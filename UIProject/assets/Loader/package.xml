@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="v9v1pqgl" jpegQuality="70" compressPNG="true">
+  <resources>
+    <component id="si0t8" name="FullScreenLoading.xml" path="/" exported="true"/>
+    <component id="si0t9" name="ProgressBar.xml" path="/"/>
+    <component id="si0ta" name="Loading.xml" path="/" exported="true"/>
+    <component id="si0tb" name="Login.xml" path="/" exported="true"/>
+    <component id="si0td" name="MaskBg.xml" path="/" exported="true"/>
+    <component id="si0te" name="Toast.xml" path="/" exported="true"/>
+    <component id="si0tf" name="WindowLoading.xml" path="/" exported="true"/>
+    <image id="si0tg" name="mask_bg.png" path="/images/" exported="true" scale="9grid" scale9grid="16,16,32,32"/>
+    <component id="si0th" name="Logo.xml" path="/"/>
+    <component id="nz2lv" name="Panel.xml" path="/Base/" exported="true"/>
+    <component id="nz2lw" name="ProgressBar.xml" path="/Base/" exported="true"/>
+    <component id="nz2lx" name="Button.xml" path="/Base/" exported="true"/>
+    <component id="nz2ly" name="CloseButton.xml" path="/Base/" exported="true"/>
+    <component id="nz2lz" name="Popup.xml" path="/Base/" exported="true"/>
+    <component id="nz2l10" name="Alert.xml" path="/Base/" exported="true"/>
+    <component id="nz2l11" name="Toast.xml" path="/Base/" exported="true"/>
+    <component id="nz2l12" name="MaskBg.xml" path="/Base/" exported="true"/>
+    <component id="nz2l13" name="FullScreenLoading.xml" path="/Base/" exported="true"/>
+    <component id="nz2l14" name="Loading.xml" path="/Base/" exported="true"/>
+    <component id="nz2li" name="Alert.xml" path="/" exported="true"/>
+    <image id="ejvq15" name="symbol_loading.png" path="/" exported="true"/>
+    <component id="p6l917" name="bg.xml" path="/" exported="true"/>
+    <component id="ir8c1b" name="CloseButton.xml" path="/" exported="true"/>
+    <image id="erui1n" name="tips_icon1.png" path="/images/"/>
+    <image id="mdb81p" name="button.png" path="/images/"/>
+    <image id="mdb81q" name="light.png" path="/images/"/>
+    <image id="mdb81r" name="loading.png" path="/images/"/>
+    <image id="mdb81s" name="logo.png" path="/images/"/>
+    <image id="mdb81t" name="process_bar.png" path="/images/" scale9grid="85,13,170,26"/>
+    <image id="mdb81u" name="process_bar_bar.png" path="/images/" scale="9grid" scale9grid="24,0,289,50"/>
+    <image id="mdb81v" name="background.png" path="/images/"/>
+    <image id="mdb81w" name="dlg_girl.png" path="/images/"/>
+    <image id="mdb81x" name="dlg_frame.png" path="/images/" scale="9grid" scale9grid="50,50,24,31"/>
+    <image id="mdb81y" name="button_cancel.png" path="/images/"/>
+    <image id="mdb81z" name="button_ok.png" path="/images/"/>
+    <component id="mdb820" name="ButtonOk.xml" path="/"/>
+    <component id="mdb821" name="ButtonCancel.xml" path="/"/>
+    <image id="mdb823" name="dlg_close.png" path="/images/"/>
+    <image id="mdb824" name="toast.png" path="/images/" scale="9grid" scale9grid="20,20,38,26"/>
+  </resources>
+  <publish name="Loader" path="../test/bin/wxlocal" multiPage="false"/>
+</packageDescription>

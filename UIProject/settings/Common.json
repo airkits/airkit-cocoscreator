@@ -1,0 +1,16 @@
+{
+	"buttonClickSound":"",
+	"colorScheme":["自定义颜色 #FF0000","弹窗背景 #ffffff","弹窗背景框8px #8ec4e6","弹窗内框背景 #8ec4e6","弹窗内框颜色 #779da5","字体颜色 #395c82","按钮白色文字边框4px #df5600","title color #856338"],
+	"font":"Heiti SC",
+	"fontAdjustment":false,
+	"fontScheme":["默认字体"],
+	"fontSize":24,
+	"fontSizeScheme":["自定义字体大小 30"],
+	"scrollBars":{
+		"defaultDisplay":"visible",
+		"horizontal":"ui://9leh0eyfi3s65i",
+		"vertical":"ui://9leh0eyfi3s65w"
+	},
+	"textColor":"#000000",
+	"tipsRes":""
+}

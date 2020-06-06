@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="750,1334" adaptationTest="FitHeightAndSetCenter">
+  <displayList>
+    <component id="n11_ngrg" name="bg" src="p6l917" fileName="bg.xml" xy="0,-159" size="750,1650">
+      <relation target="" sidePair="width-width,middle-middle"/>
+    </component>
+    <text id="n12_pdf7" name="tips" xy="182,691" size="362,28" fontSize="24" color="#ffffff" align="center" autoSize="none" strokeColor="#000000" text="资源加载中(1/10)&#xA;">
+      <relation target="" sidePair="center-center"/>
+      <relation target="n13_si0t" sidePair="center-center,top-bottom"/>
+    </text>
+    <component id="n13_si0t" name="progressBar" src="si0t9" fileName="ProgressBar.xml" xy="210,726">
+      <relation target="n15_xmdz" sidePair="center-center,bottom-top"/>
+      <ProgressBar value="20" max="100"/>
+    </component>
+    <component id="n15_xmdz" name="n15" src="si0th" fileName="Logo.xml" xy="384,344" pivot="0.52,0" anchor="true" size="470,350">
+      <relation target="" sidePair="center-center,middle-middle"/>
+    </component>
+  </displayList>
+  <transition name="t0" autoPlay="true">
+    <item time="0" type="Rotation" target="n15_xmdz" tween="true" startValue="8" endValue="-8" duration="9"/>
+    <item time="9" type="Rotation" target="n15_xmdz" tween="true" startValue="-8" endValue="5" duration="9"/>
+    <item time="18" type="Rotation" target="n15_xmdz" tween="true" startValue="5" endValue="-5" duration="9"/>
+    <item time="27" type="Rotation" target="n15_xmdz" tween="true" startValue="-5" endValue="0" duration="9"/>
+  </transition>
+</component>

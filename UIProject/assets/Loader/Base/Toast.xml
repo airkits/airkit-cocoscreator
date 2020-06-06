@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="250,50">
+  <displayList>
+    <component id="n0_nz2l" name="n0" src="nz2lv" fileName="Base/Panel.xml" xy="0,1" size="250,50" alpha="0.5">
+      <relation target="" sidePair="width-width,height-height"/>
+    </component>
+    <text id="n1_nz2l" name="tips" xy="2,13" size="245,28" fontSize="24" color="#ffffff" align="center" vAlign="middle" autoSize="none" text="tips">
+      <relation target="" sidePair="width-width,middle-middle"/>
+    </text>
+  </displayList>
+</component>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="750,1334">
+  <displayList>
+    <component id="n0_nz2l" name="n0" src="nz2l12" fileName="Base/MaskBg.xml" xy="0,0">
+      <relation target="" sidePair="width-width,height-height"/>
+    </component>
+    <component id="n1_nz2l" name="progressBar" src="nz2lw" fileName="Base/ProgressBar.xml" xy="67,1202" size="607,31">
+      <ProgressBar value="90" max="100"/>
+    </component>
+    <text id="n2_nz2l" name="tips" xy="71,1162" size="596,28" fontSize="24" color="#ffffff" align="center" vAlign="middle" autoSize="none" text="loading......"/>
+  </displayList>
+</component>

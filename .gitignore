@@ -1,0 +1,5 @@
+/client/*.npmrc
+/client/*.js
+/client/.prettierrc.js
+/client/.vscode
+/client/code-index.html

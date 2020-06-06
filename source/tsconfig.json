@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "module": "system",
+    "target": "es6",
+    "declaration": true,
+    "sourceMap": false,
+    "removeComments": true,
+    "outFile": "./airkit.js",
+    // "downlevelIteration": true,
+    // "lib": [
+    //   "es5",
+    //   "dom",
+    //   "es2015.promise",
+    //   "es2015.symbol",
+    //   "es2015.iterable"
+    // ]
+  },
+  "exclude": [
+    "node_modules",
+    "bin/**/*.d.ts",
+    "test"
+  ]
+}

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="720,385">
+  <displayList>
+    <graph id="n0_opvz" name="bg" xy="0,0" size="720,385" type="rect">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <text id="n1_opvz" name="lblName" xy="31,24" size="270,32" fontSize="28" color="#1a1a1a" autoSize="none" text="~3kg山东济南鲜橙"/>
+    <loader id="n2_opvz" name="imgIcon" xy="34,95" size="192,192" url="ui://21mnfg0cn70m7" fill="scale"/>
+    <image id="n3_opvz" name="n3" src="n70mf" fileName="images/img_line.png" xy="20,70" size="680,2">
+      <relation target="" sidePair="left-left,right-right"/>
+    </image>
+    <image id="n4_opvz" name="n4" src="n70mf" fileName="images/img_line.png" xy="20,312" size="680,2">
+      <relation target="" sidePair="left-left,right-right"/>
+    </image>
+    <text id="n5_opvz" name="lblState" xy="701,23" pivot="1,0" anchor="true" size="109,30" fontSize="26" color="#fd7539" text="～已收获"/>
+    <text id="n6_opvz" name="lblAddress" xy="262,153" size="395,75" fontSize="24" color="#666666" autoSize="none" text="~四川省 自贡市 市辖区四川省 自贡市 市辖区"/>
+    <text id="n7_opvz" name="lblUserName" xy="262,105" size="98,30" fontSize="26" color="#1a1a1a" text="~沿小波"/>
+    <text id="n8_opvz" name="lblPhone" xy="389,105" size="98,30" fontSize="26" color="#1a1a1a" text="~沿小波"/>
+    <text id="n9_opvz" name="lblTips" xy="262,260" size="408,30" fontSize="24" color="#faa818" autoSize="none" text="加油再种一棵树哦~"/>
+    <text id="n10_opvz" name="lblTitle" xy="33,330" size="123,32" group="n13_opvz" fontSize="24" color="#333333" text="~我的卡密:&#xA;"/>
+    <text id="n11_opvz" name="lblInfo" xy="166,330" size="338,28" group="n13_opvz" fontSize="24" color="#333333" text="~百事快递 1234567890456001"/>
+    <text id="n12_opvz" name="lblCopy" xy="514,330" size="102,28" group="n13_opvz" fontSize="24" color="#ff753e" text="点击复制"/>
+    <group id="n13_opvz" name="boxOrderInfo" xy="33,330" size="583,32" advanced="true" layout="hz" colGap="10" excludeInvisibles="true">
+      <relation target="" sidePair="left-left,left-right"/>
+    </group>
+  </displayList>
+</component>

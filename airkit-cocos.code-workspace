@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "source"
+		},
+		{
+			"path": "demo"
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"**/*.meta": true
+		},
+		"editor.formatOnSave": true
+	}
+}

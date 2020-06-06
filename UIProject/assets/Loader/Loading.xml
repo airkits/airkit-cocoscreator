@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="750,1334" adaptationTest="FitHeightAndSetCenter">
+  <displayList>
+    <component id="n12_ngrg" name="mask" src="si0td" fileName="MaskBg.xml" xy="0,0" size="750,1334">
+      <relation target="" sidePair="width-width,height-height"/>
+    </component>
+    <image id="n15_pdf7" name="n15" src="mdb81r" fileName="image/loading.png" xy="369,593" pivot="0.5,0.5" anchor="true">
+      <relation target="" sidePair="center-center,middle-middle"/>
+    </image>
+    <text id="n16_pdf7" name="text" xy="192,696" size="356,28" fontSize="24" color="#ffffff" align="center" autoSize="none" text="Loading...&#xA;">
+      <relation target="n15_pdf7" sidePair="bottom-top"/>
+      <relation target="" sidePair="center-center"/>
+    </text>
+  </displayList>
+  <transition name="loading" autoPlay="true" autoPlayRepeat="-1">
+    <item time="0" type="Rotation" target="n15_pdf7" tween="true" startValue="0" endValue="360" duration="24"/>
+    <item time="24" type="Rotation" target="n15_pdf7" tween="true" startValue="360"/>
+  </transition>
+</component>

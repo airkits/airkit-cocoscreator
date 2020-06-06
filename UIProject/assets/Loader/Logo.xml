@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="470,350">
+  <displayList>
+    <image id="n0_mdb8" name="n0" src="mdb81s" fileName="image/logo.png" xy="0,3">
+      <relation target="" sidePair="center-center,middle-middle"/>
+    </image>
+  </displayList>
+</component>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="21mnfg0c">
+  <resources>
+    <image id="n70m0" name="anchor.png" path="/images/"/>
+    <image id="n70m1" name="btn_dingdan.png" path="/images/"/>
+    <image id="n70m2" name="btn_jd_wc.png" path="/images/"/>
+    <image id="n70m3" name="btn_newBack.png" path="/images/"/>
+    <image id="n70m4" name="btn_xitong_b.png" path="/images/"/>
+    <image id="n70m5" name="btn_xuanz.png" path="/images/"/>
+    <image id="n70m6" name="default_crop.png" path="/images/"/>
+    <image id="n70m7" name="default_goods.png" path="/images/"/>
+    <image id="n70m8" name="img_diban_c.png" path="/images/"/>
+    <image id="n70m9" name="img_gray_bg.png" path="/images/"/>
+    <image id="n70ma" name="img_jd.png" path="/images/"/>
+    <image id="n70mb" name="img_jiaobiao_a.png" path="/images/"/>
+    <image id="n70mc" name="img_jiaobiao_b.png" path="/images/"/>
+    <image id="n70md" name="img_kong.png" path="/images/"/>
+    <image id="n70me" name="img_line_gray.png" path="/images/"/>
+    <image id="n70mf" name="img_line.png" path="/images/" scale="9grid" scale9grid="4,0,159,2"/>
+    <image id="n70mg" name="img_white_bg.png" path="/images/"/>
+    <component id="n70mh" name="Home.xml" path="/" exported="true"/>
+    <component id="n70mi" name="OrderItem.xml" path="/" exported="true"/>
+  </resources>
+  <publish name="Home" path="../test/bin/res/UI" packageCount="2"/>
+</packageDescription>

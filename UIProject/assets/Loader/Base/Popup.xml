@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="600,700">
+  <displayList>
+    <component id="n0_nz2l" name="n0" src="nz2lv" fileName="Base/Panel.xml" xy="0,0" size="600,700">
+      <relation target="" sidePair="width-width,height-height"/>
+    </component>
+    <graph id="n2_nz2l" name="content" xy="10,10" size="580,680" type="rect" fillColor="#ffcccccc"/>
+    <component id="n1_nz2l" name="closeBtn" src="nz2ly" fileName="Base/CloseButton.xml" xy="560,-18"/>
+  </displayList>
+</component>

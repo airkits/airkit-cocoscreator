@@ -1,0 +1,19 @@
+====Fri Aug 2 10:36:54 GMT+0800 2019====
+Error in (ComDocument.activate): Error #1125
+RangeError: Error #1125
+	at fgui.editor.animation::AniSprite/drawFrame()
+	at fgui.editor.animation::AniSprite/set frame()
+	at fgui.editor.gui::EGMovieClip/read_beforeAdd()
+	at fgui.editor.gui::EGComponent/handleCreate()
+	at fgui.editor.gui::EGObject/create()
+	at fgui.editor.gui::EUIObjectFactory$/createObject()
+	at fgui.editor::ComDocument/activate()
+	at fgui.editor::EditPanel/tabChanged()
+	at fgui.editor.extui::TabView/activateTab()
+	at fgui.editor::EditPanel/set activeDocument()
+	at fgui.editor::EditPanel/restoreState()
+	at fgui.editor::MainPanel/__plugInLoaded()
+	at fgui.editor.utils::BulkTasks/run()
+	at fgui.utils::GTimers/__timer()
+	at flash.utils::Timer/tick()
+

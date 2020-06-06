@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="400,80" pivot="0.5,0.5" anchor="true" opaque="false">
+  <displayList>
+    <image id="n1_ah6q" name="n1" src="mdb824" fileName="images/toast.png" xy="199,39" pivot="0.5,0.5" anchor="true" size="400,80" alpha="0.8">
+      <relation target="" sidePair="width-width,height-height"/>
+    </image>
+    <image id="n2_erui" name="n2" src="erui1n" fileName="images/tips_icon1.png" xy="36,15">
+      <relation target="n1_ah6q" sidePair="left-left,middle-middle"/>
+    </image>
+    <text id="n0_ah6q" name="tips" xy="89,19" size="250,36" fontSize="28" color="#ffffff" vAlign="middle" autoSize="none" bold="true" text="tips">
+      <relation target="" sidePair="middle-middle,left-left"/>
+    </text>
+  </displayList>
+</component>
