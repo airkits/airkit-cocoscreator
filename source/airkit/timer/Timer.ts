@@ -5,11 +5,8 @@
  */
 namespace airkit {
     export class Timer {
-        private static _startTime: number = 0;
-        public static Start() {
-            this._startTime =cc.director.getScheduler().;
-        }
-        
+        public static Start() {}
+
         //两帧之间的时间间隔,单位毫秒
         public static get deltaTimeMS(): number {
             return cc.director.getDeltaTime();

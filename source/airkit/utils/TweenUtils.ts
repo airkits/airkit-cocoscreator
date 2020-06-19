@@ -1,7 +1,3 @@
-// import { Utils } from "./Utils";
-// import { MathUtils, OrbitType } from "./MathUtils";
-// import { Log } from "../log/Log";
-
 namespace airkit {
     /*
      * @author ankye
@@ -44,7 +40,7 @@ namespace airkit {
          * @param	complete 结束回调函数。
          * @param	delay 延迟执行时间。
          */
-        public to(props: any, duration: number, ease: number = fgui.EaseType.QuadOut, complete: Function = null, delay: number = 0): TweenUtils {
+        public to(props: any, duration: number, ease: number = fgui.EaseType.QuadOut, complete: Handler = null, delay: number = 0): TweenUtils {
             this._steps.push({ props, duration, ease, complete, delay });
             this.trigger();
             return this;
@@ -82,35 +78,7 @@ namespace airkit {
                             let rotation = step.props["rotation"] != null ? step.props.rotation : this._target.rotation;
                             fgui.GTween.to(this._target.rotation, rotation, step.duration).setTarget(this._target, "rotation").setEase(step.ease);
                         }
-                        if (step.props["color"] != null) {
-                            let color = step.props["color"] != null ? step.props.color : 0xffffff;
 
-                            var redMat: Array<number> = [
-                                1,
-                                0,
-                                0,
-                                0.3,
-                                0.3, //R
-                                0,
-                                0,
-                                0,
-                                0,
-                                0, //G
-                                0,
-                                0,
-                                0,
-                                0,
-                                0, //B
-                                0,
-                                0,
-                                0,
-                                1,
-                                0, //A
-                            ];
-                            //创建一个颜色滤镜对象,红色
-                            // var redFilter: Laya.ColorFilter = new Laya.ColorFilter(redMat);
-                            // this._target.filters = [redFilter];
-                        }
                         if (step.props["alpha"] != null) {
                             if (step.props.pts) {
                                 fgui.GTween.to(this._target.alpha, step.props.alpha, step.duration)
@@ -130,14 +98,10 @@ namespace airkit {
                                     }, null);
                             }
                         }
-                        setTimeout(() => {
-                            this.onStepComplete(step.complete);
-                        }, (step.duration + step.delay) * 1000);
+                        TimerManager.Instance.addOnce((step.duration + step.delay) * 1000, this, this.onStepComplete, [step.complete]);
                     } else if (step.hasOwnProperty("delay")) {
                         this._isPlaying = true;
-                        setTimeout(() => {
-                            this.onStepComplete(step.complete);
-                        }, step.delay * 1000);
+                        TimerManager.Instance.addOnce(step.delay * 1000, this, this.onStepComplete, [step.complete]);
                     }
                 }
             }
@@ -189,38 +153,38 @@ namespace airkit {
          * @param speed
          *
          */
-        // public static stageShake(
-        //     view: fgui.GComponent,
-        //     times: number = 2,
-        //     offset: number = 12,
-        //     speed: number = 32,
-        //     caller?: any,
-        //     callBack?: Function
-        // ): void {
-        //     if (view["isShake"]) {
-        //         return;
-        //     }
+        //     public static stageShake(
+        //         view: fgui.GComponent,
+        //         times: number = 2,
+        //         offset: number = 12,
+        //         speed: number = 32,
+        //         caller?: any,
+        //         callBack?: Function
+        //     ): void {
+        //         if (view["isShake"]) {
+        //             return;
+        //         }
 
-        //     view["isShake"] = true;
-        //     var num: number = 0;
-        //     var offsetArr: Array<number> = [0, 0];
-        //     var point: cc.Vec2 = new cc.Vec2(view.x, view.y);
-        //     Laya.stage.timerLoop(speed, this, shakeObject);
+        //         view["isShake"] = true;
+        //         var num: number = 0;
+        //         var offsetArr: Array<number> = [0, 0];
+        //         var point: Laya.Point = new Laya.Point(view.x, view.y);
+        //         Laya.stage.timerLoop(speed, this, shakeObject);
 
-        //     function shakeObject(args: Array<any> = null, frameNum: number = 1, frameTime: number = 0): void {
-        //         var count: number = num++ % 4;
-        //         offsetArr[num % 2] = count < 2 ? 0 : offset;
-        //         view.x = offsetArr[0] + point.x;
-        //         view.y = offsetArr[1] + point.y;
-        //         if (num > times * 4 + 1) {
-        //             Laya.stage.clearTimer(this, shakeObject);
-        //             num = 0;
-        //             view["isShake"] = false;
-        //             if (callBack != null) {
-        //                 callBack.call(caller);
+        //         function shakeObject(args: Array<any> = null, frameNum: number = 1, frameTime: number = 0): void {
+        //             var count: number = num++ % 4;
+        //             offsetArr[num % 2] = count < 2 ? 0 : offset;
+        //             view.x = offsetArr[0] + point.x;
+        //             view.y = offsetArr[1] + point.y;
+        //             if (num > times * 4 + 1) {
+        //                 Laya.stage.clearTimer(this, shakeObject);
+        //                 num = 0;
+        //                 view["isShake"] = false;
+        //                 if (callBack != null) {
+        //                     callBack.call(caller);
+        //                 }
         //             }
         //         }
         //     }
-        // }
     }
 }

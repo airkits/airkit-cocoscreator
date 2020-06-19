@@ -7,7 +7,7 @@ namespace airkit {
 
     export class Framework extends Singleton {
         private _isStopGame: boolean = false;
-        private _mainloopHandle: Laya.Handler = null;
+        private _mainloopHandle: Handler = null;
         private _lastTimeMS: number;
 
         private static instance: Framework = null;
@@ -26,7 +26,7 @@ namespace airkit {
          */
         public setup(
             root: fgui.GComponent,
-            main_loop: Laya.Handler,
+            main_loop: Handler,
             log_level: LogLevel = LogLevel.INFO,
             design_width: number = 750,
             design_height: number = 1334,
