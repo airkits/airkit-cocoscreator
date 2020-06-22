@@ -92,7 +92,7 @@ namespace airkit {
                 request.http.timeout = HTTP_REQUEST_TIMEOUT;
                 request.http.ontimeout = function () {
                     Log.error("request timeout {0}", url);
-                    request.offAll();
+                    request.targetOff(request);
                     Http.currentRequsts--;
                     reject("timeout");
                 };
@@ -116,13 +116,13 @@ namespace airkit {
                         default:
                             data = request.data;
                     }
-                    request.offAll();
+                    request.targetOff(request);
                     Http.currentRequsts--;
                     resolve(data);
                 });
                 request.once(Event.ERROR, this, function (event: Event): void {
                     Log.error("req:{0} error:{1}", url, event);
-                    request.offAll();
+                    request.targetOff(request);
 
                     Http.currentRequsts--;
                     reject(event);
