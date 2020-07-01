@@ -35,14 +35,16 @@ window.airkit = {};
                 this.instance = new Framework();
             return this.instance;
         }
-        setup(root, main_loop, log_level = airkit.LogLevel.INFO, design_width = 750, design_height = 1334, screen_mode = Laya.Stage.SCREEN_VERTICAL, frame = 1) {
+        setup(root, main_loop, log_level = airkit.LogLevel.INFO, design_width = 750, design_height = 1334, screen_mode = "", frame = 1) {
             this.printDeviceInfo();
             this._lastTimeMS = airkit.DateUtils.getNowMS();
             this._isStopGame = false;
             this._mainloopHandle = main_loop;
+            cc.view.setResizeCallback(() => {
+                airkit.EventCenter.dispatchEvent(airkit.EventID.RESIZE);
+            });
             airkit.Log.LEVEL = log_level;
-            Laya.timer.frameLoop(frame, this, this.mainLoop);
-            Laya.stage.addChild(fgui.GRoot.inst.displayObject);
+            cc.director.getScheduler().scheduleUpdate(this, 0, false);
             airkit.LayerManager.setup(root);
             airkit.TimerManager.Instance.setup();
             airkit.UIManager.Instance.setup();
@@ -54,7 +56,6 @@ window.airkit = {};
             airkit.LoaderManager.Instance.setup();
         }
         destroy() {
-            Laya.timer.clearAll(this);
             airkit.Mediator.Instance.destroy();
             airkit.LoaderManager.Instance.destroy();
             airkit.TimerManager.Instance.destroy();
@@ -65,7 +66,7 @@ window.airkit = {};
             airkit.LayerManager.destroy();
             airkit.LangManager.Instance.destory();
         }
-        mainLoop() {
+        update(dt) {
             if (!this._isStopGame) {
                 let currentMS = airkit.DateUtils.getNowMS();
                 let dt = currentMS - this._lastTimeMS;
@@ -135,120 +136,6 @@ window.airkit = {};
     }
     Framework.instance = null;
     airkit.Framework = Framework;
-})(airkit || (airkit = {}));
-
-(function (airkit) {
-    class AudioManager extends airkit.Singleton {
-        constructor() {
-            super();
-            this.effectChannelDic = new airkit.SDictionary();
-            this.effectChannelNumDic = new airkit.SDictionary();
-            this._effectSwitch = true;
-            this._musicSwitch = true;
-            Laya.SoundManager.useAudioMusic = false;
-            Laya.SoundManager.autoReleaseSound = false;
-        }
-        static get Instance() {
-            if (!this.instance)
-                this.instance = new AudioManager();
-            return this.instance;
-        }
-        registerMusic(obj) {
-            if (this.musicsConfig == null) {
-                this.musicsConfig = new airkit.NDictionary();
-            }
-            this.musicsConfig.add(obj.id, obj);
-        }
-        registerEffect(obj) {
-            if (this.effectConfig == null) {
-                this.effectConfig = new airkit.NDictionary();
-            }
-            this.setEffectVolume(0.3, obj.url);
-            this.effectConfig.add(obj.id, obj);
-        }
-        set musicSwitch(v) {
-            if (this._musicSwitch != v) {
-                if (!v) {
-                    this.stopMusic();
-                }
-                this._musicSwitch = v;
-            }
-        }
-        set effectSwitch(v) {
-            if (this._effectSwitch != v) {
-                if (!v) {
-                    this.stopAllEffect();
-                }
-                this._effectSwitch = v;
-            }
-        }
-        playMusic(url, loops = 0, complete = null, startTime = 0) {
-            if (!this._musicSwitch)
-                return;
-            Laya.SoundManager.playMusic(url, loops, complete, startTime);
-            Laya.SoundManager.setMusicVolume(0.5);
-        }
-        playEffect(url, loops = 1, complete = null, soundClass = null, startTime = 0) {
-            if (!this._effectSwitch)
-                return;
-            let num = this.effectChannelNumDic.getValue(url);
-            if (num == null) {
-                this.effectChannelNumDic.add(url, 1);
-            }
-            else {
-                this.effectChannelNumDic.set(url, num + 1);
-            }
-            var soundChannel = this.effectChannelDic.getValue(url);
-            if (soundChannel) {
-                return;
-            }
-            num = this.effectChannelNumDic.getValue(url);
-            this.effectChannelNumDic.remove(url);
-            let scale = airkit.Timer.timeScale;
-            if (scale > 1.5)
-                scale = 1.5;
-            Laya.SoundManager.playbackRate = scale;
-            this.effectChannelDic.add(url, Laya.SoundManager.playSound(url, num, Laya.Handler.create(null, () => {
-                this.effectChannelDic.remove(url);
-            }), soundClass, startTime));
-            Laya.SoundManager.setSoundVolume(0.5, url);
-        }
-        setMusicVolume(volume) {
-            Laya.SoundManager.setMusicVolume(volume);
-        }
-        setEffectVolume(volume, url = null) {
-            Laya.SoundManager.setSoundVolume(volume, url);
-        }
-        stopAll() {
-            Laya.SoundManager.stopAll();
-        }
-        stopAllEffect() {
-            this.effectChannelDic.foreach((url, channel) => {
-                if (channel != null)
-                    channel.stop();
-                this.removeChannel(url, channel);
-                return true;
-            });
-            this.effectChannelNumDic.clear();
-        }
-        stopMusic() {
-            Laya.SoundManager.stopMusic();
-        }
-        removeChannel(url, channel) {
-            this.effectChannelDic.remove(url);
-            Laya.SoundManager.removeChannel(channel);
-        }
-        playMusicByID(eId, loops = 0, complete = null, startTime = 0) {
-            var config = this.musicsConfig.getValue(eId);
-            this.playMusic(config.url, loops, complete, startTime);
-        }
-        playEffectByID(eId, loops = 1, complete = null, startTime = 0) {
-            var config = this.effectConfig.getValue(eId);
-            this.playEffect(config.url, loops, complete, startTime);
-        }
-    }
-    AudioManager.instance = null;
-    airkit.AudioManager = AudioManager;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
@@ -925,10 +812,10 @@ window.airkit = {};
         }
         loadZip(url, list) {
             return new Promise((resolve, reject) => {
-                airkit.ResourceManager.Instance.loadRes(url, Laya.Loader.BUFFER).then(v => {
+                airkit.ResourceManager.Instance.loadRes(url, cc.BufferAsset).then((v) => {
                     let ab = airkit.ResourceManager.Instance.getRes(url);
                     airkit.ZipUtils.unzip(ab)
-                        .then(v => {
+                        .then((v) => {
                         for (let i = 0; i < list.length; i++) {
                             let template = list[i];
                             this._dicTemplate.add(list[i].url, template);
@@ -963,7 +850,7 @@ window.airkit = {};
                         }
                         resolve(v);
                     })
-                        .catch(e => {
+                        .catch((e) => {
                         airkit.Log.error(e);
                         reject(e);
                     });
@@ -975,7 +862,7 @@ window.airkit = {};
                 let assets = [];
                 for (let i = 0; i < list.length; i++) {
                     if (!airkit.ResourceManager.Instance.getRes(list[i].url)) {
-                        assets.push({ url: list[i].url, type: Laya.Loader.JSON });
+                        assets.push({ url: list[i].url, type: cc.JsonAsset });
                         this._dicTemplate.add(list[i].url, list[i]);
                     }
                 }
@@ -984,13 +871,13 @@ window.airkit = {};
                     return;
                 }
                 airkit.ResourceManager.Instance.loadArrayRes(assets, null, null, null, null, airkit.ResourceManager.SystemGroup)
-                    .then(v => {
+                    .then((v) => {
                     for (let i = 0; i < v.length; i++) {
                         this.onLoadComplete(v[i]);
                         resolve(v);
                     }
                 })
-                    .catch(e => {
+                    .catch((e) => {
                     reject(e);
                 });
             });
@@ -1592,11 +1479,11 @@ window.airkit = {};
                 this.instance = new EventCenter();
             return this.instance;
         }
-        static addEventListener(type, caller, fun) {
-            EventCenter.Instance._event.addEventListener(type, caller, fun);
+        static on(type, caller, fun) {
+            EventCenter.Instance._event.on(type, caller, fun);
         }
-        static removeEventListener(type, caller, fun) {
-            EventCenter.Instance._event.removeEventListener(type, caller, fun);
+        static off(type, caller, fun) {
+            EventCenter.Instance._event.off(type, caller, fun);
         }
         static dispatchEvent(type, ...args) {
             EventCenter.Instance._evtArgs.init(args);
@@ -1617,10 +1504,10 @@ window.airkit = {};
             this._evtArgs = null;
             this._evtArgs = new airkit.EventArgs();
         }
-        addEventListener(type, caller, fun) {
+        on(type, caller, fun) {
             if (!this._dicFuns[type]) {
                 this._dicFuns[type] = [];
-                this._dicFuns[type].push(Laya.Handler.create(caller, fun, null, false));
+                this._dicFuns[type].push(airkit.Handler.create(caller, fun, null, false));
             }
             else {
                 let arr = this._dicFuns[type];
@@ -1628,10 +1515,10 @@ window.airkit = {};
                     if (item.caller == caller && item.method == fun)
                         return;
                 }
-                arr.push(Laya.Handler.create(caller, fun, null, false));
+                arr.push(airkit.Handler.create(caller, fun, null, false));
             }
         }
-        removeEventListener(type, caller, fun) {
+        off(type, caller, fun) {
             let arr = this._dicFuns[type];
             if (!arr)
                 return;
@@ -1665,6 +1552,12 @@ window.airkit = {};
 })(airkit || (airkit = {}));
 
 (function (airkit) {
+    class Event {
+    }
+    Event.PROGRESS = "progress";
+    Event.COMPLETE = "complete";
+    Event.ERROR = "error";
+    airkit.Event = Event;
     class EventID {
     }
     EventID.BEGIN_GAME = "BEGIN_GAME";
@@ -1674,6 +1567,7 @@ window.airkit = {};
     EventID.ON_SHOW = "ON_SHOW";
     EventID.ON_HIDE = "ON_HIDE";
     EventID.CHANGE_SCENE = "CHANGE_SCENE";
+    EventID.RESIZE = "RESIZE";
     EventID.BEGIN_MODULE = "BEGIN_MODULE";
     EventID.END_MODULE = "END_MODULE";
     EventID.UI_OPEN = "UI_OPEN";
@@ -1744,7 +1638,7 @@ window.airkit = {};
         on(caller, method, args, once = false) {
             if (!this.handlers)
                 this.handlers = [];
-            let handler = new Laya.Handler(caller, method, args, once);
+            let handler = new airkit.Handler(caller, method, args, once);
             this.handlers.push(handler);
             return handler;
         }
@@ -1887,7 +1781,7 @@ window.airkit = {};
     class LoaderManager extends airkit.Singleton {
         static registerLoadingView(view_type, className, cls) {
             this.loaders.add(view_type, className);
-            Laya.ClassUtils.regClass(className, cls);
+            airkit.ClassUtils.regClass(className, cls);
         }
         static get Instance() {
             if (!this.instance)
@@ -1912,14 +1806,14 @@ window.airkit = {};
             }
         }
         registerEvent() {
-            airkit.EventCenter.addEventListener(airkit.LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
-            airkit.EventCenter.addEventListener(airkit.LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
-            airkit.EventCenter.addEventListener(airkit.LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
+            airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
+            airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
+            airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
         }
         unRegisterEvent() {
-            airkit.EventCenter.removeEventListener(airkit.LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
-            airkit.EventCenter.removeEventListener(airkit.LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
-            airkit.EventCenter.removeEventListener(airkit.LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
+            airkit.EventCenter.off(airkit.LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
+            airkit.EventCenter.off(airkit.LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
+            airkit.EventCenter.off(airkit.LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
         }
         onLoadViewEvt(args) {
             let type = args.type;
@@ -1955,11 +1849,11 @@ window.airkit = {};
             if (!view) {
                 let className = LoaderManager.loaders.getValue(type);
                 if (className.length > 0) {
-                    view = Laya.ClassUtils.getInstance(className);
+                    view = airkit.ClassUtils.getInstance(className);
                     if (view == null)
                         return;
                     view.setup([]);
-                    let clas = Laya.ClassUtils.getClass(className);
+                    let clas = airkit.ClassUtils.getClass(className);
                     view.loadResource(airkit.ResourceManager.SystemGroup, clas).then(() => {
                         airkit.LayerManager.loadingLayer.addChild(view);
                         this._dicLoadView.add(type, view);
@@ -2022,22 +1916,21 @@ window.airkit = {};
         }
         setup() {
             this._dicLoaderUrl = new airkit.SDictionary();
-            this._spineDic = new airkit.SDictionary();
             this._minLoaderTime = 1000;
             this._aniAnimDic = new airkit.SDictionary();
             this.onAniResUpdateSignal = new airkit.Signal();
         }
         static asyncLoad(url, progress, type, priority, cache, group, ignoreCache) {
             return new Promise((resolve, reject) => {
-                let errFunc = function (v) {
-                    Laya.loader.off(Laya.Event.ERROR, null, errFunc);
-                    reject(url);
-                };
-                Laya.loader.load(url, Laya.Handler.create(this, v => {
-                    Laya.loader.off(Laya.Event.ERROR, null, errFunc);
+                cc.loader.loadRes(url, type, (completedCount, totalCount, item) => {
+                    progress.runWith(completedCount / totalCount);
+                }, (error, resource) => {
+                    if (error) {
+                        reject(url);
+                        return;
+                    }
                     resolve(url);
-                }), progress, type, priority, cache, group, ignoreCache);
-                Laya.loader.on(Laya.Event.ERROR, null, errFunc);
+                });
             });
         }
         destroy() {
@@ -2049,26 +1942,26 @@ window.airkit = {};
         update(dt) { }
         getRes(url) {
             this.refreshResourceTime(url, null, false);
-            return Laya.loader.getRes(url);
+            return cc.loader.getRes(url);
         }
-        loadRes(url, type = "", viewType = airkit.LOADVIEW_TYPE_NONE, priority = 1, cache = true, group = "default", ignoreCache = false) {
+        loadRes(url, type, viewType = airkit.LOADVIEW_TYPE_NONE, priority = 1, cache = true, group = "default", ignoreCache = false) {
             this.refreshResourceTime(url, group, true);
             if (viewType == null)
                 viewType = airkit.LOADVIEW_TYPE_NONE;
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
-                if (Laya.loader.getRes(url))
+                if (cc.loader.getRes(url))
                     viewType = airkit.LOADVIEW_TYPE_NONE;
             }
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, 1);
             }
             return new Promise((resolve, reject) => {
-                ResourceManager.asyncLoad(url, Laya.Handler.create(this, this.onLoadProgress, [viewType, 1], false), type, priority, cache, group, ignoreCache)
-                    .then(v => {
+                ResourceManager.asyncLoad(url, airkit.Handler.create(this, this.onLoadProgress, [viewType, 1], false), type, priority, cache, group, ignoreCache)
+                    .then((v) => {
                     this.onLoadComplete(viewType, [url]);
                     resolve(url);
                 })
-                    .catch(e => {
+                    .catch((e) => {
                     reject(e);
                 });
             });
@@ -2077,7 +1970,6 @@ window.airkit = {};
             let has_unload = false;
             let assets = [];
             let urls = [];
-            Laya.loader.maxLoader = 4;
             if (viewType == null)
                 viewType = airkit.LOADVIEW_TYPE_NONE;
             if (priority == null)
@@ -2087,7 +1979,7 @@ window.airkit = {};
             for (let res of arr_res) {
                 assets.push({ url: res.url, type: res.type });
                 urls.push(res.url);
-                if (!has_unload && !Laya.loader.getRes(res.url))
+                if (!has_unload && !cc.loader.getRes(res.url))
                     has_unload = true;
                 this.refreshResourceTime(res.url, group, true);
             }
@@ -2098,10 +1990,10 @@ window.airkit = {};
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, assets.length, tips);
             }
             return new Promise((resolve, reject) => {
-                ResourceManager.asyncLoad(assets, Laya.Handler.create(this, this.onLoadProgress, [viewType, assets.length, tips], false), undefined, priority, cache, group, ignoreCache)
-                    .then(v => {
+                ResourceManager.asyncLoad(assets, airkit.Handler.create(this, this.onLoadProgress, [viewType, assets.length, tips], false), undefined, priority, cache, group, ignoreCache)
+                    .then((v) => {
                     if (viewType != airkit.LOADVIEW_TYPE_NONE) {
-                        airkit.TimerManager.Instance.addOnce(this._minLoaderTime, null, v => {
+                        airkit.TimerManager.Instance.addOnce(this._minLoaderTime, null, (v) => {
                             this.onLoadComplete(viewType, urls, tips);
                             resolve(urls);
                         });
@@ -2111,7 +2003,7 @@ window.airkit = {};
                         resolve(urls);
                     }
                 })
-                    .catch(e => {
+                    .catch((e) => {
                     reject(e);
                 });
             });
@@ -2153,19 +2045,19 @@ window.airkit = {};
                     loader_info.updateStatus(eLoaderStatus.LOADING);
                 }
                 else {
-                    loader_info.ctime = airkit.Timer.timeSinceStartup;
+                    loader_info.ctime = Date.now();
                 }
             }
             else {
                 let loader_info = this._dicLoaderUrl.getValue(url);
                 if (loader_info) {
-                    loader_info.utime = airkit.Timer.timeSinceStartup;
+                    loader_info.utime = Date.now();
                 }
             }
         }
         clearRes(url) {
             this._dicLoaderUrl.remove(url);
-            Laya.loader.clearRes(url);
+            cc.loader.releaseRes(url);
             var i = url.lastIndexOf(".bin");
             if (i > 0) {
                 let offset = url.lastIndexOf("/");
@@ -2193,78 +2085,6 @@ window.airkit = {};
                 value[1] += 1;
             }
         }
-        createSpineAnim(skUrl, aniMode, group = "default") {
-            return new Promise((resolve, reject) => {
-                let t = this._spineDic.getValue(skUrl);
-                if (t) {
-                    resolve(t[0].buildArmature(aniMode));
-                }
-                else {
-                    airkit.DisplayUtils.createSkeletonAni(skUrl, aniMode)
-                        .then(v => {
-                        this._spineDic.add(skUrl, [v[0], group]);
-                        resolve(v[1]);
-                    })
-                        .catch(e => {
-                        reject(e);
-                    });
-                }
-            });
-        }
-        removeSpineAnim(sk) {
-            sk.offAll();
-            sk.removeSelf();
-            sk.destroy();
-            sk = null;
-        }
-        removeSpineTemplet(skUrl) {
-            let v = this._spineDic.getValue(skUrl);
-            if (v == null) {
-                return;
-            }
-            for (let k in v[0].subTextureDic) {
-                let t = v[0].subTextureDic[k];
-                t.disposeBitmap();
-                delete v[0].subTextureDic[k];
-                t = null;
-            }
-            ResourceManager.Instance.clearRes(skUrl);
-            this._spineDic.remove(skUrl);
-            v[0].destroy();
-            airkit.ArrayUtils.clear(v);
-            v = null;
-        }
-        removeSpineTempletGroup(group) {
-            this._spineDic.foreach((k, v) => {
-                if (v[1] == group) {
-                    this.removeSpineTemplet(k);
-                }
-                return true;
-            });
-        }
-        createAniAnim(ani, atlas, group = "default") {
-            return new Promise((resolve, reject) => {
-                airkit.DisplayUtils.createAsyncAnimation(ani, atlas)
-                    .then((v) => {
-                    this.setAniAnim(ani, atlas, group);
-                    this.onAniResUpdateSignal.dispatch(ani);
-                    resolve(v);
-                })
-                    .catch(e => {
-                    reject(e);
-                });
-            });
-        }
-        createFrameAnim(name, urls, atlas, group = "default") {
-            return new Promise((resolve, reject) => {
-                let res = ResourceManager.Instance.getRes(atlas);
-                let anim = new Laya.Animation();
-                anim.loadAtlas(atlas, Laya.Handler.create(null, v => {
-                    Laya.Animation.createFrames(urls, name);
-                    resolve(anim);
-                }));
-            });
-        }
         createFuiAnim(pkgName, resName, path, group = "default") {
             return new Promise((resolve, reject) => {
                 let atlas = path + "_atlas0.png";
@@ -2272,14 +2092,14 @@ window.airkit = {};
                 let res = ResourceManager.Instance.getRes(atlas);
                 if (res == null) {
                     ResourceManager.Instance.loadArrayRes([
-                        { url: atlas, type: Laya.Loader.IMAGE },
-                        { url: bin, type: Laya.Loader.BUFFER }
+                        { url: atlas, type: cc.SpriteFrame },
+                        { url: bin, type: cc.BufferAsset },
                     ], null, null, 0, true, group)
-                        .then(v => {
+                        .then((v) => {
                         let obj = fgui.UIPackage.createObject(pkgName, resName);
                         resolve(obj.asCom);
                     })
-                        .catch(e => {
+                        .catch((e) => {
                         reject(e);
                     });
                 }
@@ -2287,40 +2107,6 @@ window.airkit = {};
                     let obj = fgui.UIPackage.createObject(pkgName, resName);
                     resolve(obj.asCom);
                 }
-            });
-        }
-        removeAniAnim(ani) {
-            let v = this._aniAnimDic.getValue(ani);
-            if (v == null) {
-                return;
-            }
-            ResourceManager.Instance.clearRes(ani);
-            for (let k in Laya.Animation.framesMap) {
-                if (airkit.StringUtils.beginsWith(k, ani)) {
-                    let obj = Laya.Animation.framesMap[k];
-                    delete Laya.Animation.framesMap[k];
-                    if (obj.frames && obj.frames.length > 0) {
-                        let len = obj.frames.length;
-                        for (let i = 0; i < len; i++) {
-                            let g = obj.frames.shift();
-                            g.autoDestroy = true;
-                            g.destroy(true);
-                            g = null;
-                        }
-                        obj.frames = null;
-                    }
-                    obj = null;
-                }
-            }
-            this._aniAnimDic.remove(ani);
-        }
-        removeAllAniAnim(group = "default") {
-            this._aniAnimDic.foreach((k, v) => {
-                if (v[2] == group) {
-                    airkit.Log.info("clean {0} {1}", k, v[0]);
-                    this.removeAniAnim(k);
-                }
-                return true;
             });
         }
         static imageProxy(image, skin, proxy, atlas) {
@@ -2339,20 +2125,20 @@ window.airkit = {};
                     }
                     airkit.Log.info("imageProxy start load {0} ", res);
                     ResourceManager.Instance.loadRes(res)
-                        .then(v => {
+                        .then((v) => {
                         image.url = skin;
                         image.alpha = 0.1;
                         airkit.TweenUtils.get(image).to({ alpha: 1.0 }, 0.3);
                         airkit.Log.info("imageProxy start load done {0} ", res);
                     })
-                        .catch(e => airkit.Log.error(e));
+                        .catch((e) => airkit.Log.error(e));
                 }
             });
         }
     }
     ResourceManager.FONT_Yuanti = "Yuanti SC Regular";
     ResourceManager.Font_Helvetica = "Helvetica";
-    ResourceManager.FONT_DEFAULT = Laya.Text.defaultFont;
+    ResourceManager.FONT_DEFAULT = "";
     ResourceManager.FONT_DEFAULT_SIZE = airkit.FONT_SIZE_5;
     ResourceManager.DefaultGroup = "airkit";
     ResourceManager.SystemGroup = "system";
@@ -2368,8 +2154,8 @@ window.airkit = {};
         constructor(url, group) {
             this.url = url;
             this.group = group;
-            this.ctime = airkit.Timer.timeSinceStartup;
-            this.utime = airkit.Timer.timeSinceStartup;
+            this.ctime = Date.now();
+            this.utime = Date.now();
             this.status = eLoaderStatus.READY;
         }
         updateStatus(status) {
@@ -2460,12 +2246,12 @@ window.airkit = {};
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class BaseModule extends Laya.EventDispatcher {
+    class BaseModule extends cc.Node {
         constructor() {
             super();
         }
         setup(args) {
-            this.event(airkit.EventID.BEGIN_MODULE, this.name);
+            this.emit(airkit.EventID.BEGIN_MODULE, this.name);
             this.registerEvent();
         }
         start() { }
@@ -2507,7 +2293,7 @@ window.airkit = {};
             return null;
         }
         dispose() {
-            this.event(airkit.EventID.END_MODULE, this.name);
+            this.emit(airkit.EventID.END_MODULE, this.name);
             this.unRegisterEvent();
         }
     }
@@ -2525,14 +2311,14 @@ window.airkit = {};
             this.registerEvent();
         }
         static register(name, cls) {
-            Laya.ClassUtils.regClass(name, cls);
+            airkit.ClassUtils.regClass(name, cls);
         }
         static call(name, funcName, ...args) {
             return new Promise((resolve, reject) => {
                 let m = this.modules.getValue(name);
                 if (m == null) {
-                    m = Laya.ClassUtils.getInstance(name);
-                    let clas = Laya.ClassUtils.getClass(name);
+                    m = airkit.ClassUtils.getInstance(name);
+                    let clas = airkit.ClassUtils.getClass(name);
                     if (m == null) {
                         airkit.Log.warning("Cant find module {0}", name);
                         reject("Cant find module" + name);
@@ -2540,9 +2326,8 @@ window.airkit = {};
                     this.modules.add(name, m);
                     m.name = name;
                     this.loadResource(m, clas)
-                        .then(v => {
-                        var onInitModuleOver = m => {
-                            m.off(airkit.EventID.BEGIN_MODULE, null, onInitModuleOver);
+                        .then((v) => {
+                        var onInitModuleOver = () => {
                             m.start();
                             if (funcName == null) {
                                 resolve(m);
@@ -2552,10 +2337,10 @@ window.airkit = {};
                                 resolve(result);
                             }
                         };
-                        m.on(airkit.EventID.BEGIN_MODULE, null, onInitModuleOver, [m]);
+                        m.once(airkit.EventID.BEGIN_MODULE, onInitModuleOver, null);
                         m.setup(null);
                     })
-                        .catch(e => {
+                        .catch((e) => {
                         airkit.Log.warning("Load module Resource Failed {0}", name);
                         reject("Load module Resource Failed " + name);
                     });
@@ -2606,10 +2391,10 @@ window.airkit = {};
                     let load_view = clas.loaderType();
                     let tips = clas.loaderTips();
                     airkit.ResourceManager.Instance.loadArrayRes(assets, load_view, tips, 1, true, airkit.ResourceManager.DefaultGroup)
-                        .then(v => {
+                        .then((v) => {
                         resolve(v);
                     })
-                        .catch(e => {
+                        .catch((e) => {
                         reject(e);
                     });
                 }
@@ -2694,15 +2479,15 @@ window.airkit = {};
                     default:
                         header.push(key, airkit.CONTENT_TYPE_TEXT);
                 }
-                var request = new Laya.HttpRequest();
+                var request = new airkit.HttpRequest();
                 request.http.timeout = airkit.HTTP_REQUEST_TIMEOUT;
                 request.http.ontimeout = function () {
                     airkit.Log.error("request timeout {0}", url);
-                    request.offAll();
+                    request.targetOff(request);
                     Http.currentRequsts--;
                     reject("timeout");
                 };
-                request.once(Laya.Event.COMPLETE, this, function (event) {
+                request.once(airkit.Event.COMPLETE, this, function (event) {
                     let data;
                     switch (responseType) {
                         case airkit.RESPONSE_TYPE_TEXT:
@@ -2712,25 +2497,25 @@ window.airkit = {};
                             data = request.data;
                             break;
                         case airkit.RESPONSE_TYPE_BYTE:
-                            var bytes = new Laya.Byte(request.data);
-                            bytes.endian = Laya.Socket.BIG_ENDIAN;
+                            var bytes = new airkit.Byte(request.data);
+                            bytes.endian = airkit.Byte.BIG_ENDIAN;
                             var body = bytes.getUint8Array(bytes.pos, bytes.length - bytes.pos);
                             data = body;
                             break;
                         default:
                             data = request.data;
                     }
-                    request.offAll();
+                    request.targetOff(request);
                     Http.currentRequsts--;
                     resolve(data);
                 });
-                request.once(Laya.Event.ERROR, this, function (event) {
+                request.once(airkit.Event.ERROR, this, function (event) {
                     airkit.Log.error("req:{0} error:{1}", url, event);
-                    request.offAll();
+                    request.targetOff(request);
                     Http.currentRequsts--;
                     reject(event);
                 });
-                request.on(Laya.Event.PROGRESS, this, function (event) { });
+                request.on(airkit.Event.PROGRESS, this, function (event) { });
                 if (method == airkit.GET) {
                     request.send(url, null, method, responseType, header);
                 }
@@ -2778,590 +2563,112 @@ window.airkit = {};
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class BaseView extends fgui.GComponent {
-        constructor() {
-            super();
-            this._isOpen = false;
-            this._UIID = 0;
-            this.objectData = null;
-            this._destory = false;
-            this._viewID = BaseView.__ViewIDSeq++;
-        }
-        createPanel(pkgName, resName) {
-            let v = fgui.UIPackage.createObjectFromURL("ui://" + pkgName + "/" + resName);
-            if (v == null)
-                return;
-            this._view = v.asCom;
-            this._view.setSize(this.width, this.height);
-            this._view.addRelation(this, fgui.RelationType.Width);
-            this._view.addRelation(this, fgui.RelationType.Height);
-            this.addChild(this._view);
-        }
-        debug() {
-            let bgColor = "#4aa7a688";
-        }
-        setup(args) {
-            this._isOpen = true;
-            this.onLangChange();
-            this.onCreate(args);
-            airkit.EventCenter.dispatchEvent(airkit.EventID.UI_OPEN, this._UIID);
-            airkit.EventCenter.addEventListener(airkit.EventID.UI_LANG, this, this.onLangChange);
-            this.registerEvent();
-            this.registeGUIEvent();
-            this.registerSignalEvent();
-        }
-        dispose() {
-            if (this._destory)
-                return;
-            this._destory = true;
-            this.onDestroy();
-            this.unRegisterEvent();
-            this.unregisteGUIEvent();
-            this.unregisterSignalEvent();
-            this._isOpen = false;
-            this.objectData = null;
-            airkit.EventCenter.dispatchEvent(airkit.EventID.UI_CLOSE, this._UIID);
-            airkit.EventCenter.removeEventListener(airkit.EventID.UI_LANG, this, this.onLangChange);
-            super.dispose();
-        }
-        isDestory() {
-            return this._destory;
-        }
-        panel() {
-            let panel = this.getGObject("panel");
-            if (panel != null)
-                return panel.asCom;
-            return null;
-        }
-        bg() {
-            let view = this.getGObject("bg");
-            if (view != null)
-                return view.asCom;
-            return null;
-        }
-        setVisible(bVisible) {
-            let old = this.visible;
-            this.visible = bVisible;
-        }
-        setUIID(id) {
-            this._UIID = id;
-        }
-        get UIID() {
-            return this._UIID;
-        }
-        get viewID() {
-            return this._viewID;
-        }
-        onCreate(args) { }
-        onDestroy() { }
-        update(dt) {
-            return true;
-        }
-        getGObject(name) {
-            return this._view.getChild(name);
-        }
-        onEnter() { }
-        onLangChange() { }
-        static res() {
-            return null;
-        }
-        static loaderTips() {
-            return "资源加载中";
-        }
-        static loaderType() {
-            return airkit.LOADVIEW_TYPE_NONE;
-        }
-        signalMap() {
-            return null;
-        }
-        eventMap() {
-            return null;
-        }
-        registerEvent() { }
-        unRegisterEvent() { }
-        staticCacheUI() {
-            return null;
-        }
-        loadResource(group, clas) {
-            return new Promise((resolve, reject) => {
-                let assets = [];
-                let res_map = clas.res();
-                if (res_map && res_map.length > 0) {
-                    for (let i = 0; i < res_map.length; ++i) {
-                        let res = res_map[i];
-                        if (!airkit.ResourceManager.Instance.getRes(res[0])) {
-                            assets.push({ url: res[0], type: res[1] });
-                        }
-                    }
-                }
-                if (assets.length > 0) {
-                    let tips = clas.loaderTips();
-                    let loaderType = clas.loaderType();
-                    airkit.ResourceManager.Instance.loadArrayRes(assets, loaderType, tips, 1, true, group)
-                        .then(v => {
-                        this.onAssetLoaded();
-                        resolve(this);
-                        this.onEnter();
-                    })
-                        .catch(e => {
-                        airkit.Log.error(e);
-                        reject(e);
-                    });
-                }
-                else {
-                    this.onAssetLoaded();
-                    resolve(this);
-                    this.onEnter();
-                }
-            });
-        }
-        onAssetLoaded() {
-            if (!this._isOpen)
-                return;
-            let staticCacheUI = this.staticCacheUI();
-            if (staticCacheUI) {
-                for (let i = 0; i < staticCacheUI.length; ++i) {
-                    let ui = staticCacheUI[i];
-                    ui.cacheAs = "bitmap";
-                }
-            }
-        }
-        registerSignalEvent() {
-            let event_list = this.signalMap();
-            if (!event_list)
-                return;
-            for (let item of event_list) {
-                let signal = item[0];
-                signal.on(item[1], item[2], item.slice(3));
-            }
-        }
-        unregisterSignalEvent() {
-            let event_list = this.signalMap();
-            if (!event_list)
-                return;
-            for (let item of event_list) {
-                let signal = item[0];
-                signal.off(item[1], item[2]);
-            }
-        }
-        registeGUIEvent() {
-            let event_list = this.eventMap();
-            if (!event_list)
-                return;
-            for (let item of event_list) {
-                let gui_control = item[0];
-                gui_control.on(item[1], this, item[2], item.slice(3));
-            }
-        }
-        unregisteGUIEvent() {
-            let event_list = this.eventMap();
-            if (!event_list)
-                return;
-            for (let item of event_list) {
-                let gui_control = item[0];
-                gui_control.off(item[1], this, item[2]);
-            }
-        }
-        doClose() {
-            if (this._isOpen === false) {
-                airkit.Log.error("连续点击");
-                return false;
-            }
-            this._isOpen = false;
-            airkit.UIManager.Instance.close(this.UIID, airkit.eCloseAnim.CLOSE_CENTER);
-            return true;
-        }
-    }
-    BaseView.__ViewIDSeq = 0;
-    airkit.BaseView = BaseView;
-})(airkit || (airkit = {}));
-
-(function (airkit) {
-    class ColorView extends airkit.BaseView {
-        constructor() {
-            super();
-            this.bgColorTweener = new Laya.Tween();
-            this.bgColorChannels = { r: 99, g: 0, b: 0xff };
-            this.gradientInterval = 5000;
-            this.displayObject.blendMode = "lighter";
-        }
-        setup(args) {
-            super.setup(args);
-            this.alpha = 0.3;
-            if (args && args.blend) {
-                this.displayObject.blendMode = args.blend;
-            }
-            this.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
-            this.evalBgColor();
-            this.sprite = fgui.UIPackage.createObjectFromURL("ui://Game/Light").asCom;
-            this.addChild(this.sprite);
-            this.sprite.displayObject.blendMode = "multiply";
-            this.sprite.setSize(this.width, this.height);
-            this.sprite.getTransition("t1").timeScale = 0.3;
-            this.sprite.alpha = 0.8;
-            this.renderBg();
-        }
-        destroy(destroyChild) {
-            this.sprite.removeFromParent();
-            this.sprite.dispose();
-            this.sprite = null;
-            this.bgColorTweener.clear();
-            this.bgColorTweener = null;
-            super.dispose();
-        }
-        evalBgColor() {
-            var color = Math.random() * 0xffffff;
-            var channels = this.getColorChannals(color);
-            this.bgColorTweener.to(this.bgColorChannels, { r: channels[0], g: channels[1], b: channels[2], a: 0.2 }, this.gradientInterval, null, Laya.Handler.create(this, this.onTweenComplete));
-        }
-        getColorChannals(color) {
-            var result = [];
-            result.push(color >> 16);
-            result.push((color >> 8) & 0xff);
-            result.push(color & 0xff);
-            return result;
-        }
-        onTweenComplete() {
-            this.evalBgColor();
-        }
-        debug() {
-            let bgColor = "#f4e1e1";
-            this.displayObject.graphics.clear();
-            this.displayObject.graphics.drawRect(0, 0, this.width, this.height, bgColor);
-            this.alpha = 0.4;
-        }
-        renderBg() {
-            this.displayObject.graphics.clear();
-            this.displayObject.graphics.drawRect(0, 0, this.width, this.height, this.getHexColorString());
-        }
-        getHexColorString() {
-            this.bgColorChannels.r = Math.floor(this.bgColorChannels.r);
-            this.bgColorChannels.g = Math.floor(this.bgColorChannels.g);
-            this.bgColorChannels.b = Math.floor(this.bgColorChannels.b);
-            var r = this.bgColorChannels.r.toString(16);
-            r = r.length == 2 ? r : "0" + r;
-            var g = this.bgColorChannels.g.toString(16);
-            g = g.length == 2 ? g : "0" + g;
-            var b = this.bgColorChannels.b.toString(16);
-            b = b.length == 2 ? b : "0" + b;
-            return "#" + r + g + b;
-        }
-        update(dt) {
-            super.update(dt);
-            this.renderBg();
-            return true;
-        }
-    }
-    airkit.ColorView = ColorView;
-})(airkit || (airkit = {}));
-
-(function (airkit) {
-    class RichImage extends airkit.BaseView {
-        get img() {
-            if (this._img == null) {
-                this._img = new fgui.GLoader();
-                this.addChild(this._img);
-            }
-            return this._img;
-        }
-        debug() {
-            this.displayObject.graphics.clear();
-            this.displayObject.graphics.drawRect(0, 0, this.width, this.height, "#00ff00");
-        }
-        setImage(v, attrs) {
-            Object.assign(this.img, attrs);
-            let w = attrs.fixedWidth ? attrs.fixedWidth : attrs.width;
-            this.setSize(w, this.height);
-            this.img.url = v;
-        }
-        dispose() {
-            airkit.DisplayUtils.removeAllChild(this);
-            super.dispose();
-        }
-    }
-    airkit.RichImage = RichImage;
-})(airkit || (airkit = {}));
-
-(function (airkit) {
-    class RichLabel extends fgui.GComponent {
-        get label() {
-            if (this._label == null) {
-                this._label = new fgui.GBasicTextField();
-                this.addChild(this._label);
-            }
-            return this._label;
-        }
-        setText(v, attrs) {
-            Object.assign(this.label, attrs);
-            this._text = v;
-            this.label.text = v;
-            let w = Laya.Browser.measureText(v, attrs.font + " " + attrs.fontSize);
-            this._label.setSize(w.width, parseInt(attrs.fontSize));
-            this.setSize(this.label.width, this.height);
-            this.label.y = (this.height - this.label.height) / 2.0;
-        }
-        dispose() {
-            airkit.DisplayUtils.removeAllChild(this);
-            super.dispose();
-        }
-    }
-    airkit.RichLabel = RichLabel;
-})(airkit || (airkit = {}));
-
-(function (airkit) {
-    let eRichTextType;
-    (function (eRichTextType) {
-        eRichTextType[eRichTextType["RICH_UNKNOWN"] = 0] = "RICH_UNKNOWN";
-        eRichTextType[eRichTextType["RICH_LABEL"] = 1] = "RICH_LABEL";
-        eRichTextType[eRichTextType["RICH_IMAGE"] = 2] = "RICH_IMAGE";
-        eRichTextType[eRichTextType["RICH_ANIM"] = 3] = "RICH_ANIM";
-        eRichTextType[eRichTextType["RICH_BR"] = 4] = "RICH_BR";
-    })(eRichTextType = airkit.eRichTextType || (airkit.eRichTextType = {}));
-    class RichText extends fgui.GComponent {
+    class HttpRequest extends cc.Node {
         constructor() {
             super(...arguments);
-            this.container = [];
-            this.texts = [];
-            this.lineHeight = 28;
-            this.font = airkit.ResourceManager.FONT_DEFAULT;
-            this.fontSize = 22;
-            this.color = "#ffffff";
-            this.pointAtX = 0;
-            this.pointAtY = 0;
+            this._http = new XMLHttpRequest();
         }
-        debug() {
-            this.displayObject.graphics.clear();
-            this.displayObject.graphics.drawRect(0, 0, this.width, this.height, "#000000");
-        }
-        parseHtml(content) {
-            let reg = /<(?:(?:\/?[A-Za-z]\w*\b(?:[=\s](['"]?)[\s\S]*?\1)*)|(?:!--[\s\S]*?--))\/?>([^>]*?<\/(img|p|font|anim)>)?/gi;
-            return content.match(reg);
-        }
-        convertTagType(tag) {
-            if (tag == "p" || tag == "font") {
-                return eRichTextType.RICH_LABEL;
+        send(url, data = null, method = "get", responseType = "text", headers = null) {
+            this._responseType = responseType;
+            this._data = null;
+            this._url = url;
+            var _this = this;
+            var http = this._http;
+            http.open(method, url, true);
+            let isJson = false;
+            if (headers) {
+                for (var i = 0; i < headers.length; i++) {
+                    http.setRequestHeader(headers[i++], headers[i]);
+                }
             }
-            if (tag == "img") {
-                return eRichTextType.RICH_IMAGE;
+            else if (!window.conch) {
+                if (!data || typeof data == "string")
+                    http.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                else {
+                    http.setRequestHeader("Content-Type", "application/json");
+                    isJson = true;
+                }
             }
-            if (tag == "anim") {
-                return eRichTextType.RICH_ANIM;
+            let restype = responseType !== "arraybuffer" ? "text" : "arraybuffer";
+            http.responseType = restype;
+            if (http.dataType) {
+                http.dataType = restype;
             }
-            if (tag == "br") {
-                return eRichTextType.RICH_BR;
-            }
-            return eRichTextType.RICH_UNKNOWN;
-        }
-        praseTag(tag) {
-            let dic = {
-                tag: "",
-                type: eRichTextType.RICH_UNKNOWN,
-                src: "",
-                attrs: {}
+            http.onerror = function (e) {
+                _this._onError(e);
             };
-            let reg = /<\/?(img|p|font|anim|br)\b([^>]*?)\/?>/;
-            let match = tag.match(reg);
-            dic.tag = match[1];
-            dic.type = this.convertTagType(dic.tag);
-            switch (dic.type) {
-                case eRichTextType.RICH_BR: {
-                    return dic;
-                }
-            }
-            let startAttrsPos = tag.indexOf(" ") + 1;
-            let endAttrsPos = tag.indexOf(">");
-            let text = tag.substr(startAttrsPos, endAttrsPos - startAttrsPos);
-            if (text) {
-                let arrs = text.split(" ");
-                if (arrs && arrs.length > 0) {
-                    for (let i = 0; i < arrs.length; i++) {
-                        let v = arrs[i].split("=");
-                        if (v && v.length > 1) {
-                            dic.attrs[v[0]] = v[1].replace(/('|")/g, "");
-                        }
-                    }
-                }
-            }
-            let defaults = ["font", "fontSize", "color"];
-            for (let k = 0; k < defaults.length; k++) {
-                let key = defaults[k];
-                if (dic.attrs[key] == null) {
-                    dic.attrs[key] = this[key];
-                }
-            }
-            if (dic.type == eRichTextType.RICH_LABEL) {
-                let startSrcPos = tag.indexOf(">") + 1;
-                let endSrcPos = tag.lastIndexOf("</");
-                dic.src = tag.substr(startSrcPos, endSrcPos - startSrcPos);
-            }
-            else if (dic.type == eRichTextType.RICH_IMAGE) {
-                dic.src = dic.attrs["src"];
-            }
-            return dic;
+            http.onabort = function (e) {
+                _this._onAbort(e);
+            };
+            http.onprogress = function (e) {
+                _this._onProgress(e);
+            };
+            http.onload = function (e) {
+                _this._onLoad(e);
+            };
+            http.send(isJson ? JSON.stringify(data) : data);
         }
-        cleanText() {
-            for (let i = this.container.length - 1; i >= 0; i--) {
-                let child = this.container[i];
-                this.removeChild(child);
-                child.dispose();
-            }
-            this.container = [];
-            this.texts = [];
-            this.pointAtX = 0;
-            this.pointAtY = 0;
+        _onProgress(e) {
+            if (e && e.lengthComputable)
+                this.emit(airkit.Event.PROGRESS, e.loaded / e.total);
         }
-        setText(content) {
-            if (content == null)
-                return;
-            this.cleanText();
-            this.appendText(content);
+        _onAbort(e) {
+            this.error("Request was aborted by user");
         }
-        processSplitLine(dic) {
-            switch (dic.type) {
-                case eRichTextType.RICH_LABEL: {
-                    return this.processSplitLabel(dic);
-                }
-                case eRichTextType.RICH_BR: {
-                    return this.processSplitBR(dic);
-                }
-                case eRichTextType.RICH_IMAGE: {
-                    return this.processSplitImage(dic);
-                }
-            }
+        _onError(e) {
+            this.error("Request failed Status:" + this._http.status + " text:" + this._http.statusText);
         }
-        processSplitImage(dic) {
-            let w = parseInt(dic.attrs.width);
-            if (dic.attrs.fixedWidth) {
-                w = parseInt(dic.attrs.fixedWidth);
-            }
-            if (this.pointAtX + w <= this.width) {
-                dic.x = this.pointAtX;
-                dic.y = this.pointAtY;
-                this.pointAtX += w;
+        _onLoad(e) {
+            var http = this._http;
+            var status = http.status !== undefined ? http.status : 200;
+            if (status === 200 || status === 204 || status === 0) {
+                this.complete();
             }
             else {
-                this.pointAtX = w;
-                this.pointAtY += this.lineHeight;
-                dic.x = 0;
-                dic.y = this.pointAtY;
-            }
-            return [dic];
-        }
-        processSplitBR(dic) {
-            this.pointAtX = 0;
-            this.pointAtY += this.lineHeight;
-            return [];
-        }
-        processSplitLabel(dic) {
-            let ret = [];
-            let fontStr = dic.attrs.fontSize + "px " + dic.attrs.font;
-            let tm = Laya.Browser.measureText(dic.src, fontStr);
-            if (this.pointAtX + tm.width <= this.width) {
-                dic.x = this.pointAtX;
-                dic.y = this.pointAtY;
-                ret.push(dic);
-                this.pointAtX += tm.width;
-                return ret;
-            }
-            else {
-                let txt = dic.src;
-                let _pointAtX = this.pointAtX;
-                let _pointAtY = this.pointAtY;
-                let pos = 0;
-                for (var i = 0, n = txt.length; i < n; i++) {
-                    let stm = Laya.Browser.measureText(txt.charAt(i), fontStr);
-                    if (this.pointAtX + stm.width > this.width) {
-                        let temp = airkit.ClassUtils.copyObject(dic);
-                        temp.src = txt.substr(pos, i - pos);
-                        temp.x = _pointAtX;
-                        temp.y = _pointAtY;
-                        ret.push(temp);
-                        this.pointAtX = stm.width;
-                        this.pointAtY += this.lineHeight;
-                        _pointAtX = 0;
-                        _pointAtY = this.pointAtY;
-                        pos = i;
-                    }
-                    else {
-                        this.pointAtX += stm.width;
-                    }
-                }
-                if (pos <= txt.length - 1) {
-                    let temp = airkit.ClassUtils.copyObject(dic);
-                    temp.src = txt.substr(pos);
-                    temp.x = _pointAtX;
-                    temp.y = _pointAtY;
-                    ret.push(temp);
-                }
-            }
-            return ret;
-        }
-        addTag(tag) {
-            let dic = this.praseTag(tag);
-            let arr = this.processSplitLine(dic);
-            switch (dic.type) {
-                case eRichTextType.RICH_LABEL: {
-                    for (let i = 0; i < arr.length; i++) {
-                        let label = new airkit.RichLabel();
-                        label.height = this.lineHeight;
-                        this.addChild(label);
-                        let attrs = this.convertAttrs(arr[i].attrs);
-                        label.setText(arr[i].src, attrs);
-                        label.x = arr[i].x;
-                        label.y = arr[i].y;
-                        this.container.push(label);
-                    }
-                    break;
-                }
-                case eRichTextType.RICH_IMAGE: {
-                    for (let i = 0; i < arr.length; i++) {
-                        let img = new airkit.RichImage();
-                        img.height = this.lineHeight;
-                        this.addChild(img);
-                        let attrs = this.convertAttrs(arr[i].attrs);
-                        img.setImage(arr[i].src, attrs);
-                        img.x = arr[i].x;
-                        img.y = arr[i].y;
-                        this.container.push(img);
-                    }
-                    break;
-                }
-                case eRichTextType.RICH_BR: {
-                    break;
-                }
+                this.error("[" + http.status + "]" + http.statusText + ":" + http.responseURL);
             }
         }
-        convertAttrs(attrs) {
-            let intVs = ["centerX", "centerY", "width", "height", "fixedHeight"];
-            for (let i = 0; i < intVs.length; i++) {
-                let key = intVs[i];
-                if (attrs[key]) {
-                    attrs[key] = parseFloat(attrs[key]);
-                }
-            }
-            return attrs;
+        error(message) {
+            this.clear();
+            console.warn(this.url, message);
+            this.emit(airkit.Event.ERROR, message);
         }
-        appendText(content) {
-            if (this.width <= 0) {
-                airkit.Log.warning("must set RichText width first");
-                return;
-            }
-            let tags = this.parseHtml(content);
-            if (tags && tags.length > 0) {
-                for (let i = 0; i < tags.length; i++) {
-                    this.addTag(tags[i]);
+        complete() {
+            this.clear();
+            var flag = true;
+            try {
+                if (this._responseType === "json") {
+                    this._data = JSON.parse(this._http.responseText);
+                }
+                else if (this._responseType === "xml") {
+                    this._data = airkit.Utils.parseXMLFromString(this._http.responseText);
+                }
+                else {
+                    this._data = this._http.response || this._http.responseText;
                 }
             }
+            catch (e) {
+                flag = false;
+                this.error(e.message);
+            }
+            flag && this.emit(airkit.Event.COMPLETE, this._data instanceof Array ? [this._data] : this._data);
+        }
+        clear() {
+            var http = this._http;
+            http.onerror = http.onabort = http.onprogress = http.onload = null;
+        }
+        get url() {
+            return this._url;
+        }
+        get data() {
+            return this._data;
+        }
+        get http() {
+            return this._http;
         }
     }
-    airkit.RichText = RichText;
-})(airkit || (airkit = {}));
-
-(function (airkit) {
-    class TextFormat {
-        constructor() { }
-    }
-    airkit.TextFormat = TextFormat;
+    HttpRequest._urlEncode = encodeURI;
+    airkit.HttpRequest = HttpRequest;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
@@ -3477,7 +2784,7 @@ window.airkit = {};
                 msgType: this.msgType,
                 seq: this.ID,
                 userdata: this.ID,
-                payload: JSON.stringify(this.data)
+                payload: JSON.stringify(this.data),
             };
             return JSON.stringify(msg);
         }
@@ -3489,8 +2796,8 @@ window.airkit = {};
     airkit.JSONMsg = JSONMsg;
     class PBMsg {
         constructor() {
-            this.receiveByte = new Laya.Byte();
-            this.receiveByte.endian = Laya.Byte.LITTLE_ENDIAN;
+            this.receiveByte = new airkit.Byte();
+            this.receiveByte.endian = airkit.Byte.LITTLE_ENDIAN;
         }
         getID() {
             return this.ID;
@@ -3502,15 +2809,15 @@ window.airkit = {};
             var len = this.receiveByte.getInt16();
             var id = this.receiveByte.getInt16();
             if (this.receiveByte.bytesAvailable >= len) {
-                let data = new Laya.Byte();
+                let data = new airkit.Byte();
                 data.writeArrayBuffer(this.receiveByte, 4, len);
                 return true;
             }
             return false;
         }
         encode(endian) {
-            let msg = new Laya.Byte();
-            msg.endian = Laya.Byte.LITTLE_ENDIAN;
+            let msg = new airkit.Byte();
+            msg.endian = airkit.Byte.LITTLE_ENDIAN;
             msg.pos = 0;
             return msg;
         }
@@ -3519,147 +2826,195 @@ window.airkit = {};
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class SocketStatus {
-    }
-    SocketStatus.SOCKET_CONNECT = "1";
-    SocketStatus.SOCKET_RECONNECT = "2";
-    SocketStatus.SOCKET_START_RECONNECT = "3";
-    SocketStatus.SOCKET_CLOSE = "4";
-    SocketStatus.SOCKET_NOCONNECT = "5";
-    SocketStatus.SOCKET_DATA = "6";
-    airkit.SocketStatus = SocketStatus;
-    let eSocketMsgType;
-    (function (eSocketMsgType) {
-        eSocketMsgType[eSocketMsgType["MTRequest"] = 1] = "MTRequest";
-        eSocketMsgType[eSocketMsgType["MTResponse"] = 2] = "MTResponse";
-        eSocketMsgType[eSocketMsgType["MTNotify"] = 3] = "MTNotify";
-        eSocketMsgType[eSocketMsgType["MTBroadcast"] = 4] = "MTBroadcast";
-    })(eSocketMsgType = airkit.eSocketMsgType || (airkit.eSocketMsgType = {}));
-    class WebSocket extends Laya.EventDispatcher {
+    class BaseView extends fgui.GComponent {
         constructor() {
             super();
-            this.mSocket = null;
-            this._needReconnect = false;
-            this._maxReconnectCount = 10;
-            this._reconnectCount = 0;
-            this._requestTimeout = 10 * 1000;
+            this._isOpen = false;
+            this._UIID = 0;
+            this.objectData = null;
+            this._destory = false;
+            this._viewID = BaseView.__ViewIDSeq++;
         }
-        initServer(host, port, msgCls, endian = Laya.Byte.BIG_ENDIAN) {
-            this.mHost = host;
-            this.mPort = port;
-            this.mEndian = endian;
-            this._handers = new airkit.NDictionary();
-            this._clsName = "message";
-            Laya.ClassUtils.regClass(this._clsName, msgCls);
-            this.connect();
-        }
-        connect() {
-            this.mSocket = new Laya.Socket();
-            this.mSocket.endian = this.mEndian;
-            this.addEvents();
-            this.mSocket.connect(this.mHost, this.mPort);
-        }
-        addEvents() {
-            this.mSocket.on(Laya.Event.OPEN, this, this.onSocketOpen);
-            this.mSocket.on(Laya.Event.MESSAGE, this, this.onReceiveMessage);
-            this.mSocket.on(Laya.Event.CLOSE, this, this.onSocketClose);
-            this.mSocket.on(Laya.Event.ERROR, this, this.onSocketError);
-        }
-        removeEvents() {
-            this.mSocket.off(Laya.Event.OPEN, this, this.onSocketOpen);
-            this.mSocket.off(Laya.Event.MESSAGE, this, this.onReceiveMessage);
-            this.mSocket.off(Laya.Event.CLOSE, this, this.onSocketClose);
-            this.mSocket.off(Laya.Event.ERROR, this, this.onSocketError);
-        }
-        onSocketOpen(event = null) {
-            this._reconnectCount = 0;
-            this._isConnecting = true;
-            if (this._connectFlag && this._needReconnect) {
-                this.event(SocketStatus.SOCKET_RECONNECT);
-            }
-            else {
-                this.event(SocketStatus.SOCKET_CONNECT);
-            }
-            this._connectFlag = true;
-        }
-        onSocketClose(e = null) {
-            this._isConnecting = false;
-            if (this._needReconnect) {
-                this.event(SocketStatus.SOCKET_START_RECONNECT);
-                this.reconnect();
-            }
-            else {
-                this.event(SocketStatus.SOCKET_CLOSE);
-            }
-        }
-        onSocketError(e = null) {
-            if (this._needReconnect) {
-                this.reconnect();
-            }
-            else {
-                this.event(SocketStatus.SOCKET_NOCONNECT);
-            }
-            this._isConnecting = false;
-        }
-        reconnect() {
-            this.closeCurrentSocket();
-            this._reconnectCount++;
-            if (this._reconnectCount < this._maxReconnectCount) {
-                this.connect();
-            }
-            else {
-                this._reconnectCount = 0;
-            }
-        }
-        onReceiveMessage(msg = null) {
-            let clas = Laya.ClassUtils.getClass(this._clsName);
-            let obj = new clas();
-            if (!obj.decode(msg, this.mEndian)) {
-                airkit.Log.error("decode msg faild {0}", msg);
+        createPanel(pkgName, resName) {
+            let v = fgui.UIPackage.createObjectFromURL("ui://" + pkgName + "/" + resName);
+            if (v == null)
                 return;
-            }
-            let hander = this._handers.getValue(obj.getID());
-            if (hander) {
-                hander(obj);
-            }
-            else {
-                this.event(SocketStatus.SOCKET_DATA, obj);
-            }
+            this._view = v.asCom;
+            this._view.setSize(this.width, this.height);
+            this._view.addRelation(this, fgui.RelationType.Width);
+            this._view.addRelation(this, fgui.RelationType.Height);
+            this.addChild(this._view);
         }
-        request(req) {
+        debug() {
+            let bgColor = "#4aa7a688";
+        }
+        setup(args) {
+            this._isOpen = true;
+            this.onLangChange();
+            this.onCreate(args);
+            airkit.EventCenter.dispatchEvent(airkit.EventID.UI_OPEN, this._UIID);
+            airkit.EventCenter.on(airkit.EventID.UI_LANG, this, this.onLangChange);
+            this.registerEvent();
+            this.registeGUIEvent();
+            this.registerSignalEvent();
+        }
+        dispose() {
+            if (this._destory)
+                return;
+            this._destory = true;
+            this.onDestroy();
+            this.unRegisterEvent();
+            this.unregisteGUIEvent();
+            this.unregisterSignalEvent();
+            this._isOpen = false;
+            this.objectData = null;
+            airkit.EventCenter.dispatchEvent(airkit.EventID.UI_CLOSE, this._UIID);
+            airkit.EventCenter.off(airkit.EventID.UI_LANG, this, this.onLangChange);
+            super.dispose();
+        }
+        isDestory() {
+            return this._destory;
+        }
+        panel() {
+            let panel = this.getGObject("panel");
+            if (panel != null)
+                return panel.asCom;
+            return null;
+        }
+        bg() {
+            let view = this.getGObject("bg");
+            if (view != null)
+                return view.asCom;
+            return null;
+        }
+        setVisible(bVisible) {
+            let old = this.visible;
+            this.visible = bVisible;
+        }
+        setUIID(id) {
+            this._UIID = id;
+        }
+        get UIID() {
+            return this._UIID;
+        }
+        get viewID() {
+            return this._viewID;
+        }
+        onCreate(args) { }
+        onDestroy() { }
+        update(dt) {
+            return true;
+        }
+        getGObject(name) {
+            return this._view.getChild(name);
+        }
+        onEnter() { }
+        onLangChange() { }
+        static res() {
+            return null;
+        }
+        static loaderTips() {
+            return "资源加载中";
+        }
+        static loaderType() {
+            return airkit.LOADVIEW_TYPE_NONE;
+        }
+        signalMap() {
+            return null;
+        }
+        eventMap() {
+            return null;
+        }
+        registerEvent() { }
+        unRegisterEvent() { }
+        staticCacheUI() {
+            return null;
+        }
+        loadResource(group, clas) {
             return new Promise((resolve, reject) => {
-                var buf = req.encode(this.mEndian);
-                let handerID = req.getID();
-                if (buf) {
-                    let id = airkit.TimerManager.Instance.addOnce(this._requestTimeout, null, () => {
-                        this._handers.remove(handerID);
-                        reject("timeout");
+                let assets = [];
+                let res_map = clas.res();
+                if (res_map && res_map.length > 0) {
+                    for (let i = 0; i < res_map.length; ++i) {
+                        let res = res_map[i];
+                        if (!airkit.ResourceManager.Instance.getRes(res[0])) {
+                            assets.push({ url: res[0], type: res[1] });
+                        }
+                    }
+                }
+                if (assets.length > 0) {
+                    let tips = clas.loaderTips();
+                    let loaderType = clas.loaderType();
+                    airkit.ResourceManager.Instance.loadArrayRes(assets, loaderType, tips, 1, true, group)
+                        .then((v) => {
+                        this.onAssetLoaded();
+                        resolve(this);
+                        this.onEnter();
+                    })
+                        .catch((e) => {
+                        airkit.Log.error(e);
+                        reject(e);
                     });
-                    this._handers.add(handerID, (resp) => {
-                        airkit.TimerManager.Instance.removeTimer(id);
-                        resolve(resp);
-                    });
-                    airkit.Log.info("start request ws {0}", buf);
-                    this.mSocket.send(buf);
+                }
+                else {
+                    this.onAssetLoaded();
+                    resolve(this);
+                    this.onEnter();
                 }
             });
         }
-        close() {
-            this._connectFlag = false;
-            this._handers.clear();
-            this.closeCurrentSocket();
+        onAssetLoaded() {
+            if (!this._isOpen)
+                return;
         }
-        closeCurrentSocket() {
-            this.removeEvents();
-            this.mSocket.close();
-            this.mSocket = null;
-            this._isConnecting = false;
+        registerSignalEvent() {
+            let event_list = this.signalMap();
+            if (!event_list)
+                return;
+            for (let item of event_list) {
+                let signal = item[0];
+                signal.on(item[1], item[2], item.slice(3));
+            }
         }
-        isConnecting() {
-            return this._isConnecting;
+        unregisterSignalEvent() {
+            let event_list = this.signalMap();
+            if (!event_list)
+                return;
+            for (let item of event_list) {
+                let signal = item[0];
+                signal.off(item[1], item[2]);
+            }
+        }
+        registeGUIEvent() {
+            let event_list = this.eventMap();
+            if (!event_list)
+                return;
+            for (let item of event_list) {
+                let gui_control = item[0];
+                gui_control.on(item[1], item[2], this);
+            }
+        }
+        unregisteGUIEvent() {
+            let event_list = this.eventMap();
+            if (!event_list)
+                return;
+            for (let item of event_list) {
+                let gui_control = item[0];
+                gui_control.off(item[1], item[2], this);
+            }
+        }
+        doClose() {
+            if (this._isOpen === false) {
+                airkit.Log.error("连续点击");
+                return false;
+            }
+            this._isOpen = false;
+            airkit.UIManager.Instance.close(this.UIID, airkit.eCloseAnim.CLOSE_CENTER);
+            return true;
         }
     }
-    airkit.WebSocket = WebSocket;
+    BaseView.__ViewIDSeq = 0;
+    airkit.BaseView = BaseView;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
@@ -3704,52 +3059,51 @@ window.airkit = {};
                     layer = this.topLayer;
                     break;
             }
-            if (Laya.stage.width != layer.width ||
-                Laya.stage.height != layer.height) {
-                layer.width = Laya.stage.width;
-                layer.height = Laya.stage.height;
+            if (cc.director.getWinSize().width != layer.width || cc.director.getWinSize().height != layer.height) {
+                layer.width = cc.director.getWinSize().width;
+                layer.height = cc.director.getWinSize().height;
             }
             return layer;
         }
         static setup(root) {
             this._root = root;
             this._bgLayer = new Layer();
-            this._bgLayer.displayObject.name = "bgLayer";
+            this._bgLayer.node.name = "bgLayer";
             this._bgLayer.touchable = true;
             this._root.addChild(this._bgLayer);
             this._bgLayer.sortingOrder = 0;
             this._mainLayer = new Layer();
-            this._mainLayer.displayObject.name = "mainLayer";
+            this._mainLayer.node.name = "mainLayer";
             this._mainLayer.touchable = true;
             this._root.addChild(this._mainLayer);
             this._mainLayer.sortingOrder = 2;
             this._tooltipLayer = new Layer();
-            this._tooltipLayer.displayObject.name = "tooltipLayer";
+            this._tooltipLayer.node.name = "tooltipLayer";
             this._tooltipLayer.touchable = false;
             this._root.addChild(this._tooltipLayer);
             this._tooltipLayer.sortingOrder = 3;
             this._uiLayer = new Layer();
-            this._uiLayer.displayObject.name = "uiLayer";
+            this._uiLayer.node.name = "uiLayer";
             this._uiLayer.touchable = true;
             this._root.addChild(this._uiLayer);
             this._uiLayer.sortingOrder = 4;
             this._popupLayer = new Layer();
-            this._popupLayer.displayObject.name = "popupLayer";
+            this._popupLayer.node.name = "popupLayer";
             this._popupLayer.touchable = true;
             this._root.addChild(this._popupLayer);
             this._popupLayer.sortingOrder = 5;
             this._systemLayer = new Layer();
-            this._systemLayer.displayObject.name = "systemLayer";
+            this._systemLayer.node.name = "systemLayer";
             this._systemLayer.touchable = true;
             this._root.addChild(this._systemLayer);
             this._systemLayer.sortingOrder = 6;
             this._loadingLayer = new Layer();
-            this._loadingLayer.displayObject.name = "loadingLayer";
+            this._loadingLayer.node.name = "loadingLayer";
             this._loadingLayer.touchable = true;
             this._root.addChild(this._loadingLayer);
             this._loadingLayer.sortingOrder = 1001;
             this._topLayer = new Layer();
-            this._topLayer.displayObject.name = "topLayer";
+            this._topLayer.node.name = "topLayer";
             this._topLayer.touchable = true;
             this._root.addChild(this._topLayer);
             this._topLayer.sortingOrder = 1002;
@@ -3761,23 +3115,23 @@ window.airkit = {};
                 this._tooltipLayer,
                 this._systemLayer,
                 this._loadingLayer,
-                this._topLayer
+                this._topLayer,
             ];
             this.registerEvent();
-            this.resize(null);
+            this.resize();
         }
         static registerEvent() {
-            Laya.stage.on(Laya.Event.RESIZE, this, this.resize);
+            airkit.EventCenter.on(airkit.EventID.RESIZE, this, this.resize);
         }
         static unRegisterEvent() {
-            Laya.stage.off(Laya.Event.RESIZE, this, this.resize);
+            airkit.EventCenter.off(airkit.EventID.RESIZE, this, this.resize);
         }
-        static resize(e) {
-            airkit.Log.info("LayerManager Receive Resize {0} {1}", Laya.stage.width, Laya.stage.height);
+        static resize() {
+            airkit.Log.info("LayerManager Receive Resize {0} {1}", cc.director.getWinSize().width, cc.director.getWinSize().height);
             var i;
             var l;
-            let w = Laya.stage.width;
-            let h = Laya.stage.height;
+            let w = cc.director.getWinSize().width;
+            let h = cc.director.getWinSize().height;
             fgui.GRoot.inst.setSize(w, h);
             for (i = 0, l = this.layers.length; i < l; i++) {
                 this.layers[i].setSize(w, h);
@@ -3786,16 +3140,10 @@ window.airkit = {};
                 var bg = this._bgLayer.getChildAt(0);
                 let x = (w - LayerManager.BG_WIDTH) >> 1;
                 let y = h - LayerManager.BG_HEIGHT;
-                bg.setXY(x, y);
+                bg.setPosition(x, y);
             }
             fgui.GRoot.inst.setSize(w, h);
-            let needUpChilds = [
-                this._uiLayer,
-                this._popupLayer,
-                this._systemLayer,
-                this._topLayer,
-                this._loadingLayer
-            ];
+            let needUpChilds = [this._uiLayer, this._popupLayer, this._systemLayer, this._topLayer, this._loadingLayer];
             for (let i = 0; i < needUpChilds.length; i++) {
                 let layer = needUpChilds[i];
                 for (let j = 0, l = layer.numChildren; j < l; j++) {
@@ -3840,8 +3188,8 @@ window.airkit = {};
                 child = new fgui.GLoader();
                 child.width = LayerManager.BG_WIDTH;
                 child.height = LayerManager.BG_HEIGHT;
-                child.x = (Laya.stage.width - LayerManager.BG_WIDTH) >> 1;
-                child.y = Laya.stage.height - LayerManager.BG_HEIGHT;
+                child.x = (cc.director.getWinSize().width - LayerManager.BG_WIDTH) >> 1;
+                child.y = cc.director.getWinSize().height - LayerManager.BG_HEIGHT;
                 this.bgLayer.addChild(child);
             }
             child.url = url;
@@ -3892,7 +3240,7 @@ window.airkit = {};
             this.createPanel(this.pkgName, this.resName);
             let panel = this.panel();
             if (panel) {
-                airkit.DisplayUtils.popup(panel, Laya.Handler.create(this, this.onOpen));
+                airkit.DisplayUtils.popup(panel, airkit.Handler.create(this, this.onOpen));
                 this.closeBtn = this.closeButton();
                 if (this.closeBtn) {
                     this.closeBtn.visible = false;
@@ -3911,11 +3259,11 @@ window.airkit = {};
             let bg = this.bg();
             if (bg && this.bgTouch) {
                 bg.touchable = true;
-                bg.onClick(this, this.onClose);
+                bg.onClick(this.onClose, this);
             }
             if (this.closeBtn) {
                 this.closeBtn.visible = true;
-                this.closeBtn.onClick(this, this.pressClose);
+                this.closeBtn.onClick(this.pressClose, this);
             }
         }
         pressClose() {
@@ -3942,7 +3290,7 @@ window.airkit = {};
     class SceneManager {
         static registerScene(scene_type, name, cls) {
             SceneManager.scenes.add(scene_type, name);
-            Laya.ClassUtils.regClass(name, cls);
+            airkit.ClassUtils.regClass(name, cls);
         }
         static get Instance() {
             if (!this.instance)
@@ -3961,15 +3309,15 @@ window.airkit = {};
             }
         }
         registerEvent() {
-            airkit.EventCenter.addEventListener(airkit.EventID.CHANGE_SCENE, this, this.onChangeScene);
-            Laya.stage.on(Laya.Event.RESIZE, this, this.resize);
+            airkit.EventCenter.on(airkit.EventID.CHANGE_SCENE, this, this.onChangeScene);
+            airkit.EventCenter.on(airkit.EventID.RESIZE, this, this.resize);
         }
         unRegisterEvent() {
-            airkit.EventCenter.removeEventListener(airkit.EventID.CHANGE_SCENE, this, this.onChangeScene);
-            Laya.stage.off(Laya.Event.RESIZE, this, this.resize);
+            airkit.EventCenter.off(airkit.EventID.CHANGE_SCENE, this, this.onChangeScene);
+            airkit.EventCenter.off(airkit.EventID.RESIZE, this, this.resize);
         }
-        resize(e) {
-            airkit.Log.info("SceneManager Receive Resize {0} {1}", Laya.stage.width, Laya.stage.height);
+        resize() {
+            airkit.Log.info("SceneManager Receive Resize {0} {1}", cc.director.getWinSize().width, cc.director.getWinSize().height);
             if (this._curScene) {
                 this._curScene.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
                 var func = this._curScene["resize"];
@@ -3989,16 +3337,16 @@ window.airkit = {};
         gotoScene(scene_type, args) {
             this.exitScene();
             let sceneName = SceneManager.scenes.getValue(scene_type);
-            let clas = Laya.ClassUtils.getClass(sceneName);
+            let clas = airkit.ClassUtils.getClass(sceneName);
             let scene = new clas();
             scene.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
             scene.setup(args);
             scene
                 .loadResource(airkit.ResourceManager.DefaultGroup, clas)
-                .then(v => {
+                .then((v) => {
                 this.onComplete(v);
             })
-                .catch(e => {
+                .catch((e) => {
                 airkit.Log.error(e);
             });
             airkit.LayerManager.mainLayer.addChild(scene);
@@ -4009,12 +3357,8 @@ window.airkit = {};
                 this._curScene.dispose();
                 this._curScene = null;
                 airkit.UIManager.Instance.closeAll();
-                airkit.ResourceManager.Instance.removeAllAniAnim();
                 airkit.ObjectPools.clearAll();
                 airkit.ResourceManager.Instance.cleanTexture(airkit.ResourceManager.DefaultGroup);
-                airkit.ResourceManager.Instance.removeAllAniAnim("default");
-                airkit.ResourceManager.Instance.removeSpineTempletGroup("default");
-                Laya.Scene.gc();
             }
         }
     }
@@ -4067,19 +3411,19 @@ window.airkit = {};
                 let conf = this._dicConfig.getValue(id);
                 airkit.assert(conf != null, "UIManager::Show - not find id:" + conf.mID);
                 let params = args.slice(0);
-                let clas = Laya.ClassUtils.getClass(conf.name);
+                let clas = airkit.ClassUtils.getClass(conf.name);
                 let v = new clas();
                 airkit.assert(v != null, "UIManager::Show - cannot create ui:" + id);
                 v.setUIID(id);
                 v.setup(params);
                 v.loadResource(airkit.ResourceManager.DefaultGroup, clas)
-                    .then(p => {
+                    .then((p) => {
                     let layer = airkit.LayerManager.getLayer(conf.mLayer);
                     layer.addChild(p);
                     this._dicUIView.add(id, p);
                     resolve(p);
                 })
-                    .catch(e => {
+                    .catch((e) => {
                     airkit.Log.error(e);
                 });
             });
@@ -4097,7 +3441,7 @@ window.airkit = {};
                     resolve([id, result]);
                 }
                 else {
-                    airkit.DisplayUtils.hide(panel, Laya.Handler.create(null, v => {
+                    airkit.DisplayUtils.hide(panel, airkit.Handler.create(null, (v) => {
                         let result = this.clearPanel(id, panel, loader_info);
                         resolve([id, result]);
                     }));
@@ -4155,10 +3499,10 @@ window.airkit = {};
                     start = toastLayer.height + 600;
                     offset = -600;
                     type = fgui.EaseType.QuadOut;
-                    view.setXY(localPoint.x, start);
+                    view.setPosition(localPoint.x, start);
                 }
                 else {
-                    view.setXY(localPoint.x, start - 200);
+                    view.setPosition(localPoint.x, start - 200);
                 }
                 airkit.TweenUtils.get(view)
                     .delay(1.5)
@@ -4167,10 +3511,10 @@ window.airkit = {};
                     scaleY: 1.0,
                     alpha: 1.0,
                     x: localPoint.x,
-                    y: localPoint.y
+                    y: localPoint.y,
                 }, duration, type)
                     .delay(0.5)
-                    .to({ x: localPoint.x, y: start - offset }, duration, fgui.EaseType.ExpoOut, Laya.Handler.create(null, () => {
+                    .to({ x: localPoint.x, y: start - offset }, duration, fgui.EaseType.ExpoOut, airkit.Handler.create(null, () => {
                     view.removeFromParent();
                     resolve();
                 }));
@@ -4204,7 +3548,7 @@ window.airkit = {};
                     y = target.height * 0.382 - target.pivotY * target.height;
                 let point = target.localToGlobal(x, y);
                 let localPoint = toastLayer.globalToLocal(point.x, point.y);
-                view.setXY(localPoint.x, localPoint.y);
+                view.setPosition(localPoint.x, localPoint.y);
                 view["toY"] = view.y;
                 let tu = airkit.TweenUtils.get(view);
                 tu.setOnUpdate((gt) => {
@@ -4218,7 +3562,7 @@ window.airkit = {};
                     }
                 });
                 let scale = 1.0;
-                tu.to({ scaleX: scale, scaleY: scale, alpha: 1.0 }, duration, inEase).to({ alpha: 0.4 }, duration * 0.7, outEase, Laya.Handler.create(this, () => {
+                tu.to({ scaleX: scale, scaleY: scale, alpha: 1.0 }, duration, inEase).to({ alpha: 0.4 }, duration * 0.7, outEase, airkit.Handler.create(this, () => {
                     target[key].splice(target[key].indexOf(view), 1);
                     if (target && view && view["parent"]) {
                         view.removeFromParent();
@@ -4268,7 +3612,7 @@ window.airkit = {};
                     y = target.height * 0.382 - target.pivotY * target.height;
                 let point = target.localToGlobal(x, y);
                 let localPoint = toastLayer.globalToLocal(point.x, point.y);
-                view.setXY(localPoint.x, localPoint.y);
+                view.setPosition(localPoint.x, localPoint.y);
                 view["toY"] = view.y;
                 let tu = airkit.TweenUtils.get(view);
                 tu.setOnUpdate((gt) => {
@@ -4282,7 +3626,7 @@ window.airkit = {};
                     }
                 });
                 let scale = speedUp ? 1.0 : 1.0;
-                tu.to({ scaleX: scale, scaleY: scale, alpha: 1.0 }, duration, inEase).to({ alpha: 0.4 }, duration * 0.7, outEase, Laya.Handler.create(this, () => {
+                tu.to({ scaleX: scale, scaleY: scale, alpha: 1.0 }, duration, inEase).to({ alpha: 0.4 }, duration * 0.7, outEase, airkit.Handler.create(this, () => {
                     target["_toastList"].splice(target["_toastList"].indexOf(view), 1);
                     if (target && view && view["parent"]) {
                         view.removeFromParent();
@@ -4315,7 +3659,7 @@ window.airkit = {};
                 return;
             }
             this._dicConfig.add(info.mID, info);
-            Laya.ClassUtils.regClass(info.name, info.cls);
+            airkit.ClassUtils.regClass(info.name, info.cls);
         }
         clearUIConfig() {
             this._dicConfig.clear();
@@ -4384,10 +3728,10 @@ window.airkit = {};
             UIManager.Instance.show(info[0], ...info[1]);
         }
         registerEvent() {
-            airkit.EventCenter.addEventListener(airkit.EventID.UI_CLOSE, this, this.onUIEvent);
+            airkit.EventCenter.on(airkit.EventID.UI_CLOSE, this, this.onUIEvent);
         }
         unRegisterEvent() {
-            airkit.EventCenter.removeEventListener(airkit.EventID.UI_CLOSE, this, this.onUIEvent);
+            airkit.EventCenter.off(airkit.EventID.UI_CLOSE, this, this.onUIEvent);
         }
         onUIEvent(args) {
             switch (args.type) {
@@ -4410,31 +3754,31 @@ window.airkit = {};
             this._globalKey = key;
         }
         static has(key) {
-            return Laya.LocalStorage.getItem(this.getFullKey(key)) != null;
+            return cc.sys.localStorage.getItem(this.getFullKey(key)) != null;
         }
         static getInt(key) {
-            return parseInt(Laya.LocalStorage.getItem(this.getFullKey(key)));
+            return parseInt(cc.sys.localStorage.getItem(this.getFullKey(key)));
         }
         static setInt(key, value) {
-            Laya.LocalStorage.setItem(this.getFullKey(key), value.toString());
+            cc.sys.localStorage.setItem(this.getFullKey(key), value.toString());
         }
         static getFloat(key) {
-            return parseInt(Laya.LocalStorage.getItem(this.getFullKey(key)));
+            return parseInt(cc.sys.localStorage.getItem(this.getFullKey(key)));
         }
         static setFloat(key, value) {
-            Laya.LocalStorage.setItem(this.getFullKey(key), value.toString());
+            cc.sys.localStorage.setItem(this.getFullKey(key), value.toString());
         }
         static getString(key) {
-            return Laya.LocalStorage.getItem(this.getFullKey(key));
+            return cc.sys.localStorage.getItem(this.getFullKey(key));
         }
         static setString(key, value) {
-            Laya.LocalStorage.setItem(this.getFullKey(key), value);
+            cc.sys.localStorage.setItem(this.getFullKey(key), value);
         }
         static remove(key) {
-            Laya.LocalStorage.removeItem(this.getFullKey(key));
+            cc.sys.localStorage.removeItem(this.getFullKey(key));
         }
         static clear() {
-            Laya.LocalStorage.clear();
+            cc.sys.localStorage.clear();
         }
         static getFullKey(key) {
             return this._globalKey + "_" + key;
@@ -4471,32 +3815,23 @@ window.airkit = {};
 
 (function (airkit) {
     class Timer {
-        static Start() {
-            this._startTime = Laya.timer.currTimer;
-        }
+        static Start() { }
         static get deltaTimeMS() {
-            return Laya.timer.delta;
+            return cc.director.getDeltaTime();
         }
         static get fixedDeltaTime() {
             return 0;
         }
-        static get time() {
-            return Laya.timer.currTimer;
-        }
-        static get timeSinceStartup() {
-            return Laya.timer.currTimer - this._startTime;
-        }
         static get frameCount() {
-            return Laya.timer.currFrame;
+            return cc.director.getTotalFrames();
         }
         static get timeScale() {
-            return Laya.timer.scale;
+            return cc.director.getScheduler().getTimeScale();
         }
         static set timeScale(scale) {
-            Laya.timer.scale = scale;
+            cc.director.getScheduler().setTimeScale(scale);
         }
     }
-    Timer._startTime = 0;
     airkit.Timer = Timer;
 })(airkit || (airkit = {}));
 
@@ -4536,7 +3871,7 @@ window.airkit = {};
             ++this._idCounter;
             if (args != null)
                 airkit.ArrayUtils.insert(args, this._idCounter, 0);
-            let handler = Laya.Handler.create(caller, method, args, false);
+            let handler = airkit.Handler.create(caller, method, args, false);
             timer.set(this._idCounter, rate, ticks, handler);
             this._timers.push(timer);
             return timer.id;
@@ -4546,7 +3881,7 @@ window.airkit = {};
             ++this._idCounter;
             if (args != null)
                 airkit.ArrayUtils.insert(args, this._idCounter, 0);
-            let handler = Laya.Handler.create(caller, method, args, false);
+            let handler = airkit.Handler.create(caller, method, args, false);
             timer.set(this._idCounter, rate, 1, handler);
             this._timers.push(timer);
             return timer.id;
@@ -4715,8 +4050,409 @@ window.airkit = {};
 })(airkit || (airkit = {}));
 
 (function (airkit) {
+    class Byte {
+        constructor(data = null) {
+            this._xd_ = true;
+            this._allocated_ = 8;
+            this._pos_ = 0;
+            this._length = 0;
+            if (data) {
+                this._u8d_ = new Uint8Array(data);
+                this._d_ = new DataView(this._u8d_.buffer);
+                this._length = this._d_.byteLength;
+            }
+            else {
+                this._resizeBuffer(this._allocated_);
+            }
+        }
+        static getSystemEndian() {
+            if (!Byte._sysEndian) {
+                var buffer = new ArrayBuffer(2);
+                new DataView(buffer).setInt16(0, 256, true);
+                Byte._sysEndian = new Int16Array(buffer)[0] === 256 ? Byte.LITTLE_ENDIAN : Byte.BIG_ENDIAN;
+            }
+            return Byte._sysEndian;
+        }
+        get buffer() {
+            var rstBuffer = this._d_.buffer;
+            if (rstBuffer.byteLength === this._length)
+                return rstBuffer;
+            return rstBuffer.slice(0, this._length);
+        }
+        get endian() {
+            return this._xd_ ? Byte.LITTLE_ENDIAN : Byte.BIG_ENDIAN;
+        }
+        set endian(value) {
+            this._xd_ = value === Byte.LITTLE_ENDIAN;
+        }
+        set length(value) {
+            if (this._allocated_ < value)
+                this._resizeBuffer((this._allocated_ = Math.floor(Math.max(value, this._allocated_ * 2))));
+            else if (this._allocated_ > value)
+                this._resizeBuffer((this._allocated_ = value));
+            this._length = value;
+        }
+        get length() {
+            return this._length;
+        }
+        _resizeBuffer(len) {
+            try {
+                var newByteView = new Uint8Array(len);
+                if (this._u8d_ != null) {
+                    if (this._u8d_.length <= len)
+                        newByteView.set(this._u8d_);
+                    else
+                        newByteView.set(this._u8d_.subarray(0, len));
+                }
+                this._u8d_ = newByteView;
+                this._d_ = new DataView(newByteView.buffer);
+            }
+            catch (err) {
+                throw "Invalid typed array length:" + len;
+            }
+        }
+        getString() {
+            return this.readString();
+        }
+        readString() {
+            return this._rUTF(this.getUint16());
+        }
+        getFloat32Array(start, len) {
+            return this.readFloat32Array(start, len);
+        }
+        readFloat32Array(start, len) {
+            var end = start + len;
+            end = end > this._length ? this._length : end;
+            var v = new Float32Array(this._d_.buffer.slice(start, end));
+            this._pos_ = end;
+            return v;
+        }
+        getUint8Array(start, len) {
+            return this.readUint8Array(start, len);
+        }
+        readUint8Array(start, len) {
+            var end = start + len;
+            end = end > this._length ? this._length : end;
+            var v = new Uint8Array(this._d_.buffer.slice(start, end));
+            this._pos_ = end;
+            return v;
+        }
+        getInt16Array(start, len) {
+            return this.readInt16Array(start, len);
+        }
+        readInt16Array(start, len) {
+            var end = start + len;
+            end = end > this._length ? this._length : end;
+            var v = new Int16Array(this._d_.buffer.slice(start, end));
+            this._pos_ = end;
+            return v;
+        }
+        getFloat32() {
+            return this.readFloat32();
+        }
+        readFloat32() {
+            if (this._pos_ + 4 > this._length)
+                throw "getFloat32 error - Out of bounds";
+            var v = this._d_.getFloat32(this._pos_, this._xd_);
+            this._pos_ += 4;
+            return v;
+        }
+        getFloat64() {
+            return this.readFloat64();
+        }
+        readFloat64() {
+            if (this._pos_ + 8 > this._length)
+                throw "getFloat64 error - Out of bounds";
+            var v = this._d_.getFloat64(this._pos_, this._xd_);
+            this._pos_ += 8;
+            return v;
+        }
+        writeFloat32(value) {
+            this._ensureWrite(this._pos_ + 4);
+            this._d_.setFloat32(this._pos_, value, this._xd_);
+            this._pos_ += 4;
+        }
+        writeFloat64(value) {
+            this._ensureWrite(this._pos_ + 8);
+            this._d_.setFloat64(this._pos_, value, this._xd_);
+            this._pos_ += 8;
+        }
+        getInt32() {
+            return this.readInt32();
+        }
+        readInt32() {
+            if (this._pos_ + 4 > this._length)
+                throw "getInt32 error - Out of bounds";
+            var float = this._d_.getInt32(this._pos_, this._xd_);
+            this._pos_ += 4;
+            return float;
+        }
+        getUint32() {
+            return this.readUint32();
+        }
+        readUint32() {
+            if (this._pos_ + 4 > this._length)
+                throw "getUint32 error - Out of bounds";
+            var v = this._d_.getUint32(this._pos_, this._xd_);
+            this._pos_ += 4;
+            return v;
+        }
+        writeInt32(value) {
+            this._ensureWrite(this._pos_ + 4);
+            this._d_.setInt32(this._pos_, value, this._xd_);
+            this._pos_ += 4;
+        }
+        writeUint32(value) {
+            this._ensureWrite(this._pos_ + 4);
+            this._d_.setUint32(this._pos_, value, this._xd_);
+            this._pos_ += 4;
+        }
+        getInt16() {
+            return this.readInt16();
+        }
+        readInt16() {
+            if (this._pos_ + 2 > this._length)
+                throw "getInt16 error - Out of bounds";
+            var us = this._d_.getInt16(this._pos_, this._xd_);
+            this._pos_ += 2;
+            return us;
+        }
+        getUint16() {
+            return this.readUint16();
+        }
+        readUint16() {
+            if (this._pos_ + 2 > this._length)
+                throw "getUint16 error - Out of bounds";
+            var us = this._d_.getUint16(this._pos_, this._xd_);
+            this._pos_ += 2;
+            return us;
+        }
+        writeUint16(value) {
+            this._ensureWrite(this._pos_ + 2);
+            this._d_.setUint16(this._pos_, value, this._xd_);
+            this._pos_ += 2;
+        }
+        writeInt16(value) {
+            this._ensureWrite(this._pos_ + 2);
+            this._d_.setInt16(this._pos_, value, this._xd_);
+            this._pos_ += 2;
+        }
+        getUint8() {
+            return this.readUint8();
+        }
+        readUint8() {
+            if (this._pos_ + 1 > this._length)
+                throw "getUint8 error - Out of bounds";
+            return this._u8d_[this._pos_++];
+        }
+        writeUint8(value) {
+            this._ensureWrite(this._pos_ + 1);
+            this._d_.setUint8(this._pos_, value);
+            this._pos_++;
+        }
+        _getUInt8(pos) {
+            return this._readUInt8(pos);
+        }
+        _readUInt8(pos) {
+            return this._d_.getUint8(pos);
+        }
+        _getUint16(pos) {
+            return this._readUint16(pos);
+        }
+        _readUint16(pos) {
+            return this._d_.getUint16(pos, this._xd_);
+        }
+        _rUTF(len) {
+            var v = "", max = this._pos_ + len, c, c2, c3, f = String.fromCharCode;
+            var u = this._u8d_, i = 0;
+            var strs = [];
+            var n = 0;
+            strs.length = 1000;
+            while (this._pos_ < max) {
+                c = u[this._pos_++];
+                if (c < 0x80) {
+                    if (c != 0)
+                        strs[n++] = f(c);
+                }
+                else if (c < 0xe0) {
+                    strs[n++] = f(((c & 0x3f) << 6) | (u[this._pos_++] & 0x7f));
+                }
+                else if (c < 0xf0) {
+                    c2 = u[this._pos_++];
+                    strs[n++] = f(((c & 0x1f) << 12) | ((c2 & 0x7f) << 6) | (u[this._pos_++] & 0x7f));
+                }
+                else {
+                    c2 = u[this._pos_++];
+                    c3 = u[this._pos_++];
+                    const _code = ((c & 0x0f) << 18) | ((c2 & 0x7f) << 12) | ((c3 & 0x7f) << 6) | (u[this._pos_++] & 0x7f);
+                    if (_code >= 0x10000) {
+                        const _offset = _code - 0x10000;
+                        const _lead = 0xd800 | (_offset >> 10);
+                        const _trail = 0xdc00 | (_offset & 0x3ff);
+                        strs[n++] = f(_lead);
+                        strs[n++] = f(_trail);
+                    }
+                    else {
+                        strs[n++] = f(_code);
+                    }
+                }
+                i++;
+            }
+            strs.length = n;
+            return strs.join("");
+        }
+        getCustomString(len) {
+            return this.readCustomString(len);
+        }
+        readCustomString(len) {
+            var v = "", ulen = 0, c, c2, f = String.fromCharCode;
+            var u = this._u8d_, i = 0;
+            while (len > 0) {
+                c = u[this._pos_];
+                if (c < 0x80) {
+                    v += f(c);
+                    this._pos_++;
+                    len--;
+                }
+                else {
+                    ulen = c - 0x80;
+                    this._pos_++;
+                    len -= ulen;
+                    while (ulen > 0) {
+                        c = u[this._pos_++];
+                        c2 = u[this._pos_++];
+                        v += f((c2 << 8) | c);
+                        ulen--;
+                    }
+                }
+            }
+            return v;
+        }
+        get pos() {
+            return this._pos_;
+        }
+        set pos(value) {
+            this._pos_ = value;
+        }
+        get bytesAvailable() {
+            return this._length - this._pos_;
+        }
+        clear() {
+            this._pos_ = 0;
+            this.length = 0;
+        }
+        __getBuffer() {
+            return this._d_.buffer;
+        }
+        writeUTFBytes(value) {
+            value = value + "";
+            for (var i = 0, sz = value.length; i < sz; i++) {
+                var c = value.charCodeAt(i);
+                if (c <= 0x7f) {
+                    this.writeByte(c);
+                }
+                else if (c <= 0x7ff) {
+                    this._ensureWrite(this._pos_ + 2);
+                    this._u8d_.set([0xc0 | (c >> 6), 0x80 | (c & 0x3f)], this._pos_);
+                    this._pos_ += 2;
+                }
+                else if (c >= 0xd800 && c <= 0xdbff) {
+                    i++;
+                    const c2 = value.charCodeAt(i);
+                    if (!Number.isNaN(c2) && c2 >= 0xdc00 && c2 <= 0xdfff) {
+                        const _p1 = (c & 0x3ff) + 0x40;
+                        const _p2 = c2 & 0x3ff;
+                        const _b1 = 0xf0 | ((_p1 >> 8) & 0x3f);
+                        const _b2 = 0x80 | ((_p1 >> 2) & 0x3f);
+                        const _b3 = 0x80 | ((_p1 & 0x3) << 4) | ((_p2 >> 6) & 0xf);
+                        const _b4 = 0x80 | (_p2 & 0x3f);
+                        this._ensureWrite(this._pos_ + 4);
+                        this._u8d_.set([_b1, _b2, _b3, _b4], this._pos_);
+                        this._pos_ += 4;
+                    }
+                }
+                else if (c <= 0xffff) {
+                    this._ensureWrite(this._pos_ + 3);
+                    this._u8d_.set([0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f)], this._pos_);
+                    this._pos_ += 3;
+                }
+                else {
+                    this._ensureWrite(this._pos_ + 4);
+                    this._u8d_.set([0xf0 | (c >> 18), 0x80 | ((c >> 12) & 0x3f), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f)], this._pos_);
+                    this._pos_ += 4;
+                }
+            }
+        }
+        writeUTFString(value) {
+            var tPos = this.pos;
+            this.writeUint16(1);
+            this.writeUTFBytes(value);
+            var dPos = this.pos - tPos - 2;
+            this._d_.setUint16(tPos, dPos, this._xd_);
+        }
+        readUTFString() {
+            return this.readUTFBytes(this.getUint16());
+        }
+        getUTFString() {
+            return this.readUTFString();
+        }
+        readUTFBytes(len = -1) {
+            if (len === 0)
+                return "";
+            var lastBytes = this.bytesAvailable;
+            if (len > lastBytes)
+                throw "readUTFBytes error - Out of bounds";
+            len = len > 0 ? len : lastBytes;
+            return this._rUTF(len);
+        }
+        getUTFBytes(len = -1) {
+            return this.readUTFBytes(len);
+        }
+        writeByte(value) {
+            this._ensureWrite(this._pos_ + 1);
+            this._d_.setInt8(this._pos_, value);
+            this._pos_ += 1;
+        }
+        readByte() {
+            if (this._pos_ + 1 > this._length)
+                throw "readByte error - Out of bounds";
+            return this._d_.getInt8(this._pos_++);
+        }
+        getByte() {
+            return this.readByte();
+        }
+        _ensureWrite(lengthToEnsure) {
+            if (this._length < lengthToEnsure)
+                this._length = lengthToEnsure;
+            if (this._allocated_ < lengthToEnsure)
+                this.length = lengthToEnsure;
+        }
+        writeArrayBuffer(arraybuffer, offset = 0, length = 0) {
+            if (offset < 0 || length < 0)
+                throw "writeArrayBuffer error - Out of bounds";
+            if (length == 0)
+                length = arraybuffer.byteLength - offset;
+            this._ensureWrite(this._pos_ + length);
+            var uint8array = new Uint8Array(arraybuffer);
+            this._u8d_.set(uint8array.subarray(offset, offset + length), this._pos_);
+            this._pos_ += length;
+        }
+        readArrayBuffer(length) {
+            var rst;
+            rst = this._u8d_.buffer.slice(this._pos_, this._pos_ + length);
+            this._pos_ = this._pos_ + length;
+            return rst;
+        }
+    }
+    Byte.BIG_ENDIAN = "bigEndian";
+    Byte.LITTLE_ENDIAN = "littleEndian";
+    Byte._sysEndian = null;
+    airkit.Byte = Byte;
+})(airkit || (airkit = {}));
+
+(function (airkit) {
     function bytes2Uint8Array(data, endian) {
-        var bytes = new Laya.Byte(data);
+        var bytes = new airkit.Byte(data);
         bytes.endian = endian;
         var body = bytes.getUint8Array(bytes.pos, bytes.length - bytes.pos);
         return body;
@@ -4757,6 +4493,31 @@ window.airkit = {};
 
 (function (airkit) {
     class ClassUtils {
+        static regClass(className, classDef) {
+            ClassUtils._classMap[className] = classDef;
+        }
+        static regShortClassName(classes) {
+            for (var i = 0; i < classes.length; i++) {
+                var classDef = classes[i];
+                var className = classDef.name;
+                ClassUtils._classMap[className] = classDef;
+            }
+        }
+        static getRegClass(className) {
+            return ClassUtils._classMap[className];
+        }
+        static getClass(className) {
+            var classObject = ClassUtils._classMap[className] || ClassUtils._classMap["cc." + className] || className;
+            return classObject;
+        }
+        static getInstance(className) {
+            var compClass = ClassUtils.getClass(className);
+            if (compClass)
+                return new compClass();
+            else
+                console.warn("[error] Undefined class:", className);
+            return null;
+        }
         static copyObject(obj) {
             let js = JSON.stringify(obj);
             return JSON.parse(js);
@@ -4793,6 +4554,7 @@ window.airkit = {};
             return sign;
         }
     }
+    ClassUtils._classMap = {};
     airkit.ClassUtils = ClassUtils;
 })(airkit || (airkit = {}));
 
@@ -4981,6 +4743,14 @@ window.airkit = {};
 })(airkit || (airkit = {}));
 
 (function (airkit) {
+    function displayWidth() {
+        return cc.director.getWinSize().width;
+    }
+    airkit.displayWidth = displayWidth;
+    function displayHeight() {
+        return cc.director.getWinSize().height;
+    }
+    airkit.displayHeight = displayHeight;
     class DisplayUtils {
         static removeAllChild(container) {
             if (!container)
@@ -5015,8 +4785,8 @@ window.airkit = {};
         }
         static popupDown(panel, handler, ignoreAnchor) {
             panel.scale(0.8, 0.8);
-            let x = Laya.stage.width >> 1;
-            let y = Laya.stage.height >> 1;
+            let x = displayWidth() >> 1;
+            let y = displayHeight() >> 1;
             if (ignoreAnchor == null || !ignoreAnchor) {
                 panel.anchorX = 0.5;
                 panel.anchorY = 0.5;
@@ -5026,9 +4796,8 @@ window.airkit = {};
                 y = panel.y;
             }
             panel.pos(x, 0);
-            Laya.Tween.clearTween(panel);
             let time = 500;
-            Laya.Tween.to(panel, { scaleX: 1, scaleY: 1, x: x, y: y }, time, Laya.Ease.backOut, handler);
+            airkit.TweenUtils.get(panel).to({ scaleX: 1, scaleY: 1, x: x, y: y }, time, fgui.EaseType.BackOut, handler);
             if (panel.parent && panel.parent.bg) {
                 panel.parent.bg.alpha = 0;
                 airkit.TweenUtils.get(panel.parent.bg).to({ alpha: 1.0 }, time, fgui.EaseType.QuadOut);
@@ -5036,8 +4805,8 @@ window.airkit = {};
         }
         static popup(view, handler, ignoreAnchor) {
             view.setScale(0.85, 0.85);
-            let x = Laya.stage.width >> 1;
-            let y = Laya.stage.height >> 1;
+            let x = displayWidth() >> 1;
+            let y = displayHeight() >> 1;
             if (ignoreAnchor == null || !ignoreAnchor) {
                 view.setPivot(0.5, 0.5, true);
             }
@@ -5045,7 +4814,7 @@ window.airkit = {};
                 x = view.x;
                 y = view.y;
             }
-            view.setXY(x, y);
+            view.setPosition(x, y);
             let time = 0.25;
             airkit.TweenUtils.get(view).to({ scaleX: 1, scaleY: 1 }, time, fgui.EaseType.QuadOut, handler);
             if (view.parent && view.parent.getChild("bg")) {
@@ -5070,30 +4839,69 @@ window.airkit = {};
                 }
             }
         }
-        static createAsyncAnimation(ani, atlas) {
-            return new Promise((resolve, reject) => {
-                let anim = new Laya.Animation();
-                anim.loadAnimation(ani, Laya.Handler.create(null, v => {
-                    resolve(anim);
-                }), atlas);
-            });
-        }
-        static createSkeletonAni(skUrl, aniMode) {
-            return new Promise((resolve, reject) => {
-                let templet = new Laya.Templet();
-                templet.on(Laya.Event.COMPLETE, null, (t) => {
-                    var skeleton = t.buildArmature(aniMode);
-                    t.offAll();
-                    resolve([t, skeleton]);
-                }, [templet]);
-                templet.on(Laya.Event.ERROR, null, e => {
-                    reject(e);
-                });
-                templet.loadAni(skUrl);
-            });
-        }
     }
     airkit.DisplayUtils = DisplayUtils;
+})(airkit || (airkit = {}));
+
+(function (airkit) {
+    class Handler {
+        constructor(caller = null, method = null, args = null, once = false) {
+            this.once = false;
+            this._id = 0;
+            this.setTo(caller, method, args, once);
+        }
+        setTo(caller, method, args, once = false) {
+            this._id = Handler._gid++;
+            this.caller = caller;
+            this.method = method;
+            this.args = args;
+            this.once = once;
+            return this;
+        }
+        run() {
+            if (this.method == null)
+                return null;
+            var id = this._id;
+            var result = this.method.apply(this.caller, this.args);
+            this._id === id && this.once && this.recover();
+            return result;
+        }
+        runWith(data) {
+            if (this.method == null)
+                return null;
+            var id = this._id;
+            if (data == null)
+                var result = this.method.apply(this.caller, this.args);
+            else if (!this.args && !data.unshift)
+                result = this.method.call(this.caller, data);
+            else if (this.args)
+                result = this.method.apply(this.caller, this.args.concat(data));
+            else
+                result = this.method.apply(this.caller, data);
+            this._id === id && this.once && this.recover();
+            return result;
+        }
+        clear() {
+            this.caller = null;
+            this.method = null;
+            this.args = null;
+            return this;
+        }
+        recover() {
+            if (this._id > 0) {
+                this._id = 0;
+                Handler._pool.push(this.clear());
+            }
+        }
+        static create(caller, method, args = null, once = true) {
+            if (Handler._pool.length)
+                return Handler._pool.pop().setTo(caller, method, args, once);
+            return new Handler(caller, method, args, once);
+        }
+    }
+    Handler._pool = [];
+    Handler._gid = 1;
+    airkit.Handler = Handler;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
@@ -5201,7 +5009,7 @@ window.airkit = {};
             return Math.atan2(ay - by, bx - ax);
         }
         static pointAtCircle(px, py, radians, radius) {
-            return new Laya.Point(px + Math.cos(radians) * radius, py - Math.sin(radians) * radius);
+            return new cc.Vec2(px + Math.cos(radians) * radius, py - Math.sin(radians) * radius);
         }
         static getPos(pts, t, type) {
             if (pts.length == 0)
@@ -5209,7 +5017,7 @@ window.airkit = {};
             if (pts.length == 1)
                 return pts[0];
             t = Math.min(t, 1);
-            let target = new Laya.Point();
+            let target = new cc.Vec2();
             let count = pts.length;
             if (type == OrbitType.Line) {
                 let unitTime = 1 / (count - 1);
@@ -5244,7 +5052,7 @@ window.airkit = {};
             return angle;
         }
         static getBezierat(pts, t) {
-            let target = new Laya.Point();
+            let target = new cc.Vec2();
             if (pts.length == 3) {
                 target.x = Math.pow(1 - t, 2) * pts[0].x + 2 * t * (1 - t) * pts[1].x + Math.pow(t, 2) * pts[2].x;
                 target.y = Math.pow(1 - t, 2) * pts[0].y + 2 * t * (1 - t) * pts[1].y + Math.pow(t, 2) * pts[2].y;
@@ -5264,7 +5072,7 @@ window.airkit = {};
             return target;
         }
         static getDirection(angle) {
-            let dir = new Laya.Point();
+            let dir = new cc.Vec2();
             if (angle == 0 || angle == 180) {
                 dir.x = 0;
                 dir.y = angle == 0 ? -1 : 1;
@@ -5302,14 +5110,14 @@ window.airkit = {};
             return Math.sqrt((endX - startX) * (endX - startX) + (endY - startY) * (endY - startY));
         }
         static getVerticalVector(start, end, raise) {
-            let dir = new Laya.Point();
+            let dir = new cc.Vec2();
             dir.x = end.x - start.x;
             dir.y = end.y - start.y;
             dir.normalize();
-            let vertial = new Laya.Point();
+            let vertial = new cc.Vec2();
             vertial.x = 1;
             vertial.y = -dir.x / dir.y;
-            let target = new Laya.Point();
+            let target = new cc.Vec2();
             target.x = (start.x + end.x) / 2 + vertial.x * raise;
             target.y = (start.y + end.y) / 2 + vertial.y * raise;
             return target;
@@ -5321,7 +5129,7 @@ window.airkit = {};
             return ctrlPoint;
         }
         static getDefaultPoints(start, end, xOffset = 150, yOffset = 150, raise = 150) {
-            if (start.x > Laya.stage.width / 2) {
+            if (start.x > airkit.displayWidth() / 2) {
                 xOffset = -xOffset;
             }
             if (start.y > end.y) {
@@ -5343,7 +5151,7 @@ window.airkit = {};
         [200, 0],
         [127, 74],
         [0, 100],
-        [-127, 74]
+        [-127, 74],
     ];
     MathUtils.Cycle9Points = [
         [0, 0],
@@ -5354,7 +5162,7 @@ window.airkit = {};
         [200, 0],
         [127, 74],
         [0, 100],
-        [-127, 74]
+        [-127, 74],
     ];
     airkit.MathUtils = MathUtils;
 })(airkit || (airkit = {}));
@@ -5539,16 +5347,6 @@ window.airkit = {};
 
 (function (airkit) {
     class TouchUtils {
-        static touchBreak(view) {
-            view.on(Laya.Event.CLICK, view, (e) => {
-                e.stopPropagation();
-            });
-        }
-        static mouseBreak(view) {
-            view.on(Laya.Event.MOUSE_DOWN, view, (e) => {
-                e.stopPropagation();
-            });
-        }
     }
     airkit.TouchUtils = TouchUtils;
 })(airkit || (airkit = {}));
@@ -5592,7 +5390,7 @@ window.airkit = {};
                             let x = step.props["x"] != null ? step.props.x : this._target.x;
                             let y = step.props["y"] != null ? step.props.y : this._target.y;
                             fgui.GTween.to2(this._target.x, this._target.y, x, y, step.duration)
-                                .setTarget(this._target, this._target.setXY)
+                                .setTarget(this._target, this._target.setPosition)
                                 .setEase(step.ease);
                         }
                         if (step.props["scaleX"] != null || step.props["scaleY"] != null) {
@@ -5604,36 +5402,7 @@ window.airkit = {};
                         }
                         if (step.props["rotation"] != null) {
                             let rotation = step.props["rotation"] != null ? step.props.rotation : this._target.rotation;
-                            fgui.GTween.to(this._target.rotation, rotation, step.duration)
-                                .setTarget(this._target, "rotation")
-                                .setEase(step.ease);
-                        }
-                        if (step.props["color"] != null) {
-                            let color = step.props["color"] != null ? step.props.color : 0xffffff;
-                            var redMat = [
-                                1,
-                                0,
-                                0,
-                                0.3,
-                                0.3,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                1,
-                                0
-                            ];
-                            var redFilter = new Laya.ColorFilter(redMat);
-                            this._target.filters = [redFilter];
+                            fgui.GTween.to(this._target.rotation, rotation, step.duration).setTarget(this._target, "rotation").setEase(step.ease);
                         }
                         if (step.props["alpha"] != null) {
                             if (step.props.pts) {
@@ -5642,7 +5411,7 @@ window.airkit = {};
                                     .setEase(step.ease)
                                     .onUpdate((gt) => {
                                     let point = airkit.MathUtils.getPos(step.props.pts, gt.normalizedTime, airkit.OrbitType.Curve);
-                                    this._target.setXY(point.x, point.y);
+                                    this._target.setPosition(point.x, point.y);
                                     this.onUpdate(gt);
                                 }, null);
                             }
@@ -5655,11 +5424,11 @@ window.airkit = {};
                                 }, null);
                             }
                         }
-                        Laya.timer.once((step.duration + step.delay) * 1000, this, this.onStepComplete, [step.complete]);
+                        airkit.TimerManager.Instance.addOnce((step.duration + step.delay) * 1000, this, this.onStepComplete, [step.complete]);
                     }
                     else if (step.hasOwnProperty("delay")) {
                         this._isPlaying = true;
-                        Laya.timer.once(step.delay * 1000, this, this.onStepComplete, [step.complete]);
+                        airkit.TimerManager.Instance.addOnce(step.delay * 1000, this, this.onStepComplete, [step.complete]);
                     }
                 }
             }
@@ -5677,44 +5446,11 @@ window.airkit = {};
             fgui.GTween.kill(this._target);
         }
         static scale(view) {
-            this.get(view)
-                .to({ scaleX: 0.8, scaleY: 0.8 }, 0.05, fgui.EaseType.QuadIn)
-                .to({ scaleX: 1.0, scaleY: 1.0 }, 0.05, fgui.EaseType.QuadIn);
+            this.get(view).to({ scaleX: 0.8, scaleY: 0.8 }, 0.05, fgui.EaseType.QuadIn).to({ scaleX: 1.0, scaleY: 1.0 }, 0.05, fgui.EaseType.QuadIn);
         }
         static appear(view) {
             view.setScale(0, 0);
-            this.get(view)
-                .to({ scaleX: 1.2, scaleY: 1.2 }, 0.4, fgui.EaseType.QuadOut)
-                .to({ scaleX: 1.0, scaleY: 1.0 }, 0.2, fgui.EaseType.QuadOut);
-        }
-        static shake(node) {
-            Laya.Tween.to(node, { y: node.y + 100 }, 100, null, Laya.Handler.create(this, function () {
-                Laya.Tween.to(node, { y: node.y - 100 }, 1000, Laya.Ease.elasticOut);
-            }));
-        }
-        static stageShake(view, times = 2, offset = 12, speed = 32, caller, callBack) {
-            if (view["isShake"]) {
-                return;
-            }
-            view["isShake"] = true;
-            var num = 0;
-            var offsetArr = [0, 0];
-            var point = new Laya.Point(view.x, view.y);
-            Laya.stage.timerLoop(speed, this, shakeObject);
-            function shakeObject(args = null, frameNum = 1, frameTime = 0) {
-                var count = num++ % 4;
-                offsetArr[num % 2] = count < 2 ? 0 : offset;
-                view.x = offsetArr[0] + point.x;
-                view.y = offsetArr[1] + point.y;
-                if (num > times * 4 + 1) {
-                    Laya.stage.clearTimer(this, shakeObject);
-                    num = 0;
-                    view["isShake"] = false;
-                    if (callBack != null) {
-                        callBack.call(caller);
-                    }
-                }
-            }
+            this.get(view).to({ scaleX: 1.2, scaleY: 1.2 }, 0.4, fgui.EaseType.QuadOut).to({ scaleX: 1.0, scaleY: 1.0 }, 0.2, fgui.EaseType.QuadOut);
         }
     }
     TweenUtils.EaseBezier = 9999;
@@ -5748,7 +5484,7 @@ window.airkit = {};
 (function (airkit) {
     class Utils {
         static openURL(url) {
-            Laya.Browser.window.location.href = url;
+            window.location.href = url;
         }
         static getLocationParams() {
             let url = window.location.href;
@@ -5768,15 +5504,6 @@ window.airkit = {};
             }
             return dic;
         }
-        static gray(obj, enabled) {
-            if (enabled) {
-                var grayFilter = new Laya.ColorFilter();
-                obj.filters = [grayFilter.gray()];
-            }
-            else {
-                obj.filters = [];
-            }
-        }
         static obj2query(obj) {
             if (!obj) {
                 return "";
@@ -5794,8 +5521,7 @@ window.airkit = {};
             let result = true;
             for (let key in data) {
                 let value = data[key];
-                if ((!ignoreMethod || typeof value != "function") &&
-                    (!ignoreNull || value != null)) {
+                if ((!ignoreMethod || typeof value != "function") && (!ignoreNull || value != null)) {
                     if (callback) {
                         callback(target, key, value);
                     }
@@ -5807,6 +5533,15 @@ window.airkit = {};
             return result;
         }
     }
+    Utils.parseXMLFromString = function (value) {
+        var rst;
+        value = value.replace(/>\s+</g, "><");
+        rst = new DOMParser().parseFromString(value, "text/xml");
+        if (rst.firstChild.textContent.indexOf("This page contains the following errors") > -1) {
+            throw new Error(rst.firstChild.firstChild.textContent);
+        }
+        return rst;
+    };
     airkit.Utils = Utils;
     class FlagUtils {
         static hasFlag(a, b) {
@@ -5835,9 +5570,7 @@ window.airkit = {};
     }
     airkit.assert = assert;
     function assertNullOrNil(condition, msg) {
-        if (condition == null ||
-            condition === null ||
-            typeof condition === "undefined") {
+        if (condition == null || condition === null || typeof condition === "undefined") {
             assert(false, msg);
         }
     }
@@ -5869,14 +5602,14 @@ window.airkit = {};
             return new Promise((resolve, reject) => {
                 let resultDic = {};
                 ZipUtils.parseZip(ab)
-                    .then(zip => {
+                    .then((zip) => {
                     let jszip = zip.jszip;
                     let filelist = zip.filelist;
                     if (jszip && filelist) {
                         let count = 0;
                         for (let i = 0; i < filelist.length; i++) {
                             ZipUtils.parseZipFile(jszip, filelist[i])
-                                .then(content => {
+                                .then((content) => {
                                 count++;
                                 resultDic[filelist[i]] = content;
                                 if (count == filelist.length) {
@@ -5886,14 +5619,14 @@ window.airkit = {};
                                     resolve(resultDic);
                                 }
                             })
-                                .catch(e => {
+                                .catch((e) => {
                                 airkit.Log.error(e);
                                 reject(e);
                             });
                         }
                     }
                 })
-                    .catch(e => {
+                    .catch((e) => {
                     airkit.Log.error(e);
                     reject(e);
                 });
@@ -5903,17 +5636,17 @@ window.airkit = {};
             return new Promise((resolve, reject) => {
                 let dic = new airkit.SDictionary();
                 let fileNameArr = new Array();
-                Laya.Browser.window.JSZip.loadAsync(ab)
-                    .then(jszip => {
+                window.JSZip.loadAsync(ab)
+                    .then((jszip) => {
                     for (var fileName in jszip.files) {
                         fileNameArr.push(fileName);
                     }
                     resolve({
                         jszip: jszip,
-                        filelist: fileNameArr
+                        filelist: fileNameArr,
                     });
                 })
-                    .catch(e => {
+                    .catch((e) => {
                     airkit.Log.error(e);
                 });
             });
@@ -5923,10 +5656,10 @@ window.airkit = {};
                 jszip
                     .file(filename)
                     .async("text")
-                    .then(content => {
+                    .then((content) => {
                     resolve(content);
                 })
-                    .catch(e => {
+                    .catch((e) => {
                     reject(e);
                     airkit.Log.error(e);
                 });

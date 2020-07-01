@@ -44,10 +44,10 @@ namespace airkit {
     }
     public loadZip(url: string, list: ConfigItem[]): Promise<any> {
       return new Promise((resolve, reject) => {
-        ResourceManager.Instance.loadRes(url, Laya.Loader.BUFFER).then(v => {
+        ResourceManager.Instance.loadRes(url, cc.BufferAsset).then((v) => {
           let ab = ResourceManager.Instance.getRes(url);
           ZipUtils.unzip(ab)
-            .then(v => {
+            .then((v) => {
               for (let i = 0; i < list.length; i++) {
                 let template = list[i];
                 this._dicTemplate.add(list[i].url, template);
@@ -82,7 +82,7 @@ namespace airkit {
               }
               resolve(v);
             })
-            .catch(e => {
+            .catch((e) => {
               Log.error(e);
               reject(e);
             });
@@ -94,7 +94,7 @@ namespace airkit {
         let assets = [];
         for (let i = 0; i < list.length; i++) {
           if (!ResourceManager.Instance.getRes(list[i].url)) {
-            assets.push({ url: list[i].url, type: Laya.Loader.JSON });
+            assets.push({ url: list[i].url, type: cc.JsonAsset });
             this._dicTemplate.add(list[i].url, list[i]);
           }
         }
@@ -110,13 +110,13 @@ namespace airkit {
           null,
           ResourceManager.SystemGroup
         )
-          .then(v => {
+          .then((v) => {
             for (let i = 0; i < v.length; i++) {
               this.onLoadComplete(v[i]);
               resolve(v);
             }
           })
-          .catch(e => {
+          .catch((e) => {
             reject(e);
           });
       });
@@ -138,7 +138,7 @@ namespace airkit {
     public unloadAll(): void {
       if (!this._dicTemplate) return;
 
-      this._dicTemplate.foreach(function(key, value) {
+      this._dicTemplate.foreach(function (key, value) {
         this.Unload(key);
         return true;
       });

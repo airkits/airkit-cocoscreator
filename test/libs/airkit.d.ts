@@ -13,9 +13,9 @@ declare namespace airkit {
         private static instance;
         static readonly Instance: Framework;
         constructor();
-        setup(root: fgui.GComponent, main_loop: Laya.Handler, log_level?: LogLevel, design_width?: number, design_height?: number, screen_mode?: string, frame?: number): void;
+        setup(root: fgui.GComponent, main_loop: Handler, log_level?: LogLevel, design_width?: number, design_height?: number, screen_mode?: string, frame?: number): void;
         destroy(): void;
-        private mainLoop;
+        update(dt: number): void;
         preTick(dt: number): void;
         tick(dt: number): void;
         endTick(dt: number): void;
@@ -23,41 +23,6 @@ declare namespace airkit {
         resumeGame(): void;
         readonly isStopGame: boolean;
         private printDeviceInfo;
-    }
-}
-declare namespace airkit {
-    class AudioManager extends Singleton {
-        private musicsConfig;
-        private effectConfig;
-        private effectChannelDic;
-        private effectChannelNumDic;
-        private _effectSwitch;
-        private _musicSwitch;
-        constructor();
-        private static instance;
-        static readonly Instance: AudioManager;
-        registerMusic(obj: {
-            id: number;
-            url: string;
-            desc: string;
-        }): void;
-        registerEffect(obj: {
-            id: number;
-            url: string;
-            desc: string;
-        }): void;
-        musicSwitch: boolean;
-        effectSwitch: boolean;
-        playMusic(url: string, loops?: number, complete?: Laya.Handler, startTime?: number): void;
-        playEffect(url: string, loops?: number, complete?: Laya.Handler, soundClass?: any, startTime?: number): void;
-        setMusicVolume(volume: number): void;
-        setEffectVolume(volume: number, url?: string): void;
-        stopAll(): void;
-        stopAllEffect(): void;
-        stopMusic(): void;
-        removeChannel(url: string, channel: Laya.SoundChannel): void;
-        playMusicByID(eId: number, loops?: number, complete?: Laya.Handler, startTime?: number): void;
-        playEffectByID(eId: number, loops?: number, complete?: Laya.Handler, startTime?: number): void;
     }
 }
 declare namespace airkit {
@@ -352,8 +317,8 @@ declare namespace airkit {
         private static instance;
         static readonly Instance: EventCenter;
         constructor();
-        static addEventListener(type: string, caller: any, fun: Function): void;
-        static removeEventListener(type: string, caller: any, fun: Function): void;
+        static on(type: string, caller: any, fun: Function): void;
+        static off(type: string, caller: any, fun: Function): void;
         static dispatchEvent(type: string, ...args: any[]): void;
         static clear(): void;
     }
@@ -363,14 +328,19 @@ declare namespace airkit {
         private _dicFuns;
         private _evtArgs;
         constructor();
-        addEventListener(type: string, caller: any, fun: Function): void;
-        removeEventListener(type: string, caller: any, fun: Function): void;
+        on(type: string, caller: any, fun: Function): void;
+        off(type: string, caller: any, fun: Function): void;
         dispatchEvent(type: string, args: EventArgs): void;
         dispatch(type: string, ...args: any[]): void;
         clear(): void;
     }
 }
 declare namespace airkit {
+    class Event {
+        static PROGRESS: string;
+        static COMPLETE: string;
+        static ERROR: string;
+    }
     class EventID {
         static BEGIN_GAME: string;
         static RESTART_GAEM: string;
@@ -379,6 +349,7 @@ declare namespace airkit {
         static ON_SHOW: string;
         static ON_HIDE: string;
         static CHANGE_SCENE: string;
+        static RESIZE: string;
         static BEGIN_MODULE: string;
         static END_MODULE: string;
         static UI_OPEN: string;
@@ -421,7 +392,7 @@ declare namespace airkit {
         constructor();
         destory(): void;
         has(caller: any): boolean;
-        on(caller: any, method: Function, args: any[], once?: boolean): Laya.Handler;
+        on(caller: any, method: Function, args: any[], once?: boolean): Handler;
         off(caller: any, method: Function): void;
         offAll(caller: any, method: Function): void;
         clear(): void;
@@ -482,20 +453,19 @@ declare namespace airkit {
         private _minLoaderTime;
         static DefaultGroup: string;
         static SystemGroup: string;
-        private _spineDic;
         private _aniAnimDic;
         onAniResUpdateSignal: Signal<string>;
         private static instance;
         static readonly Instance: ResourceManager;
         setup(): void;
-        protected static asyncLoad(url: any, progress?: Laya.Handler, type?: string, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<any>;
+        protected static asyncLoad(url: any, progress?: Handler, type?: typeof cc.Asset, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<any>;
         destroy(): void;
         update(dt: number): void;
         getRes(url: string): any;
-        loadRes(url: string, type?: string, viewType?: number, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<any>;
+        loadRes(url: string, type?: typeof cc.Asset, viewType?: number, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<any>;
         loadArrayRes(arr_res: Array<{
             url: string;
-            type: string;
+            type: typeof cc.Asset;
         }>, viewType?: number, tips?: string, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<any>;
         onLoadComplete(viewType: number, ...args: any[]): void;
         onLoadProgress(viewType: number, total: number, tips: string, progress: number): void;
@@ -503,15 +473,7 @@ declare namespace airkit {
         clearRes(url: string): any;
         cleanTexture(group: string): void;
         setAniAnim(ani: string, atlas: string, group: string): void;
-        createSpineAnim(skUrl: string, aniMode: number, group?: string): Promise<any>;
-        removeSpineAnim(sk: Laya.Skeleton): void;
-        removeSpineTemplet(skUrl: string): void;
-        removeSpineTempletGroup(group: string): void;
-        createAniAnim(ani: string, atlas: string, group?: string): Promise<any>;
-        createFrameAnim(name: string, urls: Array<string>, atlas: string, group?: string): Promise<any>;
         createFuiAnim(pkgName: string, resName: string, path: string, group?: string): Promise<any>;
-        removeAniAnim(ani: string): void;
-        removeAllAniAnim(group?: string): void;
         static imageProxy(image: fgui.GLoader, skin: string, proxy?: string, atlas?: string): Promise<any>;
     }
 }
@@ -528,7 +490,7 @@ declare namespace airkit {
     }
 }
 declare namespace airkit {
-    class BaseModule extends Laya.EventDispatcher {
+    class BaseModule extends cc.Node {
         name: string;
         constructor();
         setup(args: number): void;
@@ -587,156 +549,23 @@ declare namespace airkit {
     }
 }
 declare namespace airkit {
-    class BaseView extends fgui.GComponent implements IUIPanel {
-        protected _isOpen: boolean;
-        protected _UIID: number;
-        objectData: any;
-        pkgName: string;
-        resName: string;
-        _view: fgui.GComponent;
-        private _destory;
-        private _viewID;
-        private static __ViewIDSeq;
-        constructor();
-        createPanel(pkgName: string, resName: string): void;
-        debug(): void;
-        setup(args: any): void;
-        dispose(): void;
-        isDestory(): boolean;
-        panel(): fgui.GComponent;
-        bg(): fgui.GComponent;
-        setVisible(bVisible: boolean): void;
-        setUIID(id: number): void;
-        readonly UIID: number;
-        readonly viewID: number;
-        onCreate(args: any): void;
-        onDestroy(): void;
-        update(dt: number): boolean;
-        getGObject(name: string): fgui.GObject;
-        onEnter(): void;
-        onLangChange(): void;
-        static res(): Array<any>;
-        static loaderTips(): string;
-        static loaderType(): number;
-        protected signalMap(): Array<any>;
-        protected eventMap(): Array<any>;
-        protected registerEvent(): void;
-        protected unRegisterEvent(): void;
-        protected staticCacheUI(): any[];
-        loadResource(group: string, clas: any): Promise<any>;
-        onAssetLoaded(): void;
-        private registerSignalEvent;
-        private unregisterSignalEvent;
-        private registeGUIEvent;
-        private unregisteGUIEvent;
-        doClose(): boolean;
-    }
-}
-declare namespace airkit {
-    class ColorView extends BaseView {
-        private bgColorTweener;
-        private bgColorChannels;
-        private gradientInterval;
-        private sprite;
-        constructor();
-        setup(args: any): void;
-        destroy(destroyChild?: boolean): void;
-        private evalBgColor;
-        private getColorChannals;
-        private onTweenComplete;
-        debug(): void;
-        private renderBg;
-        private getHexColorString;
-        update(dt: number): boolean;
-    }
-}
-declare namespace airkit {
-    interface ITextFormat {
-        bgColor?: string;
-        bold?: number;
-        borderColor?: string;
-        color?: string;
-        font?: string;
-        fontSize?: number;
-        italic?: number;
-        leading?: number;
-        stroke?: number;
-        strokeColor?: string;
-        underline?: number;
-        underlineColor?: string;
-        wordWrap?: number;
-        promptColor?: string;
-    }
-}
-declare namespace airkit {
-    class RichImage extends BaseView {
-        format: ITextFormat;
-        _img: fgui.GLoader;
-        readonly img: fgui.GLoader;
-        debug(): void;
-        setImage(v: string, attrs: any): void;
-        dispose(): void;
-    }
-}
-declare namespace airkit {
-    class RichLabel extends fgui.GComponent {
-        format: ITextFormat;
-        private _text;
-        _label: fgui.GBasicTextField;
-        readonly label: fgui.GBasicTextField;
-        setText(v: string, attrs: any): void;
-        dispose(): void;
-    }
-}
-declare namespace airkit {
-    enum eRichTextType {
-        RICH_UNKNOWN = 0,
-        RICH_LABEL = 1,
-        RICH_IMAGE = 2,
-        RICH_ANIM = 3,
-        RICH_BR = 4
-    }
-    class RichText extends fgui.GComponent {
-        container: Array<fgui.GComponent>;
-        texts: Array<[string, any]>;
-        lineHeight: number;
-        font: string;
-        fontSize: number;
-        color: string;
-        pointAtX: number;
-        pointAtY: number;
-        debug(): void;
-        parseHtml(content: string): Array<string>;
-        convertTagType(tag: string): eRichTextType;
-        praseTag(tag: string): any;
-        cleanText(): void;
-        setText(content: string): void;
-        processSplitLine(dic: any): Array<any>;
-        processSplitImage(dic: any): Array<any>;
-        processSplitBR(dic: any): Array<any>;
-        processSplitLabel(dic: any): Array<any>;
-        addTag(tag: string): void;
-        convertAttrs(attrs: any): void;
-        appendText(content: string): void;
-    }
-}
-declare namespace airkit {
-    class TextFormat implements ITextFormat {
-        bgColor: string;
-        bold: number;
-        borderColor: string;
-        color: string;
-        font: string;
-        fontSize: number;
-        italic: number;
-        leading: number;
-        stroke: number;
-        strokeColor: string;
-        underline: number;
-        underlineColor: string;
-        wordWrap: number;
-        promptColor: string;
-        constructor();
+    class HttpRequest extends cc.Node {
+        protected _http: XMLHttpRequest;
+        private static _urlEncode;
+        protected _responseType: string;
+        protected _data: any;
+        protected _url: string;
+        send(url: string, data?: any, method?: string, responseType?: string, headers?: any[] | null): void;
+        protected _onProgress(e: any): void;
+        protected _onAbort(e: any): void;
+        protected _onError(e: any): void;
+        protected _onLoad(e: any): void;
+        protected error(message: string): void;
+        protected complete(): void;
+        protected clear(): void;
+        readonly url: string;
+        readonly data: any;
+        readonly http: any;
     }
 }
 declare namespace airkit {
@@ -796,47 +625,49 @@ declare namespace airkit {
     }
 }
 declare namespace airkit {
-    class SocketStatus {
-        static SOCKET_CONNECT: string;
-        static SOCKET_RECONNECT: string;
-        static SOCKET_START_RECONNECT: string;
-        static SOCKET_CLOSE: string;
-        static SOCKET_NOCONNECT: string;
-        static SOCKET_DATA: string;
-    }
-    enum eSocketMsgType {
-        MTRequest = 1,
-        MTResponse = 2,
-        MTNotify = 3,
-        MTBroadcast = 4
-    }
-    class WebSocket extends Laya.EventDispatcher {
-        private mSocket;
-        private mHost;
-        private mPort;
-        private mEndian;
-        private _needReconnect;
-        private _maxReconnectCount;
-        private _reconnectCount;
-        private _connectFlag;
-        private _isConnecting;
-        private _handers;
-        private _requestTimeout;
-        private _clsName;
+    class BaseView extends fgui.GComponent implements IUIPanel {
+        protected _isOpen: boolean;
+        protected _UIID: number;
+        objectData: any;
+        pkgName: string;
+        resName: string;
+        _view: fgui.GComponent;
+        private _destory;
+        private _viewID;
+        private static __ViewIDSeq;
         constructor();
-        initServer(host: string, port: any, msgCls: any, endian?: string): void;
-        connect(): void;
-        private addEvents;
-        private removeEvents;
-        private onSocketOpen;
-        private onSocketClose;
-        private onSocketError;
-        private reconnect;
-        private onReceiveMessage;
-        request(req: WSMessage): Promise<any>;
-        close(): void;
-        private closeCurrentSocket;
-        isConnecting(): boolean;
+        createPanel(pkgName: string, resName: string): void;
+        debug(): void;
+        setup(args: any): void;
+        dispose(): void;
+        isDestory(): boolean;
+        panel(): fgui.GComponent;
+        bg(): fgui.GComponent;
+        setVisible(bVisible: boolean): void;
+        setUIID(id: number): void;
+        readonly UIID: number;
+        readonly viewID: number;
+        onCreate(args: any): void;
+        onDestroy(): void;
+        update(dt: number): boolean;
+        getGObject(name: string): fgui.GObject;
+        onEnter(): void;
+        onLangChange(): void;
+        static res(): Array<any>;
+        static loaderTips(): string;
+        static loaderType(): number;
+        protected signalMap(): Array<any>;
+        protected eventMap(): Array<any>;
+        protected registerEvent(): void;
+        protected unRegisterEvent(): void;
+        protected staticCacheUI(): any[];
+        loadResource(group: string, clas: any): Promise<any>;
+        onAssetLoaded(): void;
+        private registerSignalEvent;
+        private unregisterSignalEvent;
+        private registeGUIEvent;
+        private unregisteGUIEvent;
+        doClose(): boolean;
     }
 }
 declare namespace airkit {
@@ -880,7 +711,7 @@ declare namespace airkit {
         static setup(root: fgui.GComponent): void;
         protected static registerEvent(): void;
         protected static unRegisterEvent(): void;
-        static resize(e: Laya.Event): void;
+        static resize(): void;
         static destroy(): void;
         static removeAll(): void;
         static readonly root: fgui.GComponent;
@@ -1007,12 +838,9 @@ declare namespace airkit {
 }
 declare namespace airkit {
     class Timer {
-        private static _startTime;
         static Start(): void;
         static readonly deltaTimeMS: number;
         static readonly fixedDeltaTime: number;
-        static readonly time: number;
-        static readonly timeSinceStartup: number;
         static readonly frameCount: number;
         static timeScale: number;
     }
@@ -1040,12 +868,12 @@ declare namespace airkit {
         mRate: number;
         mTicks: number;
         mTicksElapsed: number;
-        handle: Laya.Handler;
+        handle: Handler;
         mTime: IntervalTimer;
         constructor();
         init(): void;
         clear(): void;
-        set(id: number, rate: number, ticks: number, handle: Laya.Handler): void;
+        set(id: number, rate: number, ticks: number, handle: Handler): void;
         update(dt: number): void;
     }
 }
@@ -1068,6 +896,77 @@ declare namespace airkit {
     }
 }
 declare namespace airkit {
+    class Byte {
+        static BIG_ENDIAN: string;
+        static LITTLE_ENDIAN: string;
+        private static _sysEndian;
+        protected _xd_: boolean;
+        private _allocated_;
+        protected _d_: any;
+        protected _u8d_: any;
+        protected _pos_: number;
+        protected _length: number;
+        static getSystemEndian(): string;
+        constructor(data?: any);
+        readonly buffer: ArrayBuffer;
+        endian: string;
+        length: number;
+        private _resizeBuffer;
+        getString(): string;
+        readString(): string;
+        getFloat32Array(start: number, len: number): any;
+        readFloat32Array(start: number, len: number): any;
+        getUint8Array(start: number, len: number): Uint8Array;
+        readUint8Array(start: number, len: number): Uint8Array;
+        getInt16Array(start: number, len: number): any;
+        readInt16Array(start: number, len: number): any;
+        getFloat32(): number;
+        readFloat32(): number;
+        getFloat64(): number;
+        readFloat64(): number;
+        writeFloat32(value: number): void;
+        writeFloat64(value: number): void;
+        getInt32(): number;
+        readInt32(): number;
+        getUint32(): number;
+        readUint32(): number;
+        writeInt32(value: number): void;
+        writeUint32(value: number): void;
+        getInt16(): number;
+        readInt16(): number;
+        getUint16(): number;
+        readUint16(): number;
+        writeUint16(value: number): void;
+        writeInt16(value: number): void;
+        getUint8(): number;
+        readUint8(): number;
+        writeUint8(value: number): void;
+        _getUInt8(pos: number): number;
+        _readUInt8(pos: number): number;
+        _getUint16(pos: number): number;
+        _readUint16(pos: number): number;
+        private _rUTF;
+        getCustomString(len: number): string;
+        readCustomString(len: number): string;
+        pos: number;
+        readonly bytesAvailable: number;
+        clear(): void;
+        __getBuffer(): ArrayBuffer;
+        writeUTFBytes(value: string): void;
+        writeUTFString(value: string): void;
+        readUTFString(): string;
+        getUTFString(): string;
+        readUTFBytes(len?: number): string;
+        getUTFBytes(len?: number): string;
+        writeByte(value: number): void;
+        readByte(): number;
+        getByte(): number;
+        _ensureWrite(lengthToEnsure: number): void;
+        writeArrayBuffer(arraybuffer: any, offset?: number, length?: number): void;
+        readArrayBuffer(length: number): ArrayBuffer;
+    }
+}
+declare namespace airkit {
     function bytes2Uint8Array(data: any, endian: string): Uint8Array;
     function bytes2String(data: any, endian: string): string;
     function string2ArrayBuffer(s: string): ArrayBuffer;
@@ -1076,6 +975,12 @@ declare namespace airkit {
 }
 declare namespace airkit {
     class ClassUtils {
+        private static _classMap;
+        static regClass(className: string, classDef: any): void;
+        static regShortClassName(classes: any[]): void;
+        static getRegClass(className: string): any;
+        static getClass(className: string): any;
+        static getInstance(className: string): any;
         static copyObject(obj: any): any;
         static getObjectValue(obj: any, key: string, defVal?: any): any;
         static callFunc(obj: any, funcName: string, args?: any[]): any;
@@ -1113,14 +1018,32 @@ declare namespace airkit {
     }
 }
 declare namespace airkit {
+    function displayWidth(): number;
+    function displayHeight(): number;
     class DisplayUtils {
         static removeAllChild(container: fgui.GComponent): void;
-        static colorBG(color: string, w: number, h: number): fgui.GGraph;
-        static popupDown(panel: any, handler?: Laya.Handler, ignoreAnchor?: boolean): void;
-        static popup(view: fgui.GComponent, handler?: Laya.Handler, ignoreAnchor?: boolean): void;
-        static hide(panel: IUIPanel, handler?: Laya.Handler): void;
-        static createAsyncAnimation(ani: string, atlas: string): Promise<any>;
-        static createSkeletonAni(skUrl: string, aniMode: number): Promise<any>;
+        static colorBG(color: cc.Color, w: number, h: number): fgui.GGraph;
+        static popupDown(panel: any, handler?: Handler, ignoreAnchor?: boolean): void;
+        static popup(view: fgui.GComponent, handler?: Handler, ignoreAnchor?: boolean): void;
+        static hide(panel: IUIPanel, handler?: Handler): void;
+    }
+}
+declare namespace airkit {
+    class Handler {
+        protected static _pool: Handler[];
+        private static _gid;
+        caller: Object | null;
+        method: Function | null;
+        args: any[] | null;
+        once: boolean;
+        protected _id: number;
+        constructor(caller?: Object | null, method?: Function | null, args?: any[] | null, once?: boolean);
+        setTo(caller: any, method: Function | null, args: any[] | null, once?: boolean): Handler;
+        run(): any;
+        runWith(data: any): any;
+        clear(): Handler;
+        recover(): void;
+        static create(caller: any, method: Function | null, args?: any[] | null, once?: boolean): Handler;
     }
 }
 declare namespace airkit {
@@ -1156,16 +1079,16 @@ declare namespace airkit {
         static toRadian(degree: number): number;
         static moveTowards(current: number, target: number, maxDelta: number): number;
         static radians4point(ax: any, ay: any, bx: any, by: any): number;
-        static pointAtCircle(px: any, py: any, radians: any, radius: any): Laya.Point;
-        static getPos(pts: Laya.Point[], t: number, type: OrbitType): Laya.Point;
+        static pointAtCircle(px: any, py: any, radians: any, radius: any): cc.Vec2;
+        static getPos(pts: cc.Vec2[], t: number, type: OrbitType): cc.Vec2;
         static getRotation(startX: number, startY: number, endX: number, endY: number): number;
-        static getBezierat(pts: Laya.Point[], t: number): Laya.Point;
-        static getDirection(angle: number): Laya.Point;
-        static normalize(vec: Laya.Point): Laya.Point;
+        static getBezierat(pts: cc.Vec2[], t: number): cc.Vec2;
+        static getDirection(angle: number): cc.Vec2;
+        static normalize(vec: cc.Vec2): cc.Vec2;
         static distance(startX: number, startY: number, endX: number, endY: number): number;
         private static getVerticalVector;
-        static getCtrlPoint(start: Laya.Point, end: Laya.Point, raise?: number, xOffset?: number, yOffset?: number): Laya.Point;
-        static getDefaultPoints(start: Laya.Point, end: Laya.Point, xOffset?: number, yOffset?: number, raise?: number): Array<Laya.Point>;
+        static getCtrlPoint(start: cc.Vec2, end: cc.Vec2, raise?: number, xOffset?: number, yOffset?: number): cc.Vec2;
+        static getDefaultPoints(start: cc.Vec2, end: cc.Vec2, xOffset?: number, yOffset?: number, raise?: number): Array<cc.Vec2>;
     }
 }
 declare namespace airkit {
@@ -1201,8 +1124,6 @@ declare namespace airkit {
 }
 declare namespace airkit {
     class TouchUtils {
-        static touchBreak(view: any): void;
-        static mouseBreak(view: any): void;
     }
 }
 declare namespace airkit {
@@ -1217,15 +1138,13 @@ declare namespace airkit {
         readonly target: fgui.GObject;
         setOnUpdate(callback: Function): void;
         onUpdate(gt: fgui.GTweener): void;
-        to(props: any, duration: number, ease?: number, complete?: Laya.Handler, delay?: number): TweenUtils;
+        to(props: any, duration: number, ease?: number, complete?: Handler, delay?: number): TweenUtils;
         delay(delay: number): TweenUtils;
         private trigger;
         private onStepComplete;
         clear(): void;
         static scale(view: fgui.GObject): void;
         static appear(view: fgui.GObject): void;
-        static shake(node: any): void;
-        static stageShake(view: fgui.GComponent, times?: number, offset?: number, speed?: number, caller?: any, callBack?: Function): void;
     }
 }
 declare namespace airkit {
@@ -1238,9 +1157,9 @@ declare namespace airkit {
     class Utils {
         static openURL(url: string): void;
         static getLocationParams(): SDictionary<string>;
-        static gray(obj: Laya.View, enabled: boolean): void;
         static obj2query(obj: any): string;
         static injectProp(target: Object, data?: Object, callback?: Function, ignoreMethod?: boolean, ignoreNull?: boolean, keyBefore?: string): boolean;
+        static parseXMLFromString: Function;
     }
     class FlagUtils {
         static hasFlag(a: number, b: number): boolean;
