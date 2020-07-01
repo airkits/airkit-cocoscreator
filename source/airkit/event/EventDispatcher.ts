@@ -20,7 +20,7 @@ namespace airkit {
          * @param caller    调用者
          * @param fun       回调函数，注意回调函数的参数是共用一个，所有不要持有引用[let evt = args（不建议这样写）]
          */
-        public addEventListener(type: string, caller: any, fun: Function): void {
+        public on(type: string, caller: any, fun: Function): void {
             if (!this._dicFuns[type]) {
                 this._dicFuns[type] = [];
                 this._dicFuns[type].push(Handler.create(caller, fun, null, false));
@@ -36,7 +36,7 @@ namespace airkit {
         /**
          * 移除监听
          */
-        public removeEventListener(type: string, caller: any, fun: Function): void {
+        public off(type: string, caller: any, fun: Function): void {
             let arr: Handler[] = this._dicFuns[type];
             if (!arr) return;
             for (let i = 0; i < arr.length; ++i) {

@@ -19,7 +19,6 @@ namespace airkit {
         private _minLoaderTime: number; //最小加载时间，调整图片一闪而过的体验 单位毫秒
         public static DefaultGroup: string = "airkit";
         public static SystemGroup: string = "system";
-        private _spineDic: SDictionary<[Laya.Templet, string]>;
 
         private _aniAnimDic: SDictionary<[string, number, string]>;
         public onAniResUpdateSignal: Signal<string>;
@@ -32,7 +31,6 @@ namespace airkit {
 
         public setup(): void {
             this._dicLoaderUrl = new SDictionary<LoaderConfig>();
-            this._spineDic = new SDictionary<[Laya.Templet, string]>();
 
             this._minLoaderTime = 1000;
             this._aniAnimDic = new SDictionary<[string, number, string]>();
@@ -52,31 +50,27 @@ namespace airkit {
         protected static asyncLoad(
             url: any,
             progress?: Handler,
-            type?: string,
+            type?: typeof cc.Asset,
             priority?: number,
             cache?: boolean,
             group?: string,
             ignoreCache?: boolean
         ): Promise<any> {
             return new Promise((resolve, reject) => {
-                let errFunc = function (v) {
-                    Laya.loader.off(Laya.Event.ERROR, null, errFunc);
-                    reject(url);
-                };
-                Laya.loader.load(
+                cc.loader.loadRes(
                     url,
-                    Handler.create(this, (v) => {
-                        Laya.loader.off(Laya.Event.ERROR, null, errFunc);
-                        resolve(url);
-                    }),
-                    progress,
                     type,
-                    priority,
-                    cache,
-                    group,
-                    ignoreCache
+                    (completedCount: number, totalCount: number, item: any) => {
+                        progress.runWith(completedCount / totalCount);
+                    },
+                    (error: Error, resource: any) => {
+                        if (error) {
+                            reject(url);
+                            return;
+                        }
+                        resolve(url);
+                    }
                 );
-                Laya.loader.on(Laya.Event.ERROR, null, errFunc);
             });
         }
 
@@ -92,7 +86,7 @@ namespace airkit {
         public getRes(url: string): any {
             //修改访问时间
             this.refreshResourceTime(url, null, false);
-            return Laya.loader.getRes(url);
+            return cc.loader.getRes(url);
         }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～加载～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**
@@ -108,7 +102,7 @@ namespace airkit {
          */
         public loadRes(
             url: string,
-            type: string = "",
+            type?: typeof cc.Asset,
             viewType: number = LOADVIEW_TYPE_NONE,
             priority: number = 1,
             cache: boolean = true,
@@ -120,12 +114,13 @@ namespace airkit {
             if (viewType == null) viewType = LOADVIEW_TYPE_NONE;
             //判断是否需要显示加载界面
             if (viewType != LOADVIEW_TYPE_NONE) {
-                if (Laya.loader.getRes(url)) viewType = LOADVIEW_TYPE_NONE;
+                if (cc.loader.getRes(url)) viewType = LOADVIEW_TYPE_NONE;
             }
             //显示加载界面
             if (viewType != LOADVIEW_TYPE_NONE) {
                 EventCenter.dispatchEvent(LoaderEventID.LOADVIEW_OPEN, viewType, 1);
             }
+
             //加载
             return new Promise((resolve, reject) => {
                 ResourceManager.asyncLoad(
@@ -158,7 +153,7 @@ namespace airkit {
          * @return 	结束回调(参数：Array<string>，加载的url数组)
          */
         public loadArrayRes(
-            arr_res: Array<{ url: string; type: string }>,
+            arr_res: Array<{ url: string; type: typeof cc.Asset }>,
             viewType: number = LOADVIEW_TYPE_NONE,
             tips: string = null,
             priority: number = 1,
@@ -169,7 +164,6 @@ namespace airkit {
             let has_unload: boolean = false;
             let assets = [];
             let urls = [];
-            Laya.loader.maxLoader = 4;
             if (viewType == null) viewType = LOADVIEW_TYPE_NONE;
             if (priority == null) priority = 1;
             if (cache == null) cache = true;
@@ -177,7 +171,7 @@ namespace airkit {
                 assets.push({ url: res.url, type: res.type });
                 urls.push(res.url);
                 //判断是否有未加载资源
-                if (!has_unload && !Laya.loader.getRes(res.url)) has_unload = true;
+                if (!has_unload && !cc.loader.getRes(res.url)) has_unload = true;
                 //添加到加载目录
                 this.refreshResourceTime(res.url, group, true);
             }
@@ -270,12 +264,12 @@ namespace airkit {
                     this._dicLoaderUrl.add(url, loader_info);
                     loader_info.updateStatus(eLoaderStatus.LOADING);
                 } else {
-                    loader_info.ctime = Timer.timeSinceStartup;
+                    loader_info.ctime = Date.now();
                 }
             } else {
                 let loader_info: LoaderConfig = this._dicLoaderUrl.getValue(url);
                 if (loader_info) {
-                    loader_info.utime = Timer.timeSinceStartup;
+                    loader_info.utime = Date.now();
                 }
             }
         }
@@ -293,7 +287,7 @@ namespace airkit {
          */
         public clearRes(url: string): any {
             this._dicLoaderUrl.remove(url);
-            Laya.loader.clearRes(url);
+            cc.loader.releaseRes(url);
             var i = url.lastIndexOf(".bin");
             if (i > 0) {
                 // let pkg = url.substr(0, i);
@@ -327,91 +321,6 @@ namespace airkit {
             }
         }
 
-        /**
-         *
-         * @param skUrl
-         * @param aniMode type 0	动画模式，0:不支持换装,1,2支持换装
-         */
-        public createSpineAnim(skUrl: string, aniMode: number, group: string = "default"): Promise<any> {
-            return new Promise((resolve, reject) => {
-                let t = this._spineDic.getValue(skUrl);
-                if (t) {
-                    resolve(t[0].buildArmature(aniMode));
-                } else {
-                    DisplayUtils.createSkeletonAni(skUrl, aniMode)
-                        .then((v) => {
-                            //store templet return Skeleton
-                            this._spineDic.add(skUrl, [v[0], group]);
-                            resolve(v[1]);
-                        })
-                        .catch((e) => {
-                            reject(e);
-                        });
-                }
-            });
-        }
-
-        public removeSpineAnim(sk: Laya.Skeleton): void {
-            sk.offAll();
-            sk.removeSelf();
-            sk.destroy();
-            sk = null;
-        }
-        public removeSpineTemplet(skUrl: string): void {
-            let v = this._spineDic.getValue(skUrl);
-            if (v == null) {
-                return;
-            }
-            for (let k in v[0].subTextureDic) {
-                let t = v[0].subTextureDic[k];
-                t.disposeBitmap();
-                delete v[0].subTextureDic[k];
-                t = null;
-            }
-            ResourceManager.Instance.clearRes(skUrl);
-            this._spineDic.remove(skUrl);
-            v[0].destroy();
-            ArrayUtils.clear(v);
-            v = null;
-        }
-
-        public removeSpineTempletGroup(group: string): void {
-            this._spineDic.foreach((k, v) => {
-                if (v[1] == group) {
-                    this.removeSpineTemplet(k);
-                }
-                return true;
-            });
-        }
-        public createAniAnim(ani: string, atlas: string, group: string = "default"): Promise<any> {
-            return new Promise((resolve, reject) => {
-                DisplayUtils.createAsyncAnimation(ani, atlas)
-                    .then((v: Laya.Animation) => {
-                        this.setAniAnim(ani, atlas, group);
-                        this.onAniResUpdateSignal.dispatch(ani);
-                        resolve(v);
-                    })
-                    .catch((e) => {
-                        reject(e);
-                    });
-            });
-        }
-
-        public createFrameAnim(name: string, urls: Array<string>, atlas: string, group: string = "default"): Promise<any> {
-            return new Promise((resolve, reject) => {
-                let res = ResourceManager.Instance.getRes(atlas);
-                let anim = new Laya.Animation();
-                anim.loadAtlas(
-                    atlas,
-                    Handler.create(null, (v) => {
-                        Laya.Animation.createFrames(urls, name);
-                        //循环播放动画
-                        resolve(anim);
-                    })
-                );
-            });
-        }
-
         public createFuiAnim(pkgName: string, resName: string, path: string, group: string = "default"): Promise<any> {
             return new Promise((resolve, reject) => {
                 let atlas = path + "_atlas0.png";
@@ -420,8 +329,8 @@ namespace airkit {
                 if (res == null) {
                     ResourceManager.Instance.loadArrayRes(
                         [
-                            { url: atlas, type: Laya.Loader.IMAGE },
-                            { url: bin, type: Laya.Loader.BUFFER },
+                            { url: atlas, type: cc.SpriteFrame },
+                            { url: bin, type: cc.BufferAsset },
                         ],
                         null,
                         null,
@@ -441,46 +350,6 @@ namespace airkit {
                     resolve(obj.asCom);
                 }
             });
-        }
-        //清理资源，连atlas一起删除，非必要不用调用
-        public removeAniAnim(ani: string): void {
-            let v = this._aniAnimDic.getValue(ani);
-            if (v == null) {
-                return;
-            }
-            ResourceManager.Instance.clearRes(ani);
-            for (let k in Laya.Animation.framesMap) {
-                if (StringUtils.beginsWith(k, ani)) {
-                    let obj = Laya.Animation.framesMap[k];
-                    delete Laya.Animation.framesMap[k];
-                    if (obj.frames && obj.frames.length > 0) {
-                        let len = obj.frames.length;
-                        for (let i = 0; i < len; i++) {
-                            let g = obj.frames.shift();
-                            g.autoDestroy = true;
-                            g.destroy(true);
-                            g = null;
-                        }
-                        obj.frames = null;
-                    }
-                    obj = null;
-                }
-            }
-            this._aniAnimDic.remove(ani);
-        }
-
-        public removeAllAniAnim(group: string = "default"): void {
-            this._aniAnimDic.foreach((k, v) => {
-                if (v[2] == group) {
-                    Log.info("clean {0} {1}", k, v[0]);
-                    this.removeAniAnim(k);
-                }
-                return true;
-            });
-
-            //	Laya.Animation.framesMap = {}
-
-            //	this._aniAnimDic.clear()
         }
 
         /**
@@ -538,8 +407,8 @@ namespace airkit {
         constructor(url: string, group: string) {
             this.url = url;
             this.group = group;
-            this.ctime = Timer.timeSinceStartup;
-            this.utime = Timer.timeSinceStartup;
+            this.ctime = Date.now();
+            this.utime = Date.now();
             this.status = eLoaderStatus.READY;
         }
 

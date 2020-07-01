@@ -100,66 +100,66 @@ namespace airkit {
             return bgSp;
         }
 
-        // public static popupDown(panel: any, handler?: Laya.Handler, ignoreAnchor?: boolean): void {
-        //     panel.scale(0.8, 0.8);
-        //     let x = displayWidth() >> 1;
-        //     let y = displayHeight() >> 1;
+        public static popupDown(panel: any, handler?: Handler, ignoreAnchor?: boolean): void {
+            panel.scale(0.8, 0.8);
+            let x = displayWidth() >> 1;
+            let y = displayHeight() >> 1;
 
-        //     if (ignoreAnchor == null || !ignoreAnchor) {
-        //         panel.anchorX = 0.5;
-        //         panel.anchorY = 0.5;
-        //     } else {
-        //         x = panel.x;
-        //         y = panel.y;
-        //     }
-        //     panel.pos(x, 0);
-        //     Laya.Tween.clearTween(panel);
-        //     let time = 500;
-        //     Laya.Tween.to(panel, { scaleX: 1, scaleY: 1, x: x, y: y }, time, Laya.Ease.backOut, handler);
+            if (ignoreAnchor == null || !ignoreAnchor) {
+                panel.anchorX = 0.5;
+                panel.anchorY = 0.5;
+            } else {
+                x = panel.x;
+                y = panel.y;
+            }
+            panel.pos(x, 0);
 
-        //     if (panel.parent && panel.parent.bg) {
-        //         panel.parent.bg.alpha = 0;
-        //         TweenUtils.get(panel.parent.bg).to({ alpha: 1.0 }, time, fgui.EaseType.QuadOut);
-        //     }
-        // }
+            let time = 500;
+            TweenUtils.get(panel).to({ scaleX: 1, scaleY: 1, x: x, y: y }, time, fgui.EaseType.BackOut, handler);
 
-        // public static popup(view: fgui.GComponent, handler?: Laya.Handler, ignoreAnchor?: boolean): void {
-        //     view.setScale(0.85, 0.85);
-        //     let x = displayWidth() >> 1;
-        //     let y = displayHeight() >> 1;
+            if (panel.parent && panel.parent.bg) {
+                panel.parent.bg.alpha = 0;
+                TweenUtils.get(panel.parent.bg).to({ alpha: 1.0 }, time, fgui.EaseType.QuadOut);
+            }
+        }
 
-        //     if (ignoreAnchor == null || !ignoreAnchor) {
-        //         view.setPivot(0.5, 0.5, true);
-        //     } else {
-        //         x = view.x;
-        //         y = view.y;
-        //     }
-        //     view.setXY(x, y);
+        public static popup(view: fgui.GComponent, handler?: Handler, ignoreAnchor?: boolean): void {
+            view.setScale(0.85, 0.85);
+            let x = displayWidth() >> 1;
+            let y = displayHeight() >> 1;
 
-        //     let time = 0.25;
+            if (ignoreAnchor == null || !ignoreAnchor) {
+                view.setPivot(0.5, 0.5, true);
+            } else {
+                x = view.x;
+                y = view.y;
+            }
+            view.setPosition(x, y);
 
-        //     TweenUtils.get(view).to({ scaleX: 1, scaleY: 1 }, time, fgui.EaseType.QuadOut, handler);
-        //     if (view.parent && view.parent.getChild("bg")) {
-        //         let bg = view.parent.getChild("bg");
-        //         bg.alpha = 0;
-        //         TweenUtils.get(bg).to({ alpha: 1.0 }, 0.25, fgui.EaseType.QuadOut);
-        //     }
-        // }
-        // public static hide(panel: IUIPanel, handler?: Laya.Handler): void {
-        //     let time = 0.2;
-        //     let view = panel.panel();
-        //     let bg = panel.bg();
-        //     if (view == null) {
-        //         if (handler) {
-        //             handler.run();
-        //         }
-        //     } else {
-        //         TweenUtils.get(view).to({ scaleX: 0.5, scaleY: 0.5 }, time, fgui.EaseType.BackIn, handler);
-        //         if (bg) {
-        //             TweenUtils.get(bg).to({ alpha: 0 }, 0.2, fgui.EaseType.QuadOut);
-        //         }
-        //     }
-        // }
+            let time = 0.25;
+
+            TweenUtils.get(view).to({ scaleX: 1, scaleY: 1 }, time, fgui.EaseType.QuadOut, handler);
+            if (view.parent && view.parent.getChild("bg")) {
+                let bg = view.parent.getChild("bg");
+                bg.alpha = 0;
+                TweenUtils.get(bg).to({ alpha: 1.0 }, 0.25, fgui.EaseType.QuadOut);
+            }
+        }
+        public static hide(panel: IUIPanel, handler?: Handler): void {
+            let time = 0.2;
+            let view = panel.panel();
+            let bg = panel.bg();
+            if (view == null) {
+                if (handler) {
+                    handler.run();
+                }
+            } else {
+                TweenUtils.get(view).to({ scaleX: 0.5, scaleY: 0.5 }, time, fgui.EaseType.BackIn, handler);
+                if (bg) {
+                    TweenUtils.get(bg).to({ alpha: 0 }, 0.2, fgui.EaseType.QuadOut);
+                }
+            }
+        }
 
         // static createAsyncAnimation(ani: string, atlas: string): Promise<any> {
         //     return new Promise((resolve, reject) => {

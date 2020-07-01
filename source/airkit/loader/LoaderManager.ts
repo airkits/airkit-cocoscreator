@@ -46,15 +46,15 @@ namespace airkit {
         }
 
         private registerEvent(): void {
-            EventCenter.addEventListener(LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
-            EventCenter.addEventListener(LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
-            EventCenter.addEventListener(LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
+            EventCenter.on(LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
+            EventCenter.on(LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
+            EventCenter.on(LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
         }
 
         private unRegisterEvent(): void {
-            EventCenter.removeEventListener(LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
-            EventCenter.removeEventListener(LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
-            EventCenter.removeEventListener(LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
+            EventCenter.off(LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
+            EventCenter.off(LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
+            EventCenter.off(LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
         }
         /**加载进度事件*/
         private onLoadViewEvt(args: EventArgs): void {

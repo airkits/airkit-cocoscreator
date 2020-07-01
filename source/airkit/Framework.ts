@@ -30,7 +30,7 @@ namespace airkit {
             log_level: LogLevel = LogLevel.INFO,
             design_width: number = 750,
             design_height: number = 1334,
-            screen_mode: string = Laya.Stage.SCREEN_VERTICAL,
+            screen_mode: string = Stage.SCREEN_VERTICAL,
             frame: number = 1
         ): void {
             this.printDeviceInfo();
@@ -38,11 +38,14 @@ namespace airkit {
             this._isStopGame = false;
             this._mainloopHandle = main_loop;
 
+            cc.view.setResizeCallback(() => {
+                EventCenter.dispatchEvent(EventID.RESIZE);
+            });
             Log.LEVEL = log_level;
 
             Laya.timer.frameLoop(frame, this, this.mainLoop);
 
-            Laya.stage.addChild(fgui.GRoot.inst.displayObject);
+            Laya.stage.addChild(fgui.GRoot.inst.node);
             LayerManager.setup(root);
             TimerManager.Instance.setup();
             UIManager.Instance.setup();

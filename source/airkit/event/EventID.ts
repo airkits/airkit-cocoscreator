@@ -17,6 +17,7 @@ namespace airkit {
         public static ON_HIDE: string = "ON_HIDE";
         //切换场景
         public static CHANGE_SCENE: string = "CHANGE_SCENE";
+        public static RESIZE: string = "RESIZE";
         //模块管理事件
         public static BEGIN_MODULE: string = "BEGIN_MODULE";
         public static END_MODULE: string = "END_MODULE";
