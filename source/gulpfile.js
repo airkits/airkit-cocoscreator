@@ -37,10 +37,10 @@ gulp.task("build", ["copyJs"], () => {
     return gulp.src("bin/*.ts").pipe(gulp.dest("../test/libs/"))
 })
 
-gulp.task("copyTs", ["buildDts"], () => {
-    return gulp.src("bin/*.ts").pipe(gulp.dest("../../GameTower/libs"))
+gulp.task("copyTs", () => {
+    return gulp.src("bin/airkit.d.ts").pipe(gulp.dest("../demo/assets/Script/lib"))
 })
 
 gulp.task("copy", ["copyTs"], () => {
-    return gulp.src("bin/*.js").pipe(gulp.dest("../../GameTower/bin/three"))
+    return gulp.src("bin/airkit.js").pipe(gulp.dest("../demo/assets/Script/lib"))
 })

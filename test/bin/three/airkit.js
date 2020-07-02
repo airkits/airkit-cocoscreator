@@ -1,9 +1,19 @@
 window.airkit = {};
+window.__extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 
 (function (airkit) {
-    class Singleton {
-        constructor() {
-            let clazz = this["constructor"];
+    var Singleton = (function () {
+        function Singleton() {
+            var clazz = this["constructor"];
             if (!clazz) {
                 airkit.Log.warning("浏览器不支持读取构造函数");
                 return;
@@ -16,31 +26,42 @@ window.airkit = {};
                 Singleton.classValues.push(this);
             }
         }
-    }
-    Singleton.classKeys = [];
-    Singleton.classValues = [];
+        Singleton.classKeys = [];
+        Singleton.classValues = [];
+        return Singleton;
+    }());
     airkit.Singleton = Singleton;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class Framework extends airkit.Singleton {
-        constructor() {
-            super();
-            this._isStopGame = false;
-            this._mainloopHandle = null;
+    var Framework = (function (_super) {
+        __extends(Framework, _super);
+        function Framework() {
+            var _this = _super.call(this) || this;
+            _this._isStopGame = false;
+            _this._mainloopHandle = null;
             airkit.Timer.Start();
+            return _this;
         }
-        static get Instance() {
-            if (!this.instance)
-                this.instance = new Framework();
-            return this.instance;
-        }
-        setup(root, main_loop, log_level = airkit.LogLevel.INFO, design_width = 750, design_height = 1334, screen_mode = "", frame = 1) {
+        Object.defineProperty(Framework, "Instance", {
+            get: function () {
+                if (!this.instance)
+                    this.instance = new Framework();
+                return this.instance;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Framework.prototype.setup = function (root, log_level, design_width, design_height, screen_mode, frame) {
+            if (log_level === void 0) { log_level = airkit.LogLevel.INFO; }
+            if (design_width === void 0) { design_width = 750; }
+            if (design_height === void 0) { design_height = 1334; }
+            if (screen_mode === void 0) { screen_mode = ""; }
+            if (frame === void 0) { frame = 1; }
             this.printDeviceInfo();
             this._lastTimeMS = airkit.DateUtils.getNowMS();
             this._isStopGame = false;
-            this._mainloopHandle = main_loop;
-            cc.view.setResizeCallback(() => {
+            cc.view.setResizeCallback(function () {
                 airkit.EventCenter.dispatchEvent(airkit.EventID.RESIZE);
             });
             airkit.Log.LEVEL = log_level;
@@ -54,8 +75,8 @@ window.airkit = {};
             airkit.SceneManager.Instance.setup();
             airkit.Mediator.Instance.setup();
             airkit.LoaderManager.Instance.setup();
-        }
-        destroy() {
+        };
+        Framework.prototype.destroy = function () {
             airkit.Mediator.Instance.destroy();
             airkit.LoaderManager.Instance.destroy();
             airkit.TimerManager.Instance.destroy();
@@ -65,56 +86,60 @@ window.airkit = {};
             airkit.DataProvider.Instance.destroy();
             airkit.LayerManager.destroy();
             airkit.LangManager.Instance.destory();
-        }
-        update(dt) {
+        };
+        Framework.prototype.update = function (dt) {
             if (!this._isStopGame) {
-                let currentMS = airkit.DateUtils.getNowMS();
-                let dt = currentMS - this._lastTimeMS;
+                var currentMS = airkit.DateUtils.getNowMS();
+                var dt_1 = currentMS - this._lastTimeMS;
                 this._lastTimeMS = currentMS;
-                this.preTick(dt);
-                this.tick(dt);
-                this.endTick(dt);
+                this.preTick(dt_1);
+                this.tick(dt_1);
+                this.endTick(dt_1);
             }
-        }
-        preTick(dt) {
+        };
+        Framework.prototype.preTick = function (dt) {
             airkit.TimerManager.Instance.update(dt);
             airkit.UIManager.Instance.update(dt);
             airkit.ResourceManager.Instance.update(dt);
             airkit.Mediator.Instance.update(dt);
             airkit.SceneManager.Instance.update(dt);
-        }
-        tick(dt) {
+        };
+        Framework.prototype.tick = function (dt) {
             if (this._mainloopHandle) {
                 this._mainloopHandle.runWith([dt]);
             }
-        }
-        endTick(dt) { }
-        pauseGame() {
+        };
+        Framework.prototype.endTick = function (dt) { };
+        Framework.prototype.pauseGame = function () {
             this._isStopGame = true;
             airkit.EventCenter.dispatchEvent(airkit.EventID.STOP_GAME, true);
-        }
-        resumeGame() {
+        };
+        Framework.prototype.resumeGame = function () {
             this._isStopGame = false;
             airkit.EventCenter.dispatchEvent(airkit.EventID.STOP_GAME, false);
-        }
-        get isStopGame() {
-            return this._isStopGame;
-        }
-        printDeviceInfo() {
+        };
+        Object.defineProperty(Framework.prototype, "isStopGame", {
+            get: function () {
+                return this._isStopGame;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Framework.prototype.printDeviceInfo = function () {
             if (navigator) {
-                let agentStr = navigator.userAgent;
-                let start = agentStr.indexOf("(");
-                let end = agentStr.indexOf(")");
+                var agentStr = navigator.userAgent;
+                var start = agentStr.indexOf("(");
+                var end = agentStr.indexOf(")");
                 if (start < 0 || end < 0 || end < start) {
                     return;
                 }
-                let infoStr = agentStr.substring(start + 1, end);
+                var infoStr = agentStr.substring(start + 1, end);
                 airkit.Log.info(infoStr);
-                let device, system, version;
-                let infos = infoStr.split(";");
+                var device = void 0, system = void 0, version = void 0;
+                var infos = infoStr.split(";");
                 if (infos.length == 3) {
                     device = infos[2];
-                    let system_info = infos[1].split(" ");
+                    var system_info = infos[1].split(" ");
                     if (system_info.length >= 2) {
                         system = system_info[1];
                         version = system_info[2];
@@ -132,255 +157,320 @@ window.airkit = {};
                 }
                 airkit.Log.info("{0},{1},{2}", system, device, version);
             }
-        }
-    }
-    Framework.instance = null;
+        };
+        Framework.instance = null;
+        return Framework;
+    }(airkit.Singleton));
     airkit.Framework = Framework;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class Color {
-        constructor(r, g, b, a) {
+    var Color = (function () {
+        function Color(r, g, b, a) {
             this.r = r;
             this.g = g;
             this.b = b;
             this.a = a;
         }
-        set(new_r, new_g, new_b, new_a) {
+        Color.prototype.set = function (new_r, new_g, new_b, new_a) {
             this.r = new_r;
             this.g = new_g;
             this.b = new_b;
             this.a = new_a;
-        }
-        static add(a, b) {
+        };
+        Color.add = function (a, b) {
             return new Color(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a);
-        }
-        add(a) {
+        };
+        Color.prototype.add = function (a) {
             this.set(this.r + a.r, this.g + a.g, this.b + a.b, this.a + a.a);
             return this;
-        }
-        static sub(a, b) {
+        };
+        Color.sub = function (a, b) {
             return new Color(a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a);
-        }
-        sub(a) {
+        };
+        Color.prototype.sub = function (a) {
             this.set(this.r - a.r, this.g - a.g, this.b - a.b, this.a - a.a);
             return this;
-        }
-        static mul(a, d) {
+        };
+        Color.mul = function (a, d) {
             return new Color(a.r * d, a.g * d, a.b * d, a.a * d);
-        }
-        mul(d) {
+        };
+        Color.prototype.mul = function (d) {
             this.set(this.r * d, this.g * d, this.b * d, this.a * d);
             return this;
-        }
-        static div(a, d) {
+        };
+        Color.div = function (a, d) {
             return new Color(a.r / d, a.g / d, a.b / d, a.a / d);
-        }
-        div(d) {
+        };
+        Color.prototype.div = function (d) {
             this.set(this.r / d, this.g / d, this.b / d, this.a / d);
             return this;
-        }
-        equals(other) {
+        };
+        Color.prototype.equals = function (other) {
             return (this.r == other.r &&
                 this.g == other.g &&
                 this.b == other.b &&
                 this.a == other.a);
-        }
-        static lerp(from, to, t) {
+        };
+        Color.lerp = function (from, to, t) {
             t = airkit.MathUtils.clamp(t, 0, 1);
             return new Color(from.r + (to.r - from.r) * t, from.g + (to.g - from.g) * t, from.b + (to.b - from.b) * t + (to.a - from.a) * t);
-        }
-        static get zero() {
-            return new Color(0, 0, 0, 0);
-        }
-        static get one() {
-            return new Color(1, 1, 1, 1);
-        }
-        static get red() {
-            return new Color(1, 0, 0, 1);
-        }
-        static get green() {
-            return new Color(0, 1, 0, 1);
-        }
-        static get blue() {
-            return new Color(0, 0, 1, 1);
-        }
-        static get white() {
-            return new Color(1, 1, 1, 1);
-        }
-        static get black() {
-            return new Color(0, 0, 0, 1);
-        }
-        static get yellow() {
-            return new Color(1, 0.9215686, 0.01568628, 1);
-        }
-        static get cyan() {
-            return new Color(0, 1, 1, 1);
-        }
-        static get magenta() {
-            return new Color(1, 0, 1, 1);
-        }
-        static get gray() {
-            return new Color(0.5, 0.5, 0.5, 1);
-        }
-        static get grey() {
-            return new Color(0.5, 0.5, 0.5, 1);
-        }
-        static get clear() {
-            return new Color(0, 0, 0, 0);
-        }
-        toString() {
+        };
+        Object.defineProperty(Color, "zero", {
+            get: function () {
+                return new Color(0, 0, 0, 0);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Color, "one", {
+            get: function () {
+                return new Color(1, 1, 1, 1);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Color, "red", {
+            get: function () {
+                return new Color(1, 0, 0, 1);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Color, "green", {
+            get: function () {
+                return new Color(0, 1, 0, 1);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Color, "blue", {
+            get: function () {
+                return new Color(0, 0, 1, 1);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Color, "white", {
+            get: function () {
+                return new Color(1, 1, 1, 1);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Color, "black", {
+            get: function () {
+                return new Color(0, 0, 0, 1);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Color, "yellow", {
+            get: function () {
+                return new Color(1, 0.9215686, 0.01568628, 1);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Color, "cyan", {
+            get: function () {
+                return new Color(0, 1, 1, 1);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Color, "magenta", {
+            get: function () {
+                return new Color(1, 0, 1, 1);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Color, "gray", {
+            get: function () {
+                return new Color(0.5, 0.5, 0.5, 1);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Color, "grey", {
+            get: function () {
+                return new Color(0.5, 0.5, 0.5, 1);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Color, "clear", {
+            get: function () {
+                return new Color(0, 0, 0, 0);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Color.prototype.toString = function () {
             return airkit.StringUtils.format("({0}, {1}, {2}, {3})", this.r, this.g, this.b, this.a);
-        }
-    }
+        };
+        return Color;
+    }());
     airkit.Color = Color;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class NDictionary {
-        constructor() {
+    var NDictionary = (function () {
+        function NDictionary() {
             this._dic = {};
         }
-        add(key, value) {
+        NDictionary.prototype.add = function (key, value) {
             if (this.containsKey(key)) {
                 airkit.Log.warning("NDictionary already containsKey ", key.toString());
                 return false;
             }
             this._dic[key] = value;
             return true;
-        }
-        remove(key) {
+        };
+        NDictionary.prototype.remove = function (key) {
             delete this._dic[key];
-        }
-        set(key, value) {
+        };
+        NDictionary.prototype.set = function (key, value) {
             this._dic[key] = value;
-        }
-        containsKey(key) {
+        };
+        NDictionary.prototype.containsKey = function (key) {
             return this._dic[key] != null ? true : false;
-        }
-        getValue(key) {
+        };
+        NDictionary.prototype.getValue = function (key) {
             if (!this.containsKey(key))
                 return null;
             return this._dic[key];
-        }
-        clear() {
-            for (let key in this._dic) {
+        };
+        NDictionary.prototype.clear = function () {
+            for (var key in this._dic) {
                 delete this._dic[key];
             }
-        }
-        getkeys() {
-            let list = [];
-            for (let key in this._dic) {
+        };
+        NDictionary.prototype.getkeys = function () {
+            var list = [];
+            for (var key in this._dic) {
                 list.push(airkit.StringUtils.toNumber(key));
             }
             return list;
-        }
-        getValues() {
-            let list = [];
-            for (let key in this._dic) {
+        };
+        NDictionary.prototype.getValues = function () {
+            var list = [];
+            for (var key in this._dic) {
                 list.push(this._dic[key]);
             }
             return list;
-        }
-        foreach(compareFn) {
-            for (let key in this._dic) {
+        };
+        NDictionary.prototype.foreach = function (compareFn) {
+            for (var key in this._dic) {
                 if (!compareFn.call(null, key, this._dic[key]))
                     break;
             }
-        }
-        get length() {
-            return airkit.DicUtils.getLength(this._dic);
-        }
-    }
+        };
+        Object.defineProperty(NDictionary.prototype, "length", {
+            get: function () {
+                return airkit.DicUtils.getLength(this._dic);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return NDictionary;
+    }());
     airkit.NDictionary = NDictionary;
-    class SDictionary {
-        constructor() {
+    var SDictionary = (function () {
+        function SDictionary() {
             this._dic = {};
         }
-        add(key, value) {
+        SDictionary.prototype.add = function (key, value) {
             if (this.containsKey(key))
                 return false;
             this._dic[key] = value;
             return true;
-        }
-        set(key, value) {
+        };
+        SDictionary.prototype.set = function (key, value) {
             this._dic[key] = value;
-        }
-        remove(key) {
+        };
+        SDictionary.prototype.remove = function (key) {
             delete this._dic[key];
-        }
-        containsKey(key) {
+        };
+        SDictionary.prototype.containsKey = function (key) {
             return this._dic[key] != null ? true : false;
-        }
-        getValue(key) {
+        };
+        SDictionary.prototype.getValue = function (key) {
             if (!this.containsKey(key))
                 return null;
             return this._dic[key];
-        }
-        getkeys() {
-            let list = [];
-            for (let key in this._dic) {
+        };
+        SDictionary.prototype.getkeys = function () {
+            var list = [];
+            for (var key in this._dic) {
                 list.push(key);
             }
             return list;
-        }
-        getValues() {
-            let list = [];
-            for (let key in this._dic) {
+        };
+        SDictionary.prototype.getValues = function () {
+            var list = [];
+            for (var key in this._dic) {
                 list.push(this._dic[key]);
             }
             return list;
-        }
-        clear() {
-            for (let key in this._dic) {
+        };
+        SDictionary.prototype.clear = function () {
+            for (var key in this._dic) {
                 delete this._dic[key];
             }
-        }
-        foreach(compareFn) {
-            for (let key in this._dic) {
+        };
+        SDictionary.prototype.foreach = function (compareFn) {
+            for (var key in this._dic) {
                 if (!compareFn.call(null, key, this._dic[key]))
                     break;
             }
-        }
-        get length() {
-            return airkit.DicUtils.getLength(this._dic);
-        }
-    }
+        };
+        Object.defineProperty(SDictionary.prototype, "length", {
+            get: function () {
+                return airkit.DicUtils.getLength(this._dic);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return SDictionary;
+    }());
     airkit.SDictionary = SDictionary;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class DoubleArray {
-        constructor(rows, cols, value) {
+    var DoubleArray = (function () {
+        function DoubleArray(rows, cols, value) {
             this._array = [];
             if (rows > 0 && cols > 0) {
-                for (let row = 0; row < rows; ++row) {
-                    for (let col = 0; col < cols; ++col) {
+                for (var row = 0; row < rows; ++row) {
+                    for (var col = 0; col < cols; ++col) {
                         this.set(row, col, value);
                     }
                 }
             }
         }
-        set(row, col, value) {
+        DoubleArray.prototype.set = function (row, col, value) {
             if (!this._array[row])
                 this._array[row] = [];
             this._array[row][col] = value;
-        }
-        get(row, col) {
+        };
+        DoubleArray.prototype.get = function (row, col) {
             if (!this._array[row])
                 return null;
             return this._array[row][col];
-        }
-        clear() {
+        };
+        DoubleArray.prototype.clear = function () {
             airkit.ArrayUtils.clear(this._array);
-        }
-    }
+        };
+        return DoubleArray;
+    }());
     airkit.DoubleArray = DoubleArray;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class LinkList {
-        constructor() {
+    var LinkList = (function () {
+        function LinkList() {
             this._linkHead = null;
             this._size = 0;
             this._linkHead = { Data: null, Prev: null, Next: null };
@@ -388,24 +478,24 @@ window.airkit = {};
             this._linkHead.Next = this._linkHead;
             this._size = 0;
         }
-        add(t) {
+        LinkList.prototype.add = function (t) {
             this.append(this._size, t);
-        }
-        insert(index, t) {
+        };
+        LinkList.prototype.insert = function (index, t) {
             if (this._size < 1 || index >= this._size)
                 airkit.Log.exception("没有可插入的点或者索引溢出了");
             if (index == 0)
                 this.append(this._size, t);
             else {
-                let inode = this.getNode(index);
-                let tnode = { Data: t, Prev: inode.Prev, Next: inode };
+                var inode = this.getNode(index);
+                var tnode = { Data: t, Prev: inode.Prev, Next: inode };
                 inode.Prev.Next = tnode;
                 inode.Prev = tnode;
                 this._size++;
             }
-        }
-        append(index, t) {
-            let inode;
+        };
+        LinkList.prototype.append = function (index, t) {
+            var inode;
             if (index == 0)
                 inode = this._linkHead;
             else {
@@ -414,50 +504,50 @@ window.airkit = {};
                     airkit.Log.exception("位置不存在");
                 inode = this.getNode(index);
             }
-            let tnode = { Data: t, Prev: inode, Next: inode.Next };
+            var tnode = { Data: t, Prev: inode, Next: inode.Next };
             inode.Next.Prev = tnode;
             inode.Next = tnode;
             this._size++;
-        }
-        del(index) {
-            let inode = this.getNode(index);
+        };
+        LinkList.prototype.del = function (index) {
+            var inode = this.getNode(index);
             inode.Prev.Next = inode.Next;
             inode.Next.Prev = inode.Prev;
             this._size--;
-        }
-        delFirst() {
+        };
+        LinkList.prototype.delFirst = function () {
             this.del(0);
-        }
-        delLast() {
+        };
+        LinkList.prototype.delLast = function () {
             this.del(this._size - 1);
-        }
-        get(index) {
+        };
+        LinkList.prototype.get = function (index) {
             return this.getNode(index).Data;
-        }
-        getFirst() {
+        };
+        LinkList.prototype.getFirst = function () {
             return this.getNode(0).Data;
-        }
-        getLast() {
+        };
+        LinkList.prototype.getLast = function () {
             return this.getNode(this._size - 1).Data;
-        }
-        getNode(index) {
+        };
+        LinkList.prototype.getNode = function (index) {
             if (index < 0 || index >= this._size) {
                 airkit.Log.exception("索引溢出或者链表为空");
             }
             if (index < this._size / 2) {
-                let node = this._linkHead.Next;
-                for (let i = 0; i < index; i++)
+                var node = this._linkHead.Next;
+                for (var i = 0; i < index; i++)
                     node = node.Next;
                 return node;
             }
-            let rnode = this._linkHead.Prev;
-            let rindex = this._size - index - 1;
-            for (let i = 0; i < rindex; i++)
+            var rnode = this._linkHead.Prev;
+            var rindex = this._size - index - 1;
+            for (var i = 0; i < rindex; i++)
                 rnode = rnode.Prev;
             return rnode;
-        }
-        foreach(compareFn) {
-            let node = this._linkHead.Next;
+        };
+        LinkList.prototype.foreach = function (compareFn) {
+            var node = this._linkHead.Next;
             if (!node)
                 return;
             do {
@@ -465,38 +555,45 @@ window.airkit = {};
                     break;
                 node = node.Next;
             } while (node != this._linkHead);
-        }
-        isEmpty() {
+        };
+        LinkList.prototype.isEmpty = function () {
             return this._size == 0;
-        }
-        get length() {
-            return this._size;
-        }
-    }
+        };
+        Object.defineProperty(LinkList.prototype, "length", {
+            get: function () {
+                return this._size;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return LinkList;
+    }());
     airkit.LinkList = LinkList;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class ObjectPools {
-        static get(classDef) {
-            let sign = classDef["objectKey"];
+    var ObjectPools = (function () {
+        function ObjectPools() {
+        }
+        ObjectPools.get = function (classDef) {
+            var sign = classDef["objectKey"];
             if (sign == null) {
                 airkit.Log.error("static objectKey must set in {0} ", classDef.name);
             }
-            let pool = this.poolsMap[sign];
+            var pool = this.poolsMap[sign];
             if (pool == null) {
                 pool = new Array();
                 this.poolsMap[sign] = pool;
             }
-            let obj = pool.pop();
+            var obj = pool.pop();
             if (obj == null) {
                 obj = new classDef();
             }
             if (obj && obj["init"])
                 obj.init();
             return obj;
-        }
-        static recover(obj) {
+        };
+        ObjectPools.recover = function (obj) {
             if (!obj)
                 return;
             if (obj["parent"] != null) {
@@ -506,28 +603,29 @@ window.airkit = {};
                 obj.dispose();
                 return;
             }
-            let proto = Object.getPrototypeOf(obj);
-            let clazz = proto["constructor"];
-            let sign = clazz["objectKey"];
-            let pool = this.poolsMap[sign];
+            var proto = Object.getPrototypeOf(obj);
+            var clazz = proto["constructor"];
+            var sign = clazz["objectKey"];
+            var pool = this.poolsMap[sign];
             if (pool != null) {
                 if (obj["visible"] !== null && obj["visible"] === false) {
                     obj.visible = true;
                 }
                 pool.push(obj);
             }
-        }
-        static clearAll() {
-            airkit.DicUtils.foreach(this.poolsMap, (k, v) => {
-                this.clear(k);
+        };
+        ObjectPools.clearAll = function () {
+            var _this = this;
+            airkit.DicUtils.foreach(this.poolsMap, function (k, v) {
+                _this.clear(k);
                 return true;
             });
-        }
-        static clear(sign) {
-            let pool = this.poolsMap[sign];
+        };
+        ObjectPools.clear = function (sign) {
+            var pool = this.poolsMap[sign];
             airkit.Log.info("max object count {0}", pool.length);
             while (pool.length > 0) {
-                let obj = pool.pop();
+                var obj = pool.pop();
                 if (obj && obj["dispose"]) {
                     if (obj["parent"] != null) {
                         obj.removeFromParent();
@@ -538,128 +636,152 @@ window.airkit = {};
                     obj.dispose();
                 }
             }
-        }
-    }
-    ObjectPools.poolsMap = {};
+        };
+        ObjectPools.poolsMap = {};
+        return ObjectPools;
+    }());
     airkit.ObjectPools = ObjectPools;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class Queue {
-        constructor() {
+    var Queue = (function () {
+        function Queue() {
             this._list = [];
         }
-        enqueue(item) {
+        Queue.prototype.enqueue = function (item) {
             this._list.push(item);
-        }
-        dequeue() {
+        };
+        Queue.prototype.dequeue = function () {
             return this._list.shift();
-        }
-        peek() {
+        };
+        Queue.prototype.peek = function () {
             if (this._list.length == 0)
                 return null;
             return this._list[0];
-        }
-        seek(index) {
+        };
+        Queue.prototype.seek = function (index) {
             if (this._list.length < index)
                 return null;
             return this._list[index];
-        }
-        toArray() {
+        };
+        Queue.prototype.toArray = function () {
             return this._list.slice(0, this._list.length);
-        }
-        contains(item) {
+        };
+        Queue.prototype.contains = function (item) {
             return this._list.indexOf(item, 0) == -1 ? false : true;
-        }
-        clear() {
+        };
+        Queue.prototype.clear = function () {
             this._list.length = 0;
-        }
-        get length() {
-            return this._list.length;
-        }
-        foreach(compareFn) {
-            for (let item of this._list) {
+        };
+        Object.defineProperty(Queue.prototype, "length", {
+            get: function () {
+                return this._list.length;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Queue.prototype.foreach = function (compareFn) {
+            for (var _i = 0, _a = this._list; _i < _a.length; _i++) {
+                var item = _a[_i];
                 if (!compareFn.call(null, item))
                     break;
             }
-        }
-    }
+        };
+        return Queue;
+    }());
     airkit.Queue = Queue;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class Size {
-        constructor(w = 0, h = 0) {
+    var Size = (function () {
+        function Size(w, h) {
+            if (w === void 0) { w = 0; }
+            if (h === void 0) { h = 0; }
             this._width = w;
             this._height = h;
         }
-        set(w, h) {
+        Size.prototype.set = function (w, h) {
             this._width = w;
             this._height = h;
-        }
-        get width() {
-            return this._width;
-        }
-        get height() {
-            return this._height;
-        }
-    }
+        };
+        Object.defineProperty(Size.prototype, "width", {
+            get: function () {
+                return this._width;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Size.prototype, "height", {
+            get: function () {
+                return this._height;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Size;
+    }());
     airkit.Size = Size;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class Stack {
-        constructor() {
+    var Stack = (function () {
+        function Stack() {
             this._list = [];
         }
-        push(item) {
+        Stack.prototype.push = function (item) {
             this._list.push(item);
-        }
-        pop() {
+        };
+        Stack.prototype.pop = function () {
             return this._list.pop();
-        }
-        peek() {
+        };
+        Stack.prototype.peek = function () {
             if (this._list.length == 0)
                 return null;
             return this._list[this._list.length - 1];
-        }
-        toArray() {
+        };
+        Stack.prototype.toArray = function () {
             return this._list.slice(0, this._list.length);
-        }
-        contains(item) {
+        };
+        Stack.prototype.contains = function (item) {
             return this._list.indexOf(item, 0) == -1 ? false : true;
-        }
-        clear() {
+        };
+        Stack.prototype.clear = function () {
             this._list.length = 0;
-        }
-        get length() {
-            return this._list.length;
-        }
-        foreach(compareFn) {
-            for (let item of this._list) {
+        };
+        Object.defineProperty(Stack.prototype, "length", {
+            get: function () {
+                return this._list.length;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Stack.prototype.foreach = function (compareFn) {
+            for (var _i = 0, _a = this._list; _i < _a.length; _i++) {
+                var item = _a[_i];
                 if (!compareFn.call(null, item))
                     break;
             }
-        }
-    }
+        };
+        return Stack;
+    }());
     airkit.Stack = Stack;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
     airkit.LOADVIEW_TYPE_NONE = 0;
-    let eUIQueueType;
+    var eUIQueueType;
     (function (eUIQueueType) {
         eUIQueueType[eUIQueueType["POPUP"] = 1] = "POPUP";
         eUIQueueType[eUIQueueType["ALERT"] = 2] = "ALERT";
     })(eUIQueueType = airkit.eUIQueueType || (airkit.eUIQueueType = {}));
-    let ePopupAnim;
+    var ePopupAnim;
     (function (ePopupAnim) {
     })(ePopupAnim = airkit.ePopupAnim || (airkit.ePopupAnim = {}));
-    let eCloseAnim;
+    var eCloseAnim;
     (function (eCloseAnim) {
         eCloseAnim[eCloseAnim["CLOSE_CENTER"] = 1] = "CLOSE_CENTER";
     })(eCloseAnim = airkit.eCloseAnim || (airkit.eCloseAnim = {}));
-    let eAligeType;
+    var eAligeType;
     (function (eAligeType) {
         eAligeType[eAligeType["NONE"] = 0] = "NONE";
         eAligeType[eAligeType["RIGHT"] = 1] = "RIGHT";
@@ -672,7 +794,7 @@ window.airkit = {};
         eAligeType[eAligeType["RIGHT_TOP"] = 8] = "RIGHT_TOP";
         eAligeType[eAligeType["MID"] = 9] = "MID";
     })(eAligeType = airkit.eAligeType || (airkit.eAligeType = {}));
-    let eUILayer;
+    var eUILayer;
     (function (eUILayer) {
         eUILayer[eUILayer["BG"] = 0] = "BG";
         eUILayer[eUILayer["MAIN"] = 1] = "MAIN";
@@ -684,7 +806,7 @@ window.airkit = {};
         eUILayer[eUILayer["TOP"] = 7] = "TOP";
         eUILayer[eUILayer["MAX"] = 8] = "MAX";
     })(eUILayer = airkit.eUILayer || (airkit.eUILayer = {}));
-    let LogLevel;
+    var LogLevel;
     (function (LogLevel) {
         LogLevel[LogLevel["DEBUG"] = 7] = "DEBUG";
         LogLevel[LogLevel["INFO"] = 6] = "INFO";
@@ -692,7 +814,7 @@ window.airkit = {};
         LogLevel[LogLevel["ERROR"] = 4] = "ERROR";
         LogLevel[LogLevel["EXCEPTION"] = 3] = "EXCEPTION";
     })(LogLevel = airkit.LogLevel || (airkit.LogLevel = {}));
-    let ePopupButton;
+    var ePopupButton;
     (function (ePopupButton) {
         ePopupButton[ePopupButton["Close"] = 0] = "Close";
         ePopupButton[ePopupButton["Cancel"] = 1] = "Cancel";
@@ -701,60 +823,71 @@ window.airkit = {};
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class ConfigItem {
-        constructor(url, name, key) {
+    var ConfigItem = (function () {
+        function ConfigItem(url, name, key) {
             this.url = url;
             this.name = name;
             this.key = key;
         }
-    }
+        return ConfigItem;
+    }());
     airkit.ConfigItem = ConfigItem;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class ConfigManger extends airkit.Singleton {
-        static get Instance() {
-            if (!this.instance)
-                this.instance = new ConfigManger();
-            return this.instance;
+    var ConfigManger = (function (_super) {
+        __extends(ConfigManger, _super);
+        function ConfigManger() {
+            return _super !== null && _super.apply(this, arguments) || this;
         }
-        init(keys, zipPath = null) {
+        Object.defineProperty(ConfigManger, "Instance", {
+            get: function () {
+                if (!this.instance)
+                    this.instance = new ConfigManger();
+                return this.instance;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ConfigManger.prototype.init = function (keys, zipPath) {
+            if (zipPath === void 0) { zipPath = null; }
             if (zipPath != null)
                 ConfigManger.zipUrl = zipPath;
             this._listTables = [];
-            let c = keys;
-            for (let k in c) {
+            var c = keys;
+            for (var k in c) {
                 this._listTables.push(new airkit.ConfigItem(k, k, c[k]));
             }
-        }
-        release() {
+        };
+        ConfigManger.prototype.release = function () {
             if (!this._listTables)
                 return;
-            for (let info of this._listTables) {
+            for (var _i = 0, _a = this._listTables; _i < _a.length; _i++) {
+                var info = _a[_i];
                 airkit.DataProvider.Instance.unload(info.url);
             }
             airkit.ArrayUtils.clear(this._listTables);
             this._listTables = null;
-        }
-        loadAll() {
+        };
+        ConfigManger.prototype.loadAll = function () {
             if (this._listTables.length > 0) {
                 airkit.DataProvider.Instance.enableZip();
                 return airkit.DataProvider.Instance.loadZip(ConfigManger.zipUrl, this._listTables);
             }
-        }
-        getList(table, filter) {
-            let dic = airkit.DataProvider.Instance.getConfig(table);
+        };
+        ConfigManger.prototype.getList = function (table, filter) {
+            var dic = airkit.DataProvider.Instance.getConfig(table);
             if (dic == null)
                 return [];
             if (filter == null)
                 filter = [];
-            let result = [];
-            for (let key in dic) {
-                let val = dic[key];
-                let flag = true;
-                for (let j = 0; j < filter.length; j++) {
-                    let k = filter[j]["k"];
-                    let v = filter[j]["v"];
+            var result = [];
+            for (var key in dic) {
+                var val = dic[key];
+                var flag = true;
+                for (var j = 0; j < filter.length; j++) {
+                    var k = filter[j]["k"];
+                    var v = filter[j]["v"];
                     if (val[k] != v) {
                         flag = false;
                         break;
@@ -765,41 +898,52 @@ window.airkit = {};
                 }
             }
             return result;
-        }
-        getInfo(table, key) {
-            let info = airkit.DataProvider.Instance.getInfo(table, key);
+        };
+        ConfigManger.prototype.getInfo = function (table, key) {
+            var info = airkit.DataProvider.Instance.getInfo(table, key);
             return info;
-        }
-        get listTables() {
-            return this._listTables;
-        }
-    }
-    ConfigManger.instance = null;
-    ConfigManger.zipUrl = "res/config.zip";
+        };
+        Object.defineProperty(ConfigManger.prototype, "listTables", {
+            get: function () {
+                return this._listTables;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ConfigManger.instance = null;
+        ConfigManger.zipUrl = "res/config.zip";
+        return ConfigManger;
+    }(airkit.Singleton));
     airkit.ConfigManger = ConfigManger;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class DataProvider extends airkit.Singleton {
-        constructor() {
-            super(...arguments);
-            this._dicTemplate = null;
-            this._dicData = null;
+    var DataProvider = (function (_super) {
+        __extends(DataProvider, _super);
+        function DataProvider() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._dicTemplate = null;
+            _this._dicData = null;
+            return _this;
         }
-        static get Instance() {
-            if (!this.instance)
-                this.instance = new DataProvider();
-            return this.instance;
-        }
-        enableZip() {
+        Object.defineProperty(DataProvider, "Instance", {
+            get: function () {
+                if (!this.instance)
+                    this.instance = new DataProvider();
+                return this.instance;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        DataProvider.prototype.enableZip = function () {
             this._zip = true;
-        }
-        setup() {
+        };
+        DataProvider.prototype.setup = function () {
             this._dicTemplate = new airkit.SDictionary();
             this._dicData = new airkit.SDictionary();
             this._zip = false;
-        }
-        destroy() {
+        };
+        DataProvider.prototype.destroy = function () {
             this.unloadAll();
             if (this._dicTemplate) {
                 this._dicTemplate.clear();
@@ -809,33 +953,34 @@ window.airkit = {};
                 this._dicData.clear();
                 this._dicData = null;
             }
-        }
-        loadZip(url, list) {
-            return new Promise((resolve, reject) => {
-                airkit.ResourceManager.Instance.loadRes(url, cc.BufferAsset).then((v) => {
-                    let ab = airkit.ResourceManager.Instance.getRes(url);
+        };
+        DataProvider.prototype.loadZip = function (url, list) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                airkit.ResourceManager.Instance.loadRes(url, cc.BufferAsset).then(function (v) {
+                    var ab = airkit.ResourceManager.Instance.getRes(url);
                     airkit.ZipUtils.unzip(ab)
-                        .then((v) => {
-                        for (let i = 0; i < list.length; i++) {
-                            let template = list[i];
-                            this._dicTemplate.add(list[i].url, template);
+                        .then(function (v) {
+                        for (var i = 0; i < list.length; i++) {
+                            var template = list[i];
+                            _this._dicTemplate.add(list[i].url, template);
                             airkit.Log.info("Load config {0}", template.url);
-                            let json_res = JSON.parse(v[template.url]);
+                            var json_res = JSON.parse(v[template.url]);
                             if (airkit.StringUtils.isNullOrEmpty(template.key)) {
-                                this._dicData.add(template.name, json_res);
+                                _this._dicData.add(template.name, json_res);
                             }
                             else {
-                                let map = {};
-                                let sValue;
-                                let sData;
-                                let i = 0;
-                                let isArrayKey = Array.isArray(template.key);
-                                while (json_res[i]) {
-                                    sData = json_res[i];
+                                var map = {};
+                                var sValue = void 0;
+                                var sData = void 0;
+                                var i_1 = 0;
+                                var isArrayKey = Array.isArray(template.key);
+                                while (json_res[i_1]) {
+                                    sData = json_res[i_1];
                                     if (isArrayKey) {
                                         sValue = sData[template.key[0]];
-                                        for (let i = 1; i < template.key.length; i++) {
-                                            sValue += "_" + sData[template.key[i]];
+                                        for (var i_2 = 1; i_2 < template.key.length; i_2++) {
+                                            sValue += "_" + sData[template.key[i_2]];
                                         }
                                     }
                                     else {
@@ -843,27 +988,28 @@ window.airkit = {};
                                     }
                                     airkit.assertNullOrNil(sValue, "配置表解析错误:" + template.url);
                                     map[sValue] = sData;
-                                    i++;
+                                    i_1++;
                                 }
-                                this._dicData.add(template.name, map);
+                                _this._dicData.add(template.name, map);
                             }
                         }
                         resolve(v);
                     })
-                        .catch((e) => {
+                        .catch(function (e) {
                         airkit.Log.error(e);
                         reject(e);
                     });
                 });
             });
-        }
-        load(list) {
-            return new Promise((resolve, reject) => {
-                let assets = [];
-                for (let i = 0; i < list.length; i++) {
+        };
+        DataProvider.prototype.load = function (list) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var assets = [];
+                for (var i = 0; i < list.length; i++) {
                     if (!airkit.ResourceManager.Instance.getRes(list[i].url)) {
                         assets.push({ url: list[i].url, type: cc.JsonAsset });
-                        this._dicTemplate.add(list[i].url, list[i]);
+                        _this._dicTemplate.add(list[i].url, list[i]);
                     }
                 }
                 if (assets.length == 0) {
@@ -871,19 +1017,19 @@ window.airkit = {};
                     return;
                 }
                 airkit.ResourceManager.Instance.loadArrayRes(assets, null, null, null, null, airkit.ResourceManager.SystemGroup)
-                    .then((v) => {
-                    for (let i = 0; i < v.length; i++) {
-                        this.onLoadComplete(v[i]);
+                    .then(function (v) {
+                    for (var i = 0; i < v.length; i++) {
+                        _this.onLoadComplete(v[i]);
                         resolve(v);
                     }
                 })
-                    .catch((e) => {
+                    .catch(function (e) {
                     reject(e);
                 });
             });
-        }
-        unload(url) {
-            let template = this._dicTemplate.getValue(url);
+        };
+        DataProvider.prototype.unload = function (url) {
+            var template = this._dicTemplate.getValue(url);
             if (template) {
                 this._dicData.remove(template.name);
             }
@@ -893,8 +1039,8 @@ window.airkit = {};
                 airkit.ResourceManager.Instance.clearRes(url);
             }
             this._dicTemplate.remove(url);
-        }
-        unloadAll() {
+        };
+        DataProvider.prototype.unloadAll = function () {
             if (!this._dicTemplate)
                 return;
             this._dicTemplate.foreach(function (key, value) {
@@ -903,50 +1049,50 @@ window.airkit = {};
             });
             this._dicData.clear();
             this._dicTemplate.clear();
-        }
-        getConfig(table) {
-            let data = this._dicData.getValue(table);
+        };
+        DataProvider.prototype.getConfig = function (table) {
+            var data = this._dicData.getValue(table);
             return data;
-        }
-        getInfo(table, key) {
-            let data = this._dicData.getValue(table);
+        };
+        DataProvider.prototype.getInfo = function (table, key) {
+            var data = this._dicData.getValue(table);
             if (data) {
-                let isArrayKey = Array.isArray(key);
-                let sValue;
+                var isArrayKey = Array.isArray(key);
+                var sValue = void 0;
                 if (isArrayKey) {
                     sValue = key[0];
-                    for (let i = 1; i < key.length; i++) {
+                    for (var i = 1; i < key.length; i++) {
                         sValue += "_" + key[i];
                     }
                 }
                 else {
                     sValue = key;
                 }
-                let info = data[sValue];
+                var info = data[sValue];
                 return info;
             }
             return null;
-        }
-        getRes(url) {
+        };
+        DataProvider.prototype.getRes = function (url) {
             airkit.Log.debug("[load]加载配置表:" + url);
-            let template = this._dicTemplate.getValue(url);
+            var template = this._dicTemplate.getValue(url);
             if (template) {
-                let json_res = airkit.ResourceManager.Instance.getRes(url);
+                var json_res = airkit.ResourceManager.Instance.getRes(url);
                 if (airkit.StringUtils.isNullOrEmpty(template.key)) {
                     this._dicData.add(template.name, json_res);
                 }
                 else {
-                    let map = {};
-                    let sValue;
-                    let sData;
-                    let i = 0;
-                    let isArrayKey = Array.isArray(template.key);
+                    var map = {};
+                    var sValue = void 0;
+                    var sData = void 0;
+                    var i = 0;
+                    var isArrayKey = Array.isArray(template.key);
                     while (json_res[i]) {
                         sData = json_res[i];
                         if (isArrayKey) {
                             sValue = sData[template.key[0]];
-                            for (let i = 1; i < template.key.length; i++) {
-                                sValue += "_" + sData[template.key[i]];
+                            for (var i_3 = 1; i_3 < template.key.length; i_3++) {
+                                sValue += "_" + sData[template.key[i_3]];
                             }
                         }
                         else {
@@ -959,20 +1105,21 @@ window.airkit = {};
                     this._dicData.add(template.name, map);
                 }
             }
-        }
-        onLoadComplete(url) {
+        };
+        DataProvider.prototype.onLoadComplete = function (url) {
             this.getRes(url);
-        }
-    }
-    DataProvider.instance = null;
+        };
+        DataProvider.instance = null;
+        return DataProvider;
+    }(airkit.Singleton));
     airkit.DataProvider = DataProvider;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
     function base64_encode(data) {
-        let base = new Base64();
-        let buffer = stringToArrayBuffer(data);
-        let str = base.encode(buffer);
+        var base = new Base64();
+        var buffer = stringToArrayBuffer(data);
+        var str = base.encode(buffer);
         return str;
     }
     airkit.base64_encode = base64_encode;
@@ -985,8 +1132,8 @@ window.airkit = {};
         return buffer;
     }
     airkit.stringToArrayBuffer = stringToArrayBuffer;
-    class Base64 {
-        constructor() {
+    var Base64 = (function () {
+        function Base64() {
             this.alphabet = [
                 "A",
                 "B",
@@ -1054,16 +1201,16 @@ window.airkit = {};
                 "/"
             ];
             this.values = {};
-            for (let i = 0; i < 64; ++i) {
+            for (var i = 0; i < 64; ++i) {
                 this.values[this.alphabet[i]] = i;
             }
         }
-        encode(bytes) {
-            const array = new Uint8Array(bytes);
-            const base64 = [];
-            let index = 0;
-            let quantum;
-            let value;
+        Base64.prototype.encode = function (bytes) {
+            var array = new Uint8Array(bytes);
+            var base64 = [];
+            var index = 0;
+            var quantum;
+            var value;
             while (index + 2 < array.byteLength) {
                 quantum =
                     (array[index] << 16) | (array[index + 1] << 8) | array[index + 2];
@@ -1096,9 +1243,9 @@ window.airkit = {};
                 base64.push("=");
             }
             return base64.join("");
-        }
-        decode(string) {
-            let size = string.length;
+        };
+        Base64.prototype.decode = function (string) {
+            var size = string.length;
             if (size === 0) {
                 return new Uint8Array(new ArrayBuffer(0));
             }
@@ -1108,8 +1255,8 @@ window.airkit = {};
             if (!string.match(/^[a-zA-Z0-9+/]+={0,2}$/)) {
                 throw new Error("Invalid base64 encoded value");
             }
-            let bytes = 3 * (size / 4);
-            let numPad = 0;
+            var bytes = 3 * (size / 4);
+            var numPad = 0;
             if (string.charAt(size - 1) === "=") {
                 numPad++;
                 bytes--;
@@ -1118,16 +1265,16 @@ window.airkit = {};
                 numPad++;
                 bytes--;
             }
-            const buffer = new Uint8Array(new ArrayBuffer(bytes));
-            let index = 0;
-            let bufferIndex = 0;
-            let quantum;
+            var buffer = new Uint8Array(new ArrayBuffer(bytes));
+            var index = 0;
+            var bufferIndex = 0;
+            var quantum;
             if (numPad > 0) {
                 size -= 4;
             }
             while (index < size) {
                 quantum = 0;
-                for (let i = 0; i < 4; ++i) {
+                for (var i = 0; i < 4; ++i) {
                     quantum = (quantum << 6) | this.values[string.charAt(index + i)];
                 }
                 buffer[bufferIndex++] = (quantum >> 16) & 0xff;
@@ -1137,7 +1284,7 @@ window.airkit = {};
             }
             if (numPad > 0) {
                 quantum = 0;
-                for (let i = 0; i < 4 - numPad; ++i) {
+                for (var i = 0; i < 4 - numPad; ++i) {
                     quantum = (quantum << 6) | this.values[string.charAt(index + i)];
                 }
                 if (numPad === 1) {
@@ -1151,47 +1298,48 @@ window.airkit = {};
                 }
             }
             return buffer;
-        }
-    }
+        };
+        return Base64;
+    }());
     airkit.Base64 = Base64;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
     function md5_encrypt(data) {
-        let base = new MD5();
+        var base = new MD5();
         return base.hex_md5(data);
     }
     airkit.md5_encrypt = md5_encrypt;
-    class MD5 {
-        constructor() {
+    var MD5 = (function () {
+        function MD5() {
             this.hexcase = 0;
             this.b64pad = "";
         }
-        hex_md5(s) {
+        MD5.prototype.hex_md5 = function (s) {
             return this.rstr2hex(this.rstr_md5(this.str2rstr_utf8(s)));
-        }
-        b64_md5(s) {
+        };
+        MD5.prototype.b64_md5 = function (s) {
             return this.rstr2b64(this.rstr_md5(this.str2rstr_utf8(s)));
-        }
-        any_md5(s, e) {
+        };
+        MD5.prototype.any_md5 = function (s, e) {
             return this.rstr2any(this.rstr_md5(this.str2rstr_utf8(s)), e);
-        }
-        hex_hmac_md5(k, d) {
+        };
+        MD5.prototype.hex_hmac_md5 = function (k, d) {
             return this.rstr2hex(this.rstr_hmac_md5(this.str2rstr_utf8(k), this.str2rstr_utf8(d)));
-        }
-        b64_hmac_md5(k, d) {
+        };
+        MD5.prototype.b64_hmac_md5 = function (k, d) {
             return this.rstr2b64(this.rstr_hmac_md5(this.str2rstr_utf8(k), this.str2rstr_utf8(d)));
-        }
-        any_hmac_md5(k, d, e) {
+        };
+        MD5.prototype.any_hmac_md5 = function (k, d, e) {
             return this.rstr2any(this.rstr_hmac_md5(this.str2rstr_utf8(k), this.str2rstr_utf8(d)), e);
-        }
-        md5_vm_test() {
+        };
+        MD5.prototype.md5_vm_test = function () {
             return (this.hex_md5("abc").toLowerCase() == "900150983cd24fb0d6963f7d28e17f72");
-        }
-        rstr_md5(s) {
+        };
+        MD5.prototype.rstr_md5 = function (s) {
             return this.binl2rstr(this.binl_md5(this.rstr2binl(s), s.length * 8));
-        }
-        rstr_hmac_md5(key, data) {
+        };
+        MD5.prototype.rstr_hmac_md5 = function (key, data) {
             var bkey = this.rstr2binl(key);
             if (bkey.length > 16)
                 bkey = this.binl_md5(bkey, key.length * 8);
@@ -1202,8 +1350,8 @@ window.airkit = {};
             }
             var hash = this.binl_md5(ipad.concat(this.rstr2binl(data)), 512 + data.length * 8);
             return this.binl2rstr(this.binl_md5(opad.concat(hash), 512 + 128));
-        }
-        rstr2hex(input) {
+        };
+        MD5.prototype.rstr2hex = function (input) {
             try {
                 this.hexcase;
             }
@@ -1218,8 +1366,8 @@ window.airkit = {};
                 output += hex_tab.charAt((x >>> 4) & 0x0f) + hex_tab.charAt(x & 0x0f);
             }
             return output;
-        }
-        rstr2b64(input) {
+        };
+        MD5.prototype.rstr2b64 = function (input) {
             try {
                 this.b64pad;
             }
@@ -1241,8 +1389,8 @@ window.airkit = {};
                 }
             }
             return output;
-        }
-        rstr2any(input, encoding) {
+        };
+        MD5.prototype.rstr2any = function (input, encoding) {
             var divisor = encoding.length;
             var i, j, q, x, quotient;
             var dividend = Array(Math.ceil(input.length / 2));
@@ -1269,8 +1417,8 @@ window.airkit = {};
             for (i = remainders.length - 1; i >= 0; i--)
                 output += encoding.charAt(remainders[i]);
             return output;
-        }
-        str2rstr_utf8(input) {
+        };
+        MD5.prototype.str2rstr_utf8 = function (input) {
             var output = "";
             var i = -1;
             var x, y;
@@ -1291,34 +1439,34 @@ window.airkit = {};
                     output += String.fromCharCode(0xf0 | ((x >>> 18) & 0x07), 0x80 | ((x >>> 12) & 0x3f), 0x80 | ((x >>> 6) & 0x3f), 0x80 | (x & 0x3f));
             }
             return output;
-        }
-        str2rstr_utf16le(input) {
+        };
+        MD5.prototype.str2rstr_utf16le = function (input) {
             var output = "";
             for (var i = 0; i < input.length; i++)
                 output += String.fromCharCode(input.charCodeAt(i) & 0xff, (input.charCodeAt(i) >>> 8) & 0xff);
             return output;
-        }
-        str2rstr_utf16be(input) {
+        };
+        MD5.prototype.str2rstr_utf16be = function (input) {
             var output = "";
             for (var i = 0; i < input.length; i++)
                 output += String.fromCharCode((input.charCodeAt(i) >>> 8) & 0xff, input.charCodeAt(i) & 0xff);
             return output;
-        }
-        rstr2binl(input) {
+        };
+        MD5.prototype.rstr2binl = function (input) {
             var output = Array(input.length >> 2);
             for (var i = 0; i < output.length; i++)
                 output[i] = 0;
             for (var i = 0; i < input.length * 8; i += 8)
                 output[i >> 5] |= (input.charCodeAt(i / 8) & 0xff) << i % 32;
             return output;
-        }
-        binl2rstr(input) {
+        };
+        MD5.prototype.binl2rstr = function (input) {
             var output = "";
             for (var i = 0; i < input.length * 32; i += 8)
                 output += String.fromCharCode((input[i >> 5] >>> i % 32) & 0xff);
             return output;
-        }
-        binl_md5(x, len) {
+        };
+        MD5.prototype.binl_md5 = function (x, len) {
             x[len >> 5] |= 0x80 << len % 32;
             x[(((len + 64) >>> 9) << 4) + 14] = len;
             var a = 1732584193;
@@ -1400,37 +1548,42 @@ window.airkit = {};
                 d = this.safe_add(d, oldd);
             }
             return [a, b, c, d];
-        }
-        md5_cmn(q, a, b, x, s, t) {
+        };
+        MD5.prototype.md5_cmn = function (q, a, b, x, s, t) {
             return this.safe_add(this.bit_rol(this.safe_add(this.safe_add(a, q), this.safe_add(x, t)), s), b);
-        }
-        md5_ff(a, b, c, d, x, s, t) {
+        };
+        MD5.prototype.md5_ff = function (a, b, c, d, x, s, t) {
             return this.md5_cmn((b & c) | (~b & d), a, b, x, s, t);
-        }
-        md5_gg(a, b, c, d, x, s, t) {
+        };
+        MD5.prototype.md5_gg = function (a, b, c, d, x, s, t) {
             return this.md5_cmn((b & d) | (c & ~d), a, b, x, s, t);
-        }
-        md5_hh(a, b, c, d, x, s, t) {
+        };
+        MD5.prototype.md5_hh = function (a, b, c, d, x, s, t) {
             return this.md5_cmn(b ^ c ^ d, a, b, x, s, t);
-        }
-        md5_ii(a, b, c, d, x, s, t) {
+        };
+        MD5.prototype.md5_ii = function (a, b, c, d, x, s, t) {
             return this.md5_cmn(c ^ (b | ~d), a, b, x, s, t);
-        }
-        safe_add(x, y) {
+        };
+        MD5.prototype.safe_add = function (x, y) {
             var lsw = (x & 0xffff) + (y & 0xffff);
             var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
             return (msw << 16) | (lsw & 0xffff);
-        }
-        bit_rol(num, cnt) {
+        };
+        MD5.prototype.bit_rol = function (num, cnt) {
             return (num << cnt) | (num >>> (32 - cnt));
-        }
-    }
+        };
+        return MD5;
+    }());
     airkit.MD5 = MD5;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class EventArgs {
-        constructor(...args) {
+    var EventArgs = (function () {
+        function EventArgs() {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
             this._type = "";
             this._data = null;
             if (!args || args.length == 0)
@@ -1440,212 +1593,259 @@ window.airkit = {};
             else
                 this._data = airkit.ArrayUtils.copy(args);
         }
-        init(...args) {
+        EventArgs.prototype.init = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
             if (args.length == 0)
                 return;
             if (args instanceof Array)
                 this._data = airkit.ArrayUtils.copy(args[0]);
             else
                 this._data = airkit.ArrayUtils.copy(args);
-        }
-        get(index) {
+        };
+        EventArgs.prototype.get = function (index) {
             if (!this._data || this._data.length == 0)
                 return null;
             if (index < 0 || index >= this._data.length)
                 return null;
             return this._data[index];
-        }
-        get type() {
-            return this._type;
-        }
-        set type(t) {
-            this._type = t;
-        }
-    }
+        };
+        Object.defineProperty(EventArgs.prototype, "type", {
+            get: function () {
+                return this._type;
+            },
+            set: function (t) {
+                this._type = t;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return EventArgs;
+    }());
     airkit.EventArgs = EventArgs;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class EventCenter extends airkit.Singleton {
-        constructor() {
-            super();
-            this._event = null;
-            this._evtArgs = null;
-            this._event = new airkit.EventDispatcher();
-            this._evtArgs = new airkit.EventArgs();
+    var EventCenter = (function (_super) {
+        __extends(EventCenter, _super);
+        function EventCenter() {
+            var _this = _super.call(this) || this;
+            _this._event = null;
+            _this._evtArgs = null;
+            _this._event = new airkit.EventDispatcher();
+            _this._evtArgs = new airkit.EventArgs();
+            return _this;
         }
-        static get Instance() {
-            if (!this.instance)
-                this.instance = new EventCenter();
-            return this.instance;
-        }
-        static on(type, caller, fun) {
+        Object.defineProperty(EventCenter, "Instance", {
+            get: function () {
+                if (!this.instance)
+                    this.instance = new EventCenter();
+                return this.instance;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        EventCenter.on = function (type, caller, fun) {
             EventCenter.Instance._event.on(type, caller, fun);
-        }
-        static off(type, caller, fun) {
+        };
+        EventCenter.off = function (type, caller, fun) {
             EventCenter.Instance._event.off(type, caller, fun);
-        }
-        static dispatchEvent(type, ...args) {
+        };
+        EventCenter.dispatchEvent = function (type) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
             EventCenter.Instance._evtArgs.init(args);
             EventCenter.Instance._event.dispatchEvent(type, EventCenter.Instance._evtArgs);
-        }
-        static clear() {
+        };
+        EventCenter.clear = function () {
             EventCenter.Instance._event.clear();
-        }
-    }
-    EventCenter.instance = null;
+        };
+        EventCenter.instance = null;
+        return EventCenter;
+    }(airkit.Singleton));
     airkit.EventCenter = EventCenter;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class EventDispatcher {
-        constructor() {
+    var EventDispatcher = (function () {
+        function EventDispatcher() {
             this._dicFuns = {};
             this._evtArgs = null;
             this._evtArgs = new airkit.EventArgs();
         }
-        on(type, caller, fun) {
+        EventDispatcher.prototype.on = function (type, caller, fun) {
             if (!this._dicFuns[type]) {
                 this._dicFuns[type] = [];
                 this._dicFuns[type].push(airkit.Handler.create(caller, fun, null, false));
             }
             else {
-                let arr = this._dicFuns[type];
-                for (let item of arr) {
+                var arr = this._dicFuns[type];
+                for (var _i = 0, arr_1 = arr; _i < arr_1.length; _i++) {
+                    var item = arr_1[_i];
                     if (item.caller == caller && item.method == fun)
                         return;
                 }
                 arr.push(airkit.Handler.create(caller, fun, null, false));
             }
-        }
-        off(type, caller, fun) {
-            let arr = this._dicFuns[type];
+        };
+        EventDispatcher.prototype.off = function (type, caller, fun) {
+            var arr = this._dicFuns[type];
             if (!arr)
                 return;
-            for (let i = 0; i < arr.length; ++i) {
-                let item = arr[i];
+            for (var i = 0; i < arr.length; ++i) {
+                var item = arr[i];
                 if (item.caller == caller && item.method == fun) {
                     item.recover();
                     arr.splice(i, 1);
                     break;
                 }
             }
-        }
-        dispatchEvent(type, args) {
+        };
+        EventDispatcher.prototype.dispatchEvent = function (type, args) {
             args.type = type;
-            let arr = this._dicFuns[type];
+            var arr = this._dicFuns[type];
             if (!arr)
                 return;
-            for (let item of arr) {
+            for (var _i = 0, arr_2 = arr; _i < arr_2.length; _i++) {
+                var item = arr_2[_i];
                 item.runWith(args);
             }
-        }
-        dispatch(type, ...args) {
+        };
+        EventDispatcher.prototype.dispatch = function (type) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
             this._evtArgs.init(args);
             this.dispatchEvent(type, this._evtArgs);
-        }
-        clear() {
+        };
+        EventDispatcher.prototype.clear = function () {
             airkit.DicUtils.clearDic(this._dicFuns);
-        }
-    }
+        };
+        return EventDispatcher;
+    }());
     airkit.EventDispatcher = EventDispatcher;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class Event {
-    }
-    Event.PROGRESS = "progress";
-    Event.COMPLETE = "complete";
-    Event.ERROR = "error";
+    var Event = (function () {
+        function Event() {
+        }
+        Event.PROGRESS = "progress";
+        Event.COMPLETE = "complete";
+        Event.ERROR = "error";
+        return Event;
+    }());
     airkit.Event = Event;
-    class EventID {
-    }
-    EventID.BEGIN_GAME = "BEGIN_GAME";
-    EventID.RESTART_GAEM = "RESTART_GAME";
-    EventID.STOP_GAME = "STOP_GAME";
-    EventID.PAUSE_GAME = "PAUSE_GAME";
-    EventID.ON_SHOW = "ON_SHOW";
-    EventID.ON_HIDE = "ON_HIDE";
-    EventID.CHANGE_SCENE = "CHANGE_SCENE";
-    EventID.RESIZE = "RESIZE";
-    EventID.BEGIN_MODULE = "BEGIN_MODULE";
-    EventID.END_MODULE = "END_MODULE";
-    EventID.UI_OPEN = "UI_OPEN";
-    EventID.UI_CLOSE = "UI_CLOSE";
-    EventID.UI_LANG = "UI_LANG";
+    var EventID = (function () {
+        function EventID() {
+        }
+        EventID.BEGIN_GAME = "BEGIN_GAME";
+        EventID.RESTART_GAEM = "RESTART_GAME";
+        EventID.STOP_GAME = "STOP_GAME";
+        EventID.PAUSE_GAME = "PAUSE_GAME";
+        EventID.ON_SHOW = "ON_SHOW";
+        EventID.ON_HIDE = "ON_HIDE";
+        EventID.CHANGE_SCENE = "CHANGE_SCENE";
+        EventID.RESIZE = "RESIZE";
+        EventID.BEGIN_MODULE = "BEGIN_MODULE";
+        EventID.END_MODULE = "END_MODULE";
+        EventID.UI_OPEN = "UI_OPEN";
+        EventID.UI_CLOSE = "UI_CLOSE";
+        EventID.UI_LANG = "UI_LANG";
+        return EventID;
+    }());
     airkit.EventID = EventID;
-    class LoaderEventID {
-    }
-    LoaderEventID.RESOURCE_LOAD_COMPLATE = "RESOURCE_LOAD_COMPLATE";
-    LoaderEventID.RESOURCE_LOAD_PROGRESS = "RESOURCE_LOAD_PROGRESS";
-    LoaderEventID.RESOURCE_LOAD_FAILED = "RESOURCE_LOAD_FAILED";
-    LoaderEventID.LOADVIEW_OPEN = "LOADVIEW_OPEN";
-    LoaderEventID.LOADVIEW_COMPLATE = "LOADVIEW_COMPLATE";
-    LoaderEventID.LOADVIEW_PROGRESS = "LOADVIEW_PROGRESS";
+    var LoaderEventID = (function () {
+        function LoaderEventID() {
+        }
+        LoaderEventID.RESOURCE_LOAD_COMPLATE = "RESOURCE_LOAD_COMPLATE";
+        LoaderEventID.RESOURCE_LOAD_PROGRESS = "RESOURCE_LOAD_PROGRESS";
+        LoaderEventID.RESOURCE_LOAD_FAILED = "RESOURCE_LOAD_FAILED";
+        LoaderEventID.LOADVIEW_OPEN = "LOADVIEW_OPEN";
+        LoaderEventID.LOADVIEW_COMPLATE = "LOADVIEW_COMPLATE";
+        LoaderEventID.LOADVIEW_PROGRESS = "LOADVIEW_PROGRESS";
+        return LoaderEventID;
+    }());
     airkit.LoaderEventID = LoaderEventID;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class Signal {
-        constructor() { }
-        destory() {
+    var Signal = (function () {
+        function Signal() {
+        }
+        Signal.prototype.destory = function () {
             this._listener && this._listener.destory();
             this._listener = null;
-        }
-        dispatch(arg) {
+        };
+        Signal.prototype.dispatch = function (arg) {
             if (this._listener)
                 this._listener.execute(arg);
-        }
-        has(caller) {
+        };
+        Signal.prototype.has = function (caller) {
             if (this._listener == null)
                 return false;
             return this._listener.has(caller);
-        }
-        on(caller, method, ...args) {
+        };
+        Signal.prototype.on = function (caller, method) {
+            var args = [];
+            for (var _i = 2; _i < arguments.length; _i++) {
+                args[_i - 2] = arguments[_i];
+            }
             this.makeSureListenerManager();
             this._listener.on(caller, method, args, false);
-        }
-        once(caller, method, ...args) {
+        };
+        Signal.prototype.once = function (caller, method) {
+            var args = [];
+            for (var _i = 2; _i < arguments.length; _i++) {
+                args[_i - 2] = arguments[_i];
+            }
             this.makeSureListenerManager();
             this._listener.on(caller, method, args, true);
-        }
-        off(caller, method) {
+        };
+        Signal.prototype.off = function (caller, method) {
             if (this._listener)
                 this._listener.off(caller, method);
-        }
-        makeSureListenerManager() {
+        };
+        Signal.prototype.makeSureListenerManager = function () {
             if (!this._listener)
                 this._listener = new SignalListener();
-        }
-    }
+        };
+        return Signal;
+    }());
     airkit.Signal = Signal;
-    class SignalListener {
-        constructor() {
+    var SignalListener = (function () {
+        function SignalListener() {
             this.stopped = false;
         }
-        destory() {
+        SignalListener.prototype.destory = function () {
             this.stopped = false;
             this.clear();
-        }
-        has(caller) {
-            for (let i = 0; i < this.handlers.length; i++) {
+        };
+        SignalListener.prototype.has = function (caller) {
+            for (var i = 0; i < this.handlers.length; i++) {
                 if (this.handlers[i].caller == caller) {
                     return true;
                 }
             }
             return false;
-        }
-        on(caller, method, args, once = false) {
+        };
+        SignalListener.prototype.on = function (caller, method, args, once) {
+            if (once === void 0) { once = false; }
             if (!this.handlers)
                 this.handlers = [];
-            let handler = new airkit.Handler(caller, method, args, once);
+            var handler = new airkit.Handler(caller, method, args, once);
             this.handlers.push(handler);
             return handler;
-        }
-        off(caller, method) {
+        };
+        SignalListener.prototype.off = function (caller, method) {
             if (!this.handlers || this.handlers.length <= 0)
                 return;
-            let tempHandlers = [];
+            var tempHandlers = [];
             for (var i = 0; i < this.handlers.length; i++) {
                 var handler = this.handlers[i];
                 if (handler.caller === caller && handler.method === method) {
@@ -1661,13 +1861,13 @@ window.airkit = {};
                 tempHandlers.push(this.handlers[i]);
             }
             this.handlers = tempHandlers;
-        }
-        offAll(caller, method) {
+        };
+        SignalListener.prototype.offAll = function (caller, method) {
             if (!this.handlers || this.handlers.length <= 0)
                 return;
-            let temp = [];
-            let handlers = this.handlers;
-            let len = handlers.length;
+            var temp = [];
+            var handlers = this.handlers;
+            var len = handlers.length;
             for (var i = 0; i < len; ++i) {
                 if (caller !== handlers[i].caller || method !== handlers[i].method) {
                     temp.push(handlers[i]);
@@ -1677,8 +1877,8 @@ window.airkit = {};
                 }
             }
             this.handlers = temp;
-        }
-        clear() {
+        };
+        SignalListener.prototype.clear = function () {
             if (!this.handlers || this.handlers.length <= 0)
                 return;
             for (var i = 0; i < this.handlers.length; i++) {
@@ -1686,18 +1886,22 @@ window.airkit = {};
                 handler.recover();
             }
             this.handlers = null;
-        }
-        stop() {
+        };
+        SignalListener.prototype.stop = function () {
             this.stopped = true;
-        }
-        execute(...args) {
+        };
+        SignalListener.prototype.execute = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
             if (!this.handlers || this.handlers.length <= 0)
                 return;
-            let handlers = this.handlers;
-            let len = handlers.length;
-            let handler;
-            let temp = [];
-            let i = 0;
+            var handlers = this.handlers;
+            var len = handlers.length;
+            var handler;
+            var temp = [];
+            var i = 0;
             for (; i < len; ++i) {
                 if (this.stopped)
                     break;
@@ -1715,41 +1919,55 @@ window.airkit = {};
             handler = null;
             handlers = null;
             temp = null;
-        }
-    }
+        };
+        return SignalListener;
+    }());
     airkit.SignalListener = SignalListener;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    function L(key, ...args) {
-        let str = LangManager.Instance.getText(LangManager.Instance.curLang, key);
+    function L(key) {
+        var args = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            args[_i - 1] = arguments[_i];
+        }
+        var str = LangManager.Instance.getText(LangManager.Instance.curLang, key);
         if (str == null)
             return "unknown key:" + key;
-        return airkit.StringUtils.format(str, ...args);
+        return airkit.StringUtils.format.apply(airkit.StringUtils, [str].concat(args));
     }
     airkit.L = L;
-    class LangManager extends airkit.Singleton {
-        static get Instance() {
-            if (!this.instance)
-                this.instance = new LangManager();
-            return this.instance;
+    var LangManager = (function (_super) {
+        __extends(LangManager, _super);
+        function LangManager() {
+            return _super !== null && _super.apply(this, arguments) || this;
         }
-        init() {
+        Object.defineProperty(LangManager, "Instance", {
+            get: function () {
+                if (!this.instance)
+                    this.instance = new LangManager();
+                return this.instance;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        LangManager.prototype.init = function () {
             this._curLang = null;
-        }
-        destory() {
-        }
-        changeLang(lang) {
-            return new Promise((resolve, reject) => {
-                if (lang == this._curLang) {
+        };
+        LangManager.prototype.destory = function () {
+        };
+        LangManager.prototype.changeLang = function (lang) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                if (lang == _this._curLang) {
                     resolve(lang);
                     return;
                 }
-                let data = airkit.ConfigManger.Instance.getList(this._curLang);
+                var data = airkit.ConfigManger.Instance.getList(_this._curLang);
                 if (data) {
                     if (airkit.DataProvider.Instance.getConfig(lang)) {
-                        this._curLang = lang;
-                        airkit.EventCenter.dispatchEvent(airkit.EventID.UI_LANG, this._curLang);
+                        _this._curLang = lang;
+                        airkit.EventCenter.dispatchEvent(airkit.EventID.UI_LANG, _this._curLang);
                         resolve(lang);
                     }
                 }
@@ -1758,9 +1976,9 @@ window.airkit = {};
                     reject("no lang package " + lang);
                 }
             });
-        }
-        getText(lang, key) {
-            let info = airkit.DataProvider.Instance.getInfo(lang, key);
+        };
+        LangManager.prototype.getText = function (lang, key) {
+            var info = airkit.DataProvider.Instance.getInfo(lang, key);
             if (info) {
                 return info["name"];
             }
@@ -1768,69 +1986,82 @@ window.airkit = {};
                 airkit.Log.error("cant get lang key", key);
                 return "";
             }
-        }
-        get curLang() {
-            return this._curLang;
-        }
-    }
-    LangManager.instance = null;
+        };
+        Object.defineProperty(LangManager.prototype, "curLang", {
+            get: function () {
+                return this._curLang;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        LangManager.instance = null;
+        return LangManager;
+    }(airkit.Singleton));
     airkit.LangManager = LangManager;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class LoaderManager extends airkit.Singleton {
-        static registerLoadingView(view_type, className, cls) {
+    var LoaderManager = (function (_super) {
+        __extends(LoaderManager, _super);
+        function LoaderManager() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        LoaderManager.registerLoadingView = function (view_type, className, cls) {
             this.loaders.add(view_type, className);
             airkit.ClassUtils.regClass(className, cls);
-        }
-        static get Instance() {
-            if (!this.instance)
-                this.instance = new LoaderManager();
-            return this.instance;
-        }
-        setup() {
+        };
+        Object.defineProperty(LoaderManager, "Instance", {
+            get: function () {
+                if (!this.instance)
+                    this.instance = new LoaderManager();
+                return this.instance;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        LoaderManager.prototype.setup = function () {
             this.registerEvent();
             this._dicLoadView = new airkit.NDictionary();
-        }
-        destroy() {
+        };
+        LoaderManager.prototype.destroy = function () {
             this.unRegisterEvent();
             if (this._dicLoadView) {
-                let view = null;
+                var view_1 = null;
                 this._dicLoadView.foreach(function (key, value) {
-                    view = value;
-                    view.close();
+                    view_1 = value;
+                    view_1.close();
                     return true;
                 });
                 this._dicLoadView.clear();
                 this._dicLoadView = null;
             }
-        }
-        registerEvent() {
+        };
+        LoaderManager.prototype.registerEvent = function () {
             airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
             airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
             airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
-        }
-        unRegisterEvent() {
+        };
+        LoaderManager.prototype.unRegisterEvent = function () {
             airkit.EventCenter.off(airkit.LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
             airkit.EventCenter.off(airkit.LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
             airkit.EventCenter.off(airkit.LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
-        }
-        onLoadViewEvt(args) {
-            let type = args.type;
-            let viewType = args.get(0);
+        };
+        LoaderManager.prototype.onLoadViewEvt = function (args) {
+            var type = args.type;
+            var viewType = args.get(0);
             switch (type) {
                 case airkit.LoaderEventID.LOADVIEW_OPEN:
                     {
                         airkit.Log.debug("显示加载界面");
-                        let total = args.get(1);
-                        let tips = args.get(2);
+                        var total = args.get(1);
+                        var tips = args.get(2);
                         this.show(viewType, total, tips);
                     }
                     break;
                 case airkit.LoaderEventID.LOADVIEW_PROGRESS:
                     {
-                        let cur = args.get(1);
-                        let total = args.get(2);
+                        var cur = args.get(1);
+                        var total = args.get(2);
                         this.setProgress(viewType, cur, total);
                     }
                     break;
@@ -1841,23 +2072,24 @@ window.airkit = {};
                     }
                     break;
             }
-        }
-        show(type, total, tips) {
+        };
+        LoaderManager.prototype.show = function (type, total, tips) {
+            var _this = this;
             if (type == null || type == airkit.LOADVIEW_TYPE_NONE)
                 return;
-            let view = this._dicLoadView.getValue(type);
+            var view = this._dicLoadView.getValue(type);
             if (!view) {
-                let className = LoaderManager.loaders.getValue(type);
+                var className = LoaderManager.loaders.getValue(type);
                 if (className.length > 0) {
                     view = airkit.ClassUtils.getInstance(className);
                     if (view == null)
                         return;
                     view.setup([]);
-                    let clas = airkit.ClassUtils.getClass(className);
-                    view.loadResource(airkit.ResourceManager.SystemGroup, clas).then(() => {
+                    var clas = airkit.ClassUtils.getClass(className);
+                    view.loadResource(airkit.ResourceManager.SystemGroup, clas).then(function () {
                         airkit.LayerManager.loadingLayer.addChild(view);
-                        this._dicLoadView.add(type, view);
-                        this.updateView(view, total, tips);
+                        _this._dicLoadView.add(type, view);
+                        _this.updateView(view, total, tips);
                     });
                 }
                 else {
@@ -1867,24 +2099,24 @@ window.airkit = {};
             else {
                 this.updateView(view, total, tips);
             }
-        }
-        updateView(view, total, tips) {
+        };
+        LoaderManager.prototype.updateView = function (view, total, tips) {
             if (!view.parent) {
                 airkit.LayerManager.loadingLayer.addChild(view);
             }
             view.onOpen(total);
             view.setTips(tips);
             view.setVisible(true);
-        }
-        setProgress(type, cur, total) {
-            let view = this._dicLoadView.getValue(type);
+        };
+        LoaderManager.prototype.setProgress = function (type, cur, total) {
+            var view = this._dicLoadView.getValue(type);
             if (!view) {
                 return;
             }
             view.setProgress(cur, total);
-        }
-        close(type) {
-            let view = this._dicLoadView.getValue(type);
+        };
+        LoaderManager.prototype.close = function (type) {
+            var view = this._dicLoadView.getValue(type);
             if (!view) {
                 return;
             }
@@ -1892,10 +2124,11 @@ window.airkit = {};
             view.onClose();
             this._dicLoadView.remove(type);
             view = null;
-        }
-    }
-    LoaderManager.loaders = new airkit.NDictionary();
-    LoaderManager.instance = null;
+        };
+        LoaderManager.loaders = new airkit.NDictionary();
+        LoaderManager.instance = null;
+        return LoaderManager;
+    }(airkit.Singleton));
     airkit.LoaderManager = LoaderManager;
 })(airkit || (airkit = {}));
 
@@ -1904,27 +2137,33 @@ window.airkit = {};
     airkit.FONT_SIZE_5 = 22;
     airkit.FONT_SIZE_6 = 25;
     airkit.FONT_SIZE_7 = 29;
-    class ResourceManager extends airkit.Singleton {
-        constructor() {
-            super(...arguments);
-            this._dicLoaderUrl = null;
+    var ResourceManager = (function (_super) {
+        __extends(ResourceManager, _super);
+        function ResourceManager() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._dicLoaderUrl = null;
+            return _this;
         }
-        static get Instance() {
-            if (!this.instance)
-                this.instance = new ResourceManager();
-            return this.instance;
-        }
-        setup() {
+        Object.defineProperty(ResourceManager, "Instance", {
+            get: function () {
+                if (!this.instance)
+                    this.instance = new ResourceManager();
+                return this.instance;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ResourceManager.prototype.setup = function () {
             this._dicLoaderUrl = new airkit.SDictionary();
             this._minLoaderTime = 1000;
             this._aniAnimDic = new airkit.SDictionary();
             this.onAniResUpdateSignal = new airkit.Signal();
-        }
-        static asyncLoad(url, progress, type, priority, cache, group, ignoreCache) {
-            return new Promise((resolve, reject) => {
-                cc.loader.loadRes(url, type, (completedCount, totalCount, item) => {
+        };
+        ResourceManager.asyncLoad = function (url, progress, type, priority, cache, group, ignoreCache) {
+            return new Promise(function (resolve, reject) {
+                cc.loader.loadRes(url, type, function (completedCount, totalCount, item) {
                     progress.runWith(completedCount / totalCount);
-                }, (error, resource) => {
+                }, function (error, resource) {
                     if (error) {
                         reject(url);
                         return;
@@ -1932,19 +2171,25 @@ window.airkit = {};
                     resolve(url);
                 });
             });
-        }
-        destroy() {
+        };
+        ResourceManager.prototype.destroy = function () {
             if (this._dicLoaderUrl) {
                 this._dicLoaderUrl.clear();
                 this._dicLoaderUrl = null;
             }
-        }
-        update(dt) { }
-        getRes(url) {
+        };
+        ResourceManager.prototype.update = function (dt) { };
+        ResourceManager.prototype.getRes = function (url) {
             this.refreshResourceTime(url, null, false);
             return cc.loader.getRes(url);
-        }
-        loadRes(url, type, viewType = airkit.LOADVIEW_TYPE_NONE, priority = 1, cache = true, group = "default", ignoreCache = false) {
+        };
+        ResourceManager.prototype.loadRes = function (url, type, viewType, priority, cache, group, ignoreCache) {
+            var _this = this;
+            if (viewType === void 0) { viewType = airkit.LOADVIEW_TYPE_NONE; }
+            if (priority === void 0) { priority = 1; }
+            if (cache === void 0) { cache = true; }
+            if (group === void 0) { group = "default"; }
+            if (ignoreCache === void 0) { ignoreCache = false; }
             this.refreshResourceTime(url, group, true);
             if (viewType == null)
                 viewType = airkit.LOADVIEW_TYPE_NONE;
@@ -1955,28 +2200,36 @@ window.airkit = {};
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, 1);
             }
-            return new Promise((resolve, reject) => {
-                ResourceManager.asyncLoad(url, airkit.Handler.create(this, this.onLoadProgress, [viewType, 1], false), type, priority, cache, group, ignoreCache)
-                    .then((v) => {
-                    this.onLoadComplete(viewType, [url]);
+            return new Promise(function (resolve, reject) {
+                ResourceManager.asyncLoad(url, airkit.Handler.create(_this, _this.onLoadProgress, [viewType, 1], false), type, priority, cache, group, ignoreCache)
+                    .then(function (v) {
+                    _this.onLoadComplete(viewType, [url]);
                     resolve(url);
                 })
-                    .catch((e) => {
+                    .catch(function (e) {
                     reject(e);
                 });
             });
-        }
-        loadArrayRes(arr_res, viewType = airkit.LOADVIEW_TYPE_NONE, tips = null, priority = 1, cache = true, group = "default", ignoreCache = false) {
-            let has_unload = false;
-            let assets = [];
-            let urls = [];
+        };
+        ResourceManager.prototype.loadArrayRes = function (arr_res, viewType, tips, priority, cache, group, ignoreCache) {
+            var _this = this;
+            if (viewType === void 0) { viewType = airkit.LOADVIEW_TYPE_NONE; }
+            if (tips === void 0) { tips = null; }
+            if (priority === void 0) { priority = 1; }
+            if (cache === void 0) { cache = true; }
+            if (group === void 0) { group = "default"; }
+            if (ignoreCache === void 0) { ignoreCache = false; }
+            var has_unload = false;
+            var assets = [];
+            var urls = [];
             if (viewType == null)
                 viewType = airkit.LOADVIEW_TYPE_NONE;
             if (priority == null)
                 priority = 1;
             if (cache == null)
                 cache = true;
-            for (let res of arr_res) {
+            for (var _i = 0, arr_res_1 = arr_res; _i < arr_res_1.length; _i++) {
+                var res = arr_res_1[_i];
                 assets.push({ url: res.url, type: res.type });
                 urls.push(res.url);
                 if (!has_unload && !cc.loader.getRes(res.url))
@@ -1989,37 +2242,42 @@ window.airkit = {};
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, assets.length, tips);
             }
-            return new Promise((resolve, reject) => {
-                ResourceManager.asyncLoad(assets, airkit.Handler.create(this, this.onLoadProgress, [viewType, assets.length, tips], false), undefined, priority, cache, group, ignoreCache)
-                    .then((v) => {
+            return new Promise(function (resolve, reject) {
+                ResourceManager.asyncLoad(assets, airkit.Handler.create(_this, _this.onLoadProgress, [viewType, assets.length, tips], false), undefined, priority, cache, group, ignoreCache)
+                    .then(function (v) {
                     if (viewType != airkit.LOADVIEW_TYPE_NONE) {
-                        airkit.TimerManager.Instance.addOnce(this._minLoaderTime, null, (v) => {
-                            this.onLoadComplete(viewType, urls, tips);
+                        airkit.TimerManager.Instance.addOnce(_this._minLoaderTime, null, function (v) {
+                            _this.onLoadComplete(viewType, urls, tips);
                             resolve(urls);
                         });
                     }
                     else {
-                        this.onLoadComplete(viewType, urls, tips);
+                        _this.onLoadComplete(viewType, urls, tips);
                         resolve(urls);
                     }
                 })
-                    .catch((e) => {
+                    .catch(function (e) {
                     reject(e);
                 });
             });
-        }
-        onLoadComplete(viewType, ...args) {
+        };
+        ResourceManager.prototype.onLoadComplete = function (viewType) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
             if (args) {
-                let arr = args[0];
-                for (let url of arr) {
+                var arr = args[0];
+                for (var _a = 0, arr_3 = arr; _a < arr_3.length; _a++) {
+                    var url = arr_3[_a];
                     airkit.Log.debug("[load]加载完成url:" + url);
                     var i = url.lastIndexOf(".bin");
                     if (i > 0) {
-                        let pkg = url.substr(0, i);
+                        var pkg = url.substr(0, i);
                         fgui.UIPackage.addPackage(pkg);
                         airkit.Log.info("add Package :" + pkg);
                     }
-                    let loader_info = this._dicLoaderUrl.getValue(url);
+                    var loader_info = this._dicLoaderUrl.getValue(url);
                     if (loader_info) {
                         loader_info.updateStatus(eLoaderStatus.LOADED);
                     }
@@ -2028,17 +2286,17 @@ window.airkit = {};
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_COMPLATE, viewType);
             }
-        }
-        onLoadProgress(viewType, total, tips, progress) {
-            let cur = airkit.NumberUtils.toInt(Math.floor(progress * total));
+        };
+        ResourceManager.prototype.onLoadProgress = function (viewType, total, tips, progress) {
+            var cur = airkit.NumberUtils.toInt(Math.floor(progress * total));
             airkit.Log.debug("[load]进度: current={0} total={1}", cur, total);
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_PROGRESS, viewType, cur, total, tips);
             }
-        }
-        refreshResourceTime(url, group, is_create) {
+        };
+        ResourceManager.prototype.refreshResourceTime = function (url, group, is_create) {
             if (is_create) {
-                let loader_info = this._dicLoaderUrl.getValue(url);
+                var loader_info = this._dicLoaderUrl.getValue(url);
                 if (!loader_info) {
                     loader_info = new LoaderConfig(url, group);
                     this._dicLoaderUrl.add(url, loader_info);
@@ -2049,130 +2307,140 @@ window.airkit = {};
                 }
             }
             else {
-                let loader_info = this._dicLoaderUrl.getValue(url);
+                var loader_info = this._dicLoaderUrl.getValue(url);
                 if (loader_info) {
                     loader_info.utime = Date.now();
                 }
             }
-        }
-        clearRes(url) {
+        };
+        ResourceManager.prototype.clearRes = function (url) {
             this._dicLoaderUrl.remove(url);
             cc.loader.releaseRes(url);
             var i = url.lastIndexOf(".bin");
             if (i > 0) {
-                let offset = url.lastIndexOf("/");
-                let pkg = url.substr(offset + 1, i - offset - 1);
+                var offset = url.lastIndexOf("/");
+                var pkg = url.substr(offset + 1, i - offset - 1);
                 fgui.UIPackage.removePackage(pkg);
                 airkit.Log.info("remove Package :" + pkg);
             }
             airkit.Log.info("[res]释放资源:" + url);
-        }
-        cleanTexture(group) {
-            this._dicLoaderUrl.foreach((k, v) => {
+        };
+        ResourceManager.prototype.cleanTexture = function (group) {
+            var _this = this;
+            this._dicLoaderUrl.foreach(function (k, v) {
                 if (v.group == group) {
                     airkit.Log.info("清理texture资源 {0}", k);
-                    this.clearRes(k);
+                    _this.clearRes(k);
                 }
                 return true;
             });
-        }
-        setAniAnim(ani, atlas, group) {
-            let value = this._aniAnimDic.getValue(ani);
+        };
+        ResourceManager.prototype.setAniAnim = function (ani, atlas, group) {
+            var value = this._aniAnimDic.getValue(ani);
             if (value == null) {
                 this._aniAnimDic.add(ani, [atlas, 1, group]);
             }
             else {
                 value[1] += 1;
             }
-        }
-        createFuiAnim(pkgName, resName, path, group = "default") {
-            return new Promise((resolve, reject) => {
-                let atlas = path + "_atlas0.png";
-                let bin = path + ".bin";
-                let res = ResourceManager.Instance.getRes(atlas);
+        };
+        ResourceManager.prototype.createFuiAnim = function (pkgName, resName, path, group) {
+            if (group === void 0) { group = "default"; }
+            return new Promise(function (resolve, reject) {
+                var atlas = path + "_atlas0.png";
+                var bin = path + ".bin";
+                var res = ResourceManager.Instance.getRes(atlas);
                 if (res == null) {
                     ResourceManager.Instance.loadArrayRes([
                         { url: atlas, type: cc.SpriteFrame },
                         { url: bin, type: cc.BufferAsset },
                     ], null, null, 0, true, group)
-                        .then((v) => {
-                        let obj = fgui.UIPackage.createObject(pkgName, resName);
+                        .then(function (v) {
+                        var obj = fgui.UIPackage.createObject(pkgName, resName);
                         resolve(obj.asCom);
                     })
-                        .catch((e) => {
+                        .catch(function (e) {
                         reject(e);
                     });
                 }
                 else {
-                    let obj = fgui.UIPackage.createObject(pkgName, resName);
+                    var obj = fgui.UIPackage.createObject(pkgName, resName);
                     resolve(obj.asCom);
                 }
             });
-        }
-        static imageProxy(image, skin, proxy, atlas) {
-            return new Promise((resolve, reject) => {
-                let texture = ResourceManager.Instance.getRes(skin);
+        };
+        ResourceManager.imageProxy = function (image, skin, proxy, atlas) {
+            return new Promise(function (resolve, reject) {
+                var texture = ResourceManager.Instance.getRes(skin);
                 if (texture != null) {
                     image.url = skin;
                 }
                 else {
-                    let res = skin;
+                    var res_1 = skin;
                     if (atlas != null) {
-                        res = atlas;
+                        res_1 = atlas;
                     }
                     if (proxy) {
                         image.url = proxy;
                     }
-                    airkit.Log.info("imageProxy start load {0} ", res);
-                    ResourceManager.Instance.loadRes(res)
-                        .then((v) => {
+                    airkit.Log.info("imageProxy start load {0} ", res_1);
+                    ResourceManager.Instance.loadRes(res_1)
+                        .then(function (v) {
                         image.url = skin;
                         image.alpha = 0.1;
                         airkit.TweenUtils.get(image).to({ alpha: 1.0 }, 0.3);
-                        airkit.Log.info("imageProxy start load done {0} ", res);
+                        airkit.Log.info("imageProxy start load done {0} ", res_1);
                     })
-                        .catch((e) => airkit.Log.error(e));
+                        .catch(function (e) { return airkit.Log.error(e); });
                 }
             });
-        }
-    }
-    ResourceManager.FONT_Yuanti = "Yuanti SC Regular";
-    ResourceManager.Font_Helvetica = "Helvetica";
-    ResourceManager.FONT_DEFAULT = "";
-    ResourceManager.FONT_DEFAULT_SIZE = airkit.FONT_SIZE_5;
-    ResourceManager.DefaultGroup = "airkit";
-    ResourceManager.SystemGroup = "system";
-    ResourceManager.instance = null;
+        };
+        ResourceManager.FONT_Yuanti = "Yuanti SC Regular";
+        ResourceManager.Font_Helvetica = "Helvetica";
+        ResourceManager.FONT_DEFAULT = "";
+        ResourceManager.FONT_DEFAULT_SIZE = airkit.FONT_SIZE_5;
+        ResourceManager.DefaultGroup = "airkit";
+        ResourceManager.SystemGroup = "system";
+        ResourceManager.instance = null;
+        return ResourceManager;
+    }(airkit.Singleton));
     airkit.ResourceManager = ResourceManager;
-    let eLoaderStatus;
+    var eLoaderStatus;
     (function (eLoaderStatus) {
         eLoaderStatus[eLoaderStatus["READY"] = 0] = "READY";
         eLoaderStatus[eLoaderStatus["LOADING"] = 1] = "LOADING";
         eLoaderStatus[eLoaderStatus["LOADED"] = 2] = "LOADED";
     })(eLoaderStatus || (eLoaderStatus = {}));
-    class LoaderConfig {
-        constructor(url, group) {
+    var LoaderConfig = (function () {
+        function LoaderConfig(url, group) {
             this.url = url;
             this.group = group;
             this.ctime = Date.now();
             this.utime = Date.now();
             this.status = eLoaderStatus.READY;
         }
-        updateStatus(status) {
+        LoaderConfig.prototype.updateStatus = function (status) {
             this.status = status;
-        }
-    }
+        };
+        return LoaderConfig;
+    }());
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class Log {
-        static format(format, ...args) {
+    var Log = (function () {
+        function Log() {
+        }
+        Log.format = function (format) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
             if (format == null)
                 return "null";
             if (airkit.StringUtils.isString(format)) {
-                let arr = [];
-                for (let i = 0; i < args.length; i++) {
-                    let arg = args[i];
+                var arr = [];
+                for (var i = 0; i < args.length; i++) {
+                    var arg = args[i];
                     if (airkit.StringUtils.isString(arg)) {
                         arr.push(arg);
                     }
@@ -2180,7 +2448,7 @@ window.airkit = {};
                         arr.push(JSON.stringify(arg, null, 4));
                     }
                 }
-                let content = airkit.StringUtils.format(format, ...arr);
+                var content = airkit.StringUtils.format.apply(airkit.StringUtils, [format].concat(arr));
                 return content;
             }
             else {
@@ -2191,43 +2459,63 @@ window.airkit = {};
                     return JSON.stringify(format, null, 4);
                 }
             }
-        }
-        static debug(format, ...args) {
+        };
+        Log.debug = function (format) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
             if (this.LEVEL < airkit.LogLevel.DEBUG)
                 return;
-            let content = this.format(format, ...args);
+            var content = this.format.apply(this, [format].concat(args));
             console.log(airkit.DateUtils.currentYMDHMS(), "[debug]", content);
             return content;
-        }
-        static info(format, ...args) {
+        };
+        Log.info = function (format) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
             if (this.LEVEL < airkit.LogLevel.INFO)
                 return;
-            let content = this.format(format, ...args);
+            var content = this.format.apply(this, [format].concat(args));
             console.log(airkit.DateUtils.currentYMDHMS(), "[info]", content);
             return content;
-        }
-        static warning(format, ...args) {
+        };
+        Log.warning = function (format) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
             if (this.LEVEL < airkit.LogLevel.WARNING)
                 return;
-            let content = this.format(format, ...args);
+            var content = this.format.apply(this, [format].concat(args));
             console.warn(airkit.DateUtils.currentYMDHMS(), "[warn]", content);
             return content;
-        }
-        static error(format, ...args) {
+        };
+        Log.error = function (format) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
             if (this.LEVEL < airkit.LogLevel.ERROR)
                 return;
-            let content = this.format(format, ...args);
+            var content = this.format.apply(this, [format].concat(args));
             console.error(airkit.DateUtils.currentYMDHMS(), "[error]", content);
             return content;
-        }
-        static exception(format, ...args) {
+        };
+        Log.exception = function (format) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
             if (this.LEVEL < airkit.LogLevel.EXCEPTION)
                 return;
-            let content = this.format(format, ...args);
+            var content = this.format.apply(this, [format].concat(args));
             console.exception(airkit.DateUtils.currentYMDHMS(), "[exce]", content);
             return content;
-        }
-        static dump(value) {
+        };
+        Log.dump = function (value) {
             if (this.LEVEL < airkit.LogLevel.INFO)
                 return;
             if (value instanceof Object) {
@@ -2239,108 +2527,124 @@ window.airkit = {};
                 }
             }
             console.log(airkit.DateUtils.currentYMDHMS(), "[Dump]", value);
-        }
-    }
-    Log.LEVEL = airkit.LogLevel.INFO;
+        };
+        Log.LEVEL = airkit.LogLevel.INFO;
+        return Log;
+    }());
     airkit.Log = Log;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class BaseModule extends cc.Node {
-        constructor() {
-            super();
+    var BaseModule = (function (_super) {
+        __extends(BaseModule, _super);
+        function BaseModule() {
+            return _super.call(this) || this;
         }
-        setup(args) {
+        BaseModule.prototype.setup = function (args) {
             this.emit(airkit.EventID.BEGIN_MODULE, this.name);
             this.registerEvent();
-        }
-        start() { }
-        update(dt) { }
-        registerEvent() {
+        };
+        BaseModule.prototype.start = function () { };
+        BaseModule.prototype.update = function (dt) { };
+        BaseModule.prototype.registerEvent = function () {
             this.registerSignalEvent();
-        }
-        unRegisterEvent() {
+        };
+        BaseModule.prototype.unRegisterEvent = function () {
             this.unregisterSignalEvent();
-        }
-        static res() {
+        };
+        BaseModule.res = function () {
             return null;
-        }
-        static loaderTips() {
+        };
+        BaseModule.loaderTips = function () {
             return "资源加载中";
-        }
-        static loaderType() {
+        };
+        BaseModule.loaderType = function () {
             return airkit.LOADVIEW_TYPE_NONE;
-        }
-        registerSignalEvent() {
-            let event_list = this.signalMap();
+        };
+        BaseModule.prototype.registerSignalEvent = function () {
+            var event_list = this.signalMap();
             if (!event_list)
                 return;
-            for (let item of event_list) {
-                let signal = item[0];
+            for (var _i = 0, event_list_1 = event_list; _i < event_list_1.length; _i++) {
+                var item = event_list_1[_i];
+                var signal = item[0];
                 signal.on(item[1], item[2], item.slice(3));
             }
-        }
-        unregisterSignalEvent() {
-            let event_list = this.signalMap();
+        };
+        BaseModule.prototype.unregisterSignalEvent = function () {
+            var event_list = this.signalMap();
             if (!event_list)
                 return;
-            for (let item of event_list) {
-                let signal = item[0];
+            for (var _i = 0, event_list_2 = event_list; _i < event_list_2.length; _i++) {
+                var item = event_list_2[_i];
+                var signal = item[0];
                 signal.off(item[1], item[2]);
             }
-        }
-        signalMap() {
+        };
+        BaseModule.prototype.signalMap = function () {
             return null;
-        }
-        dispose() {
+        };
+        BaseModule.prototype.dispose = function () {
             this.emit(airkit.EventID.END_MODULE, this.name);
             this.unRegisterEvent();
-        }
-    }
+        };
+        return BaseModule;
+    }(cc.Node));
     airkit.BaseModule = BaseModule;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class Mediator {
-        static get Instance() {
-            if (!this.instance)
-                this.instance = new Mediator();
-            return this.instance;
+    var Mediator = (function () {
+        function Mediator() {
         }
-        setup() {
+        Object.defineProperty(Mediator, "Instance", {
+            get: function () {
+                if (!this.instance)
+                    this.instance = new Mediator();
+                return this.instance;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Mediator.prototype.setup = function () {
             this.registerEvent();
-        }
-        static register(name, cls) {
+        };
+        Mediator.register = function (name, cls) {
             airkit.ClassUtils.regClass(name, cls);
-        }
-        static call(name, funcName, ...args) {
-            return new Promise((resolve, reject) => {
-                let m = this.modules.getValue(name);
+        };
+        Mediator.call = function (name, funcName) {
+            var _this = this;
+            var args = [];
+            for (var _i = 2; _i < arguments.length; _i++) {
+                args[_i - 2] = arguments[_i];
+            }
+            return new Promise(function (resolve, reject) {
+                var m = _this.modules.getValue(name);
                 if (m == null) {
                     m = airkit.ClassUtils.getInstance(name);
-                    let clas = airkit.ClassUtils.getClass(name);
+                    var clas = airkit.ClassUtils.getClass(name);
                     if (m == null) {
                         airkit.Log.warning("Cant find module {0}", name);
                         reject("Cant find module" + name);
                     }
-                    this.modules.add(name, m);
+                    _this.modules.add(name, m);
                     m.name = name;
-                    this.loadResource(m, clas)
-                        .then((v) => {
-                        var onInitModuleOver = () => {
+                    _this.loadResource(m, clas)
+                        .then(function (v) {
+                        var onInitModuleOver = function () {
                             m.start();
                             if (funcName == null) {
                                 resolve(m);
                             }
                             else {
-                                let result = this.callFunc(m, funcName, args);
+                                var result = _this.callFunc(m, funcName, args);
                                 resolve(result);
                             }
                         };
                         m.once(airkit.EventID.BEGIN_MODULE, onInitModuleOver, null);
                         m.setup(null);
                     })
-                        .catch((e) => {
+                        .catch(function (e) {
                         airkit.Log.warning("Load module Resource Failed {0}", name);
                         reject("Load module Resource Failed " + name);
                     });
@@ -2350,18 +2654,18 @@ window.airkit = {};
                         resolve(m);
                     }
                     else {
-                        let result = this.callFunc(m, funcName, args);
+                        var result = _this.callFunc(m, funcName, args);
                         resolve(result);
                     }
                 }
             });
-        }
-        static callFunc(m, funcName, args) {
+        };
+        Mediator.callFunc = function (m, funcName, args) {
             if (funcName == null) {
                 return;
             }
             var func = m[funcName];
-            let result = null;
+            var result = null;
             if (func) {
                 if (args) {
                     result = func.apply(m, args);
@@ -2374,27 +2678,27 @@ window.airkit = {};
                 airkit.Log.error("cant find funcName {0} from Module:{1}", funcName, m.name);
             }
             return result;
-        }
-        static loadResource(m, clas) {
-            let assets = [];
-            let res_map = clas.res();
+        };
+        Mediator.loadResource = function (m, clas) {
+            var assets = [];
+            var res_map = clas.res();
             if (res_map && res_map.length > 0) {
-                for (let i = 0; i < res_map.length; ++i) {
-                    let res = res_map[i];
+                for (var i = 0; i < res_map.length; ++i) {
+                    var res = res_map[i];
                     if (!airkit.ResourceManager.Instance.getRes(res[0])) {
                         assets.push({ url: res[0], type: res[1] });
                     }
                 }
             }
-            return new Promise((resolve, reject) => {
+            return new Promise(function (resolve, reject) {
                 if (assets.length > 0) {
-                    let load_view = clas.loaderType();
-                    let tips = clas.loaderTips();
+                    var load_view = clas.loaderType();
+                    var tips = clas.loaderTips();
                     airkit.ResourceManager.Instance.loadArrayRes(assets, load_view, tips, 1, true, airkit.ResourceManager.DefaultGroup)
-                        .then((v) => {
+                        .then(function (v) {
                         resolve(v);
                     })
-                        .catch((e) => {
+                        .catch(function (e) {
                         reject(e);
                     });
                 }
@@ -2402,36 +2706,37 @@ window.airkit = {};
                     resolve([]);
                 }
             });
-        }
-        destroy() {
+        };
+        Mediator.prototype.destroy = function () {
             this.unRegisterEvent();
             this.clear();
-        }
-        clear() {
+        };
+        Mediator.prototype.clear = function () {
             if (Mediator.modules) {
-                Mediator.modules.foreach((k, v) => {
+                Mediator.modules.foreach(function (k, v) {
                     v.dispose();
                     return true;
                 });
                 Mediator.modules.clear();
             }
-        }
-        update(dt) {
-            Mediator.modules.foreach((k, v) => {
+        };
+        Mediator.prototype.update = function (dt) {
+            Mediator.modules.foreach(function (k, v) {
                 v.update(dt);
                 return true;
             });
-        }
-        registerEvent() { }
-        unRegisterEvent() { }
-    }
-    Mediator.modules = new airkit.SDictionary();
-    Mediator.instance = null;
+        };
+        Mediator.prototype.registerEvent = function () { };
+        Mediator.prototype.unRegisterEvent = function () { };
+        Mediator.modules = new airkit.SDictionary();
+        Mediator.instance = null;
+        return Mediator;
+    }());
     airkit.Mediator = Mediator;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    let eHttpRequestType;
+    var eHttpRequestType;
     (function (eHttpRequestType) {
         eHttpRequestType[eHttpRequestType["TypeText"] = 0] = "TypeText";
         eHttpRequestType[eHttpRequestType["TypeJson"] = 1] = "TypeJson";
@@ -2447,9 +2752,12 @@ window.airkit = {};
     airkit.RESPONSE_TYPE_XML = "xml";
     airkit.RESPONSE_TYPE_BYTE = "arraybuffer";
     airkit.HTTP_REQUEST_TIMEOUT = 10000;
-    class Http {
-        static request(url, method, reqType, header, data, responseType) {
-            return new Promise((resolve, reject) => {
+    var Http = (function () {
+        function Http() {
+        }
+        Http.request = function (url, method, reqType, header, data, responseType) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
                 if (Http.currentRequsts > Http.maxRequest) {
                     airkit.Log.error("reached max request {0}", Http.currentRequsts);
                 }
@@ -2465,7 +2773,7 @@ window.airkit = {};
                 }
                 if (!header)
                     header = [];
-                let key = "Content-Type";
+                var key = "Content-Type";
                 switch (reqType) {
                     case eHttpRequestType.TypeText:
                         header.push(key, airkit.CONTENT_TYPE_TEXT);
@@ -2487,8 +2795,8 @@ window.airkit = {};
                     Http.currentRequsts--;
                     reject("timeout");
                 };
-                request.once(airkit.Event.COMPLETE, this, function (event) {
-                    let data;
+                request.once(airkit.Event.COMPLETE, _this, function (event) {
+                    var data;
                     switch (responseType) {
                         case airkit.RESPONSE_TYPE_TEXT:
                             data = request.data;
@@ -2509,13 +2817,13 @@ window.airkit = {};
                     Http.currentRequsts--;
                     resolve(data);
                 });
-                request.once(airkit.Event.ERROR, this, function (event) {
+                request.once(airkit.Event.ERROR, _this, function (event) {
                     airkit.Log.error("req:{0} error:{1}", url, event);
                     request.targetOff(request);
                     Http.currentRequsts--;
                     reject(event);
                 });
-                request.on(airkit.Event.PROGRESS, this, function (event) { });
+                request.on(airkit.Event.PROGRESS, _this, function (event) { });
                 if (method == airkit.GET) {
                     request.send(url, null, method, responseType, header);
                 }
@@ -2523,8 +2831,8 @@ window.airkit = {};
                     request.send(url, data, method, responseType, header);
                 }
             });
-        }
-        static get(url, reqType, header, responseType) {
+        };
+        Http.get = function (url, reqType, header, responseType) {
             if (reqType == undefined) {
                 reqType = eHttpRequestType.TypeText;
             }
@@ -2532,8 +2840,8 @@ window.airkit = {};
                 responseType = airkit.RESPONSE_TYPE_TEXT;
             }
             return this.request(url, airkit.GET, reqType, header, null, responseType);
-        }
-        static post(url, params, reqType, header, responseType) {
+        };
+        Http.post = function (url, params, reqType, header, responseType) {
             var data = null;
             if (reqType == undefined) {
                 reqType = eHttpRequestType.TypeText;
@@ -2555,27 +2863,34 @@ window.airkit = {};
                 responseType = airkit.RESPONSE_TYPE_TEXT;
             }
             return this.request(url, airkit.POST, reqType, header, data, responseType);
-        }
-    }
-    Http.currentRequsts = 0;
-    Http.maxRequest = 6;
+        };
+        Http.currentRequsts = 0;
+        Http.maxRequest = 6;
+        return Http;
+    }());
     airkit.Http = Http;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class HttpRequest extends cc.Node {
-        constructor() {
-            super(...arguments);
-            this._http = new XMLHttpRequest();
+    var HttpRequest = (function (_super) {
+        __extends(HttpRequest, _super);
+        function HttpRequest() {
+            var _this_1 = _super !== null && _super.apply(this, arguments) || this;
+            _this_1._http = new XMLHttpRequest();
+            return _this_1;
         }
-        send(url, data = null, method = "get", responseType = "text", headers = null) {
+        HttpRequest.prototype.send = function (url, data, method, responseType, headers) {
+            if (data === void 0) { data = null; }
+            if (method === void 0) { method = "get"; }
+            if (responseType === void 0) { responseType = "text"; }
+            if (headers === void 0) { headers = null; }
             this._responseType = responseType;
             this._data = null;
             this._url = url;
             var _this = this;
             var http = this._http;
             http.open(method, url, true);
-            let isJson = false;
+            var isJson = false;
             if (headers) {
                 for (var i = 0; i < headers.length; i++) {
                     http.setRequestHeader(headers[i++], headers[i]);
@@ -2589,7 +2904,7 @@ window.airkit = {};
                     isJson = true;
                 }
             }
-            let restype = responseType !== "arraybuffer" ? "text" : "arraybuffer";
+            var restype = responseType !== "arraybuffer" ? "text" : "arraybuffer";
             http.responseType = restype;
             if (http.dataType) {
                 http.dataType = restype;
@@ -2607,18 +2922,18 @@ window.airkit = {};
                 _this._onLoad(e);
             };
             http.send(isJson ? JSON.stringify(data) : data);
-        }
-        _onProgress(e) {
+        };
+        HttpRequest.prototype._onProgress = function (e) {
             if (e && e.lengthComputable)
                 this.emit(airkit.Event.PROGRESS, e.loaded / e.total);
-        }
-        _onAbort(e) {
+        };
+        HttpRequest.prototype._onAbort = function (e) {
             this.error("Request was aborted by user");
-        }
-        _onError(e) {
+        };
+        HttpRequest.prototype._onError = function (e) {
             this.error("Request failed Status:" + this._http.status + " text:" + this._http.statusText);
-        }
-        _onLoad(e) {
+        };
+        HttpRequest.prototype._onLoad = function (e) {
             var http = this._http;
             var status = http.status !== undefined ? http.status : 200;
             if (status === 200 || status === 204 || status === 0) {
@@ -2627,13 +2942,13 @@ window.airkit = {};
             else {
                 this.error("[" + http.status + "]" + http.statusText + ":" + http.responseURL);
             }
-        }
-        error(message) {
+        };
+        HttpRequest.prototype.error = function (message) {
             this.clear();
             console.warn(this.url, message);
             this.emit(airkit.Event.ERROR, message);
-        }
-        complete() {
+        };
+        HttpRequest.prototype.complete = function () {
             this.clear();
             var flag = true;
             try {
@@ -2652,28 +2967,41 @@ window.airkit = {};
                 this.error(e.message);
             }
             flag && this.emit(airkit.Event.COMPLETE, this._data instanceof Array ? [this._data] : this._data);
-        }
-        clear() {
+        };
+        HttpRequest.prototype.clear = function () {
             var http = this._http;
             http.onerror = http.onabort = http.onprogress = http.onload = null;
-        }
-        get url() {
-            return this._url;
-        }
-        get data() {
-            return this._data;
-        }
-        get http() {
-            return this._http;
-        }
-    }
-    HttpRequest._urlEncode = encodeURI;
+        };
+        Object.defineProperty(HttpRequest.prototype, "url", {
+            get: function () {
+                return this._url;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(HttpRequest.prototype, "data", {
+            get: function () {
+                return this._data;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(HttpRequest.prototype, "http", {
+            get: function () {
+                return this._http;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        HttpRequest._urlEncode = encodeURI;
+        return HttpRequest;
+    }(cc.Node));
     airkit.HttpRequest = HttpRequest;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class State {
-        constructor(entity, status) {
+    var State = (function () {
+        function State(entity, status) {
             this._owner = null;
             this._status = 0;
             this._times = 0;
@@ -2681,59 +3009,60 @@ window.airkit = {};
             this._entity = entity;
             this._status = status;
         }
-        enter() {
+        State.prototype.enter = function () {
             airkit.Log.info("you must overwrite the func state.enter !");
-        }
-        update(dt) {
+        };
+        State.prototype.update = function (dt) {
             airkit.Log.info("you must overwrite the func state.update !");
-        }
-        exit() {
+        };
+        State.prototype.exit = function () {
             airkit.Log.info("you must overwrite the func state.exit !");
-        }
-    }
+        };
+        return State;
+    }());
     airkit.State = State;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class StateMachine {
-        constructor() {
+    var StateMachine = (function () {
+        function StateMachine() {
             this._currentState = null;
             this._previousState = null;
             this._globalState = null;
         }
-        update(dt) {
+        StateMachine.prototype.update = function (dt) {
             if (this._globalState) {
                 this._globalState.update(dt);
             }
             if (this._currentState) {
                 this._currentState.update(dt);
             }
-        }
-        changeState(_state) {
+        };
+        StateMachine.prototype.changeState = function (_state) {
             this._previousState = this._currentState;
             this._currentState = _state;
             this._currentState._owner = this;
             if (this._previousState)
                 this._previousState.exit();
             this._currentState.enter();
-        }
-        setCurrentState(_state) {
+        };
+        StateMachine.prototype.setCurrentState = function (_state) {
             if (this._currentState) {
                 this._currentState.exit();
             }
             this._currentState = _state;
             this._currentState._owner = this;
             this._currentState.enter();
-        }
-        setGlobalState(_state) {
+        };
+        StateMachine.prototype.setGlobalState = function (_state) {
             if (this._globalState) {
                 this._globalState.exit();
             }
             this._globalState = _state;
             this._globalState._owner = this;
             this._globalState.enter();
-        }
-        clearAllState() {
+        };
+        StateMachine.prototype.clearAllState = function () {
             if (this._globalState) {
                 this._globalState.exit();
                 this._globalState = null;
@@ -2743,28 +3072,43 @@ window.airkit = {};
                 this._currentState = null;
             }
             this._previousState = null;
-        }
-        get currentState() {
-            return this._currentState;
-        }
-        get previousState() {
-            return this._previousState;
-        }
-        get globalState() {
-            return this._globalState;
-        }
-    }
+        };
+        Object.defineProperty(StateMachine.prototype, "currentState", {
+            get: function () {
+                return this._currentState;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(StateMachine.prototype, "previousState", {
+            get: function () {
+                return this._previousState;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(StateMachine.prototype, "globalState", {
+            get: function () {
+                return this._globalState;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return StateMachine;
+    }());
     airkit.StateMachine = StateMachine;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class JSONMsg {
-        static getSeq() {
-            return JSONMsg.REQ_ID++;
+    var JSONMsg = (function () {
+        function JSONMsg() {
         }
-        decode(msg, endian) {
-            let str = airkit.bytes2String(msg, endian);
-            let m = JSON.parse(str);
+        JSONMsg.getSeq = function () {
+            return JSONMsg.REQ_ID++;
+        };
+        JSONMsg.prototype.decode = function (msg, endian) {
+            var str = airkit.bytes2String(msg, endian);
+            var m = JSON.parse(str);
             if (m && m.payload) {
                 this.uid = m.uid;
                 this.cmd = m.cmd;
@@ -2775,10 +3119,10 @@ window.airkit = {};
             }
             str = null;
             return false;
-        }
-        encode(endian) {
+        };
+        JSONMsg.prototype.encode = function (endian) {
             this.ID = JSONMsg.getSeq();
-            let msg = {
+            var msg = {
                 uid: this.uid,
                 cmd: this.cmd,
                 msgType: this.msgType,
@@ -2787,56 +3131,60 @@ window.airkit = {};
                 payload: JSON.stringify(this.data),
             };
             return JSON.stringify(msg);
-        }
-        getID() {
+        };
+        JSONMsg.prototype.getID = function () {
             return this.ID;
-        }
-    }
-    JSONMsg.REQ_ID = 1;
+        };
+        JSONMsg.REQ_ID = 1;
+        return JSONMsg;
+    }());
     airkit.JSONMsg = JSONMsg;
-    class PBMsg {
-        constructor() {
+    var PBMsg = (function () {
+        function PBMsg() {
             this.receiveByte = new airkit.Byte();
             this.receiveByte.endian = airkit.Byte.LITTLE_ENDIAN;
         }
-        getID() {
+        PBMsg.prototype.getID = function () {
             return this.ID;
-        }
-        decode(msg, endian) {
+        };
+        PBMsg.prototype.decode = function (msg, endian) {
             this.receiveByte.clear();
             this.receiveByte.writeArrayBuffer(msg);
             this.receiveByte.pos = 0;
             var len = this.receiveByte.getInt16();
             var id = this.receiveByte.getInt16();
             if (this.receiveByte.bytesAvailable >= len) {
-                let data = new airkit.Byte();
+                var data = new airkit.Byte();
                 data.writeArrayBuffer(this.receiveByte, 4, len);
                 return true;
             }
             return false;
-        }
-        encode(endian) {
-            let msg = new airkit.Byte();
+        };
+        PBMsg.prototype.encode = function (endian) {
+            var msg = new airkit.Byte();
             msg.endian = airkit.Byte.LITTLE_ENDIAN;
             msg.pos = 0;
             return msg;
-        }
-    }
+        };
+        return PBMsg;
+    }());
     airkit.PBMsg = PBMsg;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class BaseView extends fgui.GComponent {
-        constructor() {
-            super();
-            this._isOpen = false;
-            this._UIID = 0;
-            this.objectData = null;
-            this._destory = false;
-            this._viewID = BaseView.__ViewIDSeq++;
+    var BaseView = (function (_super) {
+        __extends(BaseView, _super);
+        function BaseView() {
+            var _this = _super.call(this) || this;
+            _this._isOpen = false;
+            _this._UIID = 0;
+            _this.objectData = null;
+            _this._destory = false;
+            _this._viewID = BaseView.__ViewIDSeq++;
+            return _this;
         }
-        createPanel(pkgName, resName) {
-            let v = fgui.UIPackage.createObjectFromURL("ui://" + pkgName + "/" + resName);
+        BaseView.prototype.createPanel = function (pkgName, resName) {
+            var v = fgui.UIPackage.createObjectFromURL("ui://" + pkgName + "/" + resName);
             if (v == null)
                 return;
             this._view = v.asCom;
@@ -2844,11 +3192,11 @@ window.airkit = {};
             this._view.addRelation(this, fgui.RelationType.Width);
             this._view.addRelation(this, fgui.RelationType.Height);
             this.addChild(this._view);
-        }
-        debug() {
-            let bgColor = "#4aa7a688";
-        }
-        setup(args) {
+        };
+        BaseView.prototype.debug = function () {
+            var bgColor = "#4aa7a688";
+        };
+        BaseView.prototype.setup = function (args) {
             this._isOpen = true;
             this.onLangChange();
             this.onCreate(args);
@@ -2857,8 +3205,8 @@ window.airkit = {};
             this.registerEvent();
             this.registeGUIEvent();
             this.registerSignalEvent();
-        }
-        dispose() {
+        };
+        BaseView.prototype.dispose = function () {
             if (this._destory)
                 return;
             this._destory = true;
@@ -2870,140 +3218,153 @@ window.airkit = {};
             this.objectData = null;
             airkit.EventCenter.dispatchEvent(airkit.EventID.UI_CLOSE, this._UIID);
             airkit.EventCenter.off(airkit.EventID.UI_LANG, this, this.onLangChange);
-            super.dispose();
-        }
-        isDestory() {
+            _super.prototype.dispose.call(this);
+        };
+        BaseView.prototype.isDestory = function () {
             return this._destory;
-        }
-        panel() {
-            let panel = this.getGObject("panel");
+        };
+        BaseView.prototype.panel = function () {
+            var panel = this.getGObject("panel");
             if (panel != null)
                 return panel.asCom;
             return null;
-        }
-        bg() {
-            let view = this.getGObject("bg");
+        };
+        BaseView.prototype.bg = function () {
+            var view = this.getGObject("bg");
             if (view != null)
                 return view.asCom;
             return null;
-        }
-        setVisible(bVisible) {
-            let old = this.visible;
+        };
+        BaseView.prototype.setVisible = function (bVisible) {
+            var old = this.visible;
             this.visible = bVisible;
-        }
-        setUIID(id) {
+        };
+        BaseView.prototype.setUIID = function (id) {
             this._UIID = id;
-        }
-        get UIID() {
-            return this._UIID;
-        }
-        get viewID() {
-            return this._viewID;
-        }
-        onCreate(args) { }
-        onDestroy() { }
-        update(dt) {
+        };
+        Object.defineProperty(BaseView.prototype, "UIID", {
+            get: function () {
+                return this._UIID;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(BaseView.prototype, "viewID", {
+            get: function () {
+                return this._viewID;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        BaseView.prototype.onCreate = function (args) { };
+        BaseView.prototype.onDestroy = function () { };
+        BaseView.prototype.update = function (dt) {
             return true;
-        }
-        getGObject(name) {
+        };
+        BaseView.prototype.getGObject = function (name) {
             return this._view.getChild(name);
-        }
-        onEnter() { }
-        onLangChange() { }
-        static res() {
+        };
+        BaseView.prototype.onEnter = function () { };
+        BaseView.prototype.onLangChange = function () { };
+        BaseView.res = function () {
             return null;
-        }
-        static loaderTips() {
+        };
+        BaseView.loaderTips = function () {
             return "资源加载中";
-        }
-        static loaderType() {
+        };
+        BaseView.loaderType = function () {
             return airkit.LOADVIEW_TYPE_NONE;
-        }
-        signalMap() {
+        };
+        BaseView.prototype.signalMap = function () {
             return null;
-        }
-        eventMap() {
+        };
+        BaseView.prototype.eventMap = function () {
             return null;
-        }
-        registerEvent() { }
-        unRegisterEvent() { }
-        staticCacheUI() {
+        };
+        BaseView.prototype.registerEvent = function () { };
+        BaseView.prototype.unRegisterEvent = function () { };
+        BaseView.prototype.staticCacheUI = function () {
             return null;
-        }
-        loadResource(group, clas) {
-            return new Promise((resolve, reject) => {
-                let assets = [];
-                let res_map = clas.res();
+        };
+        BaseView.prototype.loadResource = function (group, clas) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var assets = [];
+                var res_map = clas.res();
                 if (res_map && res_map.length > 0) {
-                    for (let i = 0; i < res_map.length; ++i) {
-                        let res = res_map[i];
+                    for (var i = 0; i < res_map.length; ++i) {
+                        var res = res_map[i];
                         if (!airkit.ResourceManager.Instance.getRes(res[0])) {
                             assets.push({ url: res[0], type: res[1] });
                         }
                     }
                 }
                 if (assets.length > 0) {
-                    let tips = clas.loaderTips();
-                    let loaderType = clas.loaderType();
+                    var tips = clas.loaderTips();
+                    var loaderType = clas.loaderType();
                     airkit.ResourceManager.Instance.loadArrayRes(assets, loaderType, tips, 1, true, group)
-                        .then((v) => {
-                        this.onAssetLoaded();
-                        resolve(this);
-                        this.onEnter();
+                        .then(function (v) {
+                        _this.onAssetLoaded();
+                        resolve(_this);
+                        _this.onEnter();
                     })
-                        .catch((e) => {
+                        .catch(function (e) {
                         airkit.Log.error(e);
                         reject(e);
                     });
                 }
                 else {
-                    this.onAssetLoaded();
-                    resolve(this);
-                    this.onEnter();
+                    _this.onAssetLoaded();
+                    resolve(_this);
+                    _this.onEnter();
                 }
             });
-        }
-        onAssetLoaded() {
+        };
+        BaseView.prototype.onAssetLoaded = function () {
             if (!this._isOpen)
                 return;
-        }
-        registerSignalEvent() {
-            let event_list = this.signalMap();
+        };
+        BaseView.prototype.registerSignalEvent = function () {
+            var event_list = this.signalMap();
             if (!event_list)
                 return;
-            for (let item of event_list) {
-                let signal = item[0];
+            for (var _i = 0, event_list_3 = event_list; _i < event_list_3.length; _i++) {
+                var item = event_list_3[_i];
+                var signal = item[0];
                 signal.on(item[1], item[2], item.slice(3));
             }
-        }
-        unregisterSignalEvent() {
-            let event_list = this.signalMap();
+        };
+        BaseView.prototype.unregisterSignalEvent = function () {
+            var event_list = this.signalMap();
             if (!event_list)
                 return;
-            for (let item of event_list) {
-                let signal = item[0];
+            for (var _i = 0, event_list_4 = event_list; _i < event_list_4.length; _i++) {
+                var item = event_list_4[_i];
+                var signal = item[0];
                 signal.off(item[1], item[2]);
             }
-        }
-        registeGUIEvent() {
-            let event_list = this.eventMap();
+        };
+        BaseView.prototype.registeGUIEvent = function () {
+            var event_list = this.eventMap();
             if (!event_list)
                 return;
-            for (let item of event_list) {
-                let gui_control = item[0];
+            for (var _i = 0, event_list_5 = event_list; _i < event_list_5.length; _i++) {
+                var item = event_list_5[_i];
+                var gui_control = item[0];
                 gui_control.on(item[1], item[2], this);
             }
-        }
-        unregisteGUIEvent() {
-            let event_list = this.eventMap();
+        };
+        BaseView.prototype.unregisteGUIEvent = function () {
+            var event_list = this.eventMap();
             if (!event_list)
                 return;
-            for (let item of event_list) {
-                let gui_control = item[0];
+            for (var _i = 0, event_list_6 = event_list; _i < event_list_6.length; _i++) {
+                var item = event_list_6[_i];
+                var gui_control = item[0];
                 gui_control.off(item[1], item[2], this);
             }
-        }
-        doClose() {
+        };
+        BaseView.prototype.doClose = function () {
             if (this._isOpen === false) {
                 airkit.Log.error("连续点击");
                 return false;
@@ -3011,28 +3372,39 @@ window.airkit = {};
             this._isOpen = false;
             airkit.UIManager.Instance.close(this.UIID, airkit.eCloseAnim.CLOSE_CENTER);
             return true;
-        }
-    }
-    BaseView.__ViewIDSeq = 0;
+        };
+        BaseView.__ViewIDSeq = 0;
+        return BaseView;
+    }(fgui.GComponent));
     airkit.BaseView = BaseView;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class Layer extends fgui.GComponent {
-        constructor() {
-            super();
+    var Layer = (function (_super) {
+        __extends(Layer, _super);
+        function Layer() {
+            return _super.call(this) || this;
         }
-        debug() {
-            let bgColor = "#f4e1e188";
-        }
-    }
+        Layer.prototype.debug = function () {
+            var bgColor = "#f4e1e188";
+        };
+        return Layer;
+    }(fgui.GComponent));
     airkit.Layer = Layer;
-    class LayerManager extends airkit.Singleton {
-        static get stage() {
-            return this._root;
+    var LayerManager = (function (_super) {
+        __extends(LayerManager, _super);
+        function LayerManager() {
+            return _super !== null && _super.apply(this, arguments) || this;
         }
-        static getLayer(t) {
-            let layer = null;
+        Object.defineProperty(LayerManager, "stage", {
+            get: function () {
+                return this._root;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        LayerManager.getLayer = function (t) {
+            var layer = null;
             switch (t) {
                 case airkit.eUILayer.BG:
                     layer = this.bgLayer;
@@ -3064,8 +3436,8 @@ window.airkit = {};
                 layer.height = cc.director.getWinSize().height;
             }
             return layer;
-        }
-        static setup(root) {
+        };
+        LayerManager.setup = function (root) {
             this._root = root;
             this._bgLayer = new Layer();
             this._bgLayer.node.name = "bgLayer";
@@ -3119,40 +3491,40 @@ window.airkit = {};
             ];
             this.registerEvent();
             this.resize();
-        }
-        static registerEvent() {
+        };
+        LayerManager.registerEvent = function () {
             airkit.EventCenter.on(airkit.EventID.RESIZE, this, this.resize);
-        }
-        static unRegisterEvent() {
+        };
+        LayerManager.unRegisterEvent = function () {
             airkit.EventCenter.off(airkit.EventID.RESIZE, this, this.resize);
-        }
-        static resize() {
+        };
+        LayerManager.resize = function () {
             airkit.Log.info("LayerManager Receive Resize {0} {1}", cc.director.getWinSize().width, cc.director.getWinSize().height);
             var i;
             var l;
-            let w = cc.director.getWinSize().width;
-            let h = cc.director.getWinSize().height;
+            var w = cc.director.getWinSize().width;
+            var h = cc.director.getWinSize().height;
             fgui.GRoot.inst.setSize(w, h);
             for (i = 0, l = this.layers.length; i < l; i++) {
                 this.layers[i].setSize(w, h);
             }
             if (this._bgLayer.numChildren) {
                 var bg = this._bgLayer.getChildAt(0);
-                let x = (w - LayerManager.BG_WIDTH) >> 1;
-                let y = h - LayerManager.BG_HEIGHT;
+                var x = (w - LayerManager.BG_WIDTH) >> 1;
+                var y = h - LayerManager.BG_HEIGHT;
                 bg.setPosition(x, y);
             }
             fgui.GRoot.inst.setSize(w, h);
-            let needUpChilds = [this._uiLayer, this._popupLayer, this._systemLayer, this._topLayer, this._loadingLayer];
-            for (let i = 0; i < needUpChilds.length; i++) {
-                let layer = needUpChilds[i];
-                for (let j = 0, l = layer.numChildren; j < l; j++) {
+            var needUpChilds = [this._uiLayer, this._popupLayer, this._systemLayer, this._topLayer, this._loadingLayer];
+            for (var i_4 = 0; i_4 < needUpChilds.length; i_4++) {
+                var layer = needUpChilds[i_4];
+                for (var j = 0, l_1 = layer.numChildren; j < l_1; j++) {
                     var child = layer.getChildAt(j);
                     child.setSize(w, h);
                 }
             }
-        }
-        static destroy() {
+        };
+        LayerManager.destroy = function () {
             LayerManager.removeAll();
             airkit.DisplayUtils.removeAllChild(this._topLayer);
             airkit.DisplayUtils.removeAllChild(this._root);
@@ -3164,8 +3536,8 @@ window.airkit = {};
             this._uiLayer = null;
             this._mainLayer = null;
             this._bgLayer = null;
-        }
-        static removeAll() {
+        };
+        LayerManager.removeAll = function () {
             airkit.DisplayUtils.removeAllChild(this._bgLayer);
             airkit.DisplayUtils.removeAllChild(this._mainLayer);
             airkit.DisplayUtils.removeAllChild(this._uiLayer);
@@ -3173,14 +3545,22 @@ window.airkit = {};
             airkit.DisplayUtils.removeAllChild(this._tooltipLayer);
             airkit.DisplayUtils.removeAllChild(this._systemLayer);
             airkit.DisplayUtils.removeAllChild(this._loadingLayer);
-        }
-        static get root() {
-            return this._root;
-        }
-        static get bgLayer() {
-            return this._bgLayer;
-        }
-        static addBg(url) {
+        };
+        Object.defineProperty(LayerManager, "root", {
+            get: function () {
+                return this._root;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(LayerManager, "bgLayer", {
+            get: function () {
+                return this._bgLayer;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        LayerManager.addBg = function (url) {
             var child;
             if (this.bgLayer.numChildren)
                 child = this.bgLayer.getChildAt(0);
@@ -3194,51 +3574,82 @@ window.airkit = {};
             }
             child.url = url;
             return child;
-        }
-        static get mainLayer() {
-            return this._mainLayer;
-        }
-        static get uiLayer() {
-            return this._uiLayer;
-        }
-        static get popupLayer() {
-            return this._popupLayer;
-        }
-        static get tooltipLayer() {
-            return this._tooltipLayer;
-        }
-        static get systemLayer() {
-            return this._systemLayer;
-        }
-        static get loadingLayer() {
-            return this._loadingLayer;
-        }
-        static get topLayer() {
-            return this._topLayer;
-        }
-    }
-    LayerManager.BG_WIDTH = 750;
-    LayerManager.BG_HEIGHT = 1650;
+        };
+        Object.defineProperty(LayerManager, "mainLayer", {
+            get: function () {
+                return this._mainLayer;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(LayerManager, "uiLayer", {
+            get: function () {
+                return this._uiLayer;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(LayerManager, "popupLayer", {
+            get: function () {
+                return this._popupLayer;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(LayerManager, "tooltipLayer", {
+            get: function () {
+                return this._tooltipLayer;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(LayerManager, "systemLayer", {
+            get: function () {
+                return this._systemLayer;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(LayerManager, "loadingLayer", {
+            get: function () {
+                return this._loadingLayer;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(LayerManager, "topLayer", {
+            get: function () {
+                return this._topLayer;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        LayerManager.BG_WIDTH = 750;
+        LayerManager.BG_HEIGHT = 1650;
+        return LayerManager;
+    }(airkit.Singleton));
     airkit.LayerManager = LayerManager;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class PopupView extends airkit.BaseView {
-        constructor() {
-            super();
-            this.bgTouch = true;
+    var PopupView = (function (_super) {
+        __extends(PopupView, _super);
+        function PopupView() {
+            var _this = _super.call(this) || this;
+            _this.bgTouch = true;
+            return _this;
         }
-        update(dt) {
-            return super.update(dt);
-        }
-        setup(args) {
-            super.setup(args);
+        PopupView.prototype.update = function (dt) {
+            return _super.prototype.update.call(this, dt);
+        };
+        PopupView.prototype.setup = function (args) {
+            _super.prototype.setup.call(this, args);
             this.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
-        }
-        onEnter() {
-            super.onEnter();
+        };
+        PopupView.prototype.onEnter = function () {
+            _super.prototype.onEnter.call(this);
             this.createPanel(this.pkgName, this.resName);
-            let panel = this.panel();
+            var panel = this.panel();
             if (panel) {
                 airkit.DisplayUtils.popup(panel, airkit.Handler.create(this, this.onOpen));
                 this.closeBtn = this.closeButton();
@@ -3247,16 +3658,16 @@ window.airkit = {};
                 }
             }
             airkit.TimerManager.Instance.addOnce(250, this, this.setupTouchClose);
-        }
-        onOpen() { }
-        closeButton() {
-            let btn = this.panel().getChild("closeBtn");
+        };
+        PopupView.prototype.onOpen = function () { };
+        PopupView.prototype.closeButton = function () {
+            var btn = this.panel().getChild("closeBtn");
             if (btn != null)
                 return btn.asButton;
             return null;
-        }
-        setupTouchClose() {
-            let bg = this.bg();
+        };
+        PopupView.prototype.setupTouchClose = function () {
+            var bg = this.bg();
             if (bg && this.bgTouch) {
                 bg.touchable = true;
                 bg.onClick(this.onClose, this);
@@ -3265,93 +3676,101 @@ window.airkit = {};
                 this.closeBtn.visible = true;
                 this.closeBtn.onClick(this.pressClose, this);
             }
-        }
-        pressClose() {
+        };
+        PopupView.prototype.pressClose = function () {
             if (this.closeBtn)
                 airkit.TweenUtils.scale(this.closeBtn);
             this.onClose();
-        }
-        onClose() {
+        };
+        PopupView.prototype.onClose = function () {
             this.doClose();
-        }
-        dispose() {
-            super.dispose();
+        };
+        PopupView.prototype.dispose = function () {
+            _super.prototype.dispose.call(this);
             if (this.callback != null)
                 this.callback();
-        }
-        loadResource(group, clas) {
-            return super.loadResource(group, clas);
-        }
-    }
+        };
+        PopupView.prototype.loadResource = function (group, clas) {
+            return _super.prototype.loadResource.call(this, group, clas);
+        };
+        return PopupView;
+    }(airkit.BaseView));
     airkit.PopupView = PopupView;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class SceneManager {
-        static registerScene(scene_type, name, cls) {
+    var SceneManager = (function () {
+        function SceneManager() {
+        }
+        SceneManager.registerScene = function (scene_type, name, cls) {
             SceneManager.scenes.add(scene_type, name);
             airkit.ClassUtils.regClass(name, cls);
-        }
-        static get Instance() {
-            if (!this.instance)
-                this.instance = new SceneManager();
-            return this.instance;
-        }
-        setup() {
+        };
+        Object.defineProperty(SceneManager, "Instance", {
+            get: function () {
+                if (!this.instance)
+                    this.instance = new SceneManager();
+                return this.instance;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        SceneManager.prototype.setup = function () {
             this.registerEvent();
-        }
-        destroy() {
+        };
+        SceneManager.prototype.destroy = function () {
             this.unRegisterEvent();
-        }
-        update(dt) {
+        };
+        SceneManager.prototype.update = function (dt) {
             if (this._curScene) {
                 this._curScene.update(dt);
             }
-        }
-        registerEvent() {
+        };
+        SceneManager.prototype.registerEvent = function () {
             airkit.EventCenter.on(airkit.EventID.CHANGE_SCENE, this, this.onChangeScene);
             airkit.EventCenter.on(airkit.EventID.RESIZE, this, this.resize);
-        }
-        unRegisterEvent() {
+        };
+        SceneManager.prototype.unRegisterEvent = function () {
             airkit.EventCenter.off(airkit.EventID.CHANGE_SCENE, this, this.onChangeScene);
             airkit.EventCenter.off(airkit.EventID.RESIZE, this, this.resize);
-        }
-        resize() {
+        };
+        SceneManager.prototype.resize = function () {
             airkit.Log.info("SceneManager Receive Resize {0} {1}", cc.director.getWinSize().width, cc.director.getWinSize().height);
             if (this._curScene) {
                 this._curScene.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
                 var func = this._curScene["resize"];
-                let result = null;
+                var result = null;
                 if (func) {
                     result = func.apply(this._curScene);
                 }
             }
-        }
-        onChangeScene(evt) {
-            let info = evt.get(0);
+        };
+        SceneManager.prototype.onChangeScene = function (evt) {
+            var info = evt.get(0);
             this.gotoScene(info);
-        }
-        onComplete(v) {
+        };
+        SceneManager.prototype.onComplete = function (v) {
             this._curScene = v;
-        }
-        gotoScene(scene_type, args) {
+        };
+        SceneManager.prototype.gotoScene = function (scene_type, args) {
+            var _this = this;
             this.exitScene();
-            let sceneName = SceneManager.scenes.getValue(scene_type);
-            let clas = airkit.ClassUtils.getClass(sceneName);
-            let scene = new clas();
+            var sceneName = SceneManager.scenes.getValue(scene_type);
+            var clas = airkit.ClassUtils.getClass(sceneName);
+            var scene = new clas();
             scene.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
             scene.setup(args);
             scene
                 .loadResource(airkit.ResourceManager.DefaultGroup, clas)
-                .then((v) => {
-                this.onComplete(v);
+                .then(function (v) {
+                _this.onComplete(v);
             })
-                .catch((e) => {
+                .catch(function (e) {
                 airkit.Log.error(e);
             });
             airkit.LayerManager.mainLayer.addChild(scene);
-        }
-        exitScene() {
+        };
+        SceneManager.prototype.exitScene = function () {
             if (this._curScene) {
                 this._curScene.removeFromParent();
                 this._curScene.dispose();
@@ -3360,46 +3779,58 @@ window.airkit = {};
                 airkit.ObjectPools.clearAll();
                 airkit.ResourceManager.Instance.cleanTexture(airkit.ResourceManager.DefaultGroup);
             }
-        }
-    }
-    SceneManager.scenes = new airkit.NDictionary();
-    SceneManager.instance = null;
+        };
+        SceneManager.scenes = new airkit.NDictionary();
+        SceneManager.instance = null;
+        return SceneManager;
+    }());
     airkit.SceneManager = SceneManager;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class UIManager extends airkit.Singleton {
-        constructor() {
-            super();
-            this._dicConfig = null;
-            this._dicUIView = null;
-            this._UIQueues = null;
-            this._dicConfig = new airkit.NDictionary();
-            this._dicUIView = new airkit.NDictionary();
-            this._UIQueues = new airkit.NDictionary();
-            this._UIQueues.add(airkit.eUIQueueType.POPUP, new UIQueue());
-            this._UIQueues.add(airkit.eUIQueueType.ALERT, new UIQueue());
+    var UIManager = (function (_super) {
+        __extends(UIManager, _super);
+        function UIManager() {
+            var _this = _super.call(this) || this;
+            _this._dicConfig = null;
+            _this._dicUIView = null;
+            _this._UIQueues = null;
+            _this._dicConfig = new airkit.NDictionary();
+            _this._dicUIView = new airkit.NDictionary();
+            _this._UIQueues = new airkit.NDictionary();
+            _this._UIQueues.add(airkit.eUIQueueType.POPUP, new UIQueue());
+            _this._UIQueues.add(airkit.eUIQueueType.ALERT, new UIQueue());
+            return _this;
         }
-        static get Instance() {
-            if (!this.instance)
-                this.instance = new UIManager();
-            return this.instance;
-        }
-        empty() {
-            let queue = this._UIQueues.getValue(airkit.eUIQueueType.POPUP);
+        Object.defineProperty(UIManager, "Instance", {
+            get: function () {
+                if (!this.instance)
+                    this.instance = new UIManager();
+                return this.instance;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        UIManager.prototype.empty = function () {
+            var queue = this._UIQueues.getValue(airkit.eUIQueueType.POPUP);
             if (!queue.empty())
                 return false;
             if (this._dicUIView.length > 0)
                 return false;
             return true;
-        }
-        show(id, ...args) {
-            return new Promise((resolve, reject) => {
+        };
+        UIManager.prototype.show = function (id) {
+            var _this = this;
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            return new Promise(function (resolve, reject) {
                 airkit.Log.info("show panel {0}", id);
-                let obj = this._dicUIView.getValue(id);
+                var obj = _this._dicUIView.getValue(id);
                 if (obj != null) {
                     if (obj["displayObject"] == null) {
-                        this._dicUIView.remove(id);
+                        _this._dicUIView.remove(id);
                         obj = null;
                     }
                     else {
@@ -3408,47 +3839,49 @@ window.airkit = {};
                         return;
                     }
                 }
-                let conf = this._dicConfig.getValue(id);
+                var conf = _this._dicConfig.getValue(id);
                 airkit.assert(conf != null, "UIManager::Show - not find id:" + conf.mID);
-                let params = args.slice(0);
-                let clas = airkit.ClassUtils.getClass(conf.name);
-                let v = new clas();
+                var params = args.slice(0);
+                var clas = airkit.ClassUtils.getClass(conf.name);
+                var v = new clas();
                 airkit.assert(v != null, "UIManager::Show - cannot create ui:" + id);
                 v.setUIID(id);
                 v.setup(params);
                 v.loadResource(airkit.ResourceManager.DefaultGroup, clas)
-                    .then((p) => {
-                    let layer = airkit.LayerManager.getLayer(conf.mLayer);
+                    .then(function (p) {
+                    var layer = airkit.LayerManager.getLayer(conf.mLayer);
                     layer.addChild(p);
-                    this._dicUIView.add(id, p);
+                    _this._dicUIView.add(id, p);
                     resolve(p);
                 })
-                    .catch((e) => {
+                    .catch(function (e) {
                     airkit.Log.error(e);
                 });
             });
-        }
-        close(id, animType = 0) {
-            return new Promise((resolve, reject) => {
+        };
+        UIManager.prototype.close = function (id, animType) {
+            var _this = this;
+            if (animType === void 0) { animType = 0; }
+            return new Promise(function (resolve, reject) {
                 airkit.Log.info("close panel {0}", id);
-                let loader_info = this._dicConfig.getValue(id);
+                var loader_info = _this._dicConfig.getValue(id);
                 airkit.assert(loader_info != null, "UIManager::Close - not find id:" + loader_info.mID);
-                let panel = this._dicUIView.getValue(id);
+                var panel = _this._dicUIView.getValue(id);
                 if (!panel)
                     return;
                 if (animType == 0) {
-                    let result = this.clearPanel(id, panel, loader_info);
+                    var result = _this.clearPanel(id, panel, loader_info);
                     resolve([id, result]);
                 }
                 else {
-                    airkit.DisplayUtils.hide(panel, airkit.Handler.create(null, (v) => {
-                        let result = this.clearPanel(id, panel, loader_info);
+                    airkit.DisplayUtils.hide(panel, airkit.Handler.create(null, function (v) {
+                        var result = _this.clearPanel(id, panel, loader_info);
                         resolve([id, result]);
                     }));
                 }
             });
-        }
-        clearPanel(id, panel, loader_info) {
+        };
+        UIManager.prototype.clearPanel = function (id, panel, loader_info) {
             if (loader_info.mHideDestroy) {
                 this._dicUIView.remove(id);
                 airkit.Log.info("clear panel {0}", id);
@@ -3460,41 +3893,54 @@ window.airkit = {};
                 panel.setVisible(false);
                 return false;
             }
-        }
-        closeAll(exclude_list = null) {
+        };
+        UIManager.prototype.closeAll = function (exclude_list) {
+            if (exclude_list === void 0) { exclude_list = null; }
             this._dicUIView.foreach(function (key, value) {
                 if (exclude_list && airkit.ArrayUtils.containsValue(exclude_list, key))
                     return true;
                 UIManager.Instance.close(key);
                 return true;
             });
-        }
-        popup(id, ...args) {
+        };
+        UIManager.prototype.popup = function (id) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
             this._UIQueues.getValue(airkit.eUIQueueType.POPUP).show(id, args);
-        }
-        alert(id, ...args) {
+        };
+        UIManager.prototype.alert = function (id) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
             this._UIQueues.getValue(airkit.eUIQueueType.ALERT).show(id, args);
-        }
-        findPanel(id) {
-            let panel = this._dicUIView.getValue(id);
+        };
+        UIManager.prototype.findPanel = function (id) {
+            var panel = this._dicUIView.getValue(id);
             return panel;
-        }
-        isPanelOpen(id) {
-            let panel = this._dicUIView.getValue(id);
+        };
+        UIManager.prototype.isPanelOpen = function (id) {
+            var panel = this._dicUIView.getValue(id);
             if (panel)
                 return true;
             else
                 return false;
-        }
-        tipsPopup(toastLayer, target, view, duration = 0.5, fromProps = null, toProps = null, usePool = true) {
-            return new Promise((resolve, reject) => {
+        };
+        UIManager.prototype.tipsPopup = function (toastLayer, target, view, duration, fromProps, toProps, usePool) {
+            if (duration === void 0) { duration = 0.5; }
+            if (fromProps === void 0) { fromProps = null; }
+            if (toProps === void 0) { toProps = null; }
+            if (usePool === void 0) { usePool = true; }
+            return new Promise(function (resolve, reject) {
                 toastLayer.addChild(view);
                 view.setScale(0.1, 0.1);
-                let point = target.localToGlobal(target.width / 2.0 - target.pivotX * target.width, target.height * 0.382 - target.pivotY * target.height);
-                let localPoint = toastLayer.globalToLocal(point.x, point.y);
-                let start = 0;
-                let offset = 600;
-                let type = fgui.EaseType.BounceOut;
+                var point = target.localToGlobal(target.width / 2.0 - target.pivotX * target.width, target.height * 0.382 - target.pivotY * target.height);
+                var localPoint = toastLayer.globalToLocal(point.x, point.y);
+                var start = 0;
+                var offset = 600;
+                var type = fgui.EaseType.BounceOut;
                 if (duration > 1.5) {
                     start = toastLayer.height + 600;
                     offset = -600;
@@ -3514,24 +3960,29 @@ window.airkit = {};
                     y: localPoint.y,
                 }, duration, type)
                     .delay(0.5)
-                    .to({ x: localPoint.x, y: start - offset }, duration, fgui.EaseType.ExpoOut, airkit.Handler.create(null, () => {
+                    .to({ x: localPoint.x, y: start - offset }, duration, fgui.EaseType.ExpoOut, airkit.Handler.create(null, function () {
                     view.removeFromParent();
                     resolve();
                 }));
             });
-        }
-        singleToast(toastLayer, target, view, duration = 0.5, speedUp, usePool = true, x = null, y = null) {
-            return new Promise((resolve, reject) => {
-                let key = "_single_toast";
+        };
+        UIManager.prototype.singleToast = function (toastLayer, target, view, duration, speedUp, usePool, x, y) {
+            var _this = this;
+            if (duration === void 0) { duration = 0.5; }
+            if (usePool === void 0) { usePool = true; }
+            if (x === void 0) { x = null; }
+            if (y === void 0) { y = null; }
+            return new Promise(function (resolve, reject) {
+                var key = "_single_toast";
                 if (target[key] == null) {
                     target[key] = [];
                 }
-                let inEase = fgui.EaseType.QuadOut;
-                let outEase = fgui.EaseType.QuadIn;
+                var inEase = fgui.EaseType.QuadOut;
+                var outEase = fgui.EaseType.QuadIn;
                 toastLayer.addChild(view);
-                let k = airkit.ClassUtils.classKey(view);
+                var k = airkit.ClassUtils.classKey(view);
                 for (var i in target[key]) {
-                    let o = target[key][i];
+                    var o = target[key][i];
                     if (o) {
                         o["toY"] -= o.height + 5;
                         if (airkit.ClassUtils.classKey(o) == k) {
@@ -3546,23 +3997,23 @@ window.airkit = {};
                     x = target.width / 2.0 - target.pivotX * target.width;
                 if (y == null)
                     y = target.height * 0.382 - target.pivotY * target.height;
-                let point = target.localToGlobal(x, y);
-                let localPoint = toastLayer.globalToLocal(point.x, point.y);
+                var point = target.localToGlobal(x, y);
+                var localPoint = toastLayer.globalToLocal(point.x, point.y);
                 view.setPosition(localPoint.x, localPoint.y);
                 view["toY"] = view.y;
-                let tu = airkit.TweenUtils.get(view);
-                tu.setOnUpdate((gt) => {
-                    let toY = view["toY"];
+                var tu = airkit.TweenUtils.get(view);
+                tu.setOnUpdate(function (gt) {
+                    var toY = view["toY"];
                     if (toY < view.y) {
-                        let offset = (toY - view.y) * 0.4;
-                        let limit = -5 - Math.ceil(view.height / 50);
+                        var offset = (toY - view.y) * 0.4;
+                        var limit = -5 - Math.ceil(view.height / 50);
                         if (offset < limit)
                             offset = limit;
                         view.y += offset;
                     }
                 });
-                let scale = 1.0;
-                tu.to({ scaleX: scale, scaleY: scale, alpha: 1.0 }, duration, inEase).to({ alpha: 0.4 }, duration * 0.7, outEase, airkit.Handler.create(this, () => {
+                var scale = 1.0;
+                tu.to({ scaleX: scale, scaleY: scale, alpha: 1.0 }, duration, inEase).to({ alpha: 0.4 }, duration * 0.7, outEase, airkit.Handler.create(_this, function () {
                     target[key].splice(target[key].indexOf(view), 1);
                     if (target && view && view["parent"]) {
                         view.removeFromParent();
@@ -3577,14 +4028,19 @@ window.airkit = {};
                     resolve();
                 }));
             });
-        }
-        toast(toastLayer, target, view, duration = 0.5, speedUp, usePool = true, x = null, y = null) {
-            return new Promise((resolve, reject) => {
+        };
+        UIManager.prototype.toast = function (toastLayer, target, view, duration, speedUp, usePool, x, y) {
+            var _this = this;
+            if (duration === void 0) { duration = 0.5; }
+            if (usePool === void 0) { usePool = true; }
+            if (x === void 0) { x = null; }
+            if (y === void 0) { y = null; }
+            return new Promise(function (resolve, reject) {
                 if (target["_toastList"] == null) {
                     target["_toastList"] = [];
                 }
-                let inEase = fgui.EaseType.QuadOut;
-                let outEase = fgui.EaseType.QuadIn;
+                var inEase = fgui.EaseType.QuadOut;
+                var outEase = fgui.EaseType.QuadIn;
                 toastLayer.addChild(view);
                 if (speedUp) {
                     for (var i in target["_toastList"]) {
@@ -3610,23 +4066,23 @@ window.airkit = {};
                     x = target.width / 2.0 - target.pivotX * target.width;
                 if (y == null)
                     y = target.height * 0.382 - target.pivotY * target.height;
-                let point = target.localToGlobal(x, y);
-                let localPoint = toastLayer.globalToLocal(point.x, point.y);
+                var point = target.localToGlobal(x, y);
+                var localPoint = toastLayer.globalToLocal(point.x, point.y);
                 view.setPosition(localPoint.x, localPoint.y);
                 view["toY"] = view.y;
-                let tu = airkit.TweenUtils.get(view);
-                tu.setOnUpdate((gt) => {
-                    let toY = view["toY"];
+                var tu = airkit.TweenUtils.get(view);
+                tu.setOnUpdate(function (gt) {
+                    var toY = view["toY"];
                     if (toY < view.y) {
-                        let offset = (toY - view.y) * 0.4;
-                        let limit = -8 - Math.ceil(view.height / 50);
+                        var offset = (toY - view.y) * 0.4;
+                        var limit = -8 - Math.ceil(view.height / 50);
                         if (offset < limit)
                             offset = limit;
                         view.y += offset;
                     }
                 });
-                let scale = speedUp ? 1.0 : 1.0;
-                tu.to({ scaleX: scale, scaleY: scale, alpha: 1.0 }, duration, inEase).to({ alpha: 0.4 }, duration * 0.7, outEase, airkit.Handler.create(this, () => {
+                var scale = speedUp ? 1.0 : 1.0;
+                tu.to({ scaleX: scale, scaleY: scale, alpha: 1.0 }, duration, inEase).to({ alpha: 0.4 }, duration * 0.7, outEase, airkit.Handler.create(_this, function () {
                     target["_toastList"].splice(target["_toastList"].indexOf(view), 1);
                     if (target && view && view["parent"]) {
                         view.removeFromParent();
@@ -3641,44 +4097,49 @@ window.airkit = {};
                     resolve();
                 }));
             });
-        }
-        setup() { }
-        destroy() {
+        };
+        UIManager.prototype.setup = function () { };
+        UIManager.prototype.destroy = function () {
             this.closeAll();
             this.clearUIConfig();
-        }
-        update(dt) {
+        };
+        UIManager.prototype.update = function (dt) {
             this._dicUIView.foreach(function (key, value) {
                 value.update(dt);
                 return true;
             });
-        }
-        addUIConfig(info) {
+        };
+        UIManager.prototype.addUIConfig = function (info) {
             if (this._dicConfig.containsKey(info.mID)) {
                 airkit.Log.error("UIManager::Push UIConfig - same id is register:" + info.mID);
                 return;
             }
             this._dicConfig.add(info.mID, info);
             airkit.ClassUtils.regClass(info.name, info.cls);
-        }
-        clearUIConfig() {
+        };
+        UIManager.prototype.clearUIConfig = function () {
             this._dicConfig.clear();
-        }
-        getUIConfig(id) {
+        };
+        UIManager.prototype.getUIConfig = function (id) {
             return this._dicConfig.getValue(id);
-        }
-        getUILayerID(id) {
-            let info = this._dicConfig.getValue(id);
+        };
+        UIManager.prototype.getUILayerID = function (id) {
+            var info = this._dicConfig.getValue(id);
             if (!info) {
                 return -1;
             }
             return info.mLayer;
-        }
-    }
-    UIManager.instance = null;
+        };
+        UIManager.instance = null;
+        return UIManager;
+    }(airkit.Singleton));
     airkit.UIManager = UIManager;
-    class AlertInfo {
-        constructor(callback, title = "", content, tips = "", buttons = {}, param = null) {
+    var AlertInfo = (function () {
+        function AlertInfo(callback, title, content, tips, buttons, param) {
+            if (title === void 0) { title = ""; }
+            if (tips === void 0) { tips = ""; }
+            if (buttons === void 0) { buttons = {}; }
+            if (param === void 0) { param = null; }
             this.title = "";
             this.tips = "";
             this.buttons = [];
@@ -3690,10 +4151,11 @@ window.airkit = {};
             this.buttons = buttons;
             this.param = param;
         }
-    }
+        return AlertInfo;
+    }());
     airkit.AlertInfo = AlertInfo;
-    class UIConfig {
-        constructor(id, name, cls, layer, destroy, alige) {
+    var UIConfig = (function () {
+        function UIConfig(id, name, cls, layer, destroy, alige) {
             this.mID = id;
             this.name = name;
             this.cls = cls;
@@ -3701,42 +4163,44 @@ window.airkit = {};
             this.mHideDestroy = destroy;
             this.mAlige = alige;
         }
-    }
+        return UIConfig;
+    }());
     airkit.UIConfig = UIConfig;
-    class UIQueue {
-        constructor() {
+    var UIQueue = (function () {
+        function UIQueue() {
             this._currentUI = 0;
             this._currentUI = 0;
             this._listPanels = new airkit.Queue();
         }
-        show(id, args) {
-            let info = [id, args];
+        UIQueue.prototype.show = function (id, args) {
+            var info = [id, args];
             this._listPanels.enqueue(info);
             this.checkAlertNext();
-        }
-        empty() {
+        };
+        UIQueue.prototype.empty = function () {
             if (this._currentUI > 0 || this._listPanels.length > 0)
                 return false;
             return true;
-        }
-        checkAlertNext() {
+        };
+        UIQueue.prototype.checkAlertNext = function () {
+            var _a;
             if (this._currentUI > 0 || this._listPanels.length <= 0)
                 return;
-            let info = this._listPanels.dequeue();
+            var info = this._listPanels.dequeue();
             this.registerEvent();
             this._currentUI = info[0];
-            UIManager.Instance.show(info[0], ...info[1]);
-        }
-        registerEvent() {
+            (_a = UIManager.Instance).show.apply(_a, [info[0]].concat(info[1]));
+        };
+        UIQueue.prototype.registerEvent = function () {
             airkit.EventCenter.on(airkit.EventID.UI_CLOSE, this, this.onUIEvent);
-        }
-        unRegisterEvent() {
+        };
+        UIQueue.prototype.unRegisterEvent = function () {
             airkit.EventCenter.off(airkit.EventID.UI_CLOSE, this, this.onUIEvent);
-        }
-        onUIEvent(args) {
+        };
+        UIQueue.prototype.onUIEvent = function (args) {
             switch (args.type) {
                 case airkit.EventID.UI_CLOSE:
-                    let id = args.get(0);
+                    var id = args.get(0);
                     if (this._currentUI > 0 && this._currentUI == id) {
                         this._currentUI = 0;
                         this.unRegisterEvent();
@@ -3744,156 +4208,189 @@ window.airkit = {};
                     }
                     break;
             }
-        }
-    }
+        };
+        return UIQueue;
+    }());
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class LocalDB {
-        static setGlobalKey(key) {
+    var LocalDB = (function () {
+        function LocalDB() {
+        }
+        LocalDB.setGlobalKey = function (key) {
             this._globalKey = key;
-        }
-        static has(key) {
+        };
+        LocalDB.has = function (key) {
             return cc.sys.localStorage.getItem(this.getFullKey(key)) != null;
-        }
-        static getInt(key) {
+        };
+        LocalDB.getInt = function (key) {
             return parseInt(cc.sys.localStorage.getItem(this.getFullKey(key)));
-        }
-        static setInt(key, value) {
+        };
+        LocalDB.setInt = function (key, value) {
             cc.sys.localStorage.setItem(this.getFullKey(key), value.toString());
-        }
-        static getFloat(key) {
+        };
+        LocalDB.getFloat = function (key) {
             return parseInt(cc.sys.localStorage.getItem(this.getFullKey(key)));
-        }
-        static setFloat(key, value) {
+        };
+        LocalDB.setFloat = function (key, value) {
             cc.sys.localStorage.setItem(this.getFullKey(key), value.toString());
-        }
-        static getString(key) {
+        };
+        LocalDB.getString = function (key) {
             return cc.sys.localStorage.getItem(this.getFullKey(key));
-        }
-        static setString(key, value) {
+        };
+        LocalDB.setString = function (key, value) {
             cc.sys.localStorage.setItem(this.getFullKey(key), value);
-        }
-        static remove(key) {
+        };
+        LocalDB.remove = function (key) {
             cc.sys.localStorage.removeItem(this.getFullKey(key));
-        }
-        static clear() {
+        };
+        LocalDB.clear = function () {
             cc.sys.localStorage.clear();
-        }
-        static getFullKey(key) {
+        };
+        LocalDB.getFullKey = function (key) {
             return this._globalKey + "_" + key;
-        }
-    }
-    LocalDB._globalKey = "";
+        };
+        LocalDB._globalKey = "";
+        return LocalDB;
+    }());
     airkit.LocalDB = LocalDB;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class IntervalTimer {
-        constructor() {
+    var IntervalTimer = (function () {
+        function IntervalTimer() {
             this._nowTime = 0;
         }
-        init(interval, firstFrame) {
+        IntervalTimer.prototype.init = function (interval, firstFrame) {
             this._intervalTime = interval;
             if (firstFrame)
                 this._nowTime = this._intervalTime;
-        }
-        reset() {
+        };
+        IntervalTimer.prototype.reset = function () {
             this._nowTime = 0;
-        }
-        update(elapseTime) {
+        };
+        IntervalTimer.prototype.update = function (elapseTime) {
             this._nowTime += elapseTime;
             if (this._nowTime >= this._intervalTime) {
                 this._nowTime -= this._intervalTime;
                 return true;
             }
             return false;
-        }
-    }
+        };
+        return IntervalTimer;
+    }());
     airkit.IntervalTimer = IntervalTimer;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class Timer {
-        static Start() { }
-        static get deltaTimeMS() {
-            return cc.director.getDeltaTime();
+    var Timer = (function () {
+        function Timer() {
         }
-        static get fixedDeltaTime() {
-            return 0;
-        }
-        static get frameCount() {
-            return cc.director.getTotalFrames();
-        }
-        static get timeScale() {
-            return cc.director.getScheduler().getTimeScale();
-        }
-        static set timeScale(scale) {
-            cc.director.getScheduler().setTimeScale(scale);
-        }
-    }
+        Timer.Start = function () { };
+        Object.defineProperty(Timer, "deltaTimeMS", {
+            get: function () {
+                return cc.director.getDeltaTime();
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Timer, "fixedDeltaTime", {
+            get: function () {
+                return 0;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Timer, "frameCount", {
+            get: function () {
+                return cc.director.getTotalFrames();
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Timer, "timeScale", {
+            get: function () {
+                return cc.director.getScheduler().getTimeScale();
+            },
+            set: function (scale) {
+                cc.director.getScheduler().setTimeScale(scale);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Timer;
+    }());
     airkit.Timer = Timer;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class TimerManager extends airkit.Singleton {
-        constructor() {
-            super(...arguments);
+    var TimerManager = (function (_super) {
+        __extends(TimerManager, _super);
+        function TimerManager() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._idCounter = 0;
+            _this._removalPending = [];
+            _this._timers = [];
+            return _this;
+        }
+        Object.defineProperty(TimerManager, "Instance", {
+            get: function () {
+                if (!this.instance)
+                    this.instance = new TimerManager();
+                return this.instance;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        TimerManager.prototype.setup = function () {
             this._idCounter = 0;
-            this._removalPending = [];
-            this._timers = [];
-        }
-        static get Instance() {
-            if (!this.instance)
-                this.instance = new TimerManager();
-            return this.instance;
-        }
-        setup() {
-            this._idCounter = 0;
-        }
-        destroy() {
+        };
+        TimerManager.prototype.destroy = function () {
             airkit.ArrayUtils.clear(this._removalPending);
             airkit.ArrayUtils.clear(this._timers);
-        }
-        update(dt) {
+        };
+        TimerManager.prototype.update = function (dt) {
             this.remove();
-            for (let i = 0; i < this._timers.length; i++) {
+            for (var i = 0; i < this._timers.length; i++) {
                 this._timers[i].update(dt);
                 if (this._timers[i].isActive == false) {
                     TimerManager.Instance.removeTimer(this._timers[i].id);
                 }
             }
-        }
-        addLoop(rate, ticks, caller, method, args = null) {
+        };
+        TimerManager.prototype.addLoop = function (rate, ticks, caller, method, args) {
+            if (args === void 0) { args = null; }
             if (ticks <= 0)
                 ticks = 0;
-            let timer = airkit.ObjectPools.get(TimerObject);
+            var timer = airkit.ObjectPools.get(TimerObject);
             ++this._idCounter;
             if (args != null)
                 airkit.ArrayUtils.insert(args, this._idCounter, 0);
-            let handler = airkit.Handler.create(caller, method, args, false);
+            var handler = airkit.Handler.create(caller, method, args, false);
             timer.set(this._idCounter, rate, ticks, handler);
             this._timers.push(timer);
             return timer.id;
-        }
-        addOnce(rate, caller, method, args = null) {
-            let timer = airkit.ObjectPools.get(TimerObject);
+        };
+        TimerManager.prototype.addOnce = function (rate, caller, method, args) {
+            if (args === void 0) { args = null; }
+            var timer = airkit.ObjectPools.get(TimerObject);
             ++this._idCounter;
             if (args != null)
                 airkit.ArrayUtils.insert(args, this._idCounter, 0);
-            let handler = airkit.Handler.create(caller, method, args, false);
+            var handler = airkit.Handler.create(caller, method, args, false);
             timer.set(this._idCounter, rate, 1, handler);
             this._timers.push(timer);
             return timer.id;
-        }
-        removeTimer(timerId) {
+        };
+        TimerManager.prototype.removeTimer = function (timerId) {
             this._removalPending.push(timerId);
-        }
-        remove() {
-            let t;
+        };
+        TimerManager.prototype.remove = function () {
+            var t;
             if (this._removalPending.length > 0) {
-                for (let id of this._removalPending) {
-                    for (let i = 0; i < this._timers.length; i++) {
+                for (var _i = 0, _a = this._removalPending; _i < _a.length; _i++) {
+                    var id = _a[_i];
+                    for (var i = 0; i < this._timers.length; i++) {
                         t = this._timers[i];
                         if (t.id == id) {
                             t.clear();
@@ -3905,23 +4402,24 @@ window.airkit = {};
                 }
                 airkit.ArrayUtils.clear(this._removalPending);
             }
-        }
-    }
-    TimerManager.TIMER_OBJECT = "timerObject";
-    TimerManager.instance = null;
+        };
+        TimerManager.TIMER_OBJECT = "timerObject";
+        TimerManager.instance = null;
+        return TimerManager;
+    }(airkit.Singleton));
     airkit.TimerManager = TimerManager;
-    class TimerObject {
-        constructor() {
+    var TimerObject = (function () {
+        function TimerObject() {
             this.mTime = new airkit.IntervalTimer();
         }
-        init() { }
-        clear() {
+        TimerObject.prototype.init = function () { };
+        TimerObject.prototype.clear = function () {
             if (this.handle != null) {
                 this.handle.recover();
                 this.handle = null;
             }
-        }
-        set(id, rate, ticks, handle) {
+        };
+        TimerObject.prototype.set = function (id, rate, ticks, handle) {
             this.id = id;
             this.mRate = rate < 0 ? 0 : rate;
             this.mTicks = ticks < 0 ? 0 : ticks;
@@ -3929,8 +4427,8 @@ window.airkit = {};
             this.mTicksElapsed = 0;
             this.isActive = true;
             this.mTime.init(this.mRate, false);
-        }
-        update(dt) {
+        };
+        TimerObject.prototype.update = function (dt) {
             if (this.isActive && this.mTime.update(airkit.Timer.deltaTimeMS)) {
                 if (this.handle != null)
                     this.handle.run();
@@ -3939,31 +4437,34 @@ window.airkit = {};
                     this.isActive = false;
                 }
             }
-        }
-    }
-    TimerObject.objectKey = "TimerObject";
+        };
+        TimerObject.objectKey = "TimerObject";
+        return TimerObject;
+    }());
     airkit.TimerObject = TimerObject;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    let eArraySortOrder;
+    var eArraySortOrder;
     (function (eArraySortOrder) {
         eArraySortOrder[eArraySortOrder["ASCENDING"] = 0] = "ASCENDING";
         eArraySortOrder[eArraySortOrder["DESCENDING"] = 1] = "DESCENDING";
     })(eArraySortOrder = airkit.eArraySortOrder || (airkit.eArraySortOrder = {}));
-    class ArrayUtils {
-        static insert(arr, value, index) {
+    var ArrayUtils = (function () {
+        function ArrayUtils() {
+        }
+        ArrayUtils.insert = function (arr, value, index) {
             if (index > arr.length - 1) {
                 arr.push(value);
             }
             else {
                 arr.splice(index, 0, value);
             }
-        }
-        static isArray(obj) {
+        };
+        ArrayUtils.isArray = function (obj) {
             return Object.prototype.toString.call(obj) === "[object Array]";
-        }
-        static equip(arr, v) {
+        };
+        ArrayUtils.equip = function (arr, v) {
             if (!arr || !v)
                 return false;
             if (arr.length != v.length)
@@ -3978,36 +4479,37 @@ window.airkit = {};
                 }
             }
             return true;
-        }
-        static removeValue(arr, v) {
+        };
+        ArrayUtils.removeValue = function (arr, v) {
             if (Array.isArray(v)) {
-                for (let i = arr.length - 1; i >= 0; i--) {
+                for (var i = arr.length - 1; i >= 0; i--) {
                     if (this.equip(arr[i], v)) {
                         arr.splice(i, 1);
                     }
                 }
             }
             else {
-                let i = arr.indexOf(v);
+                var i = arr.indexOf(v);
                 if (i != -1) {
                     arr.splice(i, 1);
                 }
             }
-        }
-        static removeAllValue(arr, v) {
-            let i = arr.indexOf(v);
+        };
+        ArrayUtils.removeAllValue = function (arr, v) {
+            var i = arr.indexOf(v);
             while (i >= 0) {
                 arr.splice(i, 1);
                 i = arr.indexOf(v);
             }
-        }
-        static containsValue(arr, v) {
+        };
+        ArrayUtils.containsValue = function (arr, v) {
             return arr.length > 0 ? arr.indexOf(v) != -1 : false;
-        }
-        static copy(arr) {
+        };
+        ArrayUtils.copy = function (arr) {
             return JSON.parse(JSON.stringify(arr));
-        }
-        static sort(arr, key, order = eArraySortOrder.DESCENDING) {
+        };
+        ArrayUtils.sort = function (arr, key, order) {
+            if (order === void 0) { order = eArraySortOrder.DESCENDING; }
             if (arr == null)
                 return;
             arr.sort(function (info1, info2) {
@@ -4030,28 +4532,30 @@ window.airkit = {};
                     }
                 }
             });
-        }
-        static clear(arr) {
-            let i = 0;
-            let len = arr.length;
+        };
+        ArrayUtils.clear = function (arr) {
+            var i = 0;
+            var len = arr.length;
             for (i = 0; i < len; ++i) {
                 arr[i] = null;
             }
             arr.splice(0);
-        }
-        static isEmpty(arr) {
+        };
+        ArrayUtils.isEmpty = function (arr) {
             if (arr == null || arr.length == 0) {
                 return true;
             }
             return false;
-        }
-    }
+        };
+        return ArrayUtils;
+    }());
     airkit.ArrayUtils = ArrayUtils;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class Byte {
-        constructor(data = null) {
+    var Byte = (function () {
+        function Byte(data) {
+            if (data === void 0) { data = null; }
             this._xd_ = true;
             this._allocated_ = 8;
             this._pos_ = 0;
@@ -4065,37 +4569,49 @@ window.airkit = {};
                 this._resizeBuffer(this._allocated_);
             }
         }
-        static getSystemEndian() {
+        Byte.getSystemEndian = function () {
             if (!Byte._sysEndian) {
                 var buffer = new ArrayBuffer(2);
                 new DataView(buffer).setInt16(0, 256, true);
                 Byte._sysEndian = new Int16Array(buffer)[0] === 256 ? Byte.LITTLE_ENDIAN : Byte.BIG_ENDIAN;
             }
             return Byte._sysEndian;
-        }
-        get buffer() {
-            var rstBuffer = this._d_.buffer;
-            if (rstBuffer.byteLength === this._length)
-                return rstBuffer;
-            return rstBuffer.slice(0, this._length);
-        }
-        get endian() {
-            return this._xd_ ? Byte.LITTLE_ENDIAN : Byte.BIG_ENDIAN;
-        }
-        set endian(value) {
-            this._xd_ = value === Byte.LITTLE_ENDIAN;
-        }
-        set length(value) {
-            if (this._allocated_ < value)
-                this._resizeBuffer((this._allocated_ = Math.floor(Math.max(value, this._allocated_ * 2))));
-            else if (this._allocated_ > value)
-                this._resizeBuffer((this._allocated_ = value));
-            this._length = value;
-        }
-        get length() {
-            return this._length;
-        }
-        _resizeBuffer(len) {
+        };
+        Object.defineProperty(Byte.prototype, "buffer", {
+            get: function () {
+                var rstBuffer = this._d_.buffer;
+                if (rstBuffer.byteLength === this._length)
+                    return rstBuffer;
+                return rstBuffer.slice(0, this._length);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Byte.prototype, "endian", {
+            get: function () {
+                return this._xd_ ? Byte.LITTLE_ENDIAN : Byte.BIG_ENDIAN;
+            },
+            set: function (value) {
+                this._xd_ = value === Byte.LITTLE_ENDIAN;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Byte.prototype, "length", {
+            get: function () {
+                return this._length;
+            },
+            set: function (value) {
+                if (this._allocated_ < value)
+                    this._resizeBuffer((this._allocated_ = Math.floor(Math.max(value, this._allocated_ * 2))));
+                else if (this._allocated_ > value)
+                    this._resizeBuffer((this._allocated_ = value));
+                this._length = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Byte.prototype._resizeBuffer = function (len) {
             try {
                 var newByteView = new Uint8Array(len);
                 if (this._u8d_ != null) {
@@ -4110,159 +4626,159 @@ window.airkit = {};
             catch (err) {
                 throw "Invalid typed array length:" + len;
             }
-        }
-        getString() {
+        };
+        Byte.prototype.getString = function () {
             return this.readString();
-        }
-        readString() {
+        };
+        Byte.prototype.readString = function () {
             return this._rUTF(this.getUint16());
-        }
-        getFloat32Array(start, len) {
+        };
+        Byte.prototype.getFloat32Array = function (start, len) {
             return this.readFloat32Array(start, len);
-        }
-        readFloat32Array(start, len) {
+        };
+        Byte.prototype.readFloat32Array = function (start, len) {
             var end = start + len;
             end = end > this._length ? this._length : end;
             var v = new Float32Array(this._d_.buffer.slice(start, end));
             this._pos_ = end;
             return v;
-        }
-        getUint8Array(start, len) {
+        };
+        Byte.prototype.getUint8Array = function (start, len) {
             return this.readUint8Array(start, len);
-        }
-        readUint8Array(start, len) {
+        };
+        Byte.prototype.readUint8Array = function (start, len) {
             var end = start + len;
             end = end > this._length ? this._length : end;
             var v = new Uint8Array(this._d_.buffer.slice(start, end));
             this._pos_ = end;
             return v;
-        }
-        getInt16Array(start, len) {
+        };
+        Byte.prototype.getInt16Array = function (start, len) {
             return this.readInt16Array(start, len);
-        }
-        readInt16Array(start, len) {
+        };
+        Byte.prototype.readInt16Array = function (start, len) {
             var end = start + len;
             end = end > this._length ? this._length : end;
             var v = new Int16Array(this._d_.buffer.slice(start, end));
             this._pos_ = end;
             return v;
-        }
-        getFloat32() {
+        };
+        Byte.prototype.getFloat32 = function () {
             return this.readFloat32();
-        }
-        readFloat32() {
+        };
+        Byte.prototype.readFloat32 = function () {
             if (this._pos_ + 4 > this._length)
                 throw "getFloat32 error - Out of bounds";
             var v = this._d_.getFloat32(this._pos_, this._xd_);
             this._pos_ += 4;
             return v;
-        }
-        getFloat64() {
+        };
+        Byte.prototype.getFloat64 = function () {
             return this.readFloat64();
-        }
-        readFloat64() {
+        };
+        Byte.prototype.readFloat64 = function () {
             if (this._pos_ + 8 > this._length)
                 throw "getFloat64 error - Out of bounds";
             var v = this._d_.getFloat64(this._pos_, this._xd_);
             this._pos_ += 8;
             return v;
-        }
-        writeFloat32(value) {
+        };
+        Byte.prototype.writeFloat32 = function (value) {
             this._ensureWrite(this._pos_ + 4);
             this._d_.setFloat32(this._pos_, value, this._xd_);
             this._pos_ += 4;
-        }
-        writeFloat64(value) {
+        };
+        Byte.prototype.writeFloat64 = function (value) {
             this._ensureWrite(this._pos_ + 8);
             this._d_.setFloat64(this._pos_, value, this._xd_);
             this._pos_ += 8;
-        }
-        getInt32() {
+        };
+        Byte.prototype.getInt32 = function () {
             return this.readInt32();
-        }
-        readInt32() {
+        };
+        Byte.prototype.readInt32 = function () {
             if (this._pos_ + 4 > this._length)
                 throw "getInt32 error - Out of bounds";
             var float = this._d_.getInt32(this._pos_, this._xd_);
             this._pos_ += 4;
             return float;
-        }
-        getUint32() {
+        };
+        Byte.prototype.getUint32 = function () {
             return this.readUint32();
-        }
-        readUint32() {
+        };
+        Byte.prototype.readUint32 = function () {
             if (this._pos_ + 4 > this._length)
                 throw "getUint32 error - Out of bounds";
             var v = this._d_.getUint32(this._pos_, this._xd_);
             this._pos_ += 4;
             return v;
-        }
-        writeInt32(value) {
+        };
+        Byte.prototype.writeInt32 = function (value) {
             this._ensureWrite(this._pos_ + 4);
             this._d_.setInt32(this._pos_, value, this._xd_);
             this._pos_ += 4;
-        }
-        writeUint32(value) {
+        };
+        Byte.prototype.writeUint32 = function (value) {
             this._ensureWrite(this._pos_ + 4);
             this._d_.setUint32(this._pos_, value, this._xd_);
             this._pos_ += 4;
-        }
-        getInt16() {
+        };
+        Byte.prototype.getInt16 = function () {
             return this.readInt16();
-        }
-        readInt16() {
+        };
+        Byte.prototype.readInt16 = function () {
             if (this._pos_ + 2 > this._length)
                 throw "getInt16 error - Out of bounds";
             var us = this._d_.getInt16(this._pos_, this._xd_);
             this._pos_ += 2;
             return us;
-        }
-        getUint16() {
+        };
+        Byte.prototype.getUint16 = function () {
             return this.readUint16();
-        }
-        readUint16() {
+        };
+        Byte.prototype.readUint16 = function () {
             if (this._pos_ + 2 > this._length)
                 throw "getUint16 error - Out of bounds";
             var us = this._d_.getUint16(this._pos_, this._xd_);
             this._pos_ += 2;
             return us;
-        }
-        writeUint16(value) {
+        };
+        Byte.prototype.writeUint16 = function (value) {
             this._ensureWrite(this._pos_ + 2);
             this._d_.setUint16(this._pos_, value, this._xd_);
             this._pos_ += 2;
-        }
-        writeInt16(value) {
+        };
+        Byte.prototype.writeInt16 = function (value) {
             this._ensureWrite(this._pos_ + 2);
             this._d_.setInt16(this._pos_, value, this._xd_);
             this._pos_ += 2;
-        }
-        getUint8() {
+        };
+        Byte.prototype.getUint8 = function () {
             return this.readUint8();
-        }
-        readUint8() {
+        };
+        Byte.prototype.readUint8 = function () {
             if (this._pos_ + 1 > this._length)
                 throw "getUint8 error - Out of bounds";
             return this._u8d_[this._pos_++];
-        }
-        writeUint8(value) {
+        };
+        Byte.prototype.writeUint8 = function (value) {
             this._ensureWrite(this._pos_ + 1);
             this._d_.setUint8(this._pos_, value);
             this._pos_++;
-        }
-        _getUInt8(pos) {
+        };
+        Byte.prototype._getUInt8 = function (pos) {
             return this._readUInt8(pos);
-        }
-        _readUInt8(pos) {
+        };
+        Byte.prototype._readUInt8 = function (pos) {
             return this._d_.getUint8(pos);
-        }
-        _getUint16(pos) {
+        };
+        Byte.prototype._getUint16 = function (pos) {
             return this._readUint16(pos);
-        }
-        _readUint16(pos) {
+        };
+        Byte.prototype._readUint16 = function (pos) {
             return this._d_.getUint16(pos, this._xd_);
-        }
-        _rUTF(len) {
+        };
+        Byte.prototype._rUTF = function (len) {
             var v = "", max = this._pos_ + len, c, c2, c3, f = String.fromCharCode;
             var u = this._u8d_, i = 0;
             var strs = [];
@@ -4284,11 +4800,11 @@ window.airkit = {};
                 else {
                     c2 = u[this._pos_++];
                     c3 = u[this._pos_++];
-                    const _code = ((c & 0x0f) << 18) | ((c2 & 0x7f) << 12) | ((c3 & 0x7f) << 6) | (u[this._pos_++] & 0x7f);
+                    var _code = ((c & 0x0f) << 18) | ((c2 & 0x7f) << 12) | ((c3 & 0x7f) << 6) | (u[this._pos_++] & 0x7f);
                     if (_code >= 0x10000) {
-                        const _offset = _code - 0x10000;
-                        const _lead = 0xd800 | (_offset >> 10);
-                        const _trail = 0xdc00 | (_offset & 0x3ff);
+                        var _offset = _code - 0x10000;
+                        var _lead = 0xd800 | (_offset >> 10);
+                        var _trail = 0xdc00 | (_offset & 0x3ff);
                         strs[n++] = f(_lead);
                         strs[n++] = f(_trail);
                     }
@@ -4300,11 +4816,11 @@ window.airkit = {};
             }
             strs.length = n;
             return strs.join("");
-        }
-        getCustomString(len) {
+        };
+        Byte.prototype.getCustomString = function (len) {
             return this.readCustomString(len);
-        }
-        readCustomString(len) {
+        };
+        Byte.prototype.readCustomString = function (len) {
             var v = "", ulen = 0, c, c2, f = String.fromCharCode;
             var u = this._u8d_, i = 0;
             while (len > 0) {
@@ -4327,24 +4843,32 @@ window.airkit = {};
                 }
             }
             return v;
-        }
-        get pos() {
-            return this._pos_;
-        }
-        set pos(value) {
-            this._pos_ = value;
-        }
-        get bytesAvailable() {
-            return this._length - this._pos_;
-        }
-        clear() {
+        };
+        Object.defineProperty(Byte.prototype, "pos", {
+            get: function () {
+                return this._pos_;
+            },
+            set: function (value) {
+                this._pos_ = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Byte.prototype, "bytesAvailable", {
+            get: function () {
+                return this._length - this._pos_;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Byte.prototype.clear = function () {
             this._pos_ = 0;
             this.length = 0;
-        }
-        __getBuffer() {
+        };
+        Byte.prototype.__getBuffer = function () {
             return this._d_.buffer;
-        }
-        writeUTFBytes(value) {
+        };
+        Byte.prototype.writeUTFBytes = function (value) {
             value = value + "";
             for (var i = 0, sz = value.length; i < sz; i++) {
                 var c = value.charCodeAt(i);
@@ -4358,14 +4882,14 @@ window.airkit = {};
                 }
                 else if (c >= 0xd800 && c <= 0xdbff) {
                     i++;
-                    const c2 = value.charCodeAt(i);
+                    var c2 = value.charCodeAt(i);
                     if (!Number.isNaN(c2) && c2 >= 0xdc00 && c2 <= 0xdfff) {
-                        const _p1 = (c & 0x3ff) + 0x40;
-                        const _p2 = c2 & 0x3ff;
-                        const _b1 = 0xf0 | ((_p1 >> 8) & 0x3f);
-                        const _b2 = 0x80 | ((_p1 >> 2) & 0x3f);
-                        const _b3 = 0x80 | ((_p1 & 0x3) << 4) | ((_p2 >> 6) & 0xf);
-                        const _b4 = 0x80 | (_p2 & 0x3f);
+                        var _p1 = (c & 0x3ff) + 0x40;
+                        var _p2 = c2 & 0x3ff;
+                        var _b1 = 0xf0 | ((_p1 >> 8) & 0x3f);
+                        var _b2 = 0x80 | ((_p1 >> 2) & 0x3f);
+                        var _b3 = 0x80 | ((_p1 & 0x3) << 4) | ((_p2 >> 6) & 0xf);
+                        var _b4 = 0x80 | (_p2 & 0x3f);
                         this._ensureWrite(this._pos_ + 4);
                         this._u8d_.set([_b1, _b2, _b3, _b4], this._pos_);
                         this._pos_ += 4;
@@ -4382,21 +4906,22 @@ window.airkit = {};
                     this._pos_ += 4;
                 }
             }
-        }
-        writeUTFString(value) {
+        };
+        Byte.prototype.writeUTFString = function (value) {
             var tPos = this.pos;
             this.writeUint16(1);
             this.writeUTFBytes(value);
             var dPos = this.pos - tPos - 2;
             this._d_.setUint16(tPos, dPos, this._xd_);
-        }
-        readUTFString() {
+        };
+        Byte.prototype.readUTFString = function () {
             return this.readUTFBytes(this.getUint16());
-        }
-        getUTFString() {
+        };
+        Byte.prototype.getUTFString = function () {
             return this.readUTFString();
-        }
-        readUTFBytes(len = -1) {
+        };
+        Byte.prototype.readUTFBytes = function (len) {
+            if (len === void 0) { len = -1; }
             if (len === 0)
                 return "";
             var lastBytes = this.bytesAvailable;
@@ -4404,30 +4929,33 @@ window.airkit = {};
                 throw "readUTFBytes error - Out of bounds";
             len = len > 0 ? len : lastBytes;
             return this._rUTF(len);
-        }
-        getUTFBytes(len = -1) {
+        };
+        Byte.prototype.getUTFBytes = function (len) {
+            if (len === void 0) { len = -1; }
             return this.readUTFBytes(len);
-        }
-        writeByte(value) {
+        };
+        Byte.prototype.writeByte = function (value) {
             this._ensureWrite(this._pos_ + 1);
             this._d_.setInt8(this._pos_, value);
             this._pos_ += 1;
-        }
-        readByte() {
+        };
+        Byte.prototype.readByte = function () {
             if (this._pos_ + 1 > this._length)
                 throw "readByte error - Out of bounds";
             return this._d_.getInt8(this._pos_++);
-        }
-        getByte() {
+        };
+        Byte.prototype.getByte = function () {
             return this.readByte();
-        }
-        _ensureWrite(lengthToEnsure) {
+        };
+        Byte.prototype._ensureWrite = function (lengthToEnsure) {
             if (this._length < lengthToEnsure)
                 this._length = lengthToEnsure;
             if (this._allocated_ < lengthToEnsure)
                 this.length = lengthToEnsure;
-        }
-        writeArrayBuffer(arraybuffer, offset = 0, length = 0) {
+        };
+        Byte.prototype.writeArrayBuffer = function (arraybuffer, offset, length) {
+            if (offset === void 0) { offset = 0; }
+            if (length === void 0) { length = 0; }
             if (offset < 0 || length < 0)
                 throw "writeArrayBuffer error - Out of bounds";
             if (length == 0)
@@ -4436,17 +4964,18 @@ window.airkit = {};
             var uint8array = new Uint8Array(arraybuffer);
             this._u8d_.set(uint8array.subarray(offset, offset + length), this._pos_);
             this._pos_ += length;
-        }
-        readArrayBuffer(length) {
+        };
+        Byte.prototype.readArrayBuffer = function (length) {
             var rst;
             rst = this._u8d_.buffer.slice(this._pos_, this._pos_ + length);
             this._pos_ = this._pos_ + length;
             return rst;
-        }
-    }
-    Byte.BIG_ENDIAN = "bigEndian";
-    Byte.LITTLE_ENDIAN = "littleEndian";
-    Byte._sysEndian = null;
+        };
+        Byte.BIG_ENDIAN = "bigEndian";
+        Byte.LITTLE_ENDIAN = "littleEndian";
+        Byte._sysEndian = null;
+        return Byte;
+    }());
     airkit.Byte = Byte;
 })(airkit || (airkit = {}));
 
@@ -4459,7 +4988,7 @@ window.airkit = {};
     }
     airkit.bytes2Uint8Array = bytes2Uint8Array;
     function bytes2String(data, endian) {
-        let body = bytes2Uint8Array(data, endian);
+        var body = bytes2Uint8Array(data, endian);
         return uint8Array2String(body);
     }
     airkit.bytes2String = bytes2String;
@@ -4492,48 +5021,51 @@ window.airkit = {};
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class ClassUtils {
-        static regClass(className, classDef) {
-            ClassUtils._classMap[className] = classDef;
+    var ClassUtils = (function () {
+        function ClassUtils() {
         }
-        static regShortClassName(classes) {
+        ClassUtils.regClass = function (className, classDef) {
+            ClassUtils._classMap[className] = classDef;
+        };
+        ClassUtils.regShortClassName = function (classes) {
             for (var i = 0; i < classes.length; i++) {
                 var classDef = classes[i];
                 var className = classDef.name;
                 ClassUtils._classMap[className] = classDef;
             }
-        }
-        static getRegClass(className) {
+        };
+        ClassUtils.getRegClass = function (className) {
             return ClassUtils._classMap[className];
-        }
-        static getClass(className) {
+        };
+        ClassUtils.getClass = function (className) {
             var classObject = ClassUtils._classMap[className] || ClassUtils._classMap["cc." + className] || className;
             return classObject;
-        }
-        static getInstance(className) {
+        };
+        ClassUtils.getInstance = function (className) {
             var compClass = ClassUtils.getClass(className);
             if (compClass)
                 return new compClass();
             else
                 console.warn("[error] Undefined class:", className);
             return null;
-        }
-        static copyObject(obj) {
-            let js = JSON.stringify(obj);
+        };
+        ClassUtils.copyObject = function (obj) {
+            var js = JSON.stringify(obj);
             return JSON.parse(js);
-        }
-        static getObjectValue(obj, key, defVal) {
+        };
+        ClassUtils.getObjectValue = function (obj, key, defVal) {
             if (obj[key]) {
                 return obj[key];
             }
             return defVal;
-        }
-        static callFunc(obj, funcName, args = null) {
+        };
+        ClassUtils.callFunc = function (obj, funcName, args) {
+            if (args === void 0) { args = null; }
             if (funcName == null) {
                 return;
             }
             var func = obj[funcName];
-            let result = null;
+            var result = null;
             if (func) {
                 if (args == null) {
                     result = func.apply(obj);
@@ -4546,65 +5078,69 @@ window.airkit = {};
                 airkit.Log.error("cant find funcName {0} from Module:{1}", funcName, obj.name);
             }
             return result;
-        }
-        static classKey(obj) {
-            let proto = Object.getPrototypeOf(obj);
-            let clazz = proto["constructor"];
-            let sign = clazz["objectKey"];
+        };
+        ClassUtils.classKey = function (obj) {
+            var proto = Object.getPrototypeOf(obj);
+            var clazz = proto["constructor"];
+            var sign = clazz["objectKey"];
             return sign;
-        }
-    }
-    ClassUtils._classMap = {};
+        };
+        ClassUtils._classMap = {};
+        return ClassUtils;
+    }());
     airkit.ClassUtils = ClassUtils;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class DateUtils {
-        static setServerTime(time) {
+    var DateUtils = (function () {
+        function DateUtils() {
+        }
+        DateUtils.setServerTime = function (time) {
             this.serverTime = time;
             this.serverTimeDiff = Date.now() - time;
-        }
-        static getNow() {
-            let now = Math.floor((Date.now() - this.serverTimeDiff) / 1000);
+        };
+        DateUtils.getNow = function () {
+            var now = Math.floor((Date.now() - this.serverTimeDiff) / 1000);
             return now;
-        }
-        static getNowMS() {
+        };
+        DateUtils.getNowMS = function () {
             return Date.now() - this.serverTimeDiff;
-        }
-        static isTheSameMonth(nTime, nSecond) {
-            let now = DateUtils.getNow();
-            let curTime = now - nSecond;
-            let date = new Date(curTime * 1000);
-            let defineDate = new Date(date.getFullYear(), date.getMonth(), 1);
-            let nextTime = Math.floor(defineDate.getTime() / 1000) + nSecond;
+        };
+        DateUtils.isTheSameMonth = function (nTime, nSecond) {
+            var now = DateUtils.getNow();
+            var curTime = now - nSecond;
+            var date = new Date(curTime * 1000);
+            var defineDate = new Date(date.getFullYear(), date.getMonth(), 1);
+            var nextTime = Math.floor(defineDate.getTime() / 1000) + nSecond;
             return nTime >= nextTime;
-        }
-        static isTheSameDayByNow(nTime, nSecond) {
-            let date = new Date();
-            let offset = date.getTimezoneOffset() * 60;
-            let now = DateUtils.getNow();
-            let day1 = (nTime - offset - nSecond) / 86400;
-            let day2 = (now - offset - nSecond) / 86400;
+        };
+        DateUtils.isTheSameDayByNow = function (nTime, nSecond) {
+            var date = new Date();
+            var offset = date.getTimezoneOffset() * 60;
+            var now = DateUtils.getNow();
+            var day1 = (nTime - offset - nSecond) / 86400;
+            var day2 = (now - offset - nSecond) / 86400;
             if (Math.floor(day1) === Math.floor(day2)) {
                 return true;
             }
             return false;
-        }
-        static passedDays(nTime1, nTime2, nSecondOffset = 0) {
-            let date = new Date();
-            let offset = date.getTimezoneOffset() * 60;
-            let day1 = (nTime1 - offset - nSecondOffset) / 86400;
-            let day2 = (nTime2 - offset - nSecondOffset) / 86400;
+        };
+        DateUtils.passedDays = function (nTime1, nTime2, nSecondOffset) {
+            if (nSecondOffset === void 0) { nSecondOffset = 0; }
+            var date = new Date();
+            var offset = date.getTimezoneOffset() * 60;
+            var day1 = (nTime1 - offset - nSecondOffset) / 86400;
+            var day2 = (nTime2 - offset - nSecondOffset) / 86400;
             return Math.floor(day2) - Math.floor(day1);
-        }
-        static currentYMDHMS() {
+        };
+        DateUtils.currentYMDHMS = function () {
             return this.formatDateTime(this.getNowMS());
-        }
-        static currentHour() {
+        };
+        DateUtils.currentHour = function () {
             var date = new Date(this.getNowMS());
             return date.getHours();
-        }
-        static formatDateTime(timeValue) {
+        };
+        DateUtils.formatDateTime = function (timeValue) {
             var date = new Date(timeValue);
             var y = date.getFullYear();
             var m = date.getMonth() + 1;
@@ -4618,39 +5154,41 @@ window.airkit = {};
             var minut = minute < 10 ? "0" + minute : minute;
             var secon = second < 10 ? "0" + second : second;
             return y + "-" + M + "-" + D + " " + H + ":" + minut + ":" + secon;
-        }
-        static countdown(time, format = "D天H时M分S秒") {
-            let s = Math.max(0, time / 1000);
-            let d = Math.floor(s / 24 / 3600);
-            let h = Math.floor((s / 3600) % 24);
-            let m = Math.floor((s / 60) % 60);
+        };
+        DateUtils.countdown = function (time, format) {
+            if (format === void 0) { format = "D天H时M分S秒"; }
+            var s = Math.max(0, time / 1000);
+            var d = Math.floor(s / 24 / 3600);
+            var h = Math.floor((s / 3600) % 24);
+            var m = Math.floor((s / 60) % 60);
             s = Math.floor(s % 60);
-            let f = format.replace(/D/, d.toString());
+            var f = format.replace(/D/, d.toString());
             f = f.replace(/H/, h.toString());
             f = f.replace(/M/, m.toString());
             f = f.replace(/S/, s.toString());
             return f;
-        }
-        static formatTime(time, format = "{0}:{1}:{2}") {
-            let s = Math.max(0, time);
-            let h = Math.floor((s / 3600) % 24);
-            let m = Math.floor((s / 60) % 60);
+        };
+        DateUtils.formatTime = function (time, format) {
+            if (format === void 0) { format = "{0}:{1}:{2}"; }
+            var s = Math.max(0, time);
+            var h = Math.floor((s / 3600) % 24);
+            var m = Math.floor((s / 60) % 60);
             s = Math.floor(s % 60);
             return airkit.StringUtils.format(format, h < 10 ? "0" + h : h, m < 10 ? "0" + m : m, s < 10 ? "0" + s : s);
-        }
-        static format2Time(time) {
-            let format = "{0}:{1}";
-            let s = Math.max(0, time);
-            let d = Math.floor(s / 24 / 3600);
+        };
+        DateUtils.format2Time = function (time) {
+            var format = "{0}:{1}";
+            var s = Math.max(0, time);
+            var d = Math.floor(s / 24 / 3600);
             if (d > 0) {
                 return airkit.StringUtils.format("{0}天", d);
             }
-            let h = Math.floor((s / 3600) % 24);
-            let m = Math.floor((s / 60) % 60);
+            var h = Math.floor((s / 3600) % 24);
+            var m = Math.floor((s / 60) % 60);
             s = Math.floor(s % 60);
-            let M = m < 10 ? "0" + m : m;
-            let H = h < 10 ? "0" + h : h;
-            let S = s < 10 ? "0" + s : s;
+            var M = m < 10 ? "0" + m : m;
+            var H = h < 10 ? "0" + h : h;
+            var S = s < 10 ? "0" + s : s;
             if (h > 0) {
                 return airkit.StringUtils.format(format, H, M);
             }
@@ -4658,20 +5196,20 @@ window.airkit = {};
                 format = format.replace(":", "’");
                 return airkit.StringUtils.format(format, M, S);
             }
-        }
-        static format2Time2(time) {
-            let format = "{0}:{1}";
-            let s = Math.max(0, time);
-            let d = Math.floor(s / 24 / 3600);
+        };
+        DateUtils.format2Time2 = function (time) {
+            var format = "{0}:{1}";
+            var s = Math.max(0, time);
+            var d = Math.floor(s / 24 / 3600);
             if (d > 0) {
                 return airkit.StringUtils.format("{0}天", d);
             }
-            let h = Math.floor((s / 3600) % 24);
-            let m = Math.floor((s / 60) % 60);
+            var h = Math.floor((s / 3600) % 24);
+            var m = Math.floor((s / 60) % 60);
             s = Math.floor(s % 60);
-            let M = m < 10 ? "0" + m : m;
-            let H = h < 10 ? "0" + h : h;
-            let S = s < 10 ? "0" + s : s;
+            var M = m < 10 ? "0" + m : m;
+            var H = h < 10 ? "0" + h : h;
+            var S = s < 10 ? "0" + s : s;
             if (h > 0) {
                 return airkit.StringUtils.format(format, H, M);
             }
@@ -4679,66 +5217,70 @@ window.airkit = {};
                 format = format.replace(":", "’");
                 return airkit.StringUtils.format(format, M, S);
             }
-        }
-    }
-    DateUtils.serverTimeDiff = 0;
-    DateUtils.serverTime = 0;
+        };
+        DateUtils.serverTimeDiff = 0;
+        DateUtils.serverTime = 0;
+        return DateUtils;
+    }());
     airkit.DateUtils = DateUtils;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class DicUtils {
-        static getKeys(d) {
-            let a = [];
-            for (let key in d) {
+    var DicUtils = (function () {
+        function DicUtils() {
+        }
+        DicUtils.getKeys = function (d) {
+            var a = [];
+            for (var key in d) {
                 a.push(key);
             }
             return a;
-        }
-        static getValues(d) {
-            let a = [];
-            for (let key in d) {
+        };
+        DicUtils.getValues = function (d) {
+            var a = [];
+            for (var key in d) {
                 a.push(d[key]);
             }
             return a;
-        }
-        static clearDic(dic) {
-            let v;
-            for (let key in dic) {
+        };
+        DicUtils.clearDic = function (dic) {
+            var v;
+            for (var key in dic) {
                 v = dic[key];
                 if (v instanceof Object) {
                     DicUtils.clearDic(v);
                 }
                 delete dic[key];
             }
-        }
-        static foreach(dic, compareFn) {
-            for (let key in dic) {
+        };
+        DicUtils.foreach = function (dic, compareFn) {
+            for (var key in dic) {
                 if (!compareFn.call(null, key, dic[key]))
                     break;
             }
-        }
-        static isEmpty(dic) {
+        };
+        DicUtils.isEmpty = function (dic) {
             if (dic == null)
                 return true;
-            for (let key in dic) {
+            for (var key in dic) {
                 return false;
             }
             return true;
-        }
-        static getLength(dic) {
+        };
+        DicUtils.getLength = function (dic) {
             if (dic == null)
                 return 0;
-            let count = 0;
-            for (let key in dic) {
+            var count = 0;
+            for (var key in dic) {
                 ++count;
             }
             return count;
-        }
-        static assign(obj, dic) {
+        };
+        DicUtils.assign = function (obj, dic) {
             Object.assign(obj, dic);
-        }
-    }
+        };
+        return DicUtils;
+    }());
     airkit.DicUtils = DicUtils;
 })(airkit || (airkit = {}));
 
@@ -4751,18 +5293,20 @@ window.airkit = {};
         return cc.director.getWinSize().height;
     }
     airkit.displayHeight = displayHeight;
-    class DisplayUtils {
-        static removeAllChild(container) {
+    var DisplayUtils = (function () {
+        function DisplayUtils() {
+        }
+        DisplayUtils.removeAllChild = function (container) {
             if (!container)
                 return;
             if (container.numChildren <= 0)
                 return;
             while (container.numChildren > 0) {
-                let node = container.removeChildAt(0);
+                var node = container.removeChildAt(0);
                 if (node) {
-                    let cons = node["constructor"];
+                    var cons = node["constructor"];
                     if (cons["name"] == "Animation") {
-                        let ani = node;
+                        var ani = node;
                         ani.clear();
                         ani.destroy(true);
                         ani = null;
@@ -4775,18 +5319,18 @@ window.airkit = {};
                 }
                 node = null;
             }
-        }
-        static colorBG(color, w, h) {
-            let bgSp = new fgui.GGraph();
+        };
+        DisplayUtils.colorBG = function (color, w, h) {
+            var bgSp = new fgui.GGraph();
             bgSp.drawRect(1, color, color);
             bgSp.setSize(w, h);
             bgSp.alpha = 0.7;
             return bgSp;
-        }
-        static popupDown(panel, handler, ignoreAnchor) {
+        };
+        DisplayUtils.popupDown = function (panel, handler, ignoreAnchor) {
             panel.scale(0.8, 0.8);
-            let x = displayWidth() >> 1;
-            let y = displayHeight() >> 1;
+            var x = displayWidth() >> 1;
+            var y = displayHeight() >> 1;
             if (ignoreAnchor == null || !ignoreAnchor) {
                 panel.anchorX = 0.5;
                 panel.anchorY = 0.5;
@@ -4796,17 +5340,17 @@ window.airkit = {};
                 y = panel.y;
             }
             panel.pos(x, 0);
-            let time = 500;
+            var time = 500;
             airkit.TweenUtils.get(panel).to({ scaleX: 1, scaleY: 1, x: x, y: y }, time, fgui.EaseType.BackOut, handler);
             if (panel.parent && panel.parent.bg) {
                 panel.parent.bg.alpha = 0;
                 airkit.TweenUtils.get(panel.parent.bg).to({ alpha: 1.0 }, time, fgui.EaseType.QuadOut);
             }
-        }
-        static popup(view, handler, ignoreAnchor) {
+        };
+        DisplayUtils.popup = function (view, handler, ignoreAnchor) {
             view.setScale(0.85, 0.85);
-            let x = displayWidth() >> 1;
-            let y = displayHeight() >> 1;
+            var x = displayWidth() >> 1;
+            var y = displayHeight() >> 1;
             if (ignoreAnchor == null || !ignoreAnchor) {
                 view.setPivot(0.5, 0.5, true);
             }
@@ -4815,18 +5359,18 @@ window.airkit = {};
                 y = view.y;
             }
             view.setPosition(x, y);
-            let time = 0.25;
+            var time = 0.25;
             airkit.TweenUtils.get(view).to({ scaleX: 1, scaleY: 1 }, time, fgui.EaseType.QuadOut, handler);
             if (view.parent && view.parent.getChild("bg")) {
-                let bg = view.parent.getChild("bg");
+                var bg = view.parent.getChild("bg");
                 bg.alpha = 0;
                 airkit.TweenUtils.get(bg).to({ alpha: 1.0 }, 0.25, fgui.EaseType.QuadOut);
             }
-        }
-        static hide(panel, handler) {
-            let time = 0.2;
-            let view = panel.panel();
-            let bg = panel.bg();
+        };
+        DisplayUtils.hide = function (panel, handler) {
+            var time = 0.2;
+            var view = panel.panel();
+            var bg = panel.bg();
             if (view == null) {
                 if (handler) {
                     handler.run();
@@ -4838,35 +5382,41 @@ window.airkit = {};
                     airkit.TweenUtils.get(bg).to({ alpha: 0 }, 0.2, fgui.EaseType.QuadOut);
                 }
             }
-        }
-    }
+        };
+        return DisplayUtils;
+    }());
     airkit.DisplayUtils = DisplayUtils;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class Handler {
-        constructor(caller = null, method = null, args = null, once = false) {
+    var Handler = (function () {
+        function Handler(caller, method, args, once) {
+            if (caller === void 0) { caller = null; }
+            if (method === void 0) { method = null; }
+            if (args === void 0) { args = null; }
+            if (once === void 0) { once = false; }
             this.once = false;
             this._id = 0;
             this.setTo(caller, method, args, once);
         }
-        setTo(caller, method, args, once = false) {
+        Handler.prototype.setTo = function (caller, method, args, once) {
+            if (once === void 0) { once = false; }
             this._id = Handler._gid++;
             this.caller = caller;
             this.method = method;
             this.args = args;
             this.once = once;
             return this;
-        }
-        run() {
+        };
+        Handler.prototype.run = function () {
             if (this.method == null)
                 return null;
             var id = this._id;
             var result = this.method.apply(this.caller, this.args);
             this._id === id && this.once && this.recover();
             return result;
-        }
-        runWith(data) {
+        };
+        Handler.prototype.runWith = function (data) {
             if (this.method == null)
                 return null;
             var id = this._id;
@@ -4880,152 +5430,157 @@ window.airkit = {};
                 result = this.method.apply(this.caller, data);
             this._id === id && this.once && this.recover();
             return result;
-        }
-        clear() {
+        };
+        Handler.prototype.clear = function () {
             this.caller = null;
             this.method = null;
             this.args = null;
             return this;
-        }
-        recover() {
+        };
+        Handler.prototype.recover = function () {
             if (this._id > 0) {
                 this._id = 0;
                 Handler._pool.push(this.clear());
             }
-        }
-        static create(caller, method, args = null, once = true) {
+        };
+        Handler.create = function (caller, method, args, once) {
+            if (args === void 0) { args = null; }
+            if (once === void 0) { once = true; }
             if (Handler._pool.length)
                 return Handler._pool.pop().setTo(caller, method, args, once);
             return new Handler(caller, method, args, once);
-        }
-    }
-    Handler._pool = [];
-    Handler._gid = 1;
+        };
+        Handler._pool = [];
+        Handler._gid = 1;
+        return Handler;
+    }());
     airkit.Handler = Handler;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    let OrbitType;
+    var OrbitType;
     (function (OrbitType) {
         OrbitType[OrbitType["Line"] = 3] = "Line";
         OrbitType[OrbitType["Curve"] = 2] = "Curve";
     })(OrbitType = airkit.OrbitType || (airkit.OrbitType = {}));
-    class MathUtils {
-        static sign(n) {
+    var MathUtils = (function () {
+        function MathUtils() {
+        }
+        MathUtils.sign = function (n) {
             n = +n;
             if (n === 0 || isNaN(n)) {
                 return n;
             }
             return n > 0 ? 1 : -1;
-        }
-        static clamp(n, min, max) {
+        };
+        MathUtils.clamp = function (n, min, max) {
             if (min > max) {
-                let i = min;
+                var i = min;
                 min = max;
                 max = i;
             }
             return n < min ? min : n > max ? max : n;
-        }
-        static clamp01(value) {
+        };
+        MathUtils.clamp01 = function (value) {
             if (value < 0)
                 return 0;
             if (value > 1)
                 return 1;
             return value;
-        }
-        static lerp(from, to, t) {
+        };
+        MathUtils.lerp = function (from, to, t) {
             return from + (to - from) * MathUtils.clamp01(t);
-        }
-        static lerpAngle(a, b, t) {
-            let num = MathUtils.repeat(b - a, 360);
+        };
+        MathUtils.lerpAngle = function (a, b, t) {
+            var num = MathUtils.repeat(b - a, 360);
             if (num > 180)
                 num -= 360;
             return a + num * MathUtils.clamp01(t);
-        }
-        static repeat(t, length) {
+        };
+        MathUtils.repeat = function (t, length) {
             return t - Math.floor(t / length) * length;
-        }
-        static randRange(param1, param2) {
-            let loc = Math.random() * (param2 - param1) + param1;
+        };
+        MathUtils.randRange = function (param1, param2) {
+            var loc = Math.random() * (param2 - param1) + param1;
             return loc;
-        }
-        static randRange_Int(param1, param2) {
-            let loc = Math.random() * (param2 - param1 + 1) + param1;
+        };
+        MathUtils.randRange_Int = function (param1, param2) {
+            var loc = Math.random() * (param2 - param1 + 1) + param1;
             return Math.floor(loc);
-        }
-        static randRange_Array(arr) {
+        };
+        MathUtils.randRange_Array = function (arr) {
             if (arr.length == 0)
                 return null;
-            let loc = arr[MathUtils.randRange_Int(0, arr.length - 1)];
+            var loc = arr[MathUtils.randRange_Int(0, arr.length - 1)];
             return loc;
-        }
-        static clampDegrees(degrees) {
+        };
+        MathUtils.clampDegrees = function (degrees) {
             while (degrees < 0)
                 degrees = degrees + 360;
             while (degrees >= 360)
                 degrees = degrees - 360;
             return degrees;
-        }
-        static clampRadians(radians) {
+        };
+        MathUtils.clampRadians = function (radians) {
             while (radians < 0)
                 radians = radians + 2 * Math.PI;
             while (radians >= 2 * Math.PI)
                 radians = radians - 2 * Math.PI;
             return radians;
-        }
-        static getDistance(x1, y1, x2, y2) {
+        };
+        MathUtils.getDistance = function (x1, y1, x2, y2) {
             return Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2));
-        }
-        static getSquareDistance(x1, y1, x2, y2) {
+        };
+        MathUtils.getSquareDistance = function (x1, y1, x2, y2) {
             return Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2);
-        }
-        static getLineRadians(x1, y1, x2, y2) {
+        };
+        MathUtils.getLineRadians = function (x1, y1, x2, y2) {
             return Math.atan2(y2 - y1, x2 - x1);
-        }
-        static getLineDegree(x1, y1, x2, y2) {
-            let degree = MathUtils.toDegree(MathUtils.getLineRadians(x1, y1, x2, y2));
+        };
+        MathUtils.getLineDegree = function (x1, y1, x2, y2) {
+            var degree = MathUtils.toDegree(MathUtils.getLineRadians(x1, y1, x2, y2));
             return MathUtils.clampDegrees(degree);
-        }
-        static getPointRadians(x, y) {
+        };
+        MathUtils.getPointRadians = function (x, y) {
             return Math.atan2(y, x);
-        }
-        static getPointDegree(x, y) {
-            let degree = MathUtils.toDegree(MathUtils.getPointRadians(x, y));
+        };
+        MathUtils.getPointDegree = function (x, y) {
+            var degree = MathUtils.toDegree(MathUtils.getPointRadians(x, y));
             return MathUtils.clampDegrees(degree);
-        }
-        static toDegree(radian) {
+        };
+        MathUtils.toDegree = function (radian) {
             return radian * (180.0 / Math.PI);
-        }
-        static toRadian(degree) {
+        };
+        MathUtils.toRadian = function (degree) {
             return degree * (Math.PI / 180.0);
-        }
-        static moveTowards(current, target, maxDelta) {
+        };
+        MathUtils.moveTowards = function (current, target, maxDelta) {
             if (Math.abs(target - current) <= maxDelta) {
                 return target;
             }
             return current + MathUtils.sign(target - current) * maxDelta;
-        }
-        static radians4point(ax, ay, bx, by) {
+        };
+        MathUtils.radians4point = function (ax, ay, bx, by) {
             return Math.atan2(ay - by, bx - ax);
-        }
-        static pointAtCircle(px, py, radians, radius) {
+        };
+        MathUtils.pointAtCircle = function (px, py, radians, radius) {
             return new cc.Vec2(px + Math.cos(radians) * radius, py - Math.sin(radians) * radius);
-        }
-        static getPos(pts, t, type) {
+        };
+        MathUtils.getPos = function (pts, t, type) {
             if (pts.length == 0)
                 return null;
             if (pts.length == 1)
                 return pts[0];
             t = Math.min(t, 1);
-            let target = new cc.Vec2();
-            let count = pts.length;
+            var target = new cc.Vec2();
+            var count = pts.length;
             if (type == OrbitType.Line) {
-                let unitTime = 1 / (count - 1);
-                let index = Math.floor(t / unitTime);
+                var unitTime = 1 / (count - 1);
+                var index = Math.floor(t / unitTime);
                 if (index + 1 < count) {
-                    let start = pts[index];
-                    let end = pts[index + 1];
-                    let time = (t - index * unitTime) / unitTime;
+                    var start = pts[index];
+                    var end = pts[index + 1];
+                    var time = (t - index * unitTime) / unitTime;
                     target.x = start.x + (end.x - start.x) * time;
                     target.y = start.y + (end.y - start.y) * time;
                 }
@@ -5038,11 +5593,11 @@ window.airkit = {};
                 target = this.getBezierat(pts, t);
             }
             return target;
-        }
-        static getRotation(startX, startY, endX, endY) {
-            let deltaX = endX - startX;
-            let deltaY = endY - startY;
-            let angle = (Math.atan(deltaY / deltaX) * 180) / Math.PI;
+        };
+        MathUtils.getRotation = function (startX, startY, endX, endY) {
+            var deltaX = endX - startX;
+            var deltaY = endY - startY;
+            var angle = (Math.atan(deltaY / deltaX) * 180) / Math.PI;
             if (deltaX >= 0) {
                 angle += 90;
             }
@@ -5050,9 +5605,9 @@ window.airkit = {};
                 angle += 270;
             }
             return angle;
-        }
-        static getBezierat(pts, t) {
-            let target = new cc.Vec2();
+        };
+        MathUtils.getBezierat = function (pts, t) {
+            var target = new cc.Vec2();
             if (pts.length == 3) {
                 target.x = Math.pow(1 - t, 2) * pts[0].x + 2 * t * (1 - t) * pts[1].x + Math.pow(t, 2) * pts[2].x;
                 target.y = Math.pow(1 - t, 2) * pts[0].y + 2 * t * (1 - t) * pts[1].y + Math.pow(t, 2) * pts[2].y;
@@ -5070,9 +5625,9 @@ window.airkit = {};
                         Math.pow(t, 3) * pts[3].y;
             }
             return target;
-        }
-        static getDirection(angle) {
-            let dir = new cc.Vec2();
+        };
+        MathUtils.getDirection = function (angle) {
+            var dir = new cc.Vec2();
             if (angle == 0 || angle == 180) {
                 dir.x = 0;
                 dir.y = angle == 0 ? -1 : 1;
@@ -5082,8 +5637,8 @@ window.airkit = {};
                 dir.x = angle == 90 ? 1 : -1;
             }
             else {
-                let idx = Math.floor(angle / 90);
-                let rad = ((90 - angle) * Math.PI) / 180;
+                var idx = Math.floor(angle / 90);
+                var rad = ((90 - angle) * Math.PI) / 180;
                 if (idx == 0 || idx == 1)
                     dir.x = 1;
                 else
@@ -5097,160 +5652,177 @@ window.airkit = {};
                 dir = this.normalize(dir);
             }
             return dir;
-        }
-        static normalize(vec) {
-            let k = vec.y / vec.x;
-            let x = Math.sqrt(1 / (k * k + 1));
-            let y = Math.abs(k * x);
+        };
+        MathUtils.normalize = function (vec) {
+            var k = vec.y / vec.x;
+            var x = Math.sqrt(1 / (k * k + 1));
+            var y = Math.abs(k * x);
             vec.x = vec.x > 0 ? x : -x;
             vec.y = vec.y > 0 ? y : -y;
             return vec;
-        }
-        static distance(startX, startY, endX, endY) {
+        };
+        MathUtils.distance = function (startX, startY, endX, endY) {
             return Math.sqrt((endX - startX) * (endX - startX) + (endY - startY) * (endY - startY));
-        }
-        static getVerticalVector(start, end, raise) {
-            let dir = new cc.Vec2();
+        };
+        MathUtils.getVerticalVector = function (start, end, raise) {
+            var dir = new cc.Vec2();
             dir.x = end.x - start.x;
             dir.y = end.y - start.y;
             dir.normalize();
-            let vertial = new cc.Vec2();
+            var vertial = new cc.Vec2();
             vertial.x = 1;
             vertial.y = -dir.x / dir.y;
-            let target = new cc.Vec2();
+            var target = new cc.Vec2();
             target.x = (start.x + end.x) / 2 + vertial.x * raise;
             target.y = (start.y + end.y) / 2 + vertial.y * raise;
             return target;
-        }
-        static getCtrlPoint(start, end, raise = 100, xOffset = 50, yOffset = 50) {
-            let ctrlPoint = this.getVerticalVector(start, end, raise);
+        };
+        MathUtils.getCtrlPoint = function (start, end, raise, xOffset, yOffset) {
+            if (raise === void 0) { raise = 100; }
+            if (xOffset === void 0) { xOffset = 50; }
+            if (yOffset === void 0) { yOffset = 50; }
+            var ctrlPoint = this.getVerticalVector(start, end, raise);
             ctrlPoint.x += xOffset;
             ctrlPoint.y += yOffset;
             return ctrlPoint;
-        }
-        static getDefaultPoints(start, end, xOffset = 150, yOffset = 150, raise = 150) {
+        };
+        MathUtils.getDefaultPoints = function (start, end, xOffset, yOffset, raise) {
+            if (xOffset === void 0) { xOffset = 150; }
+            if (yOffset === void 0) { yOffset = 150; }
+            if (raise === void 0) { raise = 150; }
             if (start.x > airkit.displayWidth() / 2) {
                 xOffset = -xOffset;
             }
             if (start.y > end.y) {
                 yOffset = -yOffset;
             }
-            let ctrlPt1 = this.getCtrlPoint(start, end, raise, xOffset, yOffset);
+            var ctrlPt1 = this.getCtrlPoint(start, end, raise, xOffset, yOffset);
             return [start, ctrlPt1, end];
-        }
-    }
-    MathUtils.BYTE_TO_M = 1 / (1024 * 1024);
-    MathUtils.BYTE_TO_K = 1 / 1024;
-    MathUtils.Deg2Rad = 0.01745329;
-    MathUtils.Rad2Deg = 57.29578;
-    MathUtils.Cycle8Points = [
-        [-200, 0],
-        [-127, -74],
-        [0, -100],
-        [127, -74],
-        [200, 0],
-        [127, 74],
-        [0, 100],
-        [-127, 74],
-    ];
-    MathUtils.Cycle9Points = [
-        [0, 0],
-        [-200, 0],
-        [-127, -74],
-        [0, -100],
-        [127, -74],
-        [200, 0],
-        [127, 74],
-        [0, 100],
-        [-127, 74],
-    ];
+        };
+        MathUtils.BYTE_TO_M = 1 / (1024 * 1024);
+        MathUtils.BYTE_TO_K = 1 / 1024;
+        MathUtils.Deg2Rad = 0.01745329;
+        MathUtils.Rad2Deg = 57.29578;
+        MathUtils.Cycle8Points = [
+            [-200, 0],
+            [-127, -74],
+            [0, -100],
+            [127, -74],
+            [200, 0],
+            [127, 74],
+            [0, 100],
+            [-127, 74],
+        ];
+        MathUtils.Cycle9Points = [
+            [0, 0],
+            [-200, 0],
+            [-127, -74],
+            [0, -100],
+            [127, -74],
+            [200, 0],
+            [127, 74],
+            [0, 100],
+            [-127, 74],
+        ];
+        return MathUtils;
+    }());
     airkit.MathUtils = MathUtils;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class NumberUtils {
-        static toFixed(value, p) {
+    var NumberUtils = (function () {
+        function NumberUtils() {
+        }
+        NumberUtils.toFixed = function (value, p) {
             return airkit.StringUtils.toNumber(value.toFixed(p));
-        }
-        static toInt(value) {
+        };
+        NumberUtils.toInt = function (value) {
             return Math.floor(value);
-        }
-        static isInt(value) {
+        };
+        NumberUtils.isInt = function (value) {
             return Math.ceil(value) != value ? false : true;
-        }
-        static reserveNumber(num, size) {
-            let str = String(num);
-            let l = str.length;
-            let p_index = str.indexOf(".");
+        };
+        NumberUtils.reserveNumber = function (num, size) {
+            var str = String(num);
+            var l = str.length;
+            var p_index = str.indexOf(".");
             if (p_index < 0) {
                 return num;
             }
-            let ret = str.slice(0, p_index + 1);
-            let lastNum = l - p_index;
+            var ret = str.slice(0, p_index + 1);
+            var lastNum = l - p_index;
             if (lastNum > size) {
                 lastNum = size;
             }
-            let lastStr = str.slice(p_index + 1, p_index + 1 + lastNum);
+            var lastStr = str.slice(p_index + 1, p_index + 1 + lastNum);
             return airkit.StringUtils.toNumber(ret + lastStr);
-        }
-        static reserveNumberWithZero(num, size) {
-            let str = String(num);
-            let l = str.length;
-            let p_index = str.indexOf(".");
+        };
+        NumberUtils.reserveNumberWithZero = function (num, size) {
+            var str = String(num);
+            var l = str.length;
+            var p_index = str.indexOf(".");
             if (p_index < 0) {
                 str += ".";
-                for (let i = 0; i < size; ++i)
+                for (var i = 0; i < size; ++i)
                     str += "0";
                 return str;
             }
-            let ret = str.slice(0, p_index + 1);
-            let lastNum = l - p_index - 1;
+            var ret = str.slice(0, p_index + 1);
+            var lastNum = l - p_index - 1;
             if (lastNum > size) {
                 lastNum = size;
-                let lastStr = str.slice(p_index + 1, p_index + 1 + lastNum);
+                var lastStr = str.slice(p_index + 1, p_index + 1 + lastNum);
                 return ret + lastStr;
             }
             else if (lastNum < size) {
-                let diff = size - lastNum;
-                for (let i = 0; i < diff; ++i)
+                var diff = size - lastNum;
+                for (var i = 0; i < diff; ++i)
                     str += "0";
                 return str;
             }
             else {
                 return str;
             }
-        }
-    }
+        };
+        return NumberUtils;
+    }());
     airkit.NumberUtils = NumberUtils;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class StringUtils {
-        static get empty() {
-            return "";
+    var StringUtils = (function () {
+        function StringUtils() {
         }
-        static isNullOrEmpty(s) {
+        Object.defineProperty(StringUtils, "empty", {
+            get: function () {
+                return "";
+            },
+            enumerable: true,
+            configurable: true
+        });
+        StringUtils.isNullOrEmpty = function (s) {
             return s != null && s.length > 0 ? false : true;
-        }
-        static toInt(str) {
+        };
+        StringUtils.toInt = function (str) {
             if (!str || str.length == 0)
                 return 0;
             return parseInt(str);
-        }
-        static toNumber(str) {
+        };
+        StringUtils.toNumber = function (str) {
             if (!str || str.length == 0)
                 return 0;
             return parseFloat(str);
-        }
-        static stringCut(str, len, fill = "...") {
+        };
+        StringUtils.stringCut = function (str, len, fill) {
+            if (fill === void 0) { fill = "..."; }
             var result = str;
             if (str.length > len) {
                 result = str.substr(0, len) + fill;
             }
             return result;
-        }
-        static getNumBytes(str) {
-            let realLength = 0, len = str.length, charCode = -1;
+        };
+        StringUtils.getNumBytes = function (str) {
+            var realLength = 0, len = str.length, charCode = -1;
             for (var i = 0; i < len; i++) {
                 charCode = str.charCodeAt(i);
                 if (charCode >= 0 && charCode <= 128)
@@ -5259,18 +5831,19 @@ window.airkit = {};
                     realLength += 2;
             }
             return realLength;
-        }
-        static addZero(str, len, dir = 0) {
-            let _str = "";
-            let _len = str.length;
-            let str_pre_zero = "";
-            let str_end_zero = "";
+        };
+        StringUtils.addZero = function (str, len, dir) {
+            if (dir === void 0) { dir = 0; }
+            var _str = "";
+            var _len = str.length;
+            var str_pre_zero = "";
+            var str_end_zero = "";
             if (dir == 0)
                 str_end_zero = "0";
             else
                 str_pre_zero = "0";
             if (_len < len) {
-                let i = 0;
+                var i = 0;
                 while (i < len - _len) {
                     _str = str_pre_zero + _str + str_end_zero;
                     ++i;
@@ -5278,130 +5851,146 @@ window.airkit = {};
                 return _str + str;
             }
             return str;
-        }
-        static isString(obj) {
+        };
+        StringUtils.isString = function (obj) {
             return Object.prototype.toString.call(obj) === "[object String]";
-        }
-        static trim(input) {
+        };
+        StringUtils.trim = function (input) {
             if (input == null) {
                 return "";
             }
             return input.replace(/^\s+|\s+$""^\s+|\s+$/g, "");
-        }
-        static trimLeft(input) {
+        };
+        StringUtils.trimLeft = function (input) {
             if (input == null) {
                 return "";
             }
             return input.replace(/^\s+""^\s+/, "");
-        }
-        static trimRight(input) {
+        };
+        StringUtils.trimRight = function (input) {
             if (input == null) {
                 return "";
             }
             return input.replace(/\s+$""\s+$/, "");
-        }
-        static minuteFormat(seconds) {
-            let min = Math.floor(seconds / 60);
-            let sec = Math.floor(seconds % 60);
-            let min_str = min < 10 ? "0" + min.toString() : min.toString();
-            let sec_str = sec < 10 ? "0" + sec.toString() : sec.toString();
+        };
+        StringUtils.minuteFormat = function (seconds) {
+            var min = Math.floor(seconds / 60);
+            var sec = Math.floor(seconds % 60);
+            var min_str = min < 10 ? "0" + min.toString() : min.toString();
+            var sec_str = sec < 10 ? "0" + sec.toString() : sec.toString();
             return min_str + ":" + sec_str;
-        }
-        static hourFormat(seconds) {
-            let hour = Math.floor(seconds / 3600);
-            let hour_str = hour < 10 ? "0" + hour.toString() : hour.toString();
+        };
+        StringUtils.hourFormat = function (seconds) {
+            var hour = Math.floor(seconds / 3600);
+            var hour_str = hour < 10 ? "0" + hour.toString() : hour.toString();
             return hour_str + ":" + StringUtils.minuteFormat(seconds % 3600);
-        }
-        static format(str, ...args) {
-            for (let i = 0; i < args.length; i++) {
+        };
+        StringUtils.format = function (str) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            for (var i = 0; i < args.length; i++) {
                 str = str.replace(new RegExp("\\{" + i + "\\}", "gm"), args[i]);
             }
             return str;
-        }
-        static formatWithDic(str, dic) {
-            for (let key in dic) {
+        };
+        StringUtils.formatWithDic = function (str, dic) {
+            for (var key in dic) {
                 str = str.replace(new RegExp("\\{" + key + "\\}", "gm"), dic[key]);
             }
             return str;
-        }
-        static beginsWith(input, prefix) {
+        };
+        StringUtils.beginsWith = function (input, prefix) {
             return prefix == input.substring(0, prefix.length);
-        }
-        static endsWith(input, suffix) {
+        };
+        StringUtils.endsWith = function (input, suffix) {
             return suffix == input.substring(input.length - suffix.length);
-        }
-        static getGUIDString() {
-            let d = Date.now();
+        };
+        StringUtils.getGUIDString = function () {
+            var d = Date.now();
             if (window.performance && typeof window.performance.now === "function") {
                 d += performance.now();
             }
-            return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
-                let r = (d + Math.random() * 16) % 16 | 0;
+            return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+                var r = (d + Math.random() * 16) % 16 | 0;
                 d = Math.floor(d / 16);
                 return (c == "x" ? r : (r & 0x3) | 0x8).toString(16);
             });
-        }
-    }
+        };
+        return StringUtils;
+    }());
     airkit.StringUtils = StringUtils;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class TouchUtils {
-    }
+    var TouchUtils = (function () {
+        function TouchUtils() {
+        }
+        return TouchUtils;
+    }());
     airkit.TouchUtils = TouchUtils;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class TweenUtils {
-        constructor(target) {
+    var TweenUtils = (function () {
+        function TweenUtils(target) {
             this._target = target;
             this.clear();
         }
-        static get(target) {
+        TweenUtils.get = function (target) {
             return new TweenUtils(target);
-        }
-        get target() {
-            return this._target;
-        }
-        setOnUpdate(callback) {
+        };
+        Object.defineProperty(TweenUtils.prototype, "target", {
+            get: function () {
+                return this._target;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        TweenUtils.prototype.setOnUpdate = function (callback) {
             this._updateFunc = callback;
-        }
-        onUpdate(gt) {
+        };
+        TweenUtils.prototype.onUpdate = function (gt) {
             if (this._updateFunc) {
                 this._updateFunc(gt);
             }
-        }
-        to(props, duration, ease = fgui.EaseType.QuadOut, complete = null, delay = 0) {
-            this._steps.push({ props, duration, ease, complete, delay });
+        };
+        TweenUtils.prototype.to = function (props, duration, ease, complete, delay) {
+            if (ease === void 0) { ease = fgui.EaseType.QuadOut; }
+            if (complete === void 0) { complete = null; }
+            if (delay === void 0) { delay = 0; }
+            this._steps.push({ props: props, duration: duration, ease: ease, complete: complete, delay: delay });
             this.trigger();
             return this;
-        }
-        delay(delay) {
-            this._steps.push({ delay });
+        };
+        TweenUtils.prototype.delay = function (delay) {
+            this._steps.push({ delay: delay });
             return this;
-        }
-        trigger() {
+        };
+        TweenUtils.prototype.trigger = function () {
+            var _this = this;
             if (!this._isPlaying) {
                 if (this._steps && this._steps.length) {
                     var step = this._steps.shift();
                     if (step.hasOwnProperty("props")) {
                         this._isPlaying = true;
                         if (step.props["x"] != null || step.props["y"] != null) {
-                            let x = step.props["x"] != null ? step.props.x : this._target.x;
-                            let y = step.props["y"] != null ? step.props.y : this._target.y;
+                            var x = step.props["x"] != null ? step.props.x : this._target.x;
+                            var y = step.props["y"] != null ? step.props.y : this._target.y;
                             fgui.GTween.to2(this._target.x, this._target.y, x, y, step.duration)
                                 .setTarget(this._target, this._target.setPosition)
                                 .setEase(step.ease);
                         }
                         if (step.props["scaleX"] != null || step.props["scaleY"] != null) {
-                            let x = step.props["scaleX"] != null ? step.props.scaleX : this._target.scaleX;
-                            let y = step.props["scaleY"] != null ? step.props.scaleY : this._target.scaleY;
+                            var x = step.props["scaleX"] != null ? step.props.scaleX : this._target.scaleX;
+                            var y = step.props["scaleY"] != null ? step.props.scaleY : this._target.scaleY;
                             fgui.GTween.to2(this._target.scaleX, this._target.scaleY, x, y, step.duration)
                                 .setTarget(this._target, this._target.setScale)
                                 .setEase(step.ease);
                         }
                         if (step.props["rotation"] != null) {
-                            let rotation = step.props["rotation"] != null ? step.props.rotation : this._target.rotation;
+                            var rotation = step.props["rotation"] != null ? step.props.rotation : this._target.rotation;
                             fgui.GTween.to(this._target.rotation, rotation, step.duration).setTarget(this._target, "rotation").setEase(step.ease);
                         }
                         if (step.props["alpha"] != null) {
@@ -5409,18 +5998,18 @@ window.airkit = {};
                                 fgui.GTween.to(this._target.alpha, step.props.alpha, step.duration)
                                     .setTarget(this._target, "alpha")
                                     .setEase(step.ease)
-                                    .onUpdate((gt) => {
-                                    let point = airkit.MathUtils.getPos(step.props.pts, gt.normalizedTime, airkit.OrbitType.Curve);
-                                    this._target.setPosition(point.x, point.y);
-                                    this.onUpdate(gt);
+                                    .onUpdate(function (gt) {
+                                    var point = airkit.MathUtils.getPos(step.props.pts, gt.normalizedTime, airkit.OrbitType.Curve);
+                                    _this._target.setPosition(point.x, point.y);
+                                    _this.onUpdate(gt);
                                 }, null);
                             }
                             else {
                                 fgui.GTween.to(this._target.alpha, step.props.alpha, step.duration)
                                     .setTarget(this._target, "alpha")
                                     .setEase(step.ease)
-                                    .onUpdate((gt) => {
-                                    this.onUpdate(gt);
+                                    .onUpdate(function (gt) {
+                                    _this.onUpdate(gt);
                                 }, null);
                             }
                         }
@@ -5432,70 +6021,76 @@ window.airkit = {};
                     }
                 }
             }
-        }
-        onStepComplete(onFunc) {
+        };
+        TweenUtils.prototype.onStepComplete = function (onFunc) {
             if (onFunc) {
                 onFunc.runWith();
             }
             this._isPlaying = false;
             this.trigger();
-        }
-        clear() {
+        };
+        TweenUtils.prototype.clear = function () {
             this._steps = [];
             this._isPlaying = false;
             fgui.GTween.kill(this._target);
-        }
-        static scale(view) {
+        };
+        TweenUtils.scale = function (view) {
             this.get(view).to({ scaleX: 0.8, scaleY: 0.8 }, 0.05, fgui.EaseType.QuadIn).to({ scaleX: 1.0, scaleY: 1.0 }, 0.05, fgui.EaseType.QuadIn);
-        }
-        static appear(view) {
+        };
+        TweenUtils.appear = function (view) {
             view.setScale(0, 0);
             this.get(view).to({ scaleX: 1.2, scaleY: 1.2 }, 0.4, fgui.EaseType.QuadOut).to({ scaleX: 1.0, scaleY: 1.0 }, 0.2, fgui.EaseType.QuadOut);
-        }
-    }
-    TweenUtils.EaseBezier = 9999;
+        };
+        TweenUtils.EaseBezier = 9999;
+        return TweenUtils;
+    }());
     airkit.TweenUtils = TweenUtils;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class UrlUtils {
-        static getFileExte(url) {
+    var UrlUtils = (function () {
+        function UrlUtils() {
+        }
+        UrlUtils.getFileExte = function (url) {
             if (airkit.StringUtils.isNullOrEmpty(url))
                 return airkit.StringUtils.empty;
-            let idx = url.lastIndexOf(".");
+            var idx = url.lastIndexOf(".");
             if (idx >= 0) {
                 return url.substr(idx + 1);
             }
             return airkit.StringUtils.empty;
-        }
-        static getPathWithNoExtend(url) {
+        };
+        UrlUtils.getPathWithNoExtend = function (url) {
             if (airkit.StringUtils.isNullOrEmpty(url))
                 return airkit.StringUtils.empty;
-            let idx = url.lastIndexOf(".");
+            var idx = url.lastIndexOf(".");
             if (idx >= 0) {
                 return url.substr(0, idx);
             }
             return airkit.StringUtils.empty;
-        }
-    }
+        };
+        return UrlUtils;
+    }());
     airkit.UrlUtils = UrlUtils;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class Utils {
-        static openURL(url) {
-            window.location.href = url;
+    var Utils = (function () {
+        function Utils() {
         }
-        static getLocationParams() {
-            let url = window.location.href;
-            let dic = new airkit.SDictionary();
-            let num = url.indexOf("?");
+        Utils.openURL = function (url) {
+            window.location.href = url;
+        };
+        Utils.getLocationParams = function () {
+            var url = window.location.href;
+            var dic = new airkit.SDictionary();
+            var num = url.indexOf("?");
             if (num >= 0) {
                 url = url.substr(num + 1);
-                let key, value;
-                let arr = url.split("&");
-                for (let i in arr) {
-                    let str = arr[i];
+                var key = void 0, value = void 0;
+                var arr = url.split("&");
+                for (var i in arr) {
+                    var str = arr[i];
                     num = str.indexOf("=");
                     key = str.substr(0, num);
                     value = str.substr(num + 1);
@@ -5503,8 +6098,8 @@ window.airkit = {};
                 }
             }
             return dic;
-        }
-        static obj2query(obj) {
+        };
+        Utils.obj2query = function (obj) {
             if (!obj) {
                 return "";
             }
@@ -5513,14 +6108,19 @@ window.airkit = {};
                 arr.push(key + "=" + obj[key]);
             }
             return arr.join("&");
-        }
-        static injectProp(target, data = null, callback = null, ignoreMethod = true, ignoreNull = true, keyBefore = "") {
+        };
+        Utils.injectProp = function (target, data, callback, ignoreMethod, ignoreNull, keyBefore) {
+            if (data === void 0) { data = null; }
+            if (callback === void 0) { callback = null; }
+            if (ignoreMethod === void 0) { ignoreMethod = true; }
+            if (ignoreNull === void 0) { ignoreNull = true; }
+            if (keyBefore === void 0) { keyBefore = ""; }
             if (!data) {
                 return false;
             }
-            let result = true;
-            for (let key in data) {
-                let value = data[key];
+            var result = true;
+            for (var key in data) {
+                var value = data[key];
                 if ((!ignoreMethod || typeof value != "function") && (!ignoreNull || value != null)) {
                     if (callback) {
                         callback(target, key, value);
@@ -5531,37 +6131,41 @@ window.airkit = {};
                 }
             }
             return result;
-        }
-    }
-    Utils.parseXMLFromString = function (value) {
-        var rst;
-        value = value.replace(/>\s+</g, "><");
-        rst = new DOMParser().parseFromString(value, "text/xml");
-        if (rst.firstChild.textContent.indexOf("This page contains the following errors") > -1) {
-            throw new Error(rst.firstChild.firstChild.textContent);
-        }
-        return rst;
-    };
+        };
+        Utils.parseXMLFromString = function (value) {
+            var rst;
+            value = value.replace(/>\s+</g, "><");
+            rst = new DOMParser().parseFromString(value, "text/xml");
+            if (rst.firstChild.textContent.indexOf("This page contains the following errors") > -1) {
+                throw new Error(rst.firstChild.firstChild.textContent);
+            }
+            return rst;
+        };
+        return Utils;
+    }());
     airkit.Utils = Utils;
-    class FlagUtils {
-        static hasFlag(a, b) {
+    var FlagUtils = (function () {
+        function FlagUtils() {
+        }
+        FlagUtils.hasFlag = function (a, b) {
             a = airkit.NumberUtils.toInt(a);
             b = airkit.NumberUtils.toInt(b);
             return (a & b) == 0 ? false : true;
-        }
-        static insertFlag(a, b) {
+        };
+        FlagUtils.insertFlag = function (a, b) {
             a = airkit.NumberUtils.toInt(a);
             b = airkit.NumberUtils.toInt(b);
             a |= b;
             return a;
-        }
-        static removeFlag(a, b) {
+        };
+        FlagUtils.removeFlag = function (a, b) {
             a = airkit.NumberUtils.toInt(a);
             b = airkit.NumberUtils.toInt(b);
             a ^= b;
             return a;
-        }
-    }
+        };
+        return FlagUtils;
+    }());
     airkit.FlagUtils = FlagUtils;
     function assert(condition, msg) {
         if (!condition) {
@@ -5597,47 +6201,52 @@ window.airkit = {};
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    class ZipUtils {
-        static unzip(ab) {
-            return new Promise((resolve, reject) => {
-                let resultDic = {};
+    var ZipUtils = (function () {
+        function ZipUtils() {
+        }
+        ZipUtils.unzip = function (ab) {
+            return new Promise(function (resolve, reject) {
+                var resultDic = {};
                 ZipUtils.parseZip(ab)
-                    .then((zip) => {
-                    let jszip = zip.jszip;
-                    let filelist = zip.filelist;
+                    .then(function (zip) {
+                    var jszip = zip.jszip;
+                    var filelist = zip.filelist;
                     if (jszip && filelist) {
-                        let count = 0;
-                        for (let i = 0; i < filelist.length; i++) {
+                        var count_1 = 0;
+                        var _loop_1 = function (i) {
                             ZipUtils.parseZipFile(jszip, filelist[i])
-                                .then((content) => {
-                                count++;
+                                .then(function (content) {
+                                count_1++;
                                 resultDic[filelist[i]] = content;
-                                if (count == filelist.length) {
+                                if (count_1 == filelist.length) {
                                     zip = null;
                                     jszip = null;
                                     filelist = null;
                                     resolve(resultDic);
                                 }
                             })
-                                .catch((e) => {
+                                .catch(function (e) {
                                 airkit.Log.error(e);
                                 reject(e);
                             });
+                        };
+                        for (var i = 0; i < filelist.length; i++) {
+                            _loop_1(i);
                         }
                     }
                 })
-                    .catch((e) => {
+                    .catch(function (e) {
                     airkit.Log.error(e);
                     reject(e);
                 });
             });
-        }
-        static parseZip(ab) {
-            return new Promise((resolve, reject) => {
-                let dic = new airkit.SDictionary();
-                let fileNameArr = new Array();
+        };
+        ZipUtils.parseZip = function (ab) {
+            return new Promise(function (resolve, reject) {
+                var dic = new airkit.SDictionary();
+                var fileNameArr = new Array();
                 window.JSZip.loadAsync(ab)
-                    .then((jszip) => {
+                    .then(function (jszip) {
                     for (var fileName in jszip.files) {
                         fileNameArr.push(fileName);
                     }
@@ -5646,25 +6255,26 @@ window.airkit = {};
                         filelist: fileNameArr,
                     });
                 })
-                    .catch((e) => {
+                    .catch(function (e) {
                     airkit.Log.error(e);
                 });
             });
-        }
-        static parseZipFile(jszip, filename) {
-            return new Promise((resolve, reject) => {
+        };
+        ZipUtils.parseZipFile = function (jszip, filename) {
+            return new Promise(function (resolve, reject) {
                 jszip
                     .file(filename)
                     .async("text")
-                    .then((content) => {
+                    .then(function (content) {
                     resolve(content);
                 })
-                    .catch((e) => {
+                    .catch(function (e) {
                     reject(e);
                     airkit.Log.error(e);
                 });
             });
-        }
-    }
+        };
+        return ZipUtils;
+    }());
     airkit.ZipUtils = ZipUtils;
 })(airkit || (airkit = {}));

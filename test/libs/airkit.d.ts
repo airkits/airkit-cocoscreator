@@ -13,7 +13,7 @@ declare namespace airkit {
         private static instance;
         static readonly Instance: Framework;
         constructor();
-        setup(root: fgui.GComponent, main_loop: Handler, log_level?: LogLevel, design_width?: number, design_height?: number, screen_mode?: string, frame?: number): void;
+        setup(root: fgui.GComponent, log_level?: LogLevel, design_width?: number, design_height?: number, screen_mode?: string, frame?: number): void;
         destroy(): void;
         update(dt: number): void;
         preTick(dt: number): void;
