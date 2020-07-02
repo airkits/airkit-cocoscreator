@@ -11,25 +11,28 @@ window.__extends = (this && this.__extends) || (function () {
 })();
 
 (function (airkit) {
-    var Singleton = (function () {
+    var Singleton = (function (_super) {
+        __extends(Singleton, _super);
         function Singleton() {
-            var clazz = this["constructor"];
+            var _this = _super.call(this) || this;
+            var clazz = _this["constructor"];
             if (!clazz) {
                 airkit.Log.warning("浏览器不支持读取构造函数");
-                return;
+                return _this;
             }
             if (Singleton.classKeys.indexOf(clazz) != -1) {
-                throw new Error(this + " 只允许实例化一次！");
+                throw new Error(_this + " 只允许实例化一次！");
             }
             else {
                 Singleton.classKeys.push(clazz);
-                Singleton.classValues.push(this);
+                Singleton.classValues.push(_this);
             }
+            return _this;
         }
         Singleton.classKeys = [];
         Singleton.classValues = [];
         return Singleton;
-    }());
+    }(cc.Node));
     airkit.Singleton = Singleton;
 })(airkit || (airkit = {}));
 
@@ -77,6 +80,7 @@ window.__extends = (this && this.__extends) || (function () {
             airkit.LoaderManager.Instance.setup();
         };
         Framework.prototype.destroy = function () {
+            _super.prototype.destroy.call(this);
             airkit.Mediator.Instance.destroy();
             airkit.LoaderManager.Instance.destroy();
             airkit.TimerManager.Instance.destroy();
@@ -86,6 +90,7 @@ window.__extends = (this && this.__extends) || (function () {
             airkit.DataProvider.Instance.destroy();
             airkit.LayerManager.destroy();
             airkit.LangManager.Instance.destory();
+            return true;
         };
         Framework.prototype.update = function (dt) {
             if (!this._isStopGame) {
@@ -953,6 +958,7 @@ window.__extends = (this && this.__extends) || (function () {
                 this._dicData.clear();
                 this._dicData = null;
             }
+            return true;
         };
         DataProvider.prototype.loadZip = function (url, list) {
             var _this = this;
@@ -2024,6 +2030,7 @@ window.__extends = (this && this.__extends) || (function () {
             this._dicLoadView = new airkit.NDictionary();
         };
         LoaderManager.prototype.destroy = function () {
+            _super.prototype.destroy.call(this);
             this.unRegisterEvent();
             if (this._dicLoadView) {
                 var view_1 = null;
@@ -2035,6 +2042,7 @@ window.__extends = (this && this.__extends) || (function () {
                 this._dicLoadView.clear();
                 this._dicLoadView = null;
             }
+            return true;
         };
         LoaderManager.prototype.registerEvent = function () {
             airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
@@ -2173,10 +2181,12 @@ window.__extends = (this && this.__extends) || (function () {
             });
         };
         ResourceManager.prototype.destroy = function () {
+            _super.prototype.destroy.call(this);
             if (this._dicLoaderUrl) {
                 this._dicLoaderUrl.clear();
                 this._dicLoaderUrl = null;
             }
+            return true;
         };
         ResourceManager.prototype.update = function (dt) { };
         ResourceManager.prototype.getRes = function (url) {
@@ -3431,9 +3441,10 @@ window.__extends = (this && this.__extends) || (function () {
                     layer = this.topLayer;
                     break;
             }
-            if (cc.director.getWinSize().width != layer.width || cc.director.getWinSize().height != layer.height) {
-                layer.width = cc.director.getWinSize().width;
-                layer.height = cc.director.getWinSize().height;
+            if (cc.winSize.width != layer.width ||
+                cc.winSize.height != layer.height) {
+                layer.width = cc.winSize.width;
+                layer.height = cc.winSize.height;
             }
             return layer;
         };
@@ -3499,11 +3510,11 @@ window.__extends = (this && this.__extends) || (function () {
             airkit.EventCenter.off(airkit.EventID.RESIZE, this, this.resize);
         };
         LayerManager.resize = function () {
-            airkit.Log.info("LayerManager Receive Resize {0} {1}", cc.director.getWinSize().width, cc.director.getWinSize().height);
+            airkit.Log.info("LayerManager Receive Resize {0} {1}", cc.winSize.width, cc.winSize.height);
             var i;
             var l;
-            var w = cc.director.getWinSize().width;
-            var h = cc.director.getWinSize().height;
+            var w = cc.winSize.width;
+            var h = cc.winSize.height;
             fgui.GRoot.inst.setSize(w, h);
             for (i = 0, l = this.layers.length; i < l; i++) {
                 this.layers[i].setSize(w, h);
@@ -3515,7 +3526,13 @@ window.__extends = (this && this.__extends) || (function () {
                 bg.setPosition(x, y);
             }
             fgui.GRoot.inst.setSize(w, h);
-            var needUpChilds = [this._uiLayer, this._popupLayer, this._systemLayer, this._topLayer, this._loadingLayer];
+            var needUpChilds = [
+                this._uiLayer,
+                this._popupLayer,
+                this._systemLayer,
+                this._topLayer,
+                this._loadingLayer,
+            ];
             for (var i_4 = 0; i_4 < needUpChilds.length; i_4++) {
                 var layer = needUpChilds[i_4];
                 for (var j = 0, l_1 = layer.numChildren; j < l_1; j++) {
@@ -3568,8 +3585,8 @@ window.__extends = (this && this.__extends) || (function () {
                 child = new fgui.GLoader();
                 child.width = LayerManager.BG_WIDTH;
                 child.height = LayerManager.BG_HEIGHT;
-                child.x = (cc.director.getWinSize().width - LayerManager.BG_WIDTH) >> 1;
-                child.y = cc.director.getWinSize().height - LayerManager.BG_HEIGHT;
+                child.x = (cc.winSize.width - LayerManager.BG_WIDTH) >> 1;
+                child.y = cc.winSize.height - LayerManager.BG_HEIGHT;
                 this.bgLayer.addChild(child);
             }
             child.url = url;
@@ -3735,7 +3752,7 @@ window.__extends = (this && this.__extends) || (function () {
             airkit.EventCenter.off(airkit.EventID.RESIZE, this, this.resize);
         };
         SceneManager.prototype.resize = function () {
-            airkit.Log.info("SceneManager Receive Resize {0} {1}", cc.director.getWinSize().width, cc.director.getWinSize().height);
+            airkit.Log.info("SceneManager Receive Resize {0} {1}", cc.winSize.width, cc.winSize.height);
             if (this._curScene) {
                 this._curScene.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
                 var func = this._curScene["resize"];
@@ -4045,7 +4062,8 @@ window.__extends = (this && this.__extends) || (function () {
                 if (speedUp) {
                     for (var i in target["_toastList"]) {
                         if (target["_toastList"][i]) {
-                            target["_toastList"][i]["toY"] -= target["_toastList"][i].height + 8;
+                            target["_toastList"][i]["toY"] -=
+                                target["_toastList"][i].height + 8;
                             target["_toastList"][i].visible = false;
                         }
                     }
@@ -4056,7 +4074,8 @@ window.__extends = (this && this.__extends) || (function () {
                 else {
                     for (var i in target["_toastList"]) {
                         if (target["_toastList"][i]) {
-                            target["_toastList"][i]["toY"] -= target["_toastList"][i].height + 8;
+                            target["_toastList"][i]["toY"] -=
+                                target["_toastList"][i].height + 8;
                         }
                     }
                 }
@@ -4100,8 +4119,10 @@ window.__extends = (this && this.__extends) || (function () {
         };
         UIManager.prototype.setup = function () { };
         UIManager.prototype.destroy = function () {
+            _super.prototype.destroy.call(this);
             this.closeAll();
             this.clearUIConfig();
+            return true;
         };
         UIManager.prototype.update = function (dt) {
             this._dicUIView.foreach(function (key, value) {
@@ -4346,8 +4367,10 @@ window.__extends = (this && this.__extends) || (function () {
             this._idCounter = 0;
         };
         TimerManager.prototype.destroy = function () {
+            _super.prototype.destroy.call(this);
             airkit.ArrayUtils.clear(this._removalPending);
             airkit.ArrayUtils.clear(this._timers);
+            return true;
         };
         TimerManager.prototype.update = function (dt) {
             this.remove();
@@ -5286,11 +5309,11 @@ window.__extends = (this && this.__extends) || (function () {
 
 (function (airkit) {
     function displayWidth() {
-        return cc.director.getWinSize().width;
+        return cc.winSize.width;
     }
     airkit.displayWidth = displayWidth;
     function displayHeight() {
-        return cc.director.getWinSize().height;
+        return cc.winSize.height;
     }
     airkit.displayHeight = displayHeight;
     var DisplayUtils = (function () {

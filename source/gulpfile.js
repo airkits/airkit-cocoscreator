@@ -38,9 +38,9 @@ gulp.task("build", ["copyJs"], () => {
 })
 
 gulp.task("copyTs", () => {
-    return gulp.src("bin/airkit.d.ts").pipe(gulp.dest("../demo/assets/Script/lib"))
+    return gulp.src("bin/gairkit.d.ts").pipe(gulp.dest("../demo/assets/Script/lib"))
 })
 
 gulp.task("copy", ["copyTs"], () => {
-    return gulp.src("bin/airkit.js").pipe(gulp.dest("../demo/assets/Script/lib"))
+    return gulp.src("bin/gairkit.js").pipe(gulp.dest("../demo/assets/Script/lib"))
 })

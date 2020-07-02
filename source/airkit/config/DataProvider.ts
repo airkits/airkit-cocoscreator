@@ -31,7 +31,7 @@ namespace airkit {
       this._zip = false;
     }
 
-    public destroy(): void {
+    public destroy(): boolean {
       this.unloadAll();
       if (this._dicTemplate) {
         this._dicTemplate.clear();
@@ -41,6 +41,7 @@ namespace airkit {
         this._dicData.clear();
         this._dicData = null;
       }
+      return true;
     }
     public loadZip(url: string, list: ConfigItem[]): Promise<any> {
       return new Promise((resolve, reject) => {

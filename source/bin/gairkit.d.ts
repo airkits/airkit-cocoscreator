@@ -1,5 +1,5 @@
 declare namespace airkit {
-    class Singleton {
+    class Singleton extends cc.Node {
         private static classKeys;
         private static classValues;
         constructor();
@@ -14,7 +14,7 @@ declare namespace airkit {
         static readonly Instance: Framework;
         constructor();
         setup(root: fgui.GComponent, log_level?: LogLevel, design_width?: number, design_height?: number, screen_mode?: string, frame?: number): void;
-        destroy(): void;
+        destroy(): boolean;
         update(dt: number): void;
         preTick(dt: number): void;
         tick(dt: number): void;
@@ -245,7 +245,7 @@ declare namespace airkit {
         static readonly Instance: DataProvider;
         enableZip(): void;
         setup(): void;
-        destroy(): void;
+        destroy(): boolean;
         loadZip(url: string, list: ConfigItem[]): Promise<any>;
         load(list: ConfigItem[]): Promise<any>;
         unload(url: string): void;
@@ -429,7 +429,7 @@ declare namespace airkit {
         private static instance;
         static readonly Instance: LoaderManager;
         setup(): void;
-        destroy(): void;
+        destroy(): boolean;
         private registerEvent;
         private unRegisterEvent;
         private onLoadViewEvt;
@@ -459,7 +459,7 @@ declare namespace airkit {
         static readonly Instance: ResourceManager;
         setup(): void;
         protected static asyncLoad(url: any, progress?: Handler, type?: typeof cc.Asset, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<any>;
-        destroy(): void;
+        destroy(): boolean;
         update(dt: number): void;
         getRes(url: string): any;
         loadRes(url: string, type?: typeof cc.Asset, viewType?: number, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<any>;
@@ -784,7 +784,7 @@ declare namespace airkit {
         singleToast(toastLayer: fgui.GComponent, target: fgui.GComponent, view: fgui.GComponent, duration: number, speedUp: boolean, usePool?: boolean, x?: number, y?: number): Promise<any>;
         toast(toastLayer: fgui.GComponent, target: fgui.GComponent, view: fgui.GComponent, duration: number, speedUp: boolean, usePool?: boolean, x?: number, y?: number): Promise<any>;
         setup(): void;
-        destroy(): void;
+        destroy(): boolean;
         update(dt: number): void;
         addUIConfig(info: UIConfig): void;
         clearUIConfig(): void;
@@ -854,7 +854,7 @@ declare namespace airkit {
         private static instance;
         static readonly Instance: TimerManager;
         setup(): void;
-        destroy(): void;
+        destroy(): boolean;
         update(dt: number): void;
         addLoop(rate: number, ticks: number, caller: any, method: Function, args?: Array<any>): number;
         addOnce(rate: number, caller: any, method: Function, args?: Array<any>): number;

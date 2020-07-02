@@ -6,7 +6,7 @@
     "sourceMap": false,
     "skipLibCheck": true,
     "removeComments": true,
-    "outFile": "./airkit.js",
+    "outFile": "./gairkit.js",
     // "downlevelIteration": true,
     "lib": [
       "es5",
