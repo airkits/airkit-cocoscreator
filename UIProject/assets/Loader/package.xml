@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<packageDescription id="v9v1pqgl" jpegQuality="70" compressPNG="true">
+<packageDescription id="v9v1pqgl">
   <resources>
     <component id="si0t8" name="FullScreenLoading.xml" path="/" exported="true"/>
     <component id="si0t9" name="ProgressBar.xml" path="/"/>
@@ -41,5 +41,5 @@
     <image id="mdb823" name="dlg_close.png" path="/images/"/>
     <image id="mdb824" name="toast.png" path="/images/" scale="9grid" scale9grid="20,20,38,26"/>
   </resources>
-  <publish name="Loader" path="../test/bin/wxlocal" multiPage="false"/>
+  <publish name="Loader" path="../demo/assets/Texture/ui" packageCount="2"/>
 </packageDescription>
