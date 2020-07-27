@@ -1,14 +1,25 @@
 window.airkit = {};
+window.ak = window.airkit;
 window.__extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 
 (function (airkit) {
     var Singleton = (function (_super) {
@@ -52,7 +63,7 @@ window.__extends = (this && this.__extends) || (function () {
                     this.instance = new Framework();
                 return this.instance;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Framework.prototype.setup = function (root, log_level, design_width, design_height, screen_mode, frame) {
@@ -127,7 +138,7 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return this._isStopGame;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Framework.prototype.printDeviceInfo = function () {
@@ -225,91 +236,91 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return new Color(0, 0, 0, 0);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Color, "one", {
             get: function () {
                 return new Color(1, 1, 1, 1);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Color, "red", {
             get: function () {
                 return new Color(1, 0, 0, 1);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Color, "green", {
             get: function () {
                 return new Color(0, 1, 0, 1);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Color, "blue", {
             get: function () {
                 return new Color(0, 0, 1, 1);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Color, "white", {
             get: function () {
                 return new Color(1, 1, 1, 1);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Color, "black", {
             get: function () {
                 return new Color(0, 0, 0, 1);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Color, "yellow", {
             get: function () {
                 return new Color(1, 0.9215686, 0.01568628, 1);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Color, "cyan", {
             get: function () {
                 return new Color(0, 1, 1, 1);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Color, "magenta", {
             get: function () {
                 return new Color(1, 0, 1, 1);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Color, "gray", {
             get: function () {
                 return new Color(0.5, 0.5, 0.5, 1);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Color, "grey", {
             get: function () {
                 return new Color(0.5, 0.5, 0.5, 1);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Color, "clear", {
             get: function () {
                 return new Color(0, 0, 0, 0);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Color.prototype.toString = function () {
@@ -376,7 +387,7 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return airkit.DicUtils.getLength(this._dic);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return NDictionary;
@@ -435,7 +446,7 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return airkit.DicUtils.getLength(this._dic);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return SDictionary;
@@ -568,7 +579,7 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return this._size;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return LinkList;
@@ -682,7 +693,7 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return this._list.length;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Queue.prototype.foreach = function (compareFn) {
@@ -713,14 +724,14 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return this._width;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Size.prototype, "height", {
             get: function () {
                 return this._height;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return Size;
@@ -757,7 +768,7 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return this._list.length;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Stack.prototype.foreach = function (compareFn) {
@@ -851,7 +862,7 @@ window.__extends = (this && this.__extends) || (function () {
                     this.instance = new ConfigManger();
                 return this.instance;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         ConfigManger.prototype.init = function (keys, zipPath) {
@@ -912,7 +923,7 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return this._listTables;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         ConfigManger.instance = null;
@@ -937,7 +948,7 @@ window.__extends = (this && this.__extends) || (function () {
                     this.instance = new DataProvider();
                 return this.instance;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         DataProvider.prototype.enableZip = function () {
@@ -1625,7 +1636,7 @@ window.__extends = (this && this.__extends) || (function () {
             set: function (t) {
                 this._type = t;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return EventArgs;
@@ -1650,7 +1661,7 @@ window.__extends = (this && this.__extends) || (function () {
                     this.instance = new EventCenter();
                 return this.instance;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         EventCenter.on = function (type, caller, fun) {
@@ -1940,7 +1951,7 @@ window.__extends = (this && this.__extends) || (function () {
         var str = LangManager.Instance.getText(LangManager.Instance.curLang, key);
         if (str == null)
             return "unknown key:" + key;
-        return airkit.StringUtils.format.apply(airkit.StringUtils, [str].concat(args));
+        return airkit.StringUtils.format.apply(airkit.StringUtils, __spreadArrays([str], args));
     }
     airkit.L = L;
     var LangManager = (function (_super) {
@@ -1954,7 +1965,7 @@ window.__extends = (this && this.__extends) || (function () {
                     this.instance = new LangManager();
                 return this.instance;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         LangManager.prototype.init = function () {
@@ -1997,7 +2008,7 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return this._curLang;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         LangManager.instance = null;
@@ -2022,7 +2033,7 @@ window.__extends = (this && this.__extends) || (function () {
                     this.instance = new LoaderManager();
                 return this.instance;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         LoaderManager.prototype.setup = function () {
@@ -2158,7 +2169,7 @@ window.__extends = (this && this.__extends) || (function () {
                     this.instance = new ResourceManager();
                 return this.instance;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         ResourceManager.prototype.setup = function () {
@@ -2169,7 +2180,7 @@ window.__extends = (this && this.__extends) || (function () {
         };
         ResourceManager.asyncLoad = function (url, progress, type, priority, cache, group, ignoreCache) {
             return new Promise(function (resolve, reject) {
-                cc.loader.loadRes(url, type, function (completedCount, totalCount, item) {
+                cc.resources.load(url, type, function (completedCount, totalCount, item) {
                     progress.runWith(completedCount / totalCount);
                 }, function (error, resource) {
                     if (error) {
@@ -2191,7 +2202,7 @@ window.__extends = (this && this.__extends) || (function () {
         ResourceManager.prototype.update = function (dt) { };
         ResourceManager.prototype.getRes = function (url) {
             this.refreshResourceTime(url, null, false);
-            return cc.loader.getRes(url);
+            return cc.resources.get(url);
         };
         ResourceManager.prototype.loadRes = function (url, type, viewType, priority, cache, group, ignoreCache) {
             var _this = this;
@@ -2204,7 +2215,7 @@ window.__extends = (this && this.__extends) || (function () {
             if (viewType == null)
                 viewType = airkit.LOADVIEW_TYPE_NONE;
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
-                if (cc.loader.getRes(url))
+                if (cc.resources.get(url))
                     viewType = airkit.LOADVIEW_TYPE_NONE;
             }
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
@@ -2242,7 +2253,7 @@ window.__extends = (this && this.__extends) || (function () {
                 var res = arr_res_1[_i];
                 assets.push({ url: res.url, type: res.type });
                 urls.push(res.url);
-                if (!has_unload && !cc.loader.getRes(res.url))
+                if (!has_unload && !cc.resources.get(res.url))
                     has_unload = true;
                 this.refreshResourceTime(res.url, group, true);
             }
@@ -2253,7 +2264,7 @@ window.__extends = (this && this.__extends) || (function () {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, assets.length, tips);
             }
             return new Promise(function (resolve, reject) {
-                ResourceManager.asyncLoad(assets, airkit.Handler.create(_this, _this.onLoadProgress, [viewType, assets.length, tips], false), undefined, priority, cache, group, ignoreCache)
+                ResourceManager.asyncLoad(urls, airkit.Handler.create(_this, _this.onLoadProgress, [viewType, assets.length, tips], false), undefined, priority, cache, group, ignoreCache)
                     .then(function (v) {
                     if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                         airkit.TimerManager.Instance.addOnce(_this._minLoaderTime, null, function (v) {
@@ -2325,7 +2336,7 @@ window.__extends = (this && this.__extends) || (function () {
         };
         ResourceManager.prototype.clearRes = function (url) {
             this._dicLoaderUrl.remove(url);
-            cc.loader.releaseRes(url);
+            cc.resources.release(url);
             var i = url.lastIndexOf(".bin");
             if (i > 0) {
                 var offset = url.lastIndexOf("/");
@@ -2458,7 +2469,7 @@ window.__extends = (this && this.__extends) || (function () {
                         arr.push(JSON.stringify(arg, null, 4));
                     }
                 }
-                var content = airkit.StringUtils.format.apply(airkit.StringUtils, [format].concat(arr));
+                var content = airkit.StringUtils.format.apply(airkit.StringUtils, __spreadArrays([format], arr));
                 return content;
             }
             else {
@@ -2477,7 +2488,7 @@ window.__extends = (this && this.__extends) || (function () {
             }
             if (this.LEVEL < airkit.LogLevel.DEBUG)
                 return;
-            var content = this.format.apply(this, [format].concat(args));
+            var content = this.format.apply(this, __spreadArrays([format], args));
             console.log(airkit.DateUtils.currentYMDHMS(), "[debug]", content);
             return content;
         };
@@ -2488,7 +2499,7 @@ window.__extends = (this && this.__extends) || (function () {
             }
             if (this.LEVEL < airkit.LogLevel.INFO)
                 return;
-            var content = this.format.apply(this, [format].concat(args));
+            var content = this.format.apply(this, __spreadArrays([format], args));
             console.log(airkit.DateUtils.currentYMDHMS(), "[info]", content);
             return content;
         };
@@ -2499,7 +2510,7 @@ window.__extends = (this && this.__extends) || (function () {
             }
             if (this.LEVEL < airkit.LogLevel.WARNING)
                 return;
-            var content = this.format.apply(this, [format].concat(args));
+            var content = this.format.apply(this, __spreadArrays([format], args));
             console.warn(airkit.DateUtils.currentYMDHMS(), "[warn]", content);
             return content;
         };
@@ -2510,7 +2521,7 @@ window.__extends = (this && this.__extends) || (function () {
             }
             if (this.LEVEL < airkit.LogLevel.ERROR)
                 return;
-            var content = this.format.apply(this, [format].concat(args));
+            var content = this.format.apply(this, __spreadArrays([format], args));
             console.error(airkit.DateUtils.currentYMDHMS(), "[error]", content);
             return content;
         };
@@ -2521,7 +2532,7 @@ window.__extends = (this && this.__extends) || (function () {
             }
             if (this.LEVEL < airkit.LogLevel.EXCEPTION)
                 return;
-            var content = this.format.apply(this, [format].concat(args));
+            var content = this.format.apply(this, __spreadArrays([format], args));
             console.exception(airkit.DateUtils.currentYMDHMS(), "[exce]", content);
             return content;
         };
@@ -2613,7 +2624,7 @@ window.__extends = (this && this.__extends) || (function () {
                     this.instance = new Mediator();
                 return this.instance;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Mediator.prototype.setup = function () {
@@ -2986,21 +2997,21 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return this._url;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(HttpRequest.prototype, "data", {
             get: function () {
                 return this._data;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(HttpRequest.prototype, "http", {
             get: function () {
                 return this._http;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         HttpRequest._urlEncode = encodeURI;
@@ -3087,21 +3098,21 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return this._currentState;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(StateMachine.prototype, "previousState", {
             get: function () {
                 return this._previousState;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(StateMachine.prototype, "globalState", {
             get: function () {
                 return this._globalState;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return StateMachine;
@@ -3256,14 +3267,14 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return this._UIID;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(BaseView.prototype, "viewID", {
             get: function () {
                 return this._viewID;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         BaseView.prototype.onCreate = function (args) { };
@@ -3410,7 +3421,7 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return this._root;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         LayerManager.getLayer = function (t) {
@@ -3567,14 +3578,14 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return this._root;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LayerManager, "bgLayer", {
             get: function () {
                 return this._bgLayer;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         LayerManager.addBg = function (url) {
@@ -3596,49 +3607,49 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return this._mainLayer;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LayerManager, "uiLayer", {
             get: function () {
                 return this._uiLayer;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LayerManager, "popupLayer", {
             get: function () {
                 return this._popupLayer;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LayerManager, "tooltipLayer", {
             get: function () {
                 return this._tooltipLayer;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LayerManager, "systemLayer", {
             get: function () {
                 return this._systemLayer;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LayerManager, "loadingLayer", {
             get: function () {
                 return this._loadingLayer;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LayerManager, "topLayer", {
             get: function () {
                 return this._topLayer;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         LayerManager.BG_WIDTH = 750;
@@ -3729,7 +3740,7 @@ window.__extends = (this && this.__extends) || (function () {
                     this.instance = new SceneManager();
                 return this.instance;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         SceneManager.prototype.setup = function () {
@@ -3825,7 +3836,7 @@ window.__extends = (this && this.__extends) || (function () {
                     this.instance = new UIManager();
                 return this.instance;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         UIManager.prototype.empty = function () {
@@ -4210,7 +4221,7 @@ window.__extends = (this && this.__extends) || (function () {
             var info = this._listPanels.dequeue();
             this.registerEvent();
             this._currentUI = info[0];
-            (_a = UIManager.Instance).show.apply(_a, [info[0]].concat(info[1]));
+            (_a = UIManager.Instance).show.apply(_a, __spreadArrays([info[0]], info[1]));
         };
         UIQueue.prototype.registerEvent = function () {
             airkit.EventCenter.on(airkit.EventID.UI_CLOSE, this, this.onUIEvent);
@@ -4312,21 +4323,21 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return cc.director.getDeltaTime();
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Timer, "fixedDeltaTime", {
             get: function () {
                 return 0;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Timer, "frameCount", {
             get: function () {
                 return cc.director.getTotalFrames();
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Timer, "timeScale", {
@@ -4336,7 +4347,7 @@ window.__extends = (this && this.__extends) || (function () {
             set: function (scale) {
                 cc.director.getScheduler().setTimeScale(scale);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return Timer;
@@ -4360,7 +4371,7 @@ window.__extends = (this && this.__extends) || (function () {
                     this.instance = new TimerManager();
                 return this.instance;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         TimerManager.prototype.setup = function () {
@@ -4607,7 +4618,7 @@ window.__extends = (this && this.__extends) || (function () {
                     return rstBuffer;
                 return rstBuffer.slice(0, this._length);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Byte.prototype, "endian", {
@@ -4617,7 +4628,7 @@ window.__extends = (this && this.__extends) || (function () {
             set: function (value) {
                 this._xd_ = value === Byte.LITTLE_ENDIAN;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Byte.prototype, "length", {
@@ -4631,7 +4642,7 @@ window.__extends = (this && this.__extends) || (function () {
                     this._resizeBuffer((this._allocated_ = value));
                 this._length = value;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Byte.prototype._resizeBuffer = function (len) {
@@ -4874,14 +4885,14 @@ window.__extends = (this && this.__extends) || (function () {
             set: function (value) {
                 this._pos_ = value;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Byte.prototype, "bytesAvailable", {
             get: function () {
                 return this._length - this._pos_;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Byte.prototype.clear = function () {
@@ -5820,7 +5831,7 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return "";
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         StringUtils.isNullOrEmpty = function (s) {
@@ -5968,7 +5979,7 @@ window.__extends = (this && this.__extends) || (function () {
             get: function () {
                 return this._target;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         TweenUtils.prototype.setOnUpdate = function (callback) {

@@ -1,46 +1,44 @@
-"use strict"
-const gulp = require("gulp")
-const minify = require("gulp-minify")
-const inject = require("gulp-inject-string")
-const ts = require("gulp-typescript")
-const tsProject = ts.createProject("tsconfig.json")
+"use strict";
+const gulp = require("gulp");
+const minify = require("gulp-minify");
+const ts = require("gulp-typescript");
+const tsProject = ts.createProject("tsconfig.json");
+const inject = require("gulp-inject-string");
 
 gulp.task("buildJs", () => {
-    return tsProject
+    return (
+        tsProject
         .src()
         .pipe(tsProject())
         .js.pipe(inject.replace("var airkit;", ""))
-        .pipe(inject.prepend("window.airkit = {};\n"))
-        .pipe(inject.replace("var __extends", "window.__extends"))
         .pipe(
-            minify({
-                ext: {
-                    min: ".min.js"
-                }
-            })
+            inject.prepend(
+                "window.airkit = {};\nwindow.ak = window.airkit;\n"
+            )
         )
+        .pipe(inject.replace("var __extends", "window.__extends"))
+        //.pipe(minify({ ext: { min: ".min.js" } }))
         .pipe(gulp.dest("./bin"))
-})
+    );
+});
 
-gulp.task("buildDts", ["buildJs"], () => {
+gulp.task("buildDts", () => {
     return tsProject
         .src()
         .pipe(tsProject())
-        .dts.pipe(gulp.dest("./bin"))
-})
+        .dts.pipe(inject.append("import ak = airkit;"))
+        .pipe(gulp.dest("./bin"));
+});
 
-gulp.task("copyJs", ["buildDts"], () => {
-    return gulp.src("bin/*.js").pipe(gulp.dest("../test/bin/three/"))
-})
+gulp.task("copy", () => {
+    return gulp.src("bin/**/*").pipe(gulp.dest("../demo/assets/Script/lib/"));
+});
 
-gulp.task("build", ["copyJs"], () => {
-    return gulp.src("bin/*.ts").pipe(gulp.dest("../test/libs/"))
-})
-
-gulp.task("copyTs", () => {
-    return gulp.src("bin/gairkit.d.ts").pipe(gulp.dest("../demo/assets/Script/lib"))
-})
-
-gulp.task("copy", ["copyTs"], () => {
-    return gulp.src("bin/gairkit.js").pipe(gulp.dest("../demo/assets/Script/lib"))
-})
+gulp.task(
+    "build",
+    gulp.series(
+        gulp.parallel("buildJs"),
+        gulp.parallel("buildDts"),
+        gulp.parallel("copy")
+    )
+);

@@ -15,12 +15,11 @@ declare namespace fgui {
         private _previousIndex;
         private _pageIds;
         private _pageNames;
-        private _actions;
+        private _actions?;
         name: string;
         parent: GComponent;
-        autoRadioGroupDepth: boolean;
-        changing: boolean;
-        private static _nextPageId;
+        autoRadioGroupDepth?: boolean;
+        changing?: boolean;
         constructor();
         dispose(): void;
         get selectedIndex(): number;
@@ -124,8 +123,9 @@ declare namespace fgui {
         Font = 5,
         Swf = 6,
         Misc = 7,
-        Spine = 8,
-        DragonBones = 9
+        Unknown = 8,
+        Spine = 9,
+        DragonBones = 10
     }
     enum ObjectType {
         Image = 0,
@@ -213,11 +213,6 @@ declare namespace fgui {
         BottomExt_Bottom = 23,
         Size = 24
     }
-    enum GraphType {
-        PlaceHolder = 0,
-        Rect = 1,
-        Ellipse = 2
-    }
     enum FillMethod {
         None = 0,
         Horizontal = 1,
@@ -247,32 +242,32 @@ declare namespace fgui {
 }
 declare namespace fgui {
     class GObject {
-        data: any;
-        packageItem: PackageItem;
+        data?: any;
+        packageItem?: PackageItem;
         static draggingObject: GObject;
         protected _x: number;
         protected _y: number;
         protected _alpha: number;
         protected _visible: boolean;
         protected _touchable: boolean;
-        protected _grayed: boolean;
-        protected _draggable: boolean;
+        protected _grayed?: boolean;
+        protected _draggable?: boolean;
         protected _skewX: number;
         protected _skewY: number;
-        protected _pivotAsAnchor: boolean;
+        protected _pivotAsAnchor?: boolean;
         protected _sortingOrder: number;
         protected _internalVisible: boolean;
-        protected _handlingController: boolean;
-        protected _tooltips: string;
+        protected _handlingController?: boolean;
+        protected _tooltips?: string;
         protected _blendMode: BlendMode;
-        protected _pixelSnapping: boolean;
-        protected _dragTesting: boolean;
-        protected _dragStartPoint: cc.Vec2;
+        protected _pixelSnapping?: boolean;
+        protected _dragTesting?: boolean;
+        protected _dragStartPos?: cc.Vec2;
         protected _relations: Relations;
         protected _group: GGroup;
         protected _gears: GearBase[];
         protected _node: cc.Node;
-        protected _dragBounds: cc.Rect;
+        protected _dragBounds?: cc.Rect;
         sourceWidth: number;
         sourceHeight: number;
         initWidth: number;
@@ -289,11 +284,12 @@ declare namespace fgui {
         _id: string;
         _name: string;
         _underConstruct: boolean;
-        _gearLocked: boolean;
+        _gearLocked?: boolean;
         _sizePercentInGroup: number;
-        _touchDisabled: boolean;
+        _touchDisabled?: boolean;
         _partner: GObjectPartner;
-        _treeNode: GTreeNode;
+        _treeNode?: GTreeNode;
+        private _hitTestPt?;
         static _defaultGroupIndex: number;
         constructor();
         get id(): string;
@@ -419,17 +415,18 @@ declare namespace fgui {
         startDrag(touchId?: number): void;
         stopDrag(): void;
         get dragging(): boolean;
-        localToGlobal(ax?: number, ay?: number, resultPoint?: cc.Vec2): cc.Vec2;
-        globalToLocal(ax?: number, ay?: number, resultPoint?: cc.Vec2): cc.Vec2;
-        localToGlobalRect(ax?: number, ay?: number, aw?: number, ah?: number, resultRect?: cc.Rect): cc.Rect;
-        globalToLocalRect(ax?: number, ay?: number, aw?: number, ah?: number, resultRect?: cc.Rect): cc.Rect;
+        localToGlobal(ax?: number, ay?: number, result?: cc.Vec2): cc.Vec2;
+        globalToLocal(ax?: number, ay?: number, result?: cc.Vec2): cc.Vec2;
+        localToGlobalRect(ax?: number, ay?: number, aw?: number, ah?: number, result?: cc.Rect): cc.Rect;
+        globalToLocalRect(ax?: number, ay?: number, aw?: number, ah?: number, result?: cc.Rect): cc.Rect;
         handleControllerChanged(c: Controller): void;
         protected handleAnchorChanged(): void;
         handlePositionChanged(): void;
         protected handleSizeChanged(): void;
         protected handleGrayedChanged(): void;
         handleVisibleChanged(): void;
-        hitTest(globalPt: cc.Vec2): GObject;
+        hitTest(globalPt: cc.Vec2, forTouch?: boolean): GObject;
+        protected _hitTest(pt: cc.Vec2, globalPt: cc.Vec2): GObject;
         getProp(index: number): any;
         setProp(index: number, value: any): void;
         constructFromResource(): void;
@@ -437,12 +434,6 @@ declare namespace fgui {
         setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
         private onRollOver;
         private onRollOut;
-        private static sGlobalDragStart;
-        private static sGlobalRect;
-        private static sHelperPoint;
-        private static sDragHelperRect;
-        private static sUpdateInDragging;
-        private static sDragQuery;
         private initDrag;
         private dragBegin;
         private dragEnd;
@@ -462,12 +453,12 @@ declare namespace fgui {
 }
 declare namespace fgui {
     class GComponent extends GObject {
-        hitArea: IHitTest;
+        hitArea?: IHitTest;
         private _sortingChildCount;
         private _opaque;
-        private _applyingController;
-        private _rectMask;
-        private _maskContent;
+        private _applyingController?;
+        private _rectMask?;
+        private _maskContent?;
         protected _margin: Margin;
         protected _trackBounds: boolean;
         protected _boundsChanged: boolean;
@@ -478,9 +469,9 @@ declare namespace fgui {
         _controllers: Array<Controller>;
         _transitions: Array<Transition>;
         _container: cc.Node;
-        _scrollPane: ScrollPane;
+        _scrollPane?: ScrollPane;
         _alignOffset: cc.Vec2;
-        _customMask: cc.Mask;
+        _customMask?: cc.Mask;
         constructor();
         dispose(): void;
         get displayListContainer(): cc.Node;
@@ -541,7 +532,7 @@ declare namespace fgui {
         protected handleSizeChanged(): void;
         protected handleGrayedChanged(): void;
         handleControllerChanged(c: Controller): void;
-        hitTest(globalPt: cc.Vec2): GObject;
+        protected _hitTest(pt: cc.Vec2, globalPt: cc.Vec2): GObject;
         setBoundsChangedFlag(): void;
         private refresh;
         ensureBoundsCorrect(): void;
@@ -575,14 +566,14 @@ declare namespace fgui {
         private _sound;
         private _soundVolumeScale;
         private _buttonController;
-        private _relatedController;
+        private _relatedController?;
         private _relatedPageId;
         private _changeStateOnClick;
-        private _linkedPopup;
+        private _linkedPopup?;
         private _downEffect;
         private _downEffectValue;
-        private _downColor;
-        private _downScaled;
+        private _downColor?;
+        private _downScaled?;
         private _down;
         private _over;
         static UP: string;
@@ -647,7 +638,7 @@ declare namespace fgui {
         protected _list: GList;
         private _items;
         private _values;
-        private _icons;
+        private _icons?;
         private _visibleItemCount;
         private _itemsUpdated;
         private _selectedIndex;
@@ -707,21 +698,21 @@ declare namespace fgui {
         private _lineSize;
         private _lineColor;
         private _fillColor;
-        private _cornerRadius;
-        private _sides;
-        private _startAngle;
-        private _polygonPoints;
-        private _distances;
+        private _cornerRadius?;
+        private _sides?;
+        private _startAngle?;
+        private _polygonPoints?;
+        private _distances?;
         private _hasContent;
         constructor();
         drawRect(lineSize: number, lineColor: cc.Color, fillColor: cc.Color, corner?: Array<number>): void;
         drawEllipse(lineSize: number, lineColor: cc.Color, fillColor: cc.Color): void;
         drawRegularPolygon(lineSize: number, lineColor: cc.Color, fillColor: cc.Color, sides: number, startAngle?: number, distances?: number[]): void;
-        drawPolygon(lineSize: number, lineColor: cc.Color, fillColor: cc.Color, points: any[]): void;
+        drawPolygon(lineSize: number, lineColor: cc.Color, fillColor: cc.Color, points: Array<number>): void;
         get distances(): number[];
         set distances(value: number[]);
         clearGraphics(): void;
-        get type(): GraphType;
+        get type(): number;
         get color(): cc.Color;
         set color(value: cc.Color);
         private updateGraph;
@@ -730,6 +721,7 @@ declare namespace fgui {
         protected handleAnchorChanged(): void;
         getProp(index: number): any;
         setProp(index: number, value: any): void;
+        protected _hitTest(pt: cc.Vec2): GObject;
         setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
     }
 }
@@ -841,20 +833,20 @@ declare namespace fgui {
         private _selectionMode;
         private _align;
         private _verticalAlign;
-        private _selectionController;
+        private _selectionController?;
         private _lastSelectedIndex;
         private _pool;
-        private _virtual;
-        private _loop;
+        private _virtual?;
+        private _loop?;
         private _numItems;
         private _realNumItems;
         private _firstIndex;
         private _curLineItemCount;
         private _curLineItemCount2;
-        private _itemSize;
+        private _itemSize?;
         private _virtualListChanged;
-        private _virtualItems;
-        private _eventLocked;
+        private _virtualItems?;
+        private _eventLocked?;
         private itemInfoVer;
         constructor();
         dispose(): void;
@@ -885,7 +877,7 @@ declare namespace fgui {
         get itemPool(): GObjectPool;
         getFromPool(url?: string): GObject;
         returnToPool(obj: GObject): void;
-        addChildAt(child: GObject, index?: number): GObject;
+        addChildAt(child: GObject, index: number): GObject;
         addItem(url?: string): GObject;
         addItemFromPool(url?: string): GObject;
         removeChildAt(index: number, dispose?: boolean): GObject;
@@ -969,13 +961,9 @@ declare namespace fgui {
         private _frame;
         private _color;
         private _contentItem;
-        private _contentSourceWidth;
-        private _contentSourceHeight;
-        private _contentWidth;
-        private _contentHeight;
         private _container;
-        private _errorSign;
-        private _content2;
+        private _errorSign?;
+        private _content2?;
         private _updatingLayout;
         private static _errorSignPool;
         constructor();
@@ -1027,7 +1015,7 @@ declare namespace fgui {
         protected handleSizeChanged(): void;
         protected handleAnchorChanged(): void;
         protected handleGrayedChanged(): void;
-        hitTest(globalPt: cc.Vec2): GObject;
+        protected _hitTest(pt: cc.Vec2, globalPt: cc.Vec2): GObject;
         getProp(index: number): any;
         setProp(index: number, value: any): void;
         setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
@@ -1045,6 +1033,7 @@ declare namespace fgui {
         private _frame;
         private _loop;
         private _animationName;
+        private _skinName;
         private _color;
         private _contentItem;
         private _container;
@@ -1070,12 +1059,25 @@ declare namespace fgui {
         set playing(value: boolean);
         get frame(): number;
         set frame(value: number);
+        get animationName(): string;
+        set animationName(value: string);
+        get skinName(): string;
+        set skinName(value: string);
+        get loop(): boolean;
+        set loop(value: boolean);
         get color(): cc.Color;
         set color(value: cc.Color);
+        get content(): sp.Skeleton | dragonBones.DragonBones;
         protected loadContent(): void;
         protected loadFromPackage(itemURL: string): void;
-        protected loadExternal(): void;
         private onLoaded;
+        setSpine(asset: sp.SkeletonData, anchor: cc.Vec2, pma?: boolean): void;
+        setDragonBones(asset: dragonBones.DragonBonesAsset, atlasAsset: dragonBones.DragonBonesAtlasAsset, anchor: cc.Vec2, pma?: boolean): void;
+        private onChange;
+        private onChangeSpine;
+        private onChangeDragonBones;
+        protected loadExternal(): void;
+        private onLoaded2;
         private updateLayout;
         private clearContent;
         protected handleSizeChanged(): void;
@@ -1103,6 +1105,7 @@ declare namespace fgui {
         advance(timeInMiniseconds: number): void;
         setPlaySettings(start?: number, end?: number, times?: number, endAt?: number, endCallback?: Function, callbackObj?: any): void;
         protected handleGrayedChanged(): void;
+        protected handleSizeChanged(): void;
         getProp(index: number): any;
         setProp(index: number, value: any): void;
         constructFromResource(): void;
@@ -1137,6 +1140,7 @@ declare namespace fgui {
         set value(value: number);
         tweenValue(value: number, duration: number): GTweener;
         update(newValue: number): void;
+        private setFillAmount;
         protected constructExtension(buffer: ByteBuffer): void;
         protected handleSizeChanged(): void;
         setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
@@ -1149,15 +1153,20 @@ declare namespace fgui {
         protected _realFont: string | cc.Font;
         protected _fontSize: number;
         protected _color: cc.Color;
-        protected _strokeColor: cc.Color;
+        protected _strokeColor?: cc.Color;
+        protected _shadowOffset?: cc.Vec2;
+        protected _shadowColor?: cc.Color;
         protected _leading: number;
         protected _text: string;
         protected _ubbEnabled: boolean;
-        protected _templateVars: any;
+        protected _templateVars?: {
+            [index: string]: string;
+        };
         protected _autoSize: AutoSizeType;
         protected _updatingSize: boolean;
         protected _sizeDirty: boolean;
-        protected _outline: cc.LabelOutline;
+        protected _outline?: cc.LabelOutline;
+        protected _shadow?: cc.LabelShadow;
         constructor();
         protected createRenderer(): void;
         set text(value: string);
@@ -1188,13 +1197,21 @@ declare namespace fgui {
         set stroke(value: number);
         get strokeColor(): cc.Color;
         set strokeColor(value: cc.Color);
+        get shadowOffset(): cc.Vec2;
+        set shadowOffset(value: cc.Vec2);
+        get shadowColor(): cc.Color;
+        set shadowColor(value: cc.Color);
         set ubbEnabled(value: boolean);
         get ubbEnabled(): boolean;
         set autoSize(value: AutoSizeType);
         get autoSize(): AutoSizeType;
         protected parseTemplate(template: string): string;
-        get templateVars(): any;
-        set templateVars(value: any);
+        get templateVars(): {
+            [index: string]: string;
+        };
+        set templateVars(value: {
+            [index: string]: string;
+        });
         setVar(name: string, value: string): GTextField;
         flushVars(): void;
         get textWidth(): number;
@@ -1205,6 +1222,7 @@ declare namespace fgui {
         protected updateFont(): void;
         protected updateFontColor(): void;
         protected updateStrokeColor(): void;
+        protected updateShadowColor(): void;
         protected updateFontSize(): void;
         protected updateOverflow(): void;
         protected markSizeChanged(): void;
@@ -1233,18 +1251,12 @@ declare namespace fgui {
         protected createRenderer(): void;
         get align(): cc.Label.HorizontalAlign;
         set align(value: cc.Label.HorizontalAlign);
-        get verticalAlign(): cc.Label.VerticalAlign;
-        set verticalAlign(value: cc.Label.VerticalAlign);
-        get letterSpacing(): number;
-        set letterSpacing(value: number);
         get underline(): boolean;
         set underline(value: boolean);
         get bold(): boolean;
         set bold(value: boolean);
         get italic(): boolean;
         set italic(value: boolean);
-        get singleLine(): boolean;
-        set singleLine(value: boolean);
         protected markSizeChanged(): void;
         protected updateText(): void;
         protected updateFont(): void;
@@ -1286,9 +1298,9 @@ declare namespace fgui {
         get modalLayer(): GGraph;
         get hasModalWindow(): boolean;
         get modalWaiting(): boolean;
-        getPopupPosition(popup: GObject, target?: GObject, downward?: any, result?: cc.Vec2): cc.Vec2;
-        showPopup(popup: GObject, target?: GObject, downward?: any): void;
-        togglePopup(popup: GObject, target?: GObject, downward?: any): void;
+        getPopupPosition(popup: GObject, target?: GObject, dir?: PopupDirection | boolean, result?: cc.Vec2): cc.Vec2;
+        showPopup(popup: GObject, target?: GObject, dir?: PopupDirection | boolean): void;
+        togglePopup(popup: GObject, target?: GObject, dir?: PopupDirection | boolean): void;
         hidePopup(popup?: GObject): void;
         get hasAnyPopup(): boolean;
         private closePopup;
@@ -1325,7 +1337,6 @@ declare namespace fgui {
         get gripDragging(): boolean;
         protected constructExtension(buffer: ByteBuffer): void;
         private onGripTouchDown;
-        private static sScrollbarHelperPoint;
         private onGripTouchMove;
         private onGripTouchEnd;
         private onClickArrow1;
@@ -1372,7 +1383,6 @@ declare namespace fgui {
         protected handleSizeChanged(): void;
         setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
         private onGripTouchBegin;
-        private static sSilderHelperPoint;
         private onGripTouchMove;
         private onBarTouchBegin;
     }
@@ -1397,8 +1407,6 @@ declare namespace fgui {
         set align(value: cc.Label.HorizontalAlign);
         get verticalAlign(): cc.Label.VerticalAlign;
         set verticalAlign(value: cc.Label.VerticalAlign);
-        get letterSpacing(): number;
-        set letterSpacing(value: number);
         get singleLine(): boolean;
         set singleLine(value: boolean);
         requestFocus(): void;
@@ -1421,7 +1429,6 @@ declare namespace fgui {
         private _clickToExpand;
         private _rootNode;
         private _expandedStatusInEvt;
-        private static helperIntList;
         constructor();
         get rootNode(): GTreeNode;
         get indent(): number;
@@ -1454,14 +1461,14 @@ declare namespace fgui {
 }
 declare namespace fgui {
     class GTreeNode {
-        data: any;
+        data?: any;
         private _parent;
         private _children;
         private _expanded;
         private _level;
         private _tree;
         _cell: GComponent;
-        _resURL: string;
+        _resURL?: string;
         constructor(hasChild: boolean, resURL?: string);
         set expanded(value: boolean);
         get expanded(): boolean;
@@ -1496,7 +1503,7 @@ declare namespace fgui {
     interface IUISource {
         fileName: string;
         loaded: boolean;
-        load(callback: Function, thisObj: any): void;
+        load(callback: Function, target: any): void;
     }
 }
 declare namespace fgui {
@@ -1514,29 +1521,32 @@ declare namespace fgui {
     class PackageItem {
         owner: UIPackage;
         type: PackageItemType;
-        objectType: ObjectType;
+        objectType?: ObjectType;
         id: string;
         name: string;
         width: number;
         height: number;
         file: string;
-        decoded: boolean;
-        rawData: ByteBuffer;
-        asset: cc.Texture2D | cc.SpriteFrame | cc.AudioClip | cc.LabelAtlas;
-        highResolution: Array<string>;
-        branches: Array<string>;
-        scale9Grid: cc.Rect;
-        scaleByTile: boolean;
-        tileGridIndice: number;
-        smoothing: boolean;
-        hitTestData: PixelHitTestData;
-        interval: number;
-        repeatDelay: number;
-        swing: boolean;
-        frames: Array<Frame>;
-        extensionType: any;
+        decoded?: boolean;
+        loading?: Array<Function>;
+        rawData?: ByteBuffer;
+        asset?: cc.Asset;
+        highResolution?: Array<string>;
+        branches?: Array<string>;
+        scale9Grid?: cc.Rect;
+        scaleByTile?: boolean;
+        tileGridIndice?: number;
+        smoothing?: boolean;
+        hitTestData?: PixelHitTestData;
+        interval?: number;
+        repeatDelay?: number;
+        swing?: boolean;
+        frames?: Array<Frame>;
+        extensionType?: any;
+        skeletonAnchor?: cc.Vec2;
+        atlasAsset?: dragonBones.DragonBonesAtlasAsset;
         constructor();
-        load(): any;
+        load(): cc.Asset;
         getBranch(): PackageItem;
         getHighResolution(): PackageItem;
         toString(): string;
@@ -1563,7 +1573,7 @@ declare namespace fgui {
         get itemCount(): number;
         get contentPane(): GComponent;
         get list(): GList;
-        show(target?: GObject, downward?: any): void;
+        show(target?: GObject, dir?: PopupDirection | boolean): void;
         private onClickItem;
         private onClickItem2;
         private onDisplay;
@@ -1637,18 +1647,19 @@ declare namespace fgui {
         private _scrollBarMargin;
         private _bouncebackEffect;
         private _touchEffect;
-        private _scrollBarDisplayAuto;
+        private _scrollBarDisplayAuto?;
         private _vScrollNone;
         private _hScrollNone;
         private _needRefresh;
         private _refreshBarAxis;
-        private _displayOnLeft;
-        private _snapToItem;
-        _displayInDemand: boolean;
+        private _displayOnLeft?;
+        private _snapToItem?;
+        _displayInDemand?: boolean;
         private _mouseWheelEnabled;
-        private _pageMode;
-        private _inertiaDisabled;
-        private _floating;
+        private _pageMode?;
+        private _inertiaDisabled?;
+        private _floating?;
+        private _dontClipMargin?;
         private _xPos;
         private _yPos;
         private _viewSize;
@@ -1675,23 +1686,15 @@ declare namespace fgui {
         private _tweenDuration;
         private _tweenStart;
         private _tweenChange;
-        private _pageController;
-        private _hzScrollBar;
-        private _vtScrollBar;
-        private _header;
-        private _footer;
+        private _pageController?;
+        private _hzScrollBar?;
+        private _vtScrollBar?;
+        private _header?;
+        private _footer?;
         static draggingPane: ScrollPane;
-        private static _gestureFlag;
-        static TWEEN_TIME_GO: number;
-        static TWEEN_TIME_DEFAULT: number;
-        static PULL_RATIO: number;
-        private static sHelperPoint;
-        private static sHelperRect;
-        private static sEndPos;
-        private static sOldChange;
         setup(buffer: ByteBuffer): void;
         protected onDestroy(): void;
-        hitTest(globalPt: cc.Vec2): GObject;
+        hitTest(pt: cc.Vec2, globalPt: cc.Vec2): GObject;
         get owner(): GComponent;
         get hzScrollBar(): GScrollBar;
         get vtScrollBar(): GScrollBar;
@@ -1787,7 +1790,6 @@ declare namespace fgui {
         private checkRefreshBar;
         protected update(dt: number): boolean;
         private runTween;
-        private static easeFunc;
     }
 }
 declare namespace fgui {
@@ -1800,20 +1802,17 @@ declare namespace fgui {
         private _totalTimes;
         private _totalTasks;
         private _playing;
-        private _paused;
-        private _onComplete;
+        private _paused?;
+        private _onComplete?;
         private _options;
-        private _reversed;
+        private _reversed?;
         private _totalDuration;
-        private _autoPlay;
+        private _autoPlay?;
         private _autoPlayTimes;
         private _autoPlayDelay;
         private _timeScale;
         private _startTime;
         private _endTime;
-        static OPTION_IGNORE_DISPLAY_CONTROLLER: number;
-        static OPTION_AUTO_STOP_DISABLED: number;
-        static OPTION_AUTO_STOP_AT_END: number;
         constructor(owner: GComponent);
         play(onComplete?: () => void, times?: number, delay?: number, startTime?: number, endTime?: number): void;
         playReverse(onComplete?: () => void, times?: number, delay?: number): void;
@@ -1854,7 +1853,11 @@ declare namespace fgui {
 }
 declare namespace fgui {
     class TranslationHelper {
-        static strings: Object;
+        static strings: {
+            [index: string]: {
+                [index: string]: string;
+            };
+        };
         static loadFromXML(source: string): void;
         static translateComponent(item: PackageItem): void;
     }
@@ -1888,36 +1891,41 @@ declare namespace fgui {
         static linkUnderline: boolean;
         static defaultUIGroup: string;
     }
-    var addLoadHandler: Function;
-    var registerFont: Function;
-    var getFontByName: Function;
+    function addLoadHandler(ext?: string): void;
+    function registerFont(name: string, font: cc.Font | string): void;
+    function getFontByName(name: string): cc.Font;
 }
 declare namespace fgui {
     class UIObjectFactory {
         static counter: number;
-        static extensions: any;
-        private static loaderType;
+        static extensions: {
+            [index: string]: new () => GComponent;
+        };
+        static loaderType: new () => GLoader;
         constructor();
-        static setPackageItemExtension(url: string, type: any): void;
-        static setExtension(url: string, type: any): void;
-        static setLoaderExtension(type: any): void;
+        static setExtension(url: string, type: new () => GComponent): void;
+        static setLoaderExtension(type: new () => GLoader): void;
         static resolveExtension(pi: PackageItem): void;
-        static newObject(pi: PackageItem, userClass?: any): GObject;
-        static newObject2(type: ObjectType): GObject;
+        static newObject(type: number | PackageItem, userClass?: new () => GObject): GObject;
     }
 }
 declare namespace fgui {
-    class UIPackage {
+    type PackageDependency = {
+        id: string;
+        name: string;
+    };
+    export class UIPackage {
         private _id;
         private _name;
+        private _path;
         private _items;
         private _itemsById;
         private _itemsByName;
-        private _url;
         private _sprites;
         private _dependencies;
         private _branches;
         _branchIndex: number;
+        private _bundle;
         static _constructing: number;
         private static _instById;
         private static _instByName;
@@ -1926,15 +1934,18 @@ declare namespace fgui {
         constructor();
         static get branch(): string;
         static set branch(value: string);
-        static getVar(key: string): any;
-        static setVar(key: string, value: any): void;
+        static getVar(key: string): string;
+        static setVar(key: string, value: string): void;
         static getById(id: string): UIPackage;
         static getByName(name: string): UIPackage;
-        static addPackage(url: string): UIPackage;
-        static loadPackage(url: string, completeCallback: ((error: any) => void) | null): void;
+        static addPackage(path: string): UIPackage;
+        static loadPackage(bundle: cc.AssetManager.Bundle, path: string, onComplete?: (error: any, pkg: UIPackage) => void): void;
+        static loadPackage(bundle: cc.AssetManager.Bundle, path: string, onProgress?: (finish: number, total: number, item: cc.AssetManager.RequestItem) => void, onComplete?: (error: any, pkg: UIPackage) => void): void;
+        static loadPackage(path: string, onComplete?: (error: any, pkg: UIPackage) => void): void;
+        static loadPackage(path: string, onProgress?: (finish: number, total: number, item: cc.AssetManager.RequestItem) => void, onComplete?: (error: any, pkg: UIPackage) => void): void;
         static removePackage(packageIdOrName: string): void;
-        static createObject(pkgName: string, resName: string, userClass?: any): GObject;
-        static createObjectFromURL(url: string, userClass?: any): GObject;
+        static createObject(pkgName: string, resName: string, userClass?: new () => GObject): GObject;
+        static createObjectFromURL(url: string, userClass?: new () => GObject): GObject;
         static getItemURL(pkgName: string, resName: string): string;
         static getItemByURL(url: string): PackageItem;
         static normalizeURL(url: string): string;
@@ -1943,17 +1954,22 @@ declare namespace fgui {
         dispose(): void;
         get id(): string;
         get name(): string;
-        get url(): string;
-        createObject(resName: string, userClass?: any): GObject;
-        internalCreateObject(item: PackageItem, userClass?: any): GObject;
+        get path(): string;
+        get dependencies(): Array<PackageDependency>;
+        createObject(resName: string, userClass?: new () => GObject): GObject;
+        internalCreateObject(item: PackageItem, userClass?: new () => GObject): GObject;
         getItemById(itemId: string): PackageItem;
         getItemByName(resName: string): PackageItem;
-        getItemAssetByName(resName: string): any;
+        getItemAssetByName(resName: string): cc.Asset;
         getItemAsset(item: PackageItem): cc.Asset;
+        getItemAssetAsync(item: PackageItem, onComplete?: (err: Error, item: PackageItem) => void): void;
         loadAllAssets(): void;
         private loadMovieClip;
         private loadFont;
+        private loadSpine;
+        private loadDragonBones;
     }
+    export {};
 }
 declare namespace fgui {
     class Window extends GComponent {
@@ -1964,9 +1980,9 @@ declare namespace fgui {
         private _contentArea;
         private _frame;
         private _modal;
-        private _uiSources;
-        private _inited;
-        private _loading;
+        private _uiSources?;
+        private _inited?;
+        private _loading?;
         protected _requestingCmd: number;
         bringToFontOnClick: boolean;
         constructor();
@@ -2062,7 +2078,6 @@ declare namespace fgui {
         Custom3 = 11
     }
     class BlendModeUtils {
-        private static factors;
         static apply(node: cc.Node, blendMode: BlendMode): void;
         static override(blendMode: BlendMode, srcFactor: number, dstFactor: number): void;
     }
@@ -2074,9 +2089,9 @@ declare namespace fgui {
         private _fillOrigin;
         private _fillAmount;
         private _fillClockwise;
-        private _grayed;
-        private _graySpriteMaterial;
-        private _spriteMaterial;
+        private _grayed?;
+        private _graySpriteMaterial?;
+        private _spriteMaterial?;
         constructor();
         get flip(): FlipType;
         set flip(value: FlipType);
@@ -2094,11 +2109,10 @@ declare namespace fgui {
     }
 }
 declare namespace fgui {
-    class Frame {
+    interface Frame {
         rect: cc.Rect;
         addDelay: number;
-        texture: cc.SpriteFrame;
-        constructor();
+        texture?: cc.SpriteFrame;
     }
     class MovieClip extends Image {
         interval: number;
@@ -2179,14 +2193,13 @@ declare namespace fgui {
         get isShiftDown(): boolean;
         get isCtrlDown(): boolean;
         captureTouch(): void;
-        private static _eventPool;
         static _borrow(type: string, bubbles?: boolean): Event;
         static _return(evt: Event): void;
     }
 }
 declare namespace fgui {
     interface IHitTest {
-        hitTest(obj: GComponent, x: number, y: number): boolean;
+        hitTest(pt: cc.Vec2, globalPt: cc.Vec2): boolean;
     }
     class PixelHitTest implements IHitTest {
         private _data;
@@ -2195,7 +2208,7 @@ declare namespace fgui {
         scaleX: number;
         scaleY: number;
         constructor(data: PixelHitTestData, offsetX?: number, offsetY?: number);
-        hitTest(obj: GComponent, x: number, y: number): boolean;
+        hitTest(pt: cc.Vec2): boolean;
     }
     class PixelHitTestData {
         pixelWidth: number;
@@ -2205,9 +2218,8 @@ declare namespace fgui {
     }
     class ChildHitArea implements IHitTest {
         private _child;
-        private _reversed;
-        constructor(child: GObject, reversed?: boolean);
-        hitTest(obj: GComponent, x: number, y: number): boolean;
+        constructor(child: GObject);
+        hitTest(pt: cc.Vec2, globalPt: cc.Vec2): boolean;
     }
 }
 declare namespace fgui {
@@ -2252,8 +2264,7 @@ declare namespace fgui {
         static disableAllTweenEffect: boolean;
         protected _owner: GObject;
         protected _controller: Controller;
-        protected _tweenConfig: GearTweenConfig;
-        private static Classes;
+        protected _tweenConfig?: GearTweenConfig;
         static create(owner: GObject, index: number): GearBase;
         constructor(owner: GObject);
         dispose(): void;
@@ -2400,11 +2411,7 @@ declare namespace fgui {
     }
 }
 declare namespace fgui {
-    class EaseManager {
-        private static _PiOver2;
-        private static _TwoPi;
-        static evaluate(easeType: number, time: number, duration: number, overshootOrAmplitude: number, period: number): number;
-    }
+    function evaluateEase(easeType: number, time: number, duration: number, overshootOrAmplitude: number, period: number): number;
 }
 declare namespace fgui {
     class EaseType {
@@ -2447,11 +2454,9 @@ declare namespace fgui {
         private _segments;
         private _points;
         private _fullLength;
-        private static helperPoints;
         constructor();
         get length(): number;
-        create2(pt1: GPathPoint, pt2: GPathPoint, pt3?: GPathPoint, pt4?: GPathPoint): void;
-        create(points: Array<GPathPoint>): void;
+        create(pt1: Array<GPathPoint> | GPathPoint, pt2?: GPathPoint, pt3?: GPathPoint, pt4?: GPathPoint): void;
         private createSplineSegment;
         clear(): void;
         getPointAt(t: number, result?: cc.Vec2): cc.Vec2;
@@ -2495,9 +2500,9 @@ declare namespace fgui {
         static toColor(start: number, end: number, duration: number): GTweener;
         static delayedCall(delay: number): GTweener;
         static shake(startX: number, startY: number, amplitude: number, duration: number): GTweener;
-        static isTweening(target: Object, propType?: any): Boolean;
-        static kill(target: Object, complete?: boolean, propType?: any): void;
-        static getTween(target: Object, propType?: any): GTweener;
+        static isTweening(target: any, propType?: any): Boolean;
+        static kill(target: any, complete?: boolean, propType?: any): void;
+        static getTween(target: any, propType?: any): GTweener;
     }
 }
 declare namespace fgui {
@@ -2534,7 +2539,6 @@ declare namespace fgui {
         private _ended;
         private _elapsedTime;
         private _normalizedTime;
-        private static helperPoint;
         constructor();
         setDelay(value: number): GTweener;
         get delay(): number;
@@ -2548,14 +2552,14 @@ declare namespace fgui {
         get repeat(): number;
         setTimeScale(value: number): GTweener;
         setSnapping(value: boolean): GTweener;
-        setTarget(value: Object, propType?: Object): GTweener;
-        get target(): Object;
+        setTarget(value: any, propType?: any): GTweener;
+        get target(): any;
         setPath(value: GPath): GTweener;
         setUserData(value: any): GTweener;
         get userData(): any;
-        onUpdate(callback: Function, caller: any): GTweener;
-        onStart(callback: Function, caller: any): GTweener;
-        onComplete(callback: Function, caller: any): GTweener;
+        onUpdate(callback: Function, target?: any): GTweener;
+        onStart(callback: Function, target?: any): GTweener;
+        onComplete(callback: Function, target?: any): GTweener;
         get startValue(): TweenValue;
         get endValue(): TweenValue;
         get value(): TweenValue;
@@ -2583,14 +2587,10 @@ declare namespace fgui {
 }
 declare namespace fgui {
     class TweenManager {
-        private static _activeTweens;
-        private static _tweenerPool;
-        private static _totalActiveTweens;
-        private static _root;
         static createTween(): GTweener;
-        static isTweening(target: any, propType: any): boolean;
-        static killTweens(target: any, completed: boolean, propType: any): boolean;
-        static getTween(target: any, propType: any): GTweener;
+        static isTweening(target: any, propType?: any): boolean;
+        static killTweens(target: any, completed: boolean, propType?: any): boolean;
+        static getTween(target: any, propType?: any): GTweener;
         private static update;
     }
 }
@@ -2643,14 +2643,8 @@ declare namespace fgui {
 }
 declare namespace fgui {
     class ColorMatrix {
-        matrix: Array<number>;
-        private static IDENTITY_MATRIX;
-        private static LENGTH;
-        private static LUMA_R;
-        private static LUMA_G;
-        private static LUMA_B;
-        static create(p_brightness: number, p_contrast: number, p_saturation: number, p_hue: number): ColorMatrix;
-        constructor();
+        readonly matrix: Array<number>;
+        constructor(p_brightness?: number, p_contrast?: number, p_saturation?: number, p_hue?: number);
         reset(): void;
         invert(): void;
         adjustColor(p_brightness: number, p_contrast: number, p_saturation: number, p_hue: number): void;
@@ -2669,7 +2663,9 @@ declare namespace fgui {
     class UBBParser {
         private _text;
         private _readPos;
-        protected _handlers: any;
+        protected _handlers: {
+            [index: string]: (tagName: string, end: boolean, attr: string) => string;
+        };
         lastColor: string;
         lastSize: string;
         linkUnderline: boolean;
@@ -2688,7 +2684,6 @@ declare namespace fgui {
 }
 declare namespace fgui {
     class ToolSet {
-        constructor();
         static startsWith(source: string, str: string, ignoreCase?: boolean): boolean;
         static encodeHTML(str: string): string;
         static clamp(value: number, min: number, max: number): number;

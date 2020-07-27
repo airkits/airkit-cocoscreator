@@ -1,5 +1,26 @@
 {
+  "android-instant": {
+    "REMOTE_SERVER_ROOT": "",
+    "host": "",
+    "pathPattern": "",
+    "recordPath": "",
+    "scheme": "https",
+    "skipRecord": false
+  },
+  "appKey": "",
+  "appSecret": "",
+  "encryptJs": true,
   "excludeScenes": [],
+  "fb-instant-games": {},
+  "includeAnySDK": false,
+  "includeSDKBox": false,
+  "inlineSpriteFrames": true,
+  "inlineSpriteFrames_native": true,
+  "jailbreakPlatform": false,
+  "md5Cache": false,
+  "mergeStartScene": false,
+  "oauthLoginServer": "",
+  "optimizeHotUpdate": false,
   "orientation": {
     "landscapeLeft": true,
     "landscapeRight": true,
@@ -7,48 +28,20 @@
     "upsideDown": false
   },
   "packageName": "org.cocos2d.helloworld",
-  "startScene": "2d2f792f-a40c-49bb-a189-ed176a246e49",
-  "title": "hello_world",
-  "webOrientation": "auto",
-  "includeSDKBox": false,
-  "inlineSpriteFrames": true,
-  "inlineSpriteFrames_native": true,
-  "mainCompressionType": "default",
-  "mainIsRemote": false,
-  "optimizeHotUpdate": false,
-  "md5Cache": true,
-  "nativeMd5Cache": true,
-  "encryptJs": true,
-  "xxteaKey": "9eef77e3-4685-41",
-  "zipCompressJs": true,
-  "fb-instant-games": {},
-  "android": {
+  "privateKey": "",
+  "qqplay": {
     "REMOTE_SERVER_ROOT": "",
-    "packageName": "org.cocos2d.demo"
+    "orientation": "portrait"
   },
-  "ios": {
+  "startScene": "a0b48413-72ba-4990-ab8b-49e55d013f01",
+  "title": "FairyGUI-Demo",
+  "webOrientation": "landscape",
+  "wechatgame": {
     "REMOTE_SERVER_ROOT": "",
-    "packageName": "org.cocos2d.demo"
+    "appid": "wx6ac3f5090a6b99c5",
+    "orientation": "portrait",
+    "subContext": ""
   },
-  "mac": {
-    "REMOTE_SERVER_ROOT": "",
-    "height": 720,
-    "packageName": "org.cocos2d.demo",
-    "width": 1280
-  },
-  "win32": {
-    "REMOTE_SERVER_ROOT": "",
-    "height": 720,
-    "width": 1280
-  },
-  "android-instant": {
-    "REMOTE_SERVER_ROOT": "",
-    "host": "",
-    "packageName": "org.cocos2d.demo",
-    "pathPattern": "",
-    "recordPath": "",
-    "scheme": "https",
-    "skipRecord": false
-  },
-  "appBundle": false
+  "xxteaKey": "ba7c0cef-2e75-4a",
+  "zipCompressJs": true
 }

@@ -1,29 +1,14 @@
 {
-  "compilerOptions": {
-    "module": "amd",
-    "target": "es5",
-    "declaration": true,
-    "sourceMap": false,
-    "skipLibCheck": true,
-    "removeComments": true,
-    "outFile": "./gairkit.js",
-    // "downlevelIteration": true,
-    "lib": [
-      "es5",
-      "dom",
-      "es2015.promise",
-      // "es2015.symbol",
-      // "es2015.iterable",
-      "es2015.core",
-    ]
-  },
-  "include": [
-    "airkit",
-    "lib"
-  ],
-  "exclude": [
-    "node_modules",
-    "bin/**/*.d.ts",
-    "test"
-  ],
+    "compilerOptions": {
+        "module": "amd",
+        "lib": ["dom", "es5", "es2015.promise", "ES2015.Core"],
+        "target": "es5",
+        "skipLibCheck": true,
+        "outFile": "./gairkit.js",
+        "declaration": true,
+        "sourceMap": false,
+        "removeComments": true
+    },
+    "include": ["src", "lib"],
+    "exclude": ["node_modules"]
 }

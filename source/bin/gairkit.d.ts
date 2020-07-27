@@ -11,7 +11,7 @@ declare namespace airkit {
         private _mainloopHandle;
         private _lastTimeMS;
         private static instance;
-        static readonly Instance: Framework;
+        static get Instance(): Framework;
         constructor();
         setup(root: fgui.GComponent, log_level?: LogLevel, design_width?: number, design_height?: number, screen_mode?: string, frame?: number): void;
         destroy(): boolean;
@@ -21,7 +21,7 @@ declare namespace airkit {
         endTick(dt: number): void;
         pauseGame(): void;
         resumeGame(): void;
-        readonly isStopGame: boolean;
+        get isStopGame(): boolean;
         private printDeviceInfo;
     }
 }
@@ -43,19 +43,19 @@ declare namespace airkit {
         div(d: number): Color;
         equals(other: Color): boolean;
         static lerp(from: Color, to: Color, t: number): Color;
-        static readonly zero: Color;
-        static readonly one: Color;
-        static readonly red: Color;
-        static readonly green: Color;
-        static readonly blue: Color;
-        static readonly white: Color;
-        static readonly black: Color;
-        static readonly yellow: Color;
-        static readonly cyan: Color;
-        static readonly magenta: Color;
-        static readonly gray: Color;
-        static readonly grey: Color;
-        static readonly clear: Color;
+        static get zero(): Color;
+        static get one(): Color;
+        static get red(): Color;
+        static get green(): Color;
+        static get blue(): Color;
+        static get white(): Color;
+        static get black(): Color;
+        static get yellow(): Color;
+        static get cyan(): Color;
+        static get magenta(): Color;
+        static get gray(): Color;
+        static get grey(): Color;
+        static get clear(): Color;
         toString(): string;
     }
 }
@@ -71,7 +71,7 @@ declare namespace airkit {
         getkeys(): Array<number>;
         getValues(): Array<TValue>;
         foreach(compareFn: (key: number, value: TValue) => boolean): void;
-        readonly length: number;
+        get length(): number;
     }
     class SDictionary<TValue> {
         private _dic;
@@ -84,7 +84,7 @@ declare namespace airkit {
         getValues(): Array<TValue>;
         clear(): void;
         foreach(compareFn: (key: string, value: TValue) => boolean): void;
-        readonly length: number;
+        get length(): number;
     }
 }
 declare namespace airkit {
@@ -118,7 +118,7 @@ declare namespace airkit {
         private getNode;
         foreach(compareFn: (value: T) => boolean): void;
         isEmpty(): boolean;
-        readonly length: number;
+        get length(): number;
     }
 }
 declare namespace airkit {
@@ -140,7 +140,7 @@ declare namespace airkit {
         toArray(): Array<T>;
         contains(item: T): boolean;
         clear(): void;
-        readonly length: number;
+        get length(): number;
         foreach(compareFn: (a: T) => boolean): void;
     }
 }
@@ -150,8 +150,8 @@ declare namespace airkit {
         private _height;
         constructor(w?: number, h?: number);
         set(w: number, h: number): void;
-        readonly width: number;
-        readonly height: number;
+        get width(): number;
+        get height(): number;
     }
 }
 declare namespace airkit {
@@ -163,7 +163,7 @@ declare namespace airkit {
         toArray(): Array<T>;
         contains(item: T): boolean;
         clear(): void;
-        readonly length: number;
+        get length(): number;
         foreach(compareFn: (a: T) => boolean): void;
     }
 }
@@ -227,13 +227,13 @@ declare namespace airkit {
         private _listTables;
         private static instance;
         static zipUrl: string;
-        static readonly Instance: ConfigManger;
+        static get Instance(): ConfigManger;
         init(keys: any, zipPath?: string): void;
         release(): void;
         loadAll(): Promise<any>;
         getList(table: string, filter?: Array<any>): Array<any>;
         getInfo(table: string, key: any): any;
-        readonly listTables: Array<ConfigItem>;
+        get listTables(): Array<ConfigItem>;
     }
 }
 declare namespace airkit {
@@ -242,7 +242,7 @@ declare namespace airkit {
         private _dicData;
         _zip: boolean;
         private static instance;
-        static readonly Instance: DataProvider;
+        static get Instance(): DataProvider;
         enableZip(): void;
         setup(): void;
         destroy(): boolean;
@@ -307,7 +307,8 @@ declare namespace airkit {
         constructor(...args: any[]);
         init(...args: any[]): void;
         get(index: number): any;
-        type: string;
+        get type(): string;
+        set type(t: string);
     }
 }
 declare namespace airkit {
@@ -315,7 +316,7 @@ declare namespace airkit {
         private _event;
         private _evtArgs;
         private static instance;
-        static readonly Instance: EventCenter;
+        static get Instance(): EventCenter;
         constructor();
         static on(type: string, caller: any, fun: Function): void;
         static off(type: string, caller: any, fun: Function): void;
@@ -405,12 +406,12 @@ declare namespace airkit {
     class LangManager extends Singleton {
         private _curLang;
         private static instance;
-        static readonly Instance: LangManager;
+        static get Instance(): LangManager;
         init(): void;
         destory(): void;
         changeLang(lang: string): Promise<any>;
         getText(lang: string, key: string): string;
-        readonly curLang: string;
+        get curLang(): string;
     }
 }
 declare namespace airkit {
@@ -427,7 +428,7 @@ declare namespace airkit {
         static loaders: NDictionary<string>;
         static registerLoadingView(view_type: number, className: string, cls: any): void;
         private static instance;
-        static readonly Instance: LoaderManager;
+        static get Instance(): LoaderManager;
         setup(): void;
         destroy(): boolean;
         private registerEvent;
@@ -456,9 +457,9 @@ declare namespace airkit {
         private _aniAnimDic;
         onAniResUpdateSignal: Signal<string>;
         private static instance;
-        static readonly Instance: ResourceManager;
+        static get Instance(): ResourceManager;
         setup(): void;
-        protected static asyncLoad(url: any, progress?: Handler, type?: typeof cc.Asset, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<any>;
+        protected static asyncLoad(url: string | string[], progress?: Handler, type?: typeof cc.Asset, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<any>;
         destroy(): boolean;
         update(dt: number): void;
         getRes(url: string): any;
@@ -511,7 +512,7 @@ declare namespace airkit {
     class Mediator {
         static modules: SDictionary<BaseModule>;
         private static instance;
-        static readonly Instance: Mediator;
+        static get Instance(): Mediator;
         setup(): void;
         static register(name: string, cls: any): void;
         static call(name: string, funcName?: string, ...args: any[]): Promise<any>;
@@ -563,9 +564,9 @@ declare namespace airkit {
         protected error(message: string): void;
         protected complete(): void;
         protected clear(): void;
-        readonly url: string;
-        readonly data: any;
-        readonly http: any;
+        get url(): string;
+        get data(): any;
+        get http(): any;
     }
 }
 declare namespace airkit {
@@ -592,9 +593,9 @@ declare namespace airkit {
         setCurrentState(_state: any): void;
         setGlobalState(_state: any): void;
         clearAllState(): void;
-        readonly currentState: State<T>;
-        readonly previousState: State<T>;
-        readonly globalState: State<T>;
+        get currentState(): State<T>;
+        get previousState(): State<T>;
+        get globalState(): State<T>;
     }
 }
 declare namespace airkit {
@@ -645,8 +646,8 @@ declare namespace airkit {
         bg(): fgui.GComponent;
         setVisible(bVisible: boolean): void;
         setUIID(id: number): void;
-        readonly UIID: number;
-        readonly viewID: number;
+        get UIID(): number;
+        get viewID(): number;
         onCreate(args: any): void;
         onDestroy(): void;
         update(dt: number): boolean;
@@ -706,7 +707,7 @@ declare namespace airkit {
         private static _mainLayer;
         private static _bgLayer;
         private static layers;
-        static readonly stage: fgui.GComponent;
+        static get stage(): fgui.GComponent;
         static getLayer(t: eUILayer): fgui.GComponent;
         static setup(root: fgui.GComponent): void;
         protected static registerEvent(): void;
@@ -714,16 +715,16 @@ declare namespace airkit {
         static resize(): void;
         static destroy(): void;
         static removeAll(): void;
-        static readonly root: fgui.GComponent;
-        static readonly bgLayer: fgui.GComponent;
+        static get root(): fgui.GComponent;
+        static get bgLayer(): fgui.GComponent;
         static addBg(url: string): fgui.GLoader;
-        static readonly mainLayer: fgui.GComponent;
-        static readonly uiLayer: fgui.GComponent;
-        static readonly popupLayer: fgui.GComponent;
-        static readonly tooltipLayer: fgui.GComponent;
-        static readonly systemLayer: fgui.GComponent;
-        static readonly loadingLayer: fgui.GComponent;
-        static readonly topLayer: fgui.GComponent;
+        static get mainLayer(): fgui.GComponent;
+        static get uiLayer(): fgui.GComponent;
+        static get popupLayer(): fgui.GComponent;
+        static get tooltipLayer(): fgui.GComponent;
+        static get systemLayer(): fgui.GComponent;
+        static get loadingLayer(): fgui.GComponent;
+        static get topLayer(): fgui.GComponent;
     }
 }
 declare namespace airkit {
@@ -750,7 +751,7 @@ declare namespace airkit {
         static registerScene(scene_type: number, name: string, cls: any): any;
         private _curScene;
         private static instance;
-        static readonly Instance: SceneManager;
+        static get Instance(): SceneManager;
         setup(): void;
         destroy(): void;
         update(dt: number): void;
@@ -769,7 +770,7 @@ declare namespace airkit {
         private _dicUIView;
         private _UIQueues;
         private static instance;
-        static readonly Instance: UIManager;
+        static get Instance(): UIManager;
         constructor();
         empty(): boolean;
         show(id: number, ...args: any[]): Promise<any>;
@@ -839,10 +840,11 @@ declare namespace airkit {
 declare namespace airkit {
     class Timer {
         static Start(): void;
-        static readonly deltaTimeMS: number;
-        static readonly fixedDeltaTime: number;
-        static readonly frameCount: number;
-        static timeScale: number;
+        static get deltaTimeMS(): number;
+        static get fixedDeltaTime(): number;
+        static get frameCount(): number;
+        static get timeScale(): number;
+        static set timeScale(scale: number);
     }
 }
 declare namespace airkit {
@@ -852,7 +854,7 @@ declare namespace airkit {
         private _timers;
         static TIMER_OBJECT: string;
         private static instance;
-        static readonly Instance: TimerManager;
+        static get Instance(): TimerManager;
         setup(): void;
         destroy(): boolean;
         update(dt: number): void;
@@ -908,9 +910,11 @@ declare namespace airkit {
         protected _length: number;
         static getSystemEndian(): string;
         constructor(data?: any);
-        readonly buffer: ArrayBuffer;
-        endian: string;
-        length: number;
+        get buffer(): ArrayBuffer;
+        get endian(): string;
+        set endian(value: string);
+        set length(value: number);
+        get length(): number;
         private _resizeBuffer;
         getString(): string;
         readString(): string;
@@ -948,8 +952,9 @@ declare namespace airkit {
         private _rUTF;
         getCustomString(len: number): string;
         readCustomString(len: number): string;
-        pos: number;
-        readonly bytesAvailable: number;
+        get pos(): number;
+        set pos(value: number);
+        get bytesAvailable(): number;
         clear(): void;
         __getBuffer(): ArrayBuffer;
         writeUTFBytes(value: string): void;
@@ -1102,7 +1107,7 @@ declare namespace airkit {
 }
 declare namespace airkit {
     class StringUtils {
-        static readonly empty: string;
+        static get empty(): string;
         static isNullOrEmpty(s: string): boolean;
         static toInt(str: string): number;
         static toNumber(str: string): number;
@@ -1135,7 +1140,7 @@ declare namespace airkit {
         private _isPlaying;
         private _updateFunc;
         static get(target: fgui.GObject): TweenUtils;
-        readonly target: fgui.GObject;
+        get target(): fgui.GObject;
         setOnUpdate(callback: Function): void;
         onUpdate(gt: fgui.GTweener): void;
         to(props: any, duration: number, ease?: number, complete?: Handler, delay?: number): TweenUtils;
@@ -1178,3 +1183,4 @@ declare namespace airkit {
         static parseZipFile(jszip: any, filename: string): Promise<any>;
     }
 }
+import ak = airkit;
