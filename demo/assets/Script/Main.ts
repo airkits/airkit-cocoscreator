@@ -1,7 +1,8 @@
+import GameLayer from "./app/layer/GameLayer";
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export default class DemoEntry extends cc.Component {
+export default class Main extends cc.Component {
     private _closeButton: fgui.GObject;
     private _currentDemo: cc.Component;
 
@@ -9,7 +10,7 @@ export default class DemoEntry extends cc.Component {
         fgui.GRoot.create();
 
         // this.node.on("start_demo", this.onDemoStart, this);
-        // this.addComponent(MainMenu);
+        //  this.addComponent(GameLayer);
         airkit.Framework.Instance.setup(
             fgui.GRoot.inst,
             ak.LogLevel.DEBUG,
@@ -27,18 +28,21 @@ export default class DemoEntry extends cc.Component {
         //这里填写的是相对于resources里的路径
 
         let res = [
-            { url: "ui/Loader", type: null }, //描述文件
-            { url: "ui/Loader_atlas0", type: null }, //纹理集
+            { url: "ui/Loader", type: airkit.FguiAsset }, //描述文件
+            { url: "ui/Loader_atlas0", type: cc.BufferAsset }, //纹理集
         ];
 
         airkit.ResourceManager.Instance.loadArrayRes(res).then((v) => {
             //     //都加载完毕后再调用addPackage
+            console.log(v);
             fgui.UIPackage.addPackage("ui/Loader");
             let view: fgui.GComponent = fgui.UIPackage.createObject(
                 "Loader",
                 "Login"
             ).asCom;
+
             fgui.GRoot.inst.addChild(view);
+            view.makeFullScreen();
         });
     }
 

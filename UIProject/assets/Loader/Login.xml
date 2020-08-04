@@ -13,7 +13,7 @@
     <item time="0" type="XY" target="n4_xmdz" value="377,-900"/>
     <item time="12" type="XY" target="n4_xmdz" tween="true" startValue="377,-900" endValue="377,209" duration="12" ease="Bounce.Out"/>
     <item time="24" type="Rotation" target="n4_xmdz" tween="true" startValue="0" endValue="8" duration="6"/>
-    <item time="24" type="XY" target="n4_xmdz" tween="true" startValue="377,209"/>
+    <item time="24" type="XY" target="n4_xmdz" value="377,209"/>
     <item time="30" type="Rotation" target="n4_xmdz" tween="true" startValue="8" endValue="-8" duration="6"/>
     <item time="36" type="Rotation" target="n4_xmdz" tween="true" startValue="-8" endValue="5" duration="6"/>
     <item time="42" type="Rotation" target="n4_xmdz" tween="true" startValue="5" endValue="-5" duration="6"/>

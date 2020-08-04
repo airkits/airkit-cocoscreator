@@ -445,35 +445,32 @@ declare namespace airkit {
     const FONT_SIZE_5 = 22;
     const FONT_SIZE_6 = 25;
     const FONT_SIZE_7 = 29;
+    class FguiAsset extends cc.BufferAsset {
+    }
     class ResourceManager extends Singleton {
         static FONT_Yuanti: string;
         static Font_Helvetica: string;
         static FONT_DEFAULT: string;
         static FONT_DEFAULT_SIZE: number;
-        private _dicLoaderUrl;
+        private _dicResInfo;
         private _minLoaderTime;
         static DefaultGroup: string;
         static SystemGroup: string;
-        private _aniAnimDic;
-        onAniResUpdateSignal: Signal<string>;
         private static instance;
         static get Instance(): ResourceManager;
         setup(): void;
-        protected static asyncLoad(url: string | string[], progress?: Handler, type?: typeof cc.Asset, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<any>;
         destroy(): boolean;
         update(dt: number): void;
         getRes(url: string): any;
-        loadRes(url: string, type?: typeof cc.Asset, viewType?: number, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<any>;
+        loadRes(url: string, type?: typeof cc.Asset, viewType?: number, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<string>;
         loadArrayRes(arr_res: Array<{
             url: string;
             type: typeof cc.Asset;
-        }>, viewType?: number, tips?: string, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<any>;
-        onLoadComplete(viewType: number, ...args: any[]): void;
+        }>, viewType?: number, tips?: string, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<string[]>;
+        onLoadComplete(viewType: number, urls: string[], types: Array<typeof cc.Asset>, tips: string): void;
         onLoadProgress(viewType: number, total: number, tips: string, progress: number): void;
-        private refreshResourceTime;
-        clearRes(url: string): any;
-        cleanTexture(group: string): void;
-        setAniAnim(ani: string, atlas: string, group: string): void;
+        clearRes(url: string): void;
+        releaseRes(url: string): void;
         createFuiAnim(pkgName: string, resName: string, path: string, group?: string): Promise<any>;
         static imageProxy(image: fgui.GLoader, skin: string, proxy?: string, atlas?: string): Promise<any>;
     }

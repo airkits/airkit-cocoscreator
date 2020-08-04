@@ -2156,11 +2156,19 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     airkit.FONT_SIZE_5 = 22;
     airkit.FONT_SIZE_6 = 25;
     airkit.FONT_SIZE_7 = 29;
+    var FguiAsset = (function (_super) {
+        __extends(FguiAsset, _super);
+        function FguiAsset() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        return FguiAsset;
+    }(cc.BufferAsset));
+    airkit.FguiAsset = FguiAsset;
     var ResourceManager = (function (_super) {
         __extends(ResourceManager, _super);
         function ResourceManager() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._dicLoaderUrl = null;
+            _this._dicResInfo = null;
             return _this;
         }
         Object.defineProperty(ResourceManager, "Instance", {
@@ -2173,35 +2181,23 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             configurable: true
         });
         ResourceManager.prototype.setup = function () {
-            this._dicLoaderUrl = new airkit.SDictionary();
+            this._dicResInfo = new airkit.SDictionary();
             this._minLoaderTime = 1000;
-            this._aniAnimDic = new airkit.SDictionary();
-            this.onAniResUpdateSignal = new airkit.Signal();
-        };
-        ResourceManager.asyncLoad = function (url, progress, type, priority, cache, group, ignoreCache) {
-            return new Promise(function (resolve, reject) {
-                cc.resources.load(url, type, function (completedCount, totalCount, item) {
-                    progress.runWith(completedCount / totalCount);
-                }, function (error, resource) {
-                    if (error) {
-                        reject(url);
-                        return;
-                    }
-                    resolve(url);
-                });
-            });
         };
         ResourceManager.prototype.destroy = function () {
             _super.prototype.destroy.call(this);
-            if (this._dicLoaderUrl) {
-                this._dicLoaderUrl.clear();
-                this._dicLoaderUrl = null;
+            if (this._dicResInfo) {
+                this._dicResInfo.foreach(function (k, v) {
+                    ResourceManager.Instance.clearRes(k);
+                    return true;
+                });
+                this._dicResInfo.clear();
+                this._dicResInfo = null;
             }
             return true;
         };
         ResourceManager.prototype.update = function (dt) { };
         ResourceManager.prototype.getRes = function (url) {
-            this.refreshResourceTime(url, null, false);
             return cc.resources.get(url);
         };
         ResourceManager.prototype.loadRes = function (url, type, viewType, priority, cache, group, ignoreCache) {
@@ -2211,7 +2207,6 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (cache === void 0) { cache = true; }
             if (group === void 0) { group = "default"; }
             if (ignoreCache === void 0) { ignoreCache = false; }
-            this.refreshResourceTime(url, group, true);
             if (viewType == null)
                 viewType = airkit.LOADVIEW_TYPE_NONE;
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
@@ -2222,13 +2217,15 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, 1);
             }
             return new Promise(function (resolve, reject) {
-                ResourceManager.asyncLoad(url, airkit.Handler.create(_this, _this.onLoadProgress, [viewType, 1], false), type, priority, cache, group, ignoreCache)
-                    .then(function (v) {
-                    _this.onLoadComplete(viewType, [url]);
+                cc.resources.load(url, type, function (completedCount, totalCount, item) {
+                    _this.onLoadProgress(viewType, totalCount, "", completedCount / totalCount);
+                }, function (error, resource) {
+                    if (error) {
+                        reject(url);
+                        return;
+                    }
+                    _this.onLoadComplete(viewType, [url], [type], "");
                     resolve(url);
-                })
-                    .catch(function (e) {
-                    reject(e);
                 });
             });
         };
@@ -2243,6 +2240,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             var has_unload = false;
             var assets = [];
             var urls = [];
+            var types = new Array();
             if (viewType == null)
                 viewType = airkit.LOADVIEW_TYPE_NONE;
             if (priority == null)
@@ -2253,9 +2251,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 var res = arr_res_1[_i];
                 assets.push({ url: res.url, type: res.type });
                 urls.push(res.url);
+                types.push(res.type);
                 if (!has_unload && !cc.resources.get(res.url))
                     has_unload = true;
-                this.refreshResourceTime(res.url, group, true);
             }
             if (!has_unload && viewType != airkit.LOADVIEW_TYPE_NONE) {
                 viewType = airkit.LOADVIEW_TYPE_NONE;
@@ -2264,33 +2262,31 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, assets.length, tips);
             }
             return new Promise(function (resolve, reject) {
-                ResourceManager.asyncLoad(urls, airkit.Handler.create(_this, _this.onLoadProgress, [viewType, assets.length, tips], false), undefined, priority, cache, group, ignoreCache)
-                    .then(function (v) {
+                cc.resources.load(urls, function (completedCount, totalCount, item) {
+                    _this.onLoadProgress(viewType, totalCount, tips, completedCount / totalCount);
+                }, function (error, resource) {
+                    if (error) {
+                        reject(urls);
+                        return;
+                    }
                     if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                         airkit.TimerManager.Instance.addOnce(_this._minLoaderTime, null, function (v) {
-                            _this.onLoadComplete(viewType, urls, tips);
+                            _this.onLoadComplete(viewType, urls, types, tips);
                             resolve(urls);
                         });
                     }
                     else {
-                        _this.onLoadComplete(viewType, urls, tips);
+                        _this.onLoadComplete(viewType, urls, types, tips);
                         resolve(urls);
                     }
-                })
-                    .catch(function (e) {
-                    reject(e);
                 });
             });
         };
-        ResourceManager.prototype.onLoadComplete = function (viewType) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
-            if (args) {
-                var arr = args[0];
-                for (var _a = 0, arr_3 = arr; _a < arr_3.length; _a++) {
-                    var url = arr_3[_a];
+        ResourceManager.prototype.onLoadComplete = function (viewType, urls, types, tips) {
+            if (urls) {
+                var arr = urls;
+                for (var _i = 0, arr_3 = arr; _i < arr_3.length; _i++) {
+                    var url = arr_3[_i];
                     airkit.Log.debug("[load]加载完成url:" + url);
                     var i = url.lastIndexOf(".bin");
                     if (i > 0) {
@@ -2298,7 +2294,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         fgui.UIPackage.addPackage(pkg);
                         airkit.Log.info("add Package :" + pkg);
                     }
-                    var loader_info = this._dicLoaderUrl.getValue(url);
+                    var loader_info = this._dicResInfo.getValue(url);
                     if (loader_info) {
                         loader_info.updateStatus(eLoaderStatus.LOADED);
                     }
@@ -2315,55 +2311,16 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_PROGRESS, viewType, cur, total, tips);
             }
         };
-        ResourceManager.prototype.refreshResourceTime = function (url, group, is_create) {
-            if (is_create) {
-                var loader_info = this._dicLoaderUrl.getValue(url);
-                if (!loader_info) {
-                    loader_info = new LoaderConfig(url, group);
-                    this._dicLoaderUrl.add(url, loader_info);
-                    loader_info.updateStatus(eLoaderStatus.LOADING);
-                }
-                else {
-                    loader_info.ctime = Date.now();
-                }
-            }
-            else {
-                var loader_info = this._dicLoaderUrl.getValue(url);
-                if (loader_info) {
-                    loader_info.utime = Date.now();
-                }
-            }
-        };
         ResourceManager.prototype.clearRes = function (url) {
-            this._dicLoaderUrl.remove(url);
+            var res = this._dicResInfo.getValue(url);
+            if (res) {
+                res.decRef();
+            }
+        };
+        ResourceManager.prototype.releaseRes = function (url) {
+            this._dicResInfo.remove(url);
             cc.resources.release(url);
-            var i = url.lastIndexOf(".bin");
-            if (i > 0) {
-                var offset = url.lastIndexOf("/");
-                var pkg = url.substr(offset + 1, i - offset - 1);
-                fgui.UIPackage.removePackage(pkg);
-                airkit.Log.info("remove Package :" + pkg);
-            }
             airkit.Log.info("[res]释放资源:" + url);
-        };
-        ResourceManager.prototype.cleanTexture = function (group) {
-            var _this = this;
-            this._dicLoaderUrl.foreach(function (k, v) {
-                if (v.group == group) {
-                    airkit.Log.info("清理texture资源 {0}", k);
-                    _this.clearRes(k);
-                }
-                return true;
-            });
-        };
-        ResourceManager.prototype.setAniAnim = function (ani, atlas, group) {
-            var value = this._aniAnimDic.getValue(ani);
-            if (value == null) {
-                this._aniAnimDic.add(ani, [atlas, 1, group]);
-            }
-            else {
-                value[1] += 1;
-            }
         };
         ResourceManager.prototype.createFuiAnim = function (pkgName, resName, path, group) {
             if (group === void 0) { group = "default"; }
@@ -2432,19 +2389,30 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         eLoaderStatus[eLoaderStatus["LOADING"] = 1] = "LOADING";
         eLoaderStatus[eLoaderStatus["LOADED"] = 2] = "LOADED";
     })(eLoaderStatus || (eLoaderStatus = {}));
-    var LoaderConfig = (function () {
-        function LoaderConfig(url, group) {
-            this.url = url;
-            this.group = group;
-            this.ctime = Date.now();
-            this.utime = Date.now();
-            this.status = eLoaderStatus.READY;
+    var ResInfo = (function (_super) {
+        __extends(ResInfo, _super);
+        function ResInfo(url, type, group) {
+            var _this = _super.call(this) || this;
+            _this.url = url;
+            _this.ref = 0;
+            _this.group = group;
+            _this.status = eLoaderStatus.READY;
+            return _this;
         }
-        LoaderConfig.prototype.updateStatus = function (status) {
+        ResInfo.prototype.updateStatus = function (status) {
             this.status = status;
         };
-        return LoaderConfig;
-    }());
+        ResInfo.prototype.incRef = function () {
+            this.ref++;
+        };
+        ResInfo.prototype.decRef = function () {
+            this.ref--;
+            if (this.ref <= 0) {
+                ResourceManager.Instance.releaseRes(this.url);
+            }
+        };
+        return ResInfo;
+    }(airkit.EventDispatcher));
 })(airkit || (airkit = {}));
 
 (function (airkit) {
@@ -3805,7 +3773,6 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 this._curScene = null;
                 airkit.UIManager.Instance.closeAll();
                 airkit.ObjectPools.clearAll();
-                airkit.ResourceManager.Instance.cleanTexture(airkit.ResourceManager.DefaultGroup);
             }
         };
         SceneManager.scenes = new airkit.NDictionary();
