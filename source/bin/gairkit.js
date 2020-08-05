@@ -2200,6 +2200,12 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         ResourceManager.prototype.getRes = function (url) {
             return cc.resources.get(url);
         };
+        ResourceManager.prototype.dump = function () {
+            this._dicResInfo.foreach(function (k, v) {
+                console.log("url:" + k + " refCount=" + v.ref + "\n");
+                return true;
+            });
+        };
         ResourceManager.prototype.loadRes = function (url, type, viewType, priority, cache, group, ignoreCache) {
             var _this = this;
             if (viewType === void 0) { viewType = airkit.LOADVIEW_TYPE_NONE; }
@@ -2216,14 +2222,24 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, 1);
             }
+            var resInfo = this._dicResInfo.getValue(url);
+            if (!resInfo) {
+                resInfo = new ResInfo(url, type, group);
+                this._dicResInfo.set(url, resInfo);
+            }
+            resInfo.incRef();
+            resInfo.updateStatus(eLoaderStatus.LOADING);
             return new Promise(function (resolve, reject) {
                 cc.resources.load(url, type, function (completedCount, totalCount, item) {
                     _this.onLoadProgress(viewType, totalCount, "", completedCount / totalCount);
                 }, function (error, resource) {
                     if (error) {
+                        resInfo.updateStatus(eLoaderStatus.READY);
+                        resInfo.decRef();
                         reject(url);
                         return;
                     }
+                    resInfo.updateStatus(eLoaderStatus.LOADED);
                     _this.onLoadComplete(viewType, [url], [type], "");
                     resolve(url);
                 });
@@ -2238,7 +2254,6 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (group === void 0) { group = "default"; }
             if (ignoreCache === void 0) { ignoreCache = false; }
             var has_unload = false;
-            var assets = [];
             var urls = [];
             var types = new Array();
             if (viewType == null)
@@ -2249,7 +2264,6 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 cache = true;
             for (var _i = 0, arr_res_1 = arr_res; _i < arr_res_1.length; _i++) {
                 var res = arr_res_1[_i];
-                assets.push({ url: res.url, type: res.type });
                 urls.push(res.url);
                 types.push(res.type);
                 if (!has_unload && !cc.resources.get(res.url))
@@ -2259,15 +2273,37 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 viewType = airkit.LOADVIEW_TYPE_NONE;
             }
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
-                airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, assets.length, tips);
+                airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, urls.length, tips);
+            }
+            for (var i = 0; i < urls.length; i++) {
+                var resInfo = this._dicResInfo.getValue(urls[i]);
+                if (!resInfo) {
+                    resInfo = new ResInfo(urls[i], types[i], group);
+                    this._dicResInfo.set(urls[i], resInfo);
+                }
+                resInfo.incRef();
+                resInfo.updateStatus(eLoaderStatus.LOADING);
             }
             return new Promise(function (resolve, reject) {
                 cc.resources.load(urls, function (completedCount, totalCount, item) {
                     _this.onLoadProgress(viewType, totalCount, tips, completedCount / totalCount);
                 }, function (error, resource) {
                     if (error) {
+                        for (var i = 0; i < urls.length; i++) {
+                            var resInfo = _this._dicResInfo.getValue(urls[i]);
+                            if (resInfo) {
+                                resInfo.decRef();
+                                resInfo.updateStatus(eLoaderStatus.READY);
+                            }
+                        }
                         reject(urls);
                         return;
+                    }
+                    for (var i = 0; i < urls.length; i++) {
+                        var resInfo = _this._dicResInfo.getValue(urls[i]);
+                        if (resInfo) {
+                            resInfo.updateStatus(eLoaderStatus.READY);
+                        }
                     }
                     if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                         airkit.TimerManager.Instance.addOnce(_this._minLoaderTime, null, function (v) {
@@ -2285,18 +2321,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         ResourceManager.prototype.onLoadComplete = function (viewType, urls, types, tips) {
             if (urls) {
                 var arr = urls;
-                for (var _i = 0, arr_3 = arr; _i < arr_3.length; _i++) {
-                    var url = arr_3[_i];
-                    airkit.Log.debug("[load]加载完成url:" + url);
-                    var i = url.lastIndexOf(".bin");
-                    if (i > 0) {
-                        var pkg = url.substr(0, i);
-                        fgui.UIPackage.addPackage(pkg);
-                        airkit.Log.info("add Package :" + pkg);
-                    }
-                    var loader_info = this._dicResInfo.getValue(url);
-                    if (loader_info) {
-                        loader_info.updateStatus(eLoaderStatus.LOADED);
+                for (var i = 0; i < urls.length; i++) {
+                    if (types[i] == airkit.FguiAsset) {
+                        fgui.UIPackage.addPackage(urls[i]);
                     }
                 }
             }
@@ -2325,13 +2352,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         ResourceManager.prototype.createFuiAnim = function (pkgName, resName, path, group) {
             if (group === void 0) { group = "default"; }
             return new Promise(function (resolve, reject) {
-                var atlas = path + "_atlas0.png";
-                var bin = path + ".bin";
+                var atlas = path + "_atlas0";
+                var bin = path;
                 var res = ResourceManager.Instance.getRes(atlas);
                 if (res == null) {
                     ResourceManager.Instance.loadArrayRes([
-                        { url: atlas, type: cc.SpriteFrame },
-                        { url: bin, type: cc.BufferAsset },
+                        { url: atlas, type: cc.BufferAsset },
+                        { url: bin, type: FguiAsset },
                     ], null, null, 0, true, group)
                         .then(function (v) {
                         var obj = fgui.UIPackage.createObject(pkgName, resName);
@@ -2408,6 +2435,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         ResInfo.prototype.decRef = function () {
             this.ref--;
             if (this.ref <= 0) {
+                if (this.type == FguiAsset) {
+                    fgui.UIPackage.removePackage(this.url);
+                }
                 ResourceManager.Instance.releaseRes(this.url);
             }
         };

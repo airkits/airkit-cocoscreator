@@ -462,6 +462,7 @@ declare namespace airkit {
         destroy(): boolean;
         update(dt: number): void;
         getRes(url: string): any;
+        dump(): void;
         loadRes(url: string, type?: typeof cc.Asset, viewType?: number, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<string>;
         loadArrayRes(arr_res: Array<{
             url: string;

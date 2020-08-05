@@ -35,7 +35,7 @@ export default class Main extends cc.Component {
         airkit.ResourceManager.Instance.loadArrayRes(res).then((v) => {
             //     //都加载完毕后再调用addPackage
             console.log(v);
-            fgui.UIPackage.addPackage("ui/Loader");
+
             let view: fgui.GComponent = fgui.UIPackage.createObject(
                 "Loader",
                 "Login"
@@ -43,6 +43,7 @@ export default class Main extends cc.Component {
 
             fgui.GRoot.inst.addChild(view);
             view.makeFullScreen();
+            airkit.ResourceManager.Instance.dump();
         });
     }
 
