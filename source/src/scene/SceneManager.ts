@@ -100,6 +100,7 @@ namespace airkit {
             let clas = ClassUtils.getClass(sceneName);
 
             let scene = new clas();
+            scene["__scene_type__"] = scene_type;
             scene.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
             scene.setup(args);
             scene
@@ -116,18 +117,17 @@ namespace airkit {
 
         private exitScene(): void {
             if (this._curScene) {
+                //切换
+                let sceneName = SceneManager.scenes.getValue(
+                    this._curScene["__scene_type__"]
+                );
+                let clas = ClassUtils.getClass(sceneName);
+                clas.unres();
                 this._curScene.removeFromParent();
                 this._curScene.dispose();
                 this._curScene = null;
-
                 UIManager.Instance.closeAll();
-                //  LayerManager.removeAll();
-                //  ResourceManager.Instance.removeAllAniAnim();
                 ObjectPools.clearAll();
-
-                //  ResourceManager.Instance.cleanTexture(ResourceManager.DefaultGroup);
-                // ResourceManager.Instance.removeAllAniAnim("default");
-                // ResourceManager.Instance.removeSpineTempletGroup("default");
             }
         }
     }

@@ -2333,7 +2333,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         ResourceManager.prototype.onLoadProgress = function (viewType, total, tips, progress) {
             var cur = airkit.NumberUtils.toInt(Math.floor(progress * total));
-            airkit.Log.debug("[load]进度: current={0} total={1}", cur, total);
+            airkit.Log.debug("[load]进度: current={0} total={1} precent = {2}", cur, total, progress);
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_PROGRESS, viewType, cur, total, tips);
             }
@@ -3288,6 +3288,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         BaseView.res = function () {
             return null;
         };
+        BaseView.unres = function () {
+            var arr = this.res();
+            if (arr && arr.length > 0) {
+                for (var i = 0; i < arr.length; i++) {
+                    airkit.ResourceManager.Instance.clearRes(arr[i][0]);
+                }
+            }
+        };
         BaseView.loaderTips = function () {
             return "资源加载中";
         };
@@ -3784,6 +3792,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             var sceneName = SceneManager.scenes.getValue(scene_type);
             var clas = airkit.ClassUtils.getClass(sceneName);
             var scene = new clas();
+            scene["__scene_type__"] = scene_type;
             scene.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
             scene.setup(args);
             scene
@@ -3798,6 +3807,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         SceneManager.prototype.exitScene = function () {
             if (this._curScene) {
+                var sceneName = SceneManager.scenes.getValue(this._curScene["__scene_type__"]);
+                var clas = airkit.ClassUtils.getClass(sceneName);
+                clas.unres();
                 this._curScene.removeFromParent();
                 this._curScene.dispose();
                 this._curScene = null;
@@ -3889,25 +3901,27 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (animType === void 0) { animType = 0; }
             return new Promise(function (resolve, reject) {
                 airkit.Log.info("close panel {0}", id);
-                var loader_info = _this._dicConfig.getValue(id);
-                airkit.assert(loader_info != null, "UIManager::Close - not find id:" + loader_info.mID);
+                var conf = _this._dicConfig.getValue(id);
+                airkit.assert(conf != null, "UIManager::Close - not find id:" + conf.mID);
                 var panel = _this._dicUIView.getValue(id);
                 if (!panel)
                     return;
+                var clas = airkit.ClassUtils.getClass(conf.name);
+                clas.unres();
                 if (animType == 0) {
-                    var result = _this.clearPanel(id, panel, loader_info);
+                    var result = _this.clearPanel(id, panel, conf);
                     resolve([id, result]);
                 }
                 else {
                     airkit.DisplayUtils.hide(panel, airkit.Handler.create(null, function (v) {
-                        var result = _this.clearPanel(id, panel, loader_info);
+                        var result = _this.clearPanel(id, panel, conf);
                         resolve([id, result]);
                     }));
                 }
             });
         };
-        UIManager.prototype.clearPanel = function (id, panel, loader_info) {
-            if (loader_info.mHideDestroy) {
+        UIManager.prototype.clearPanel = function (id, panel, resInfo) {
+            if (resInfo.mHideDestroy) {
                 this._dicUIView.remove(id);
                 airkit.Log.info("clear panel {0}", id);
                 panel.removeFromParent();

@@ -295,7 +295,12 @@ namespace airkit {
         ): void {
             let cur: number = NumberUtils.toInt(Math.floor(progress * total));
 
-            Log.debug("[load]进度: current={0} total={1}", cur, total);
+            Log.debug(
+                "[load]进度: current={0} total={1} precent = {2}",
+                cur,
+                total,
+                progress
+            );
             if (viewType != LOADVIEW_TYPE_NONE) {
                 EventCenter.dispatchEvent(
                     LoaderEventID.LOADVIEW_PROGRESS,

@@ -652,7 +652,8 @@ declare namespace airkit {
         getGObject(name: string): fgui.GObject;
         onEnter(): void;
         onLangChange(): void;
-        static res(): Array<any>;
+        static res(): Array<[string, cc.Asset]>;
+        static unres(): void;
         static loaderTips(): string;
         static loaderType(): number;
         protected signalMap(): Array<any>;
@@ -773,7 +774,7 @@ declare namespace airkit {
         empty(): boolean;
         show(id: number, ...args: any[]): Promise<any>;
         close(id: number, animType?: number): Promise<any>;
-        clearPanel(id: number, panel: IUIPanel, loader_info: any): boolean;
+        clearPanel(id: number, panel: IUIPanel, resInfo: UIConfig): boolean;
         closeAll(exclude_list?: Array<number>): void;
         popup(id: number, ...args: any[]): void;
         alert(id: number, ...args: any[]): void;

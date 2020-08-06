@@ -33,7 +33,9 @@ namespace airkit {
         }
 
         public createPanel(pkgName: string, resName: string): void {
-            let v = fgui.UIPackage.createObjectFromURL("ui://" + pkgName + "/" + resName);
+            let v = fgui.UIPackage.createObjectFromURL(
+                "ui://" + pkgName + "/" + resName
+            );
             if (v == null) return;
             this._view = v.asCom; // fgui.UIPackage.createObject(pkgName, resName).asCom
             this._view.setSize(this.width, this.height);
@@ -78,6 +80,7 @@ namespace airkit {
             EventCenter.off(EventID.UI_LANG, this, this.onLangChange);
             super.dispose();
         }
+
         public isDestory(): boolean {
             return this._destory;
         }
@@ -138,10 +141,18 @@ namespace airkit {
             ["res/image/3.png", Laya.Loader.IMAGE],
         ]
     */
-        public static res(): Array<any> {
+        public static res(): Array<[string, cc.Asset]> {
             return null;
         }
 
+        public static unres(): void {
+            let arr = this.res();
+            if (arr && arr.length > 0) {
+                for (let i = 0; i < arr.length; i++) {
+                    ResourceManager.Instance.clearRes(arr[i][0]);
+                }
+            }
+        }
         public static loaderTips(): string {
             return "资源加载中";
         }
@@ -201,7 +212,14 @@ namespace airkit {
                 if (assets.length > 0) {
                     let tips = clas.loaderTips();
                     let loaderType = clas.loaderType();
-                    ResourceManager.Instance.loadArrayRes(assets, loaderType, tips, 1, true, group)
+                    ResourceManager.Instance.loadArrayRes(
+                        assets,
+                        loaderType,
+                        tips,
+                        1,
+                        true,
+                        group
+                    )
                         .then((v) => {
                             this.onAssetLoaded();
                             resolve(this);

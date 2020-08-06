@@ -30,6 +30,8 @@ export default class Main extends cc.Component {
         let res = [
             { url: "ui/Loader", type: airkit.FguiAsset }, //描述文件
             { url: "ui/Loader_atlas0", type: cc.BufferAsset }, //纹理集
+            { url: "ui/Home", type: airkit.FguiAsset }, //描述文件
+            { url: "ui/Home_atlas0", type: cc.BufferAsset }, //纹理集
         ];
 
         airkit.ResourceManager.Instance.loadArrayRes(res).then((v) => {
