@@ -1,4 +1,6 @@
 import GameLayer from "./app/layer/GameLayer";
+import { Platform, isWX, GetPlatform } from "./app/platform/Platform";
+import { ePlatform } from "./app/platform/PlatfromType";
 const { ccclass, property } = cc._decorator;
 
 @ccclass
@@ -11,12 +13,7 @@ export default class Main extends cc.Component {
 
         // this.node.on("start_demo", this.onDemoStart, this);
         //  this.addComponent(GameLayer);
-        airkit.Framework.Instance.setup(
-            fgui.GRoot.inst,
-            ak.LogLevel.DEBUG,
-            cc.winSize.width,
-            cc.winSize.height
-        );
+        airkit.Framework.Instance.setup(fgui.GRoot.inst, ak.LogLevel.DEBUG, cc.winSize.width, cc.winSize.height);
         // cc.resources.load(
         //     ["ui/Loader.bin", "ui/Loader_atlas0.png"],
         //     (err, assets) => {
@@ -38,15 +35,25 @@ export default class Main extends cc.Component {
             //     //都加载完毕后再调用addPackage
             console.log(v);
 
-            let view: fgui.GComponent = fgui.UIPackage.createObject(
-                "Loader",
-                "Login"
-            ).asCom;
+            let view: fgui.GComponent = fgui.UIPackage.createObject("Loader", "Login").asCom;
 
             fgui.GRoot.inst.addChild(view);
             view.makeFullScreen();
             airkit.ResourceManager.Instance.dump();
         });
+        if (isWX()) {
+            Platform.init(ePlatform.WX, "wxec644f0c4e2cb275", "wx");
+            GetPlatform().createAuthButton(
+                new cc.Vec2(100, 100),
+                new cc.Size(100, 100),
+                (res) => {
+                    console.log(res);
+                },
+                (e) => {
+                    console.log(e);
+                }
+            );
+        }
     }
 
     // onDemoStart(demo) {
