@@ -1,10 +1,11 @@
 import { ePlatfromADStatus, ePlatform } from "./PlatfromType";
 import { PlatformUser } from "./PlatformUser";
+import { IPlatform } from './IPlatform';
 
 var AuthAPI = "http://127.0.0.1:8000/v1/wxlogin";
 
-export class PlatformWechat {
-    private static doNull() {}
+export class PlatformWechat extends IPlatform {
+    private static doNull() { }
 
     private isIphoneX: boolean;
     private isIOS: boolean;
@@ -202,7 +203,7 @@ export class PlatformWechat {
         var height = cc.winSize.height * (systemInfo.statusBarHeight / systemInfo.windowHeight); //systemInfo.safeArea.top / systemInfo.windowHeight;//
         return height;
     }
-    public exitGame(): Promise<any> {
+    public exitGame(): Promise<void> {
         return new Promise((resolve, reject) => {
             wx.exitMiniProgram({
                 success: () => {
@@ -289,17 +290,17 @@ export class PlatformWechat {
 
     public vibrateShort(): void {
         wx.vibrateShort({
-            success: () => {},
-            fail: () => {},
-            complete: () => {},
+            success: () => { },
+            fail: () => { },
+            complete: () => { },
         });
     }
 
     public vibrateLong(): void {
         wx.vibrateLong({
-            success: () => {},
-            fail: () => {},
-            complete: () => {},
+            success: () => { },
+            fail: () => { },
+            complete: () => { },
         });
     }
     public getButtonRect(pos: cc.Vec2, size: cc.Size): any {
@@ -393,7 +394,7 @@ export class PlatformWechat {
                 fail: () => {
                     reject("login wxgame failed");
                 },
-                complete: () => {},
+                complete: () => { },
             };
             wx.login(obj);
         });
@@ -441,7 +442,7 @@ export class PlatformWechat {
      * @memberof IPlatform
      */
     loginWithUserInfo(): Promise<any> {
-        return new Promise((resolve, reject) => {});
+        return new Promise((resolve, reject) => { });
     }
     public getUserInfo(): Promise<PlatformUser> {
         return new Promise((resolve, reject) => {
@@ -479,7 +480,7 @@ export class PlatformWechat {
                     extraData: data,
                     envVersion: "trial",
                     success(res: any) {
-                        resolve();
+                        resolve(true);
                     },
                     fail(e: any) {
                         reject(e);
@@ -515,7 +516,7 @@ export class PlatformWechat {
                             // app.model.wxRecallDay = res["query"]["day"];
                             // manager.event(Manager.WX_ON_SHOW_RECALL_CARD);
                         }
-                        resolve();
+                        resolve(res);
                     },
 
                     fail: (res: any) => {
@@ -861,11 +862,11 @@ export class PlatformWechat {
         });
     }
     //注册onHide
-    registerOnHideHandler(hander: (res: any) => void): void {}
+    registerOnHideHandler(hander: (res: any) => void): void { }
     //注册回退事件
-    registerBackHandler(hander: (res: any) => void): void {}
+    registerBackHandler(hander: (res: any) => void): void { }
     //注册同步事件
-    registerSyncHandler(hander: (res: any) => void): void {}
+    registerSyncHandler(hander: (res: any) => void): void { }
     //调用宿主进行copy
     copyTextByApp(str: string): boolean {
         return true;

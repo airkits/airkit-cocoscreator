@@ -1,5 +1,6 @@
 {
   "libview.firstColumnWidth": 283,
+  "snapToGrid": true,
   "expanded_nodes": [
     "21mnfg0c",
     "/",
@@ -26,8 +27,10 @@
     "/images/"
   ],
   "auxline1": true,
+  "gridSize": 30,
   "test.orientation": "portriait",
   "backgroundColor": 6710886,
   "libview.currentGroup": "",
-  "hidden_packages": []
+  "hidden_packages": [],
+  "gridColor": 80
 }

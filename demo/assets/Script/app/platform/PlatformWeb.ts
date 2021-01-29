@@ -1,7 +1,8 @@
 import { ePlatfromADStatus, ePlatform } from "./PlatfromType";
 import { PlatformUser } from "./PlatformUser";
+import { IPlatform } from './IPlatform';
 
-export class PlatformWeb {
+export class PlatformWeb extends IPlatform {
     public static AuthServer = "https://127.0.0.1/auth";
     public type: ePlatform;
 
@@ -38,15 +39,15 @@ export class PlatformWeb {
     public checkVersion(): number {
         return 0;
     }
-    public showLoading(): void {}
-    public hideLoading(): void {}
+    public showLoading(): void { }
+    public hideLoading(): void { }
 
-    public vibrateShort(): void {}
+    public vibrateShort(): void { }
 
-    public vibrateLong(): void {}
+    public vibrateLong(): void { }
 
-    public setKeepScreenOn(flag: boolean): void {}
-    createAuthButton(pos: cc.Vec2, size: cc.Size, onSuccess: Function, onFailed: Function): any {}
+    public setKeepScreenOn(flag: boolean): void { }
+    createAuthButton(pos: cc.Vec2, size: cc.Size, onSuccess: Function, onFailed: Function): any { }
 
     public getUserInfo(): Promise<PlatformUser> {
         return new Promise((resolve, reject) => {
@@ -61,7 +62,7 @@ export class PlatformWeb {
      * @memberof IPlatform
      */
     loginWithUserInfo(): Promise<any> {
-        return new Promise((resolve, reject) => {});
+        return new Promise((resolve, reject) => { });
     }
 
     /**
@@ -72,18 +73,18 @@ export class PlatformWeb {
      */
     login(): Promise<any> {
         return new Promise((resolve, reject) => {
-            resolve();
+            resolve(null);
         });
     }
 
     open(appid: string, path: string, data: any): Promise<any> {
         return new Promise((resolve, reject) => {
-            resolve();
+            resolve(null);
         });
     }
     openCustomerServiceCardMsg(showMessageCard: boolean, sendMessageTitle: string, sendMessageImg: string): Promise<any> {
         return new Promise((resolve, reject) => {
-            resolve();
+            resolve(null);
         });
     }
 
@@ -124,7 +125,7 @@ export class PlatformWeb {
      * @memberof IPlatform
      */
     setOnForeground(): Promise<any> {
-        return new Promise((resolve, reject) => {});
+        return new Promise((resolve, reject) => { });
     }
 
     /**
@@ -134,13 +135,13 @@ export class PlatformWeb {
      * @memberof IPlatform
      */
     showAuthModal(): Promise<any> {
-        return new Promise((resolve, reject) => {});
+        return new Promise((resolve, reject) => { });
     }
 
     //分享接口
     public share(position: string, title: string, image: string, query: string): Promise<any> {
         return new Promise((resolve, reject) => {
-            resolve();
+            resolve(null);
         });
     }
 
@@ -152,7 +153,7 @@ export class PlatformWeb {
         return;
     }
     //统计
-    tj(a: string): void {}
+    tj(a: string): void { }
 
     //获取平台渠道号
     getPlatfromChannel(): Promise<string> {
@@ -169,13 +170,13 @@ export class PlatformWeb {
     }
 
     //注册onShow
-    registerOnShowHandler(hander: (res: any) => void): void {}
+    registerOnShowHandler(hander: (res: any) => void): void { }
     //注册onHide
-    registerOnHideHandler(hander: (res: any) => void): void {}
+    registerOnHideHandler(hander: (res: any) => void): void { }
     //注册回退事件
-    registerBackHandler(hander: (res: any) => void): void {}
+    registerBackHandler(hander: (res: any) => void): void { }
     //注册同步事件
-    registerSyncHandler(hander: (res: any) => void): void {}
+    registerSyncHandler(hander: (res: any) => void): void { }
 
     callNativeAppInit(): Promise<boolean> {
         return new Promise((resolve, reject) => {
@@ -200,5 +201,24 @@ export class PlatformWeb {
     //调用宿主进行copy
     copyTextByApp(str: string): boolean {
         return true;
+    }
+
+    createGameIcon(adUnitId: string, x: number, y: number, iconSize: number): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            resolve(true);
+        }).catch((e) => {
+            return false;
+        });
+    }
+    showGameIcon(v: boolean): void {
+
+    }
+    //显示插屏广告
+    interstitialAd(adUnitID: string): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            resolve(true);
+        }).catch((e) => {
+            return false;
+        });
     }
 }
