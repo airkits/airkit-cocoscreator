@@ -25,5 +25,8 @@
         "vinyl-source-stream": "^1.1.0",
         "watchify": "^3.9.0",
         "gulp-inject-string": "^1.1.2"
+    },
+    "devDependencies": {
+        "gulp-sourcemaps": "^3.0.0"
     }
 }

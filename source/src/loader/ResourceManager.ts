@@ -9,7 +9,7 @@ namespace airkit {
     export const FONT_SIZE_6 = 25;
     export const FONT_SIZE_7 = 29;
 
-    export class FguiAsset extends cc.BufferAsset {}
+    export class FguiAsset extends cc.BufferAsset { }
 
     export class ResourceManager extends Singleton {
         public static FONT_Yuanti = "Yuanti SC Regular";
@@ -56,7 +56,7 @@ namespace airkit {
             }
             return true;
         }
-        public update(dt: number): void {}
+        public update(dt: number): void { }
 
         /**获取资源*/
         public getRes(url: string): any {

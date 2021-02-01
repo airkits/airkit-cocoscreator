@@ -6,8 +6,8 @@
         "skipLibCheck": true,
         "outFile": "./gairkit.js",
         "declaration": true,
-        "sourceMap": false,
-        "removeComments": true
+        "sourceMap": true,
+        "removeComments": false
     },
     "include": ["src", "lib"],
     "exclude": ["node_modules"]

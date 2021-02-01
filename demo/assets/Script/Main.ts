@@ -1,6 +1,7 @@
 import GameLayer from "./app/layer/GameLayer";
 import { Platform, isWX, GetPlatform } from "./app/platform/Platform";
 import { ePlatform } from "./app/platform/PlatfromType";
+import LoginDlg from './app/ui/Loader/LoginDlg';
 const { ccclass, property } = cc._decorator;
 
 @ccclass
@@ -34,8 +35,7 @@ export default class Main extends cc.Component {
         airkit.ResourceManager.Instance.loadArrayRes(res).then((v) => {
             //     //都加载完毕后再调用addPackage
             console.log(v);
-
-            let view: fgui.GComponent = fgui.UIPackage.createObject("Loader", "Login").asCom;
+            let view: fgui.GComponent = LoginDlg.createInstance(); //fgui.UIPackage.createObject("Loader", "LoginDlg").asCom;
 
             fgui.GRoot.inst.addChild(view);
             view.makeFullScreen();
@@ -86,5 +86,5 @@ export default class Main extends cc.Component {
     //     this.addComponent(MainMenu);
     // }
 
-    start() {}
+    start() { }
 }

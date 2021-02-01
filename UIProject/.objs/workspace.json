@@ -1,6 +1,5 @@
 {
   "libview.firstColumnWidth": 283,
-  "snapToGrid": true,
   "expanded_nodes": [
     "21mnfg0c",
     "/",
@@ -11,12 +10,16 @@
   "doc.openedDocs": [
     "ui://21mnfg0cn70mi",
     "ui://v9v1pqglsi0tb",
+    "ui://v9v1pqglsi0td",
+    "ui://v9v1pqglnz2l12",
+    "ui://v9v1pqglp6l917",
+    "ui://v9v1pqglir8c1b",
     "ui://21mnfg0cn70mh"
   ],
   "test.device": "iPhone 8 Plus",
   "canvasColor": 10066329,
   "auxline2": true,
-  "doc.activeDoc": "ui://v9v1pqglsi0tb",
+  "doc.activeDoc": "ui://v9v1pqglir8c1b",
   "libview.twoColumn": false,
   "libview.expandedNodes": [
     "21mnfg0c",
@@ -24,13 +27,16 @@
     "v9v1pqgl",
     "/",
     "v9v1pqgl",
+    "/Base/",
+    "v9v1pqgl",
     "/images/"
   ],
   "auxline1": true,
-  "gridSize": 30,
+  "snapToGrid": true,
   "test.orientation": "portriait",
   "backgroundColor": 6710886,
   "libview.currentGroup": "",
   "hidden_packages": [],
+  "gridSize": 30,
   "gridColor": 80
 }

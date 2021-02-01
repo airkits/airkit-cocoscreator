@@ -1,0 +1,11 @@
+{
+	"name": "com.fairygui.plugin.gencode",
+	"displayName": "GenCode",
+	"description": "Gen Code and resource ref",
+	"version": "0.0.1",
+	"author": {
+		"name": "FairyGUI.com"
+	},
+	"icon": "icon.png",
+	"main": "main.js"
+}
