@@ -1,4 +1,4 @@
-import { FairyEditor } from 'csharp';
+import { FairyEditor, System } from 'csharp';
 import CodeWriter from './CodeWriter';
 
 //
@@ -8,7 +8,9 @@ function genCode(handler: FairyEditor.PublishHandler) {
     let exportCodePath = handler.exportCodePath + '/' + codePkgName;
     let namespaceName = codePkgName;
     let ns = "fgui";
-    let isPuerts = handler.project.type == FairyEditor.ProjectType.Unity
+    let isPuerts = handler.project.type == FairyEditor.ProjectType.Unity;
+    let isLaya = handler.project.type == FairyEditor.ProjectType.Layabox;
+    let isCocos = handler.project.type == FairyEditor.ProjectType.CocosCreator;
     if (isPuerts) ns = "FairyGUI";
 
     if (settings.packageName)
@@ -48,8 +50,13 @@ function genCode(handler: FairyEditor.PublishHandler) {
             writer.writeln();
         }
 
+        if (classInfo.superClassName == "fgui.GComponent") {
+            writer.writeln('export default class %s extends %s', classInfo.className, "airkit.BaseView");
+        } else {
+            writer.writeln('export default class %s extends %s', classInfo.className, classInfo.superClassName);
+        }
 
-        writer.writeln('export default class %s extends %s', classInfo.className, classInfo.superClassName);
+
         writer.startBlock();
         writer.writeln();
 
@@ -63,15 +70,30 @@ function genCode(handler: FairyEditor.PublishHandler) {
         writer.writeln('public static ResName:string = "%s";', classInfo.resName);
         let q = new FairyEditor.DependencyQuery();
         q.QueryDependencies(handler.project, "ui://" + handler.pkg.id + classInfo.resId, FairyEditor.DependencyQuery.SeekLevel.ALL);
+        let res = {};
+        let key = "";
         q.resultList.ForEach(v => {
+            if (v.item.GetAsset().GetType().FullName == "FairyEditor.ImageAsset") {
+                console.log(v.item.fileName);
+                console.log(v.item.GetAtlasIndex())
+                if (!res[v.item.owner.name]) {
+                    res[v.item.owner.name] = {}
+                }
 
-            console.log(v.item.fileName);
-            console.log(v.item.name);
-            console.log(v.item.file);
-            console.log(v.item.supportAtlas);
-            console.log(v.item.owner.name);
-            console.log(v.item.GetAsset().GetType());
+                if (v.item.GetAtlasIndex() >= 0) {
+                    key = v.item.owner.name + "_atlas" + v.item.GetAtlasIndex();
+                } else {
+                    key = v.item.owner.name + "_atlas_" + v.item.id
+                }
+                if (!res[v.item.owner.name][key]) {
+                    res[v.item.owner.name][key] = 1;
+                } else {
+                    res[v.item.owner.name][key] += 1;
+                }
+                //   console.log(v.item.owner.name);
+            }
         })
+        writer.writeln('public static ResMap:{ [index: string]: {} } = %s;', JSON.stringify(res));
 
         writer.writeln();
 

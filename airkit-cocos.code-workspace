@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "UIProject"
+		},
+		{
+			"path": "tools"
 		}
 	],
 	"settings": {

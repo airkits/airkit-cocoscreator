@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="750,1334">
+  <displayList>
+    <component id="n3_ngrg" name="bg" src="p6l917" fileName="bg.xml" xy="0,-159" size="750,1650">
+      <relation target="" sidePair="width-width,middle-middle"/>
+    </component>
+    <image id="n5_hhom" name="n5" src="hhom25" fileName="images/img_bg1.jpg" xy="25,62"/>
+    <component id="n4_xmdz" name="n4" src="si0th" fileName="Logo.xml" xy="377,209" pivot="0.5,0" anchor="true" scale="1.5,1.5">
+      <relation target="" sidePair="center-center,middle-middle"/>
+    </component>
+  </displayList>
+  <transition name="click"/>
+  <transition name="t1" autoPlay="true">
+    <item time="0" type="XY" target="n4_xmdz" value="377,-900"/>
+    <item time="12" type="XY" target="n4_xmdz" tween="true" startValue="377,-900" endValue="377,209" duration="12" ease="Bounce.Out"/>
+    <item time="24" type="Rotation" target="n4_xmdz" tween="true" startValue="0" endValue="8" duration="6"/>
+    <item time="30" type="Rotation" target="n4_xmdz" tween="true" startValue="8" endValue="-8" duration="6"/>
+    <item time="36" type="Rotation" target="n4_xmdz" tween="true" startValue="-8" endValue="5" duration="6"/>
+    <item time="42" type="Rotation" target="n4_xmdz" tween="true" startValue="5" endValue="-5" duration="6"/>
+    <item time="48" type="Rotation" target="n4_xmdz" tween="true" startValue="-5" endValue="0" duration="6"/>
+  </transition>
+</component>

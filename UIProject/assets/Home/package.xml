@@ -18,8 +18,9 @@
     <image id="n70me" name="img_line_gray.png" path="/images/"/>
     <image id="n70mf" name="img_line.png" path="/images/" scale="9grid" scale9grid="4,0,159,2"/>
     <image id="n70mg" name="img_white_bg.png" path="/images/"/>
-    <component id="n70mh" name="Home.xml" path="/" exported="true"/>
+    <component id="n70mh" name="HomeScene.xml" path="/" exported="true"/>
     <component id="n70mi" name="OrderItem.xml" path="/" exported="true"/>
+    <component id="fqe2j" name="HomeDlg.xml" path="/" exported="true"/>
   </resources>
   <publish name="Home" path="../demo/assets/resources/ui" packageCount="2" genCode="true"/>
 </packageDescription>

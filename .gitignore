@@ -3,3 +3,4 @@
 /client/.prettierrc.js
 /client/.vscode
 /client/code-index.html
+node_modules

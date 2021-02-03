@@ -9,7 +9,7 @@
   "compressPNG": false,
   "codeGeneration": {
     "allowGenCode": true,
-    "codePath": "../demo/assets/Script/app/ui",
+    "codePath": "../demo/assets/Script/app/gen/ui",
     "classNamePrefix": "",
     "memberNamePrefix": "m_",
     "packageName": "app",

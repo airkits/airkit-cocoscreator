@@ -1,7 +1,7 @@
 import GameLayer from "./app/layer/GameLayer";
 import { Platform, isWX, GetPlatform } from "./app/platform/Platform";
 import { ePlatform } from "./app/platform/PlatfromType";
-import LoginDlg from './app/ui/Loader/LoginDlg';
+import LoginDlg from './app/gen/ui/Loader/LoginDlg';
 const { ccclass, property } = cc._decorator;
 
 @ccclass
@@ -26,12 +26,18 @@ export default class Main extends cc.Component {
         //这里填写的是相对于resources里的路径
 
         let res = [
-            { url: "ui/Loader", type: airkit.FguiAsset }, //描述文件
-            { url: "ui/Loader_atlas0", type: cc.BufferAsset }, //纹理集
-            { url: "ui/Home", type: airkit.FguiAsset }, //描述文件
-            { url: "ui/Home_atlas0", type: cc.BufferAsset }, //纹理集
+            // { url: "ui/Loader", type: airkit.FguiAsset }, //描述文件
+            // { url: "ui/Loader_atlas0", type: cc.BufferAsset }, //纹理集
+            // { url: "ui/Home", type: airkit.FguiAsset }, //描述文件
+            // { url: "ui/Home_atlas0", type: cc.BufferAsset }, //纹理集
         ];
-
+        let resMap = LoginDlg.ResMap;
+        for (let k in resMap) {
+            res.push({ url: "ui/" + k, type: airkit.FguiAsset });
+            for (let k2 in resMap[k]) {
+                res.push({ url: "ui/" + k2, type: cc.BufferAsset });
+            }
+        }
         airkit.ResourceManager.Instance.loadArrayRes(res).then((v) => {
             //     //都加载完毕后再调用addPackage
             console.log(v);

@@ -1,0 +1,13 @@
+namespace app.{moduleName} {
+    export class {className} extends {parentName} {#hasEvents}implements I{parentName}{/hasEvents} {
+        protected _modelEvents: any[] = [];
+
+        onCreate() {
+            super.onCreate();
+        }
+
+        {#hasEvents}
+        {eventStr}
+        {/hasEvents}
+    }
+}

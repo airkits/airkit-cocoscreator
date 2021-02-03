@@ -1,0 +1,13 @@
+{?isNtf}
+        {functionName}(data: pb.{protoName}{protoTag}) {
+
+        }{:else}
+        {functionName}({#params}{paramName}: {paramType}{@sep}, {/sep}{/params}) {
+            let param = new pb.{protoName}Req();
+            {#params}param.{paramName} = {paramName};
+            {/params}{?hasAck}
+            return net.sendAndWait(param, pb.{protoName}Ack).then(data => {
+
+            }){:else}
+            return net.send(param);{/hasAck}
+        }{/isNtf}

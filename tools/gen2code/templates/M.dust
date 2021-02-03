@@ -1,0 +1,10 @@
+namespace app {
+    export class {className} {
+        constructor() {
+
+        }
+        {#protoItems}{>func /}{/protoItems}
+    }
+}
+
+
