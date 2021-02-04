@@ -20,6 +20,8 @@
         "dust": "^0.3.0",
         "dustjs-helpers": "^1.7.4",
         "dustjs-linkedin": "^2.7.5",
+        "fs": "0.0.1-security",
+        "fs-extra": "^9.1.0",
         "gulp": "^4.0.2",
         "gulp-babel": "^8.0.0",
         "gulp-inject-string": "^1.1.2",

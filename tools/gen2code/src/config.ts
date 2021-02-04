@@ -17,5 +17,5 @@ export function appDir():string {
     return path.join(workspace(), APP_DIR);
 }
 export function genDir():string {
-    return path.join(workspace(), APP_DIR);
+    return path.join(workspace(), GEN_CODE_DIR);
 }

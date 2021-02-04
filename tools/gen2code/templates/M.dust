@@ -1,10 +1,37 @@
-namespace app {
-    export class {className} {
-        constructor() {
 
+
+{#moduleItems}
+{>MImport /}{/moduleItems}
+
+export default class M {
+    //模块定义
+    {#moduleItems}
+    public static {C} : string = "{M}Module";{/moduleItems}
+
+    public static register(): void {
+        let m: Array<[string, any]> = [
+            {#moduleItems}
+            [M.{C} , {M}Module],{/moduleItems}
+        ]
+        for (let i = 0; i < m.length; i++) {
+            airkit.Mediator.register(m[i][0], m[i][1]);
         }
-        {#protoItems}{>func /}{/protoItems}
     }
+  
+    public static preloadModule() {
+        let list = [
+        ]
+        for (let i = 0; i < list.length; i++) {
+            airkit.Mediator.call(list[i])
+        }
+    }
+    constructor() {
+
+    }
+    {#moduleItems}
+    {>MFunc /}{/moduleItems}
 }
+
+
 
 

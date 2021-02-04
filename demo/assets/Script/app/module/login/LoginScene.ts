@@ -1,9 +1,5 @@
 
-import { GetPlatform } from "../../../platform/Platform";
-import { API } from "../../manager/API";
-import M from "../M";
-import { helper } from "../../helper/Helper";
-import { eLoaderType } from "../system/loader/LoaderType";
+
 
 
 
@@ -24,46 +20,9 @@ export default class LoginScene extends airkit.BaseView {
     onEnter(): void {
         airkit.Log.info("login scene onEnter")
         this.createPanel(this.pkgName, this.resName)
-        this.createLoginBtn()
         this.resize()
 
     }
-
-
-
-
-    public createLoginBtn() {
-        let that = this
-        GetPlatform().createAuthButton(user => {
-            airkit.Log.info(user)
-
-            M.battle().then(m => {
-                m.enterScene()
-            }).catch(e => {
-                airkit.Log.error(e)
-            })
-            // API.Instance.initUser(user).then(v => {
-
-            //     M.tower().then(m => {
-            //         m.enterScene()
-            //     }).catch(e => {
-            //         airkit.Log.error(e)
-            //     })
-
-
-            // }).catch(e => {
-            //     helper.toast(e)
-            //     that.createLoginBtn()
-            // })
-        }, v => {
-            airkit.Log.info(v)
-            helper.toast(v["data"]["msg"])
-            that.createLoginBtn()
-
-        })
-    }
-
-
 
     public res(): Array<[string, string]> {
         let list = [
@@ -87,9 +46,10 @@ export default class LoginScene extends airkit.BaseView {
 
         return list
     }
-    public loaderType(): number {
-        return eLoaderType.FULLSCREEN
-    }
+    //public loaderType(): number {
+        
+       // return eLoaderType.FULLSCREEN
+    // }
     public loaderTips(): string {
         return "动画资源加载"
     }

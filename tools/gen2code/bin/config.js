@@ -19,6 +19,6 @@ function appDir() {
 }
 exports.appDir = appDir;
 function genDir() {
-    return path.join(workspace(), exports.APP_DIR);
+    return path.join(workspace(), exports.GEN_CODE_DIR);
 }
 exports.genDir = genDir;

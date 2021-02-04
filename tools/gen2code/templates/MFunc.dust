@@ -1,0 +1,3 @@
+public static {m}(): Promise<{M}Module> {
+        return airkit.Mediator.call(M.{C})
+    }

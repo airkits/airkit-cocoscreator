@@ -1,9 +1,4 @@
 
-import { eLoaderType } from "../system/loader/LoaderType";
-import { SceneID } from "../../config/UIID";
-import { API } from "../../manager/API";
-import { GetPlatform } from "../../../platform/Platform";
-import { helper } from "../../helper/Helper";
 
 export default class HomeModule extends airkit.BaseModule {
 
@@ -17,13 +12,11 @@ export default class HomeModule extends airkit.BaseModule {
 
     public start(): void {
         super.start()
-        airkit.Log.info("Module Game start")
+        airkit.Log.info("Module login start")
     }
 
     public enterScene(): void {
-
-        airkit.SceneManager.Instance.gotoScene(SceneID.HOME_SCENE)
-
+       // airkit.SceneManager.Instance.gotoScene(SceneID.LOGIN_SCENE)
     }
 
 
@@ -40,13 +33,13 @@ export default class HomeModule extends airkit.BaseModule {
     }
 
     public loaderTips(): string {
-        return "资源加载中"
+        return "美术资源加载中"
     }
 
     /**是否显示加载界面*/
-    public loaderType(): number {
-        return eLoaderType.FULLSCREEN
-    }
+    // public loaderType(): number {
+    //     return eLoaderType.FULLSCREEN
+    // }
 
     protected signalMap() {
         return null
