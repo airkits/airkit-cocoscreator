@@ -19,7 +19,6 @@ declare namespace airkit {
     class Framework extends Singleton {
         private _isStopGame;
         private _mainloopHandle;
-        private _lastTimeMS;
         private static instance;
         static get Instance(): Framework;
         constructor();
@@ -33,9 +32,9 @@ declare namespace airkit {
          * 游戏主循环
          */
         update(dt: number): void;
-        preTick(dt: number): void;
+        private preTick;
         tick(dt: number): void;
-        endTick(dt: number): void;
+        private endTick;
         /**暂停游戏*/
         pauseGame(): void;
         /**结束暂停*/
@@ -1473,10 +1472,7 @@ declare namespace airkit {
  */
 declare namespace airkit {
     class Timer {
-        static Start(): void;
         static get deltaTimeMS(): number;
-        /**固定两帧之间的时间间隔*/
-        static get fixedDeltaTime(): number;
         /**游戏启动后，经过的帧数*/
         static get frameCount(): number;
         static get timeScale(): number;

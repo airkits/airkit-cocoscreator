@@ -1,7 +1,7 @@
 import GameLayer from "./app/layer/GameLayer";
 import { Platform, isWX, GetPlatform } from "./app/platform/Platform";
 import { ePlatform } from "./app/platform/PlatfromType";
-import LoginDlg from './app/gen/ui/Loader/LoginDlg';
+import LoginScene from './app/gen/ui/Loader/LoginScene';
 const { ccclass, property } = cc._decorator;
 
 @ccclass
@@ -24,6 +24,8 @@ export default class Main extends cc.Component {
         //     }
         // );
         //这里填写的是相对于resources里的路径
+        airkit.TimerManager.Instance.addOnce(1000,this,()=>{ console.log("timer fire")});
+        airkit.TimerManager.Instance.addLoop(1000,20,this,()=>{ console.log("timer loop fire")});
 
         let res = [
             // { url: "ui/Loader", type: airkit.FguiAsset }, //描述文件
@@ -31,7 +33,7 @@ export default class Main extends cc.Component {
             // { url: "ui/Home", type: airkit.FguiAsset }, //描述文件
             // { url: "ui/Home_atlas0", type: cc.BufferAsset }, //纹理集
         ];
-        let resMap = LoginDlg.ResMap;
+        let resMap = LoginScene.ResMap;
         for (let k in resMap) {
             res.push({ url: "ui/" + k, type: airkit.FguiAsset });
             for (let k2 in resMap[k]) {
@@ -41,7 +43,7 @@ export default class Main extends cc.Component {
         airkit.ResourceManager.Instance.loadArrayRes(res).then((v) => {
             //     //都加载完毕后再调用addPackage
             console.log(v);
-            let view: fgui.GComponent = LoginDlg.createInstance(); //fgui.UIPackage.createObject("Loader", "LoginDlg").asCom;
+            let view: fgui.GComponent = LoginScene.createInstance(); //fgui.UIPackage.createObject("Loader", "LoginDlg").asCom;
 
             fgui.GRoot.inst.addChild(view);
             view.makeFullScreen();
@@ -61,7 +63,7 @@ export default class Main extends cc.Component {
             );
         }
     }
-
+  
     // onDemoStart(demo) {
     //     this._currentDemo = demo;
     //     this._closeButton = fgui.UIPackage.createObject(

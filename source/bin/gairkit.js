@@ -68,7 +68,6 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             var _this = _super.call(this) || this;
             _this._isStopGame = false;
             _this._mainloopHandle = null;
-            airkit.Timer.Start();
             return _this;
         }
         Object.defineProperty(Framework, "Instance", {
@@ -91,36 +90,35 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (screen_mode === void 0) { screen_mode = ""; }
             if (frame === void 0) { frame = 1; }
             this.printDeviceInfo();
-            this._lastTimeMS = airkit.DateUtils.getNowMS();
             this._isStopGame = false;
             cc.view.setResizeCallback(function () {
                 airkit.EventCenter.dispatchEvent(airkit.EventID.RESIZE);
             });
             airkit.Log.LEVEL = log_level;
-            cc.director.getScheduler().scheduleUpdate(this, 0, false);
             // Laya.stage.addChild(fgui.GRoot.inst.node);
-            airkit.LayerManager.setup(root);
+            // LayerManager.setup(root);
             airkit.TimerManager.Instance.setup();
-            airkit.UIManager.Instance.setup();
+            // UIManager.Instance.setup();
             airkit.ResourceManager.Instance.setup();
-            airkit.DataProvider.Instance.setup();
-            airkit.LangManager.Instance.init();
-            airkit.SceneManager.Instance.setup();
-            airkit.Mediator.Instance.setup();
-            airkit.LoaderManager.Instance.setup();
+            // DataProvider.Instance.setup();
+            // LangManager.Instance.init();
+            // SceneManager.Instance.setup();
+            // Mediator.Instance.setup();
+            // LoaderManager.Instance.setup();
+            cc.director.getScheduler().scheduleUpdate(this, 0, false);
         };
         Framework.prototype.destroy = function () {
             //  Laya.timer.clearAll(this);
             _super.prototype.destroy.call(this);
-            airkit.Mediator.Instance.destroy();
-            airkit.LoaderManager.Instance.destroy();
+            // Mediator.Instance.destroy();
+            // LoaderManager.Instance.destroy();
             airkit.TimerManager.Instance.destroy();
-            airkit.UIManager.Instance.destroy();
-            airkit.SceneManager.Instance.destroy();
+            // UIManager.Instance.destroy();
+            // SceneManager.Instance.destroy();
             airkit.ResourceManager.Instance.destroy();
-            airkit.DataProvider.Instance.destroy();
-            airkit.LayerManager.destroy();
-            airkit.LangManager.Instance.destory();
+            // DataProvider.Instance.destroy();
+            // LayerManager.destroy();
+            // LangManager.Instance.destory();
             return true;
         };
         /**
@@ -128,20 +126,18 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         Framework.prototype.update = function (dt) {
             if (!this._isStopGame) {
-                var currentMS = airkit.DateUtils.getNowMS();
-                var dt_1 = currentMS - this._lastTimeMS;
-                this._lastTimeMS = currentMS;
-                this.preTick(dt_1);
-                this.tick(dt_1);
-                this.endTick(dt_1);
+                var dtMs = dt * 1000;
+                this.preTick(dtMs);
+                this.tick(dtMs);
+                this.endTick(dtMs);
             }
         };
         Framework.prototype.preTick = function (dt) {
             airkit.TimerManager.Instance.update(dt);
-            airkit.UIManager.Instance.update(dt);
+            // UIManager.Instance.update(dt);
             airkit.ResourceManager.Instance.update(dt);
-            airkit.Mediator.Instance.update(dt);
-            airkit.SceneManager.Instance.update(dt);
+            // Mediator.Instance.update(dt);
+            // SceneManager.Instance.update(dt);
         };
         Framework.prototype.tick = function (dt) {
             if (this._mainloopHandle) {
@@ -5594,19 +5590,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     var Timer = /** @class */ (function () {
         function Timer() {
         }
-        Timer.Start = function () { };
         Object.defineProperty(Timer, "deltaTimeMS", {
             //两帧之间的时间间隔,单位毫秒
             get: function () {
                 return cc.director.getDeltaTime();
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Timer, "fixedDeltaTime", {
-            /**固定两帧之间的时间间隔*/
-            get: function () {
-                return 0;
             },
             enumerable: false,
             configurable: true

@@ -10,7 +10,6 @@ namespace airkit {
   export class Framework extends Singleton {
     private _isStopGame: boolean = false;
     private _mainloopHandle: Handler = null;
-    private _lastTimeMS: number;
 
     private static instance: Framework = null;
     public static get Instance(): Framework {
@@ -20,7 +19,6 @@ namespace airkit {
 
     constructor() {
       super();
-      Timer.Start();
     }
     /**
      * 初始化
@@ -35,70 +33,68 @@ namespace airkit {
       frame: number = 1
     ): void {
       this.printDeviceInfo();
-      this._lastTimeMS = DateUtils.getNowMS();
       this._isStopGame = false;
 
       cc.view.setResizeCallback(() => {
         EventCenter.dispatchEvent(EventID.RESIZE);
       });
       Log.LEVEL = log_level;
-      cc.director.getScheduler().scheduleUpdate(this, 0, false);
 
       // Laya.stage.addChild(fgui.GRoot.inst.node);
-      LayerManager.setup(root);
-      TimerManager.Instance.setup();
-      UIManager.Instance.setup();
+      // LayerManager.setup(root);
+       TimerManager.Instance.setup();
+      // UIManager.Instance.setup();
 
-      ResourceManager.Instance.setup();
-      DataProvider.Instance.setup();
-      LangManager.Instance.init();
+       ResourceManager.Instance.setup();
+      // DataProvider.Instance.setup();
+      // LangManager.Instance.init();
 
-      SceneManager.Instance.setup();
-      Mediator.Instance.setup();
-      LoaderManager.Instance.setup();
+      // SceneManager.Instance.setup();
+      // Mediator.Instance.setup();
+      // LoaderManager.Instance.setup();
+      cc.director.getScheduler().scheduleUpdate(this, 0, false);
+
     }
 
     public destroy(): boolean {
       //  Laya.timer.clearAll(this);
       super.destroy();
-      Mediator.Instance.destroy();
-      LoaderManager.Instance.destroy();
+      // Mediator.Instance.destroy();
+      // LoaderManager.Instance.destroy();
 
-      TimerManager.Instance.destroy();
-      UIManager.Instance.destroy();
-      SceneManager.Instance.destroy();
-      ResourceManager.Instance.destroy();
-      DataProvider.Instance.destroy();
-      LayerManager.destroy();
-      LangManager.Instance.destory();
+       TimerManager.Instance.destroy();
+      // UIManager.Instance.destroy();
+      // SceneManager.Instance.destroy();
+       ResourceManager.Instance.destroy();
+      // DataProvider.Instance.destroy();
+      // LayerManager.destroy();
+      // LangManager.Instance.destory();
       return true;
     }
     /**
      * 游戏主循环
      */
-    public update(dt: number): void {
+    public update(dt: number): void { //dt是秒，强制转换成毫秒
       if (!this._isStopGame) {
-        let currentMS = DateUtils.getNowMS();
-        let dt = currentMS - this._lastTimeMS;
-        this._lastTimeMS = currentMS;
-        this.preTick(dt);
-        this.tick(dt);
-        this.endTick(dt);
+        let dtMs = dt * 1000;
+        this.preTick(dtMs);
+        this.tick(dtMs);
+        this.endTick(dtMs);
       }
     }
-    public preTick(dt: number): void {
-      TimerManager.Instance.update(dt);
-      UIManager.Instance.update(dt);
-      ResourceManager.Instance.update(dt);
-      Mediator.Instance.update(dt);
-      SceneManager.Instance.update(dt);
+    private preTick(dt: number): void {
+       TimerManager.Instance.update(dt);
+      // UIManager.Instance.update(dt);
+       ResourceManager.Instance.update(dt);
+      // Mediator.Instance.update(dt);
+      // SceneManager.Instance.update(dt);
     }
     public tick(dt: number): void {
       if (this._mainloopHandle) {
         this._mainloopHandle.runWith([dt]);
       }
     }
-    public endTick(dt: number): void {}
+    private endTick(dt: number): void {}
 
     /**暂停游戏*/
     public pauseGame(): void {
