@@ -11,6 +11,7 @@ namespace airkit {
 
     export class FguiAsset extends cc.BufferAsset { }
 
+    
     export class ResourceManager extends Singleton {
         public static FONT_Yuanti = "Yuanti SC Regular";
         public static Font_Helvetica = "Helvetica";
@@ -45,7 +46,6 @@ namespace airkit {
          */
 
         public destroy(): boolean {
-            super.destroy();
             if (this._dicResInfo) {
                 this._dicResInfo.foreach((k, v) => {
                     ResourceManager.Instance.clearRes(k);

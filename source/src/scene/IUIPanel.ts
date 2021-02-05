@@ -17,7 +17,5 @@ namespace airkit {
 
     loadResource(group: string, clas: any): Promise<any>;
     removeFromParent(): void;
-    panel(): fgui.GComponent;
-    bg(): fgui.GComponent;
   }
 }

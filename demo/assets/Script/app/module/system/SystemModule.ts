@@ -10,9 +10,9 @@ export default class SystemModule extends airkit.BaseModule {
         super.setup(args)
     }
 
-    public start(): void {
-        super.start()
-        airkit.Log.info("Module system start")
+    public enter(): void {
+        super.enter()
+        airkit.Log.info("Module login enter")
     }
 
 
@@ -22,7 +22,7 @@ export default class SystemModule extends airkit.BaseModule {
     }
 
 
-    public res(): Array<[string, string]> {
+    public res(): Array<{ url: string; type: typeof cc.Asset }> {
         let assets = [
 
         ]

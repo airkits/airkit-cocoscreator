@@ -44,7 +44,7 @@ namespace airkit {
                     this.loadResource(m, clas)
                         .then((v) => {
                             var onInitModuleOver: Function = () => {
-                                m.start();
+                                m.enter();
                                 if (funcName == null) {
                                     resolve(m);
                                 } else {
@@ -124,6 +124,7 @@ namespace airkit {
         public clear(): void {
             if (Mediator.modules) {
                 Mediator.modules.foreach((k, v) => {
+                    v.exit();
                     v.dispose();
                     return true;
                 });

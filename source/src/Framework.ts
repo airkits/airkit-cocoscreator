@@ -6,14 +6,15 @@ namespace airkit {
    * @author ankye
    * @time 2018-7-6
    */
-
-  export class Framework extends Singleton {
+  export class Framework extends Singleton{
     private _isStopGame: boolean = false;
     private _mainloopHandle: Handler = null;
 
     private static instance: Framework = null;
     public static get Instance(): Framework {
-      if (!this.instance) this.instance = new Framework();
+      if (!this.instance){
+        this.instance = new Framework();
+      } 
       return this.instance;
     }
 
@@ -39,35 +40,34 @@ namespace airkit {
         EventCenter.dispatchEvent(EventID.RESIZE);
       });
       Log.LEVEL = log_level;
-
-      // Laya.stage.addChild(fgui.GRoot.inst.node);
-      // LayerManager.setup(root);
-       TimerManager.Instance.setup();
+      LayerManager.setup(root);
+      Mediator.Instance.setup();
+      TimerManager.Instance.setup();
       // UIManager.Instance.setup();
-
+      
        ResourceManager.Instance.setup();
       // DataProvider.Instance.setup();
       // LangManager.Instance.init();
 
       // SceneManager.Instance.setup();
-      // Mediator.Instance.setup();
+      // 
       // LoaderManager.Instance.setup();
-      cc.director.getScheduler().scheduleUpdate(this, 0, false);
+     // cc.director.getScheduler().scheduleUpdate(this, 0, false);
 
     }
 
     public destroy(): boolean {
       //  Laya.timer.clearAll(this);
-      super.destroy();
-      // Mediator.Instance.destroy();
+      //
       // LoaderManager.Instance.destroy();
-
+      ResourceManager.Instance.destroy();
        TimerManager.Instance.destroy();
+       Mediator.Instance.destroy();
       // UIManager.Instance.destroy();
       // SceneManager.Instance.destroy();
-       ResourceManager.Instance.destroy();
+       
       // DataProvider.Instance.destroy();
-      // LayerManager.destroy();
+      LayerManager.destroy();
       // LangManager.Instance.destory();
       return true;
     }
@@ -75,6 +75,7 @@ namespace airkit {
      * 游戏主循环
      */
     public update(dt: number): void { //dt是秒，强制转换成毫秒
+     
       if (!this._isStopGame) {
         let dtMs = dt * 1000;
         this.preTick(dtMs);
@@ -82,11 +83,11 @@ namespace airkit {
         this.endTick(dtMs);
       }
     }
-    private preTick(dt: number): void {
+    public preTick(dt: number): void {
        TimerManager.Instance.update(dt);
       // UIManager.Instance.update(dt);
        ResourceManager.Instance.update(dt);
-      // Mediator.Instance.update(dt);
+       Mediator.Instance.update(dt);
       // SceneManager.Instance.update(dt);
     }
     public tick(dt: number): void {
@@ -94,7 +95,8 @@ namespace airkit {
         this._mainloopHandle.runWith([dt]);
       }
     }
-    private endTick(dt: number): void {}
+
+    public endTick(dt: number): void {}
 
     /**暂停游戏*/
     public pauseGame(): void {

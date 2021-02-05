@@ -1,35 +1,35 @@
 /** This is an automatically generated class by FairyGUI. Please do not modify it. **/
 
-import Alert from "./Alert";
-import Toast from "./Toast";
-import MaskBg from "./MaskBg";
-import FullScreenLoading from "./FullScreenLoading";
-import Loading from "./Loading";
-import AlertDlg from "./AlertDlg";
-import Panel from "./Panel";
-import Popup from "./Popup";
-import bg from "./bg";
-import FullScreenLoadingDlg from "./FullScreenLoadingDlg";
-import LoadingDlg from "./LoadingDlg";
-import LoginScene from "./LoginScene";
-import ToastView from "./ToastView";
-import WindowLoadingDlg from "./WindowLoadingDlg";
+import UIAlert from "./UIAlert";
+import UIToast from "./UIToast";
+import UIMaskBg from "./UIMaskBg";
+import UIFullScreenLoading from "./UIFullScreenLoading";
+import UILoading from "./UILoading";
+import UIAlertDlg from "./UIAlertDlg";
+import UIPanel from "./UIPanel";
+import UIPopup from "./UIPopup";
+import UIbg from "./UIbg";
+import UIFullScreenLoadingDlg from "./UIFullScreenLoadingDlg";
+import UILoadingDlg from "./UILoadingDlg";
+import UILoginScene from "./UILoginScene";
+import UIToastView from "./UIToastView";
+import UIWindowLoadingDlg from "./UIWindowLoadingDlg";
 
 export default class LoaderBinder {
 	public static bindAll():void {
-		fgui.UIObjectFactory.setExtension(Alert.URL, Alert);
-		fgui.UIObjectFactory.setExtension(Toast.URL, Toast);
-		fgui.UIObjectFactory.setExtension(MaskBg.URL, MaskBg);
-		fgui.UIObjectFactory.setExtension(FullScreenLoading.URL, FullScreenLoading);
-		fgui.UIObjectFactory.setExtension(Loading.URL, Loading);
-		fgui.UIObjectFactory.setExtension(AlertDlg.URL, AlertDlg);
-		fgui.UIObjectFactory.setExtension(Panel.URL, Panel);
-		fgui.UIObjectFactory.setExtension(Popup.URL, Popup);
-		fgui.UIObjectFactory.setExtension(bg.URL, bg);
-		fgui.UIObjectFactory.setExtension(FullScreenLoadingDlg.URL, FullScreenLoadingDlg);
-		fgui.UIObjectFactory.setExtension(LoadingDlg.URL, LoadingDlg);
-		fgui.UIObjectFactory.setExtension(LoginScene.URL, LoginScene);
-		fgui.UIObjectFactory.setExtension(ToastView.URL, ToastView);
-		fgui.UIObjectFactory.setExtension(WindowLoadingDlg.URL, WindowLoadingDlg);
+		fgui.UIObjectFactory.setExtension(UIAlert.URL, UIAlert);
+		fgui.UIObjectFactory.setExtension(UIToast.URL, UIToast);
+		fgui.UIObjectFactory.setExtension(UIMaskBg.URL, UIMaskBg);
+		fgui.UIObjectFactory.setExtension(UIFullScreenLoading.URL, UIFullScreenLoading);
+		fgui.UIObjectFactory.setExtension(UILoading.URL, UILoading);
+		fgui.UIObjectFactory.setExtension(UIAlertDlg.URL, UIAlertDlg);
+		fgui.UIObjectFactory.setExtension(UIPanel.URL, UIPanel);
+		fgui.UIObjectFactory.setExtension(UIPopup.URL, UIPopup);
+		fgui.UIObjectFactory.setExtension(UIbg.URL, UIbg);
+		fgui.UIObjectFactory.setExtension(UIFullScreenLoadingDlg.URL, UIFullScreenLoadingDlg);
+		fgui.UIObjectFactory.setExtension(UILoadingDlg.URL, UILoadingDlg);
+		fgui.UIObjectFactory.setExtension(UILoginScene.URL, UILoginScene);
+		fgui.UIObjectFactory.setExtension(UIToastView.URL, UIToastView);
+		fgui.UIObjectFactory.setExtension(UIWindowLoadingDlg.URL, UIWindowLoadingDlg);
 	}
 }

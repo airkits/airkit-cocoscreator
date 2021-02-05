@@ -5,7 +5,7 @@
  * @author ankye
  * @time 2017-7-14
  */
-export default class LoginScene extends airkit.BaseView {
+export default class BattleScene extends airkit.BaseView {
 
     public pkgName: string = "Loader"
     public resName: string = "Login"
@@ -16,12 +16,12 @@ export default class LoginScene extends airkit.BaseView {
 
     onEnter(): void {
         airkit.Log.info("login scene onEnter")
-        this.createPanel(this.pkgName, this.resName)
+       // this.createPanel(this.pkgName, this.resName)
         this.resize()
 
     }
 
-    public res(): Array<[string, string]> {
+    public res(): Array<{ url: string; type: typeof cc.Asset }> {
         let list = [
             // [ResourceConfig.APP_BG, Laya.Loader.IMAGE]
             // ["res/bg/gamebg.jpg", Laya.Loader.IMAGE],

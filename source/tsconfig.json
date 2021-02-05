@@ -1,13 +1,14 @@
 {
     "compilerOptions": {
         "module": "amd",
-        "lib": ["dom", "es5", "es2015.promise", "ES2015.Core"],
-        "target": "es5",
+        "lib": ["dom", "es6"],
+        "target": "es6",
         "skipLibCheck": true,
         "outFile": "./gairkit.js",
         "declaration": true,
         "sourceMap": true,
-        "removeComments": false
+        "removeComments": false,
+        "experimentalDecorators": true
     },
     "include": ["src", "lib"],
     "exclude": ["node_modules"]

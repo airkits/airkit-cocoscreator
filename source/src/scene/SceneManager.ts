@@ -16,19 +16,17 @@ namespace airkit {
      * @time 2017-7-13
      */
     export class SceneManager {
-        public static scenes: NDictionary<string> = new NDictionary<string>();
+      //  public static scenes: NDictionary<string> = new NDictionary<string>();
         /**
          * 注册场景类，存放场景id和name的对应关系
-         * @param scene_type
          * @param name
          * @param cls
          */
-        public static registerScene(
-            scene_type: number,
+        public static register(
             name: string,
             cls: any
         ): any {
-            SceneManager.scenes.add(scene_type, name);
+          //  SceneManager.scenes.add(scene_type, name);
             ClassUtils.regClass(name, cls);
         }
 
@@ -93,14 +91,14 @@ namespace airkit {
             this._curScene = v;
         }
         /**进入场景*/
-        public gotoScene(scene_type: number, args?: any): void {
+        public gotoScene(sceneName: string, args?: any): void {
             this.exitScene();
-            let sceneName = SceneManager.scenes.getValue(scene_type);
+          //  let sceneName = SceneManager.scenes.getValue(scene_type);
             //切换
             let clas = ClassUtils.getClass(sceneName);
 
             let scene = new clas();
-            scene["__scene_type__"] = scene_type;
+            scene["__scene_type__"] = sceneName;
             scene.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
             scene.setup(args);
             scene
@@ -118,9 +116,9 @@ namespace airkit {
         private exitScene(): void {
             if (this._curScene) {
                 //切换
-                let sceneName = SceneManager.scenes.getValue(
+                let sceneName = //SceneManager.scenes.getValue(
                     this._curScene["__scene_type__"]
-                );
+               // );
                 let clas = ClassUtils.getClass(sceneName);
                 clas.unres();
                 this._curScene.removeFromParent();

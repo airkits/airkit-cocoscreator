@@ -191,7 +191,7 @@ namespace airkit {
             toProps = null,
             usePool: boolean = true
         ): Promise<any> {
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                 //  target.addChild(view)
                 toastLayer.addChild(view);
                 view.setScale(0.1, 0.1);
@@ -251,7 +251,7 @@ namespace airkit {
             x: number = null,
             y: number = null
         ): Promise<any> {
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                 let key = "_single_toast";
                 if (target[key] == null) {
                     target[key] = [];
@@ -332,7 +332,7 @@ namespace airkit {
             x: number = null,
             y: number = null
         ): Promise<any> {
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                 if (target["_toastList"] == null) {
                     target["_toastList"] = [];
                 }
@@ -416,7 +416,6 @@ namespace airkit {
         public setup(): void {}
 
         public destroy(): boolean {
-            super.destroy();
             this.closeAll();
             this.clearUIConfig();
             return true;

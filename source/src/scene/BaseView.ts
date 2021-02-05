@@ -32,20 +32,7 @@ namespace airkit {
             this._viewID = BaseView.__ViewIDSeq++;
         }
 
-        public createPanel(pkgName: string, resName: string): void {
-            let v = fgui.UIPackage.createObjectFromURL(
-                "ui://" + pkgName + "/" + resName
-            );
-            if (v == null) return;
-            this._view = v.asCom; // fgui.UIPackage.createObject(pkgName, resName).asCom
-            this._view.setSize(this.width, this.height);
-            this._view.addRelation(this, fgui.RelationType.Width);
-            this._view.addRelation(this, fgui.RelationType.Height);
-
-            this.addChild(this._view);
-
-            //fgui.GRoot.inst.addChild(this._view)
-        }
+ 
 
         public debug(): void {
             let bgColor: string = "#4aa7a688";
@@ -84,17 +71,8 @@ namespace airkit {
         public isDestory(): boolean {
             return this._destory;
         }
-        public panel(): fgui.GComponent {
-            let panel = this.getGObject("panel");
-            if (panel != null) return panel.asCom;
-            return null;
-        }
-        public bg(): fgui.GComponent {
-            let view = this.getGObject("bg");
-            if (view != null) return view.asCom;
-            return null;
-        }
-
+      
+       
         /**是否可见*/
         public setVisible(bVisible: boolean): void {
             let old: boolean = this.visible;
@@ -124,9 +102,7 @@ namespace airkit {
         public update(dt: number): boolean {
             return true;
         }
-        public getGObject(name: string): fgui.GObject {
-            return this._view.getChild(name);
-        }
+       
         /**资源加载结束*/
         public onEnter(): void {}
 
@@ -141,7 +117,7 @@ namespace airkit {
             ["res/image/3.png", Laya.Loader.IMAGE],
         ]
     */
-        public static res(): Array<[string, cc.Asset]> {
+        public static res():  Array<{ url: string; type: typeof cc.Asset }> {
             return null;
         }
 
@@ -149,7 +125,7 @@ namespace airkit {
             let arr = this.res();
             if (arr && arr.length > 0) {
                 for (let i = 0; i < arr.length; i++) {
-                    ResourceManager.Instance.clearRes(arr[i][0]);
+                    ResourceManager.Instance.clearRes(arr[i].url);
                 }
             }
         }
@@ -204,8 +180,8 @@ namespace airkit {
                 if (res_map && res_map.length > 0) {
                     for (let i = 0; i < res_map.length; ++i) {
                         let res = res_map[i];
-                        if (!ResourceManager.Instance.getRes(res[0])) {
-                            assets.push({ url: res[0], type: res[1] });
+                        if (!ResourceManager.Instance.getRes(res.url)) {
+                            assets.push({ url: res.url, type: res.type });
                         }
                     }
                 }

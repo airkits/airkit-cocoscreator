@@ -1,25 +1,5 @@
 window.airkit = {};
 window.ak = window.airkit;
-window.__extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __spreadArrays = (this && this.__spreadArrays) || function () {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-            r[k] = a[j];
-    return r;
-};
 //import { Log } from "../log/Log";
 
 (function (airkit) {
@@ -28,30 +8,26 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-6
      */
-    var Singleton = /** @class */ (function (_super) {
-        __extends(Singleton, _super);
-        function Singleton() {
-            var _this = _super.call(this) || this;
-            var clazz = _this["constructor"];
+    class Singleton {
+        constructor() {
+            let clazz = this["constructor"];
             //为空时，表示浏览器不支持这样读取构造函数
             if (!clazz) {
                 airkit.Log.warning("浏览器不支持读取构造函数");
-                return _this;
+                return;
             }
             // 防止重复实例化
             if (Singleton.classKeys.indexOf(clazz) != -1) {
-                throw new Error(_this + " 只允许实例化一次！");
+                throw new Error(this + " 只允许实例化一次！");
             }
             else {
                 Singleton.classKeys.push(clazz);
-                Singleton.classValues.push(_this);
+                Singleton.classValues.push(this);
             }
-            return _this;
         }
-        Singleton.classKeys = [];
-        Singleton.classValues = [];
-        return Singleton;
-    }(cc.Node));
+    }
+    Singleton.classKeys = [];
+    Singleton.classValues = [];
     airkit.Singleton = Singleton;
 })(airkit || (airkit = {}));
 /// <reference path="collection/Singleton.ts" />
@@ -62,124 +38,110 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-6
      */
-    var Framework = /** @class */ (function (_super) {
-        __extends(Framework, _super);
-        function Framework() {
-            var _this = _super.call(this) || this;
-            _this._isStopGame = false;
-            _this._mainloopHandle = null;
-            return _this;
+    class Framework extends airkit.Singleton {
+        constructor() {
+            super();
+            this._isStopGame = false;
+            this._mainloopHandle = null;
         }
-        Object.defineProperty(Framework, "Instance", {
-            get: function () {
-                if (!this.instance)
-                    this.instance = new Framework();
-                return this.instance;
-            },
-            enumerable: false,
-            configurable: true
-        });
+        static get Instance() {
+            if (!this.instance) {
+                this.instance = new Framework();
+            }
+            return this.instance;
+        }
         /**
          * 初始化
          * @param	root	根节点，可以是stage
          */
-        Framework.prototype.setup = function (root, log_level, design_width, design_height, screen_mode, frame) {
-            if (log_level === void 0) { log_level = airkit.LogLevel.INFO; }
-            if (design_width === void 0) { design_width = 750; }
-            if (design_height === void 0) { design_height = 1334; }
-            if (screen_mode === void 0) { screen_mode = ""; }
-            if (frame === void 0) { frame = 1; }
+        setup(root, log_level = airkit.LogLevel.INFO, design_width = 750, design_height = 1334, screen_mode = "", frame = 1) {
             this.printDeviceInfo();
             this._isStopGame = false;
-            cc.view.setResizeCallback(function () {
+            cc.view.setResizeCallback(() => {
                 airkit.EventCenter.dispatchEvent(airkit.EventID.RESIZE);
             });
             airkit.Log.LEVEL = log_level;
-            // Laya.stage.addChild(fgui.GRoot.inst.node);
-            // LayerManager.setup(root);
+            airkit.LayerManager.setup(root);
+            airkit.Mediator.Instance.setup();
             airkit.TimerManager.Instance.setup();
             // UIManager.Instance.setup();
             airkit.ResourceManager.Instance.setup();
             // DataProvider.Instance.setup();
             // LangManager.Instance.init();
             // SceneManager.Instance.setup();
-            // Mediator.Instance.setup();
+            // 
             // LoaderManager.Instance.setup();
-            cc.director.getScheduler().scheduleUpdate(this, 0, false);
-        };
-        Framework.prototype.destroy = function () {
+            // cc.director.getScheduler().scheduleUpdate(this, 0, false);
+        }
+        destroy() {
             //  Laya.timer.clearAll(this);
-            _super.prototype.destroy.call(this);
-            // Mediator.Instance.destroy();
+            //
             // LoaderManager.Instance.destroy();
+            airkit.ResourceManager.Instance.destroy();
             airkit.TimerManager.Instance.destroy();
+            airkit.Mediator.Instance.destroy();
             // UIManager.Instance.destroy();
             // SceneManager.Instance.destroy();
-            airkit.ResourceManager.Instance.destroy();
             // DataProvider.Instance.destroy();
-            // LayerManager.destroy();
+            airkit.LayerManager.destroy();
             // LangManager.Instance.destory();
             return true;
-        };
+        }
         /**
          * 游戏主循环
          */
-        Framework.prototype.update = function (dt) {
+        update(dt) {
             if (!this._isStopGame) {
-                var dtMs = dt * 1000;
+                let dtMs = dt * 1000;
                 this.preTick(dtMs);
                 this.tick(dtMs);
                 this.endTick(dtMs);
             }
-        };
-        Framework.prototype.preTick = function (dt) {
+        }
+        preTick(dt) {
             airkit.TimerManager.Instance.update(dt);
             // UIManager.Instance.update(dt);
             airkit.ResourceManager.Instance.update(dt);
-            // Mediator.Instance.update(dt);
+            airkit.Mediator.Instance.update(dt);
             // SceneManager.Instance.update(dt);
-        };
-        Framework.prototype.tick = function (dt) {
+        }
+        tick(dt) {
             if (this._mainloopHandle) {
                 this._mainloopHandle.runWith([dt]);
             }
-        };
-        Framework.prototype.endTick = function (dt) { };
+        }
+        endTick(dt) { }
         /**暂停游戏*/
-        Framework.prototype.pauseGame = function () {
+        pauseGame() {
             this._isStopGame = true;
             airkit.EventCenter.dispatchEvent(airkit.EventID.STOP_GAME, true);
-        };
+        }
         /**结束暂停*/
-        Framework.prototype.resumeGame = function () {
+        resumeGame() {
             this._isStopGame = false;
             airkit.EventCenter.dispatchEvent(airkit.EventID.STOP_GAME, false);
-        };
-        Object.defineProperty(Framework.prototype, "isStopGame", {
-            get: function () {
-                return this._isStopGame;
-            },
-            enumerable: false,
-            configurable: true
-        });
+        }
+        get isStopGame() {
+            return this._isStopGame;
+        }
         /**打印设备信息*/
-        Framework.prototype.printDeviceInfo = function () {
+        printDeviceInfo() {
             if (navigator) {
-                var agentStr = navigator.userAgent;
-                var start = agentStr.indexOf("(");
-                var end = agentStr.indexOf(")");
+                let agentStr = navigator.userAgent;
+                let start = agentStr.indexOf("(");
+                let end = agentStr.indexOf(")");
                 if (start < 0 || end < 0 || end < start) {
                     return;
                 }
-                var infoStr = agentStr.substring(start + 1, end);
+                let infoStr = agentStr.substring(start + 1, end);
                 airkit.Log.info(infoStr);
-                var device = void 0, system = void 0, version = void 0;
-                var infos = infoStr.split(";");
+                let device, system, version;
+                let infos = infoStr.split(";");
                 if (infos.length == 3) {
                     //如果是三个的话， 可能是android的， 那么第三个是设备号
                     device = infos[2];
                     //第二个是系统号和版本
-                    var system_info = infos[1].split(" ");
+                    let system_info = infos[1].split(" ");
                     if (system_info.length >= 2) {
                         system = system_info[1];
                         version = system_info[2];
@@ -197,10 +159,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
                 airkit.Log.info("{0},{1},{2}", system, device, version);
             }
-        };
-        Framework.instance = null;
-        return Framework;
-    }(airkit.Singleton));
+        }
+    }
+    Framework.instance = null;
     airkit.Framework = Framework;
 })(airkit || (airkit = {}));
 // // import { Singleton } from "../collection/Singleton";
@@ -441,153 +402,100 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-3
      */
-    var Color = /** @class */ (function () {
-        function Color(r, g, b, a) {
+    class Color {
+        constructor(r, g, b, a) {
             this.r = r;
             this.g = g;
             this.b = b;
             this.a = a;
         }
-        Color.prototype.set = function (new_r, new_g, new_b, new_a) {
+        set(new_r, new_g, new_b, new_a) {
             this.r = new_r;
             this.g = new_g;
             this.b = new_b;
             this.a = new_a;
-        };
-        Color.add = function (a, b) {
+        }
+        static add(a, b) {
             return new Color(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a);
-        };
-        Color.prototype.add = function (a) {
+        }
+        add(a) {
             this.set(this.r + a.r, this.g + a.g, this.b + a.b, this.a + a.a);
             return this;
-        };
-        Color.sub = function (a, b) {
+        }
+        static sub(a, b) {
             return new Color(a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a);
-        };
-        Color.prototype.sub = function (a) {
+        }
+        sub(a) {
             this.set(this.r - a.r, this.g - a.g, this.b - a.b, this.a - a.a);
             return this;
-        };
-        Color.mul = function (a, d) {
+        }
+        static mul(a, d) {
             return new Color(a.r * d, a.g * d, a.b * d, a.a * d);
-        };
-        Color.prototype.mul = function (d) {
+        }
+        mul(d) {
             this.set(this.r * d, this.g * d, this.b * d, this.a * d);
             return this;
-        };
-        Color.div = function (a, d) {
+        }
+        static div(a, d) {
             return new Color(a.r / d, a.g / d, a.b / d, a.a / d);
-        };
-        Color.prototype.div = function (d) {
+        }
+        div(d) {
             this.set(this.r / d, this.g / d, this.b / d, this.a / d);
             return this;
-        };
-        Color.prototype.equals = function (other) {
+        }
+        equals(other) {
             return (this.r == other.r &&
                 this.g == other.g &&
                 this.b == other.b &&
                 this.a == other.a);
-        };
-        Color.lerp = function (from, to, t) {
+        }
+        static lerp(from, to, t) {
             t = airkit.MathUtils.clamp(t, 0, 1);
             return new Color(from.r + (to.r - from.r) * t, from.g + (to.g - from.g) * t, from.b + (to.b - from.b) * t + (to.a - from.a) * t);
-        };
-        Object.defineProperty(Color, "zero", {
-            get: function () {
-                return new Color(0, 0, 0, 0);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Color, "one", {
-            get: function () {
-                return new Color(1, 1, 1, 1);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Color, "red", {
-            get: function () {
-                return new Color(1, 0, 0, 1);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Color, "green", {
-            get: function () {
-                return new Color(0, 1, 0, 1);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Color, "blue", {
-            get: function () {
-                return new Color(0, 0, 1, 1);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Color, "white", {
-            get: function () {
-                return new Color(1, 1, 1, 1);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Color, "black", {
-            get: function () {
-                return new Color(0, 0, 0, 1);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Color, "yellow", {
-            get: function () {
-                return new Color(1, 0.9215686, 0.01568628, 1);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Color, "cyan", {
-            get: function () {
-                return new Color(0, 1, 1, 1);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Color, "magenta", {
-            get: function () {
-                return new Color(1, 0, 1, 1);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Color, "gray", {
-            get: function () {
-                return new Color(0.5, 0.5, 0.5, 1);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Color, "grey", {
-            get: function () {
-                return new Color(0.5, 0.5, 0.5, 1);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Color, "clear", {
-            get: function () {
-                return new Color(0, 0, 0, 0);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Color.prototype.toString = function () {
+        }
+        static get zero() {
+            return new Color(0, 0, 0, 0);
+        }
+        static get one() {
+            return new Color(1, 1, 1, 1);
+        }
+        static get red() {
+            return new Color(1, 0, 0, 1);
+        }
+        static get green() {
+            return new Color(0, 1, 0, 1);
+        }
+        static get blue() {
+            return new Color(0, 0, 1, 1);
+        }
+        static get white() {
+            return new Color(1, 1, 1, 1);
+        }
+        static get black() {
+            return new Color(0, 0, 0, 1);
+        }
+        static get yellow() {
+            return new Color(1, 0.9215686, 0.01568628, 1);
+        }
+        static get cyan() {
+            return new Color(0, 1, 1, 1);
+        }
+        static get magenta() {
+            return new Color(1, 0, 1, 1);
+        }
+        static get gray() {
+            return new Color(0.5, 0.5, 0.5, 1);
+        }
+        static get grey() {
+            return new Color(0.5, 0.5, 0.5, 1);
+        }
+        static get clear() {
+            return new Color(0, 0, 0, 0);
+        }
+        toString() {
             return airkit.StringUtils.format("({0}, {1}, {2}, {3})", this.r, this.g, this.b, this.a);
-        };
-        return Color;
-    }());
+        }
+    }
     airkit.Color = Color;
 })(airkit || (airkit = {}));
 // import { Log } from "../log/Log";
@@ -601,136 +509,126 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-6
      */
-    var NDictionary = /** @class */ (function () {
-        function NDictionary() {
+    class NDictionary {
+        constructor() {
             this._dic = {};
         }
-        NDictionary.prototype.add = function (key, value) {
+        add(key, value) {
             if (this.containsKey(key)) {
                 airkit.Log.warning("NDictionary already containsKey ", key.toString());
                 return false;
             }
             this._dic[key] = value;
             return true;
-        };
-        NDictionary.prototype.remove = function (key) {
+        }
+        remove(key) {
             delete this._dic[key];
-        };
-        NDictionary.prototype.set = function (key, value) {
+        }
+        set(key, value) {
             this._dic[key] = value;
-        };
-        NDictionary.prototype.containsKey = function (key) {
+        }
+        containsKey(key) {
             return this._dic[key] != null ? true : false;
-        };
-        NDictionary.prototype.getValue = function (key) {
+        }
+        getValue(key) {
             if (!this.containsKey(key))
                 return null;
             return this._dic[key];
-        };
-        NDictionary.prototype.clear = function () {
-            for (var key in this._dic) {
+        }
+        clear() {
+            for (let key in this._dic) {
                 delete this._dic[key];
             }
-        };
-        NDictionary.prototype.getkeys = function () {
-            var list = [];
-            for (var key in this._dic) {
+        }
+        getkeys() {
+            let list = [];
+            for (let key in this._dic) {
                 list.push(airkit.StringUtils.toNumber(key));
             }
             return list;
-        };
-        NDictionary.prototype.getValues = function () {
-            var list = [];
-            for (var key in this._dic) {
+        }
+        getValues() {
+            let list = [];
+            for (let key in this._dic) {
                 list.push(this._dic[key]);
             }
             return list;
-        };
+        }
         /**
          * 遍历列表，执行回调函数；注意返回值为false时，中断遍历
          */
-        NDictionary.prototype.foreach = function (compareFn) {
-            for (var key in this._dic) {
+        foreach(compareFn) {
+            for (let key in this._dic) {
                 if (!compareFn.call(null, key, this._dic[key]))
                     break;
             }
-        };
-        Object.defineProperty(NDictionary.prototype, "length", {
-            get: function () {
-                return airkit.DicUtils.getLength(this._dic);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        return NDictionary;
-    }());
+        }
+        get length() {
+            return airkit.DicUtils.getLength(this._dic);
+        }
+    }
     airkit.NDictionary = NDictionary;
     /**
      * 字典-键为string
      * @author ankye
      * @time 2018-7-6
      */
-    var SDictionary = /** @class */ (function () {
-        function SDictionary() {
+    class SDictionary {
+        constructor() {
             this._dic = {};
         }
-        SDictionary.prototype.add = function (key, value) {
+        add(key, value) {
             if (this.containsKey(key))
                 return false;
             this._dic[key] = value;
             return true;
-        };
-        SDictionary.prototype.set = function (key, value) {
+        }
+        set(key, value) {
             this._dic[key] = value;
-        };
-        SDictionary.prototype.remove = function (key) {
+        }
+        remove(key) {
             delete this._dic[key];
-        };
-        SDictionary.prototype.containsKey = function (key) {
+        }
+        containsKey(key) {
             return this._dic[key] != null ? true : false;
-        };
-        SDictionary.prototype.getValue = function (key) {
+        }
+        getValue(key) {
             if (!this.containsKey(key))
                 return null;
             return this._dic[key];
-        };
-        SDictionary.prototype.getkeys = function () {
-            var list = [];
-            for (var key in this._dic) {
+        }
+        getkeys() {
+            let list = [];
+            for (let key in this._dic) {
                 list.push(key);
             }
             return list;
-        };
-        SDictionary.prototype.getValues = function () {
-            var list = [];
-            for (var key in this._dic) {
+        }
+        getValues() {
+            let list = [];
+            for (let key in this._dic) {
                 list.push(this._dic[key]);
             }
             return list;
-        };
-        SDictionary.prototype.clear = function () {
-            for (var key in this._dic) {
+        }
+        clear() {
+            for (let key in this._dic) {
                 delete this._dic[key];
             }
-        };
+        }
         /**
          * 遍历列表，执行回调函数；注意返回值为false时，中断遍历
          */
-        SDictionary.prototype.foreach = function (compareFn) {
-            for (var key in this._dic) {
+        foreach(compareFn) {
+            for (let key in this._dic) {
                 if (!compareFn.call(null, key, this._dic[key]))
                     break;
             }
-        };
-        Object.defineProperty(SDictionary.prototype, "length", {
-            get: function () {
-                return airkit.DicUtils.getLength(this._dic);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        return SDictionary;
-    }());
+        }
+        get length() {
+            return airkit.DicUtils.getLength(this._dic);
+        }
+    }
     airkit.SDictionary = SDictionary;
 })(airkit || (airkit = {}));
 //import { ArrayUtils } from "../utils/ArrayUtils";
@@ -741,32 +639,31 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-8
      */
-    var DoubleArray = /** @class */ (function () {
-        function DoubleArray(rows, cols, value) {
+    class DoubleArray {
+        constructor(rows, cols, value) {
             this._array = [];
             if (rows > 0 && cols > 0) {
-                for (var row = 0; row < rows; ++row) {
-                    for (var col = 0; col < cols; ++col) {
+                for (let row = 0; row < rows; ++row) {
+                    for (let col = 0; col < cols; ++col) {
                         this.set(row, col, value);
                     }
                 }
             }
         }
-        DoubleArray.prototype.set = function (row, col, value) {
+        set(row, col, value) {
             if (!this._array[row])
                 this._array[row] = [];
             this._array[row][col] = value;
-        };
-        DoubleArray.prototype.get = function (row, col) {
+        }
+        get(row, col) {
             if (!this._array[row])
                 return null;
             return this._array[row][col];
-        };
-        DoubleArray.prototype.clear = function () {
+        }
+        clear() {
             airkit.ArrayUtils.clear(this._array);
-        };
-        return DoubleArray;
-    }());
+        }
+    }
     airkit.DoubleArray = DoubleArray;
 })(airkit || (airkit = {}));
 //import { Log } from "../log/Log";
@@ -782,8 +679,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-6
      */
-    var LinkList = /** @class */ (function () {
-        function LinkList() {
+    class LinkList {
+        constructor() {
             /**表头*/
             this._linkHead = null;
             /**节点个数*/
@@ -794,26 +691,26 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this._size = 0;
         }
         /**在链表末尾添加*/
-        LinkList.prototype.add = function (t) {
+        add(t) {
             this.append(this._size, t);
-        };
+        }
         /**将节点插入到第index位置之前*/
-        LinkList.prototype.insert = function (index, t) {
+        insert(index, t) {
             if (this._size < 1 || index >= this._size)
                 airkit.Log.exception("没有可插入的点或者索引溢出了");
             if (index == 0)
                 this.append(this._size, t);
             else {
-                var inode = this.getNode(index);
-                var tnode = { Data: t, Prev: inode.Prev, Next: inode };
+                let inode = this.getNode(index);
+                let tnode = { Data: t, Prev: inode.Prev, Next: inode };
                 inode.Prev.Next = tnode;
                 inode.Prev = tnode;
                 this._size++;
             }
-        };
+        }
         /**追加到index位置之后*/
-        LinkList.prototype.append = function (index, t) {
-            var inode;
+        append(index, t) {
+            let inode;
             if (index == 0)
                 inode = this._linkHead;
             else {
@@ -822,59 +719,59 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     airkit.Log.exception("位置不存在");
                 inode = this.getNode(index);
             }
-            var tnode = { Data: t, Prev: inode, Next: inode.Next };
+            let tnode = { Data: t, Prev: inode, Next: inode.Next };
             inode.Next.Prev = tnode;
             inode.Next = tnode;
             this._size++;
-        };
+        }
         /**
          * 删除节点，有效节点索引为[0,_size-1]
          */
-        LinkList.prototype.del = function (index) {
-            var inode = this.getNode(index);
+        del(index) {
+            let inode = this.getNode(index);
             inode.Prev.Next = inode.Next;
             inode.Next.Prev = inode.Prev;
             this._size--;
-        };
-        LinkList.prototype.delFirst = function () {
+        }
+        delFirst() {
             this.del(0);
-        };
-        LinkList.prototype.delLast = function () {
+        }
+        delLast() {
             this.del(this._size - 1);
-        };
-        LinkList.prototype.get = function (index) {
+        }
+        get(index) {
             return this.getNode(index).Data;
-        };
-        LinkList.prototype.getFirst = function () {
+        }
+        getFirst() {
             return this.getNode(0).Data;
-        };
-        LinkList.prototype.getLast = function () {
+        }
+        getLast() {
             return this.getNode(this._size - 1).Data;
-        };
+        }
         /**通过索引查找*/
-        LinkList.prototype.getNode = function (index) {
+        getNode(index) {
             if (index < 0 || index >= this._size) {
                 airkit.Log.exception("索引溢出或者链表为空");
             }
             if (index < this._size / 2) {
                 //正向查找
-                var node = this._linkHead.Next;
-                for (var i = 0; i < index; i++)
+                let node = this._linkHead.Next;
+                for (let i = 0; i < index; i++)
                     node = node.Next;
                 return node;
             }
             //反向查找
-            var rnode = this._linkHead.Prev;
-            var rindex = this._size - index - 1;
-            for (var i = 0; i < rindex; i++)
+            let rnode = this._linkHead.Prev;
+            let rindex = this._size - index - 1;
+            for (let i = 0; i < rindex; i++)
                 rnode = rnode.Prev;
             return rnode;
-        };
+        }
         /**
          * 遍历列表，执行回调函数；注意返回值为false时，中断遍历
          */
-        LinkList.prototype.foreach = function (compareFn) {
-            var node = this._linkHead.Next;
+        foreach(compareFn) {
+            let node = this._linkHead.Next;
             if (!node)
                 return;
             do {
@@ -882,19 +779,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     break;
                 node = node.Next;
             } while (node != this._linkHead);
-        };
-        LinkList.prototype.isEmpty = function () {
+        }
+        isEmpty() {
             return this._size == 0;
-        };
-        Object.defineProperty(LinkList.prototype, "length", {
-            get: function () {
-                return this._size;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        return LinkList;
-    }());
+        }
+        get length() {
+            return this._size;
+        }
+    }
     airkit.LinkList = LinkList;
 })(airkit || (airkit = {}));
 // import { Log } from "../log/Log";
@@ -907,37 +799,35 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-11
      */
-    var ObjectPools = /** @class */ (function () {
-        function ObjectPools() {
-        }
+    class ObjectPools {
         /**
          * 获取一个对象，不存在则创建,classDef必须要有 objectKey的static变量
          * @param classDef  类名
          */
-        ObjectPools.get = function (classDef) {
-            var sign = classDef["objectKey"];
+        static get(classDef) {
+            let sign = classDef["objectKey"];
             if (sign == null) {
                 //直接通过classDef.name获取sign,在混淆的情况下会出错
                 airkit.Log.error("static objectKey must set in {0} ", classDef.name);
             }
-            var pool = this.poolsMap[sign];
+            let pool = this.poolsMap[sign];
             if (pool == null) {
                 pool = new Array();
                 this.poolsMap[sign] = pool;
             }
-            var obj = pool.pop();
+            let obj = pool.pop();
             if (obj == null) {
                 obj = new classDef();
             }
             if (obj && obj["init"])
                 obj.init();
             return obj;
-        };
+        }
         /**
          * 回收对象
          * @param obj  对象实例
          */
-        ObjectPools.recover = function (obj) {
+        static recover(obj) {
             if (!obj)
                 return;
             if (obj["parent"] != null) {
@@ -947,29 +837,28 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 obj.dispose();
                 return;
             }
-            var proto = Object.getPrototypeOf(obj);
-            var clazz = proto["constructor"];
-            var sign = clazz["objectKey"];
-            var pool = this.poolsMap[sign];
+            let proto = Object.getPrototypeOf(obj);
+            let clazz = proto["constructor"];
+            let sign = clazz["objectKey"];
+            let pool = this.poolsMap[sign];
             if (pool != null) {
                 if (obj["visible"] !== null && obj["visible"] === false) {
                     obj.visible = true;
                 }
                 pool.push(obj);
             }
-        };
-        ObjectPools.clearAll = function () {
-            var _this = this;
-            airkit.DicUtils.foreach(this.poolsMap, function (k, v) {
-                _this.clear(k);
+        }
+        static clearAll() {
+            airkit.DicUtils.foreach(this.poolsMap, (k, v) => {
+                this.clear(k);
                 return true;
             });
-        };
-        ObjectPools.clear = function (sign) {
-            var pool = this.poolsMap[sign];
+        }
+        static clear(sign) {
+            let pool = this.poolsMap[sign];
             airkit.Log.info("max object count {0}", pool.length);
             while (pool.length > 0) {
-                var obj = pool.pop();
+                let obj = pool.pop();
                 if (obj && obj["dispose"]) {
                     if (obj["parent"] != null) {
                         obj.removeFromParent();
@@ -980,10 +869,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     obj.dispose();
                 }
             }
-        };
-        ObjectPools.poolsMap = {};
-        return ObjectPools;
-    }());
+        }
+    }
+    ObjectPools.poolsMap = {};
     airkit.ObjectPools = ObjectPools;
 })(airkit || (airkit = {}));
 /**
@@ -993,58 +881,52 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
  */
 
 (function (airkit) {
-    var Queue = /** @class */ (function () {
-        function Queue() {
+    class Queue {
+        constructor() {
             this._list = [];
         }
         /**添加到队列尾*/
-        Queue.prototype.enqueue = function (item) {
+        enqueue(item) {
             this._list.push(item);
-        };
+        }
         /**获取队列头，并删除*/
-        Queue.prototype.dequeue = function () {
+        dequeue() {
             return this._list.shift();
-        };
+        }
         /**获取队列头，并不删除*/
-        Queue.prototype.peek = function () {
+        peek() {
             if (this._list.length == 0)
                 return null;
             return this._list[0];
-        };
+        }
         /**查询某个元素，并不删除*/
-        Queue.prototype.seek = function (index) {
+        seek(index) {
             if (this._list.length < index)
                 return null;
             return this._list[index];
-        };
+        }
         /**转换成标准数组*/
-        Queue.prototype.toArray = function () {
+        toArray() {
             return this._list.slice(0, this._list.length);
-        };
+        }
         /**是否包含指定元素*/
-        Queue.prototype.contains = function (item) {
+        contains(item) {
             return this._list.indexOf(item, 0) == -1 ? false : true;
-        };
+        }
         /**清空*/
-        Queue.prototype.clear = function () {
+        clear() {
             this._list.length = 0;
-        };
-        Object.defineProperty(Queue.prototype, "length", {
-            get: function () {
-                return this._list.length;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Queue.prototype.foreach = function (compareFn) {
-            for (var _i = 0, _a = this._list; _i < _a.length; _i++) {
-                var item = _a[_i];
+        }
+        get length() {
+            return this._list.length;
+        }
+        foreach(compareFn) {
+            for (let item of this._list) {
                 if (!compareFn.call(null, item))
                     break;
             }
-        };
-        return Queue;
-    }());
+        }
+    }
     airkit.Queue = Queue;
 })(airkit || (airkit = {}));
 
@@ -1054,33 +936,22 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-3
      */
-    var Size = /** @class */ (function () {
-        function Size(w, h) {
-            if (w === void 0) { w = 0; }
-            if (h === void 0) { h = 0; }
+    class Size {
+        constructor(w = 0, h = 0) {
             this._width = w;
             this._height = h;
         }
-        Size.prototype.set = function (w, h) {
+        set(w, h) {
             this._width = w;
             this._height = h;
-        };
-        Object.defineProperty(Size.prototype, "width", {
-            get: function () {
-                return this._width;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Size.prototype, "height", {
-            get: function () {
-                return this._height;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        return Size;
-    }());
+        }
+        get width() {
+            return this._width;
+        }
+        get height() {
+            return this._height;
+        }
+    }
     airkit.Size = Size;
 })(airkit || (airkit = {}));
 
@@ -1090,52 +961,46 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-6
      */
-    var Stack = /** @class */ (function () {
-        function Stack() {
+    class Stack {
+        constructor() {
             this._list = [];
         }
         /**添加数据*/
-        Stack.prototype.push = function (item) {
+        push(item) {
             this._list.push(item);
-        };
+        }
         /**获取栈顶元素，并删除*/
-        Stack.prototype.pop = function () {
+        pop() {
             return this._list.pop();
-        };
+        }
         /**获取栈顶元素，并不删除*/
-        Stack.prototype.peek = function () {
+        peek() {
             if (this._list.length == 0)
                 return null;
             return this._list[this._list.length - 1];
-        };
+        }
         /**转换成标准数组*/
-        Stack.prototype.toArray = function () {
+        toArray() {
             return this._list.slice(0, this._list.length);
-        };
+        }
         /**是否包含指定元素*/
-        Stack.prototype.contains = function (item) {
+        contains(item) {
             return this._list.indexOf(item, 0) == -1 ? false : true;
-        };
+        }
         /**清空*/
-        Stack.prototype.clear = function () {
+        clear() {
             this._list.length = 0;
-        };
-        Object.defineProperty(Stack.prototype, "length", {
-            get: function () {
-                return this._list.length;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Stack.prototype.foreach = function (compareFn) {
-            for (var _i = 0, _a = this._list; _i < _a.length; _i++) {
-                var item = _a[_i];
+        }
+        get length() {
+            return this._list.length;
+        }
+        foreach(compareFn) {
+            for (let item of this._list) {
                 if (!compareFn.call(null, item))
                     break;
             }
-        };
-        return Stack;
-    }());
+        }
+    }
     airkit.Stack = Stack;
 })(airkit || (airkit = {}));
 
@@ -1144,19 +1009,19 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * 预留id=0，不显示加载界面
      */
     airkit.LOADVIEW_TYPE_NONE = 0;
-    var eUIQueueType;
+    let eUIQueueType;
     (function (eUIQueueType) {
         eUIQueueType[eUIQueueType["POPUP"] = 1] = "POPUP";
         eUIQueueType[eUIQueueType["ALERT"] = 2] = "ALERT";
     })(eUIQueueType = airkit.eUIQueueType || (airkit.eUIQueueType = {}));
-    var ePopupAnim;
+    let ePopupAnim;
     (function (ePopupAnim) {
     })(ePopupAnim = airkit.ePopupAnim || (airkit.ePopupAnim = {}));
-    var eCloseAnim;
+    let eCloseAnim;
     (function (eCloseAnim) {
         eCloseAnim[eCloseAnim["CLOSE_CENTER"] = 1] = "CLOSE_CENTER";
     })(eCloseAnim = airkit.eCloseAnim || (airkit.eCloseAnim = {}));
-    var eAligeType;
+    let eAligeType;
     (function (eAligeType) {
         eAligeType[eAligeType["NONE"] = 0] = "NONE";
         eAligeType[eAligeType["RIGHT"] = 1] = "RIGHT";
@@ -1172,7 +1037,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     /**
      * UI层级
      */
-    var eUILayer;
+    let eUILayer;
     (function (eUILayer) {
         eUILayer[eUILayer["BG"] = 0] = "BG";
         eUILayer[eUILayer["MAIN"] = 1] = "MAIN";
@@ -1184,7 +1049,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         eUILayer[eUILayer["TOP"] = 7] = "TOP";
         eUILayer[eUILayer["MAX"] = 8] = "MAX";
     })(eUILayer = airkit.eUILayer || (airkit.eUILayer = {}));
-    var LogLevel;
+    let LogLevel;
     (function (LogLevel) {
         LogLevel[LogLevel["DEBUG"] = 7] = "DEBUG";
         LogLevel[LogLevel["INFO"] = 6] = "INFO";
@@ -1192,7 +1057,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         LogLevel[LogLevel["ERROR"] = 4] = "ERROR";
         LogLevel[LogLevel["EXCEPTION"] = 3] = "EXCEPTION";
     })(LogLevel = airkit.LogLevel || (airkit.LogLevel = {}));
-    var ePopupButton;
+    let ePopupButton;
     (function (ePopupButton) {
         ePopupButton[ePopupButton["Close"] = 0] = "Close";
         ePopupButton[ePopupButton["Cancel"] = 1] = "Cancel";
@@ -1206,14 +1071,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-11
      */
-    var ConfigItem = /** @class */ (function () {
-        function ConfigItem(url, name, key) {
+    class ConfigItem {
+        constructor(url, name, key) {
             this.url = url;
             this.name = name;
             this.key = key;
         }
-        return ConfigItem;
-    }());
+    }
     airkit.ConfigItem = ConfigItem;
 })(airkit || (airkit = {}));
 // import { Singleton } from "../collection/Singleton";
@@ -1227,68 +1091,58 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2017-7-9
      */
-    var ConfigManger = /** @class */ (function (_super) {
-        __extends(ConfigManger, _super);
-        function ConfigManger() {
-            return _super !== null && _super.apply(this, arguments) || this;
+    class ConfigManger extends airkit.Singleton {
+        static get Instance() {
+            if (!this.instance)
+                this.instance = new ConfigManger();
+            return this.instance;
         }
-        Object.defineProperty(ConfigManger, "Instance", {
-            get: function () {
-                if (!this.instance)
-                    this.instance = new ConfigManger();
-                return this.instance;
-            },
-            enumerable: false,
-            configurable: true
-        });
         /**初始化数据*/
-        ConfigManger.prototype.init = function (keys, zipPath) {
-            if (zipPath === void 0) { zipPath = null; }
+        init(keys, zipPath = null) {
             if (zipPath != null)
                 ConfigManger.zipUrl = zipPath;
             this._listTables = [];
-            var c = keys;
-            for (var k in c) {
+            let c = keys;
+            for (let k in c) {
                 this._listTables.push(new airkit.ConfigItem(k, k, c[k]));
             }
-        };
+        }
         /**释放数据*/
-        ConfigManger.prototype.release = function () {
+        release() {
             if (!this._listTables)
                 return;
-            for (var _i = 0, _a = this._listTables; _i < _a.length; _i++) {
-                var info = _a[_i];
+            for (let info of this._listTables) {
                 airkit.DataProvider.Instance.unload(info.url);
             }
             airkit.ArrayUtils.clear(this._listTables);
             this._listTables = null;
-        };
+        }
         /**开始加载*/
-        ConfigManger.prototype.loadAll = function () {
+        loadAll() {
             if (this._listTables.length > 0) {
                 airkit.DataProvider.Instance.enableZip();
                 return airkit.DataProvider.Instance.loadZip(ConfigManger.zipUrl, this._listTables);
             }
             //return DataProvider.Instance.load(this._listTables)
-        };
+        }
         /**
          * 获取列表，fiter用于过滤,可以有多个值，格式为 [{k:"id",v:this.id},{k:"aaa",v:"bbb"}]
          * @param table
          * @param filter 目前只实现了绝对值匹配
          */
-        ConfigManger.prototype.getList = function (table, filter) {
-            var dic = airkit.DataProvider.Instance.getConfig(table);
+        getList(table, filter) {
+            let dic = airkit.DataProvider.Instance.getConfig(table);
             if (dic == null)
                 return [];
             if (filter == null)
                 filter = [];
-            var result = [];
-            for (var key in dic) {
-                var val = dic[key];
-                var flag = true;
-                for (var j = 0; j < filter.length; j++) {
-                    var k = filter[j]["k"];
-                    var v = filter[j]["v"];
+            let result = [];
+            for (let key in dic) {
+                let val = dic[key];
+                let flag = true;
+                for (let j = 0; j < filter.length; j++) {
+                    let k = filter[j]["k"];
+                    let v = filter[j]["v"];
                     if (val[k] != v) {
                         flag = false;
                         break;
@@ -1299,31 +1153,26 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
             return result;
-        };
-        ConfigManger.prototype.getInfo = function (table, key) {
-            var info = airkit.DataProvider.Instance.getInfo(table, key);
+        }
+        getInfo(table, key) {
+            let info = airkit.DataProvider.Instance.getInfo(table, key);
             return info;
-        };
-        Object.defineProperty(ConfigManger.prototype, "listTables", {
-            /**定义需要前期加载的资源*/
-            // public get preLoadRes(): Array<[string, string]> {
-            //     let c = TableConfig.keys()
-            //     let res = []
-            //     for (let k in c) {
-            //         res.push(["res/config/" + k, laya.net.Loader.JSON])
-            //     }
-            //     return res
-            // }
-            get: function () {
-                return this._listTables;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        ConfigManger.instance = null;
-        ConfigManger.zipUrl = "res/config.zip";
-        return ConfigManger;
-    }(airkit.Singleton));
+        }
+        /**定义需要前期加载的资源*/
+        // public get preLoadRes(): Array<[string, string]> {
+        //     let c = TableConfig.keys()
+        //     let res = []
+        //     for (let k in c) {
+        //         res.push(["res/config/" + k, laya.net.Loader.JSON])
+        //     }
+        //     return res
+        // }
+        get listTables() {
+            return this._listTables;
+        }
+    }
+    ConfigManger.instance = null;
+    ConfigManger.zipUrl = "res/config.zip";
     airkit.ConfigManger = ConfigManger;
 })(airkit || (airkit = {}));
 // import { assertNullOrNil } from "../utils/Utils";
@@ -1341,32 +1190,26 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-11
      */
-    var DataProvider = /** @class */ (function (_super) {
-        __extends(DataProvider, _super);
-        function DataProvider() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._dicTemplate = null;
-            _this._dicData = null;
-            return _this;
+    class DataProvider extends airkit.Singleton {
+        constructor() {
+            super(...arguments);
+            this._dicTemplate = null;
+            this._dicData = null;
         }
-        Object.defineProperty(DataProvider, "Instance", {
-            get: function () {
-                if (!this.instance)
-                    this.instance = new DataProvider();
-                return this.instance;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        DataProvider.prototype.enableZip = function () {
+        static get Instance() {
+            if (!this.instance)
+                this.instance = new DataProvider();
+            return this.instance;
+        }
+        enableZip() {
             this._zip = true;
-        };
-        DataProvider.prototype.setup = function () {
+        }
+        setup() {
             this._dicTemplate = new airkit.SDictionary();
             this._dicData = new airkit.SDictionary();
             this._zip = false;
-        };
-        DataProvider.prototype.destroy = function () {
+        }
+        destroy() {
             this.unloadAll();
             if (this._dicTemplate) {
                 this._dicTemplate.clear();
@@ -1377,34 +1220,33 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 this._dicData = null;
             }
             return true;
-        };
-        DataProvider.prototype.loadZip = function (url, list) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                airkit.ResourceManager.Instance.loadRes(url, cc.BufferAsset).then(function (v) {
-                    var ab = airkit.ResourceManager.Instance.getRes(url);
+        }
+        loadZip(url, list) {
+            return new Promise((resolve, reject) => {
+                airkit.ResourceManager.Instance.loadRes(url, cc.BufferAsset).then((v) => {
+                    let ab = airkit.ResourceManager.Instance.getRes(url);
                     airkit.ZipUtils.unzip(ab)
-                        .then(function (v) {
-                        for (var i = 0; i < list.length; i++) {
-                            var template = list[i];
-                            _this._dicTemplate.add(list[i].url, template);
+                        .then((v) => {
+                        for (let i = 0; i < list.length; i++) {
+                            let template = list[i];
+                            this._dicTemplate.add(list[i].url, template);
                             airkit.Log.info("Load config {0}", template.url);
-                            var json_res = JSON.parse(v[template.url]);
+                            let json_res = JSON.parse(v[template.url]);
                             if (airkit.StringUtils.isNullOrEmpty(template.key)) {
-                                _this._dicData.add(template.name, json_res);
+                                this._dicData.add(template.name, json_res);
                             }
                             else {
-                                var map = {};
-                                var sValue = void 0;
-                                var sData = void 0;
-                                var i_1 = 0;
-                                var isArrayKey = Array.isArray(template.key);
-                                while (json_res[i_1]) {
-                                    sData = json_res[i_1];
+                                let map = {};
+                                let sValue;
+                                let sData;
+                                let i = 0;
+                                let isArrayKey = Array.isArray(template.key);
+                                while (json_res[i]) {
+                                    sData = json_res[i];
                                     if (isArrayKey) {
                                         sValue = sData[template.key[0]];
-                                        for (var i_2 = 1; i_2 < template.key.length; i_2++) {
-                                            sValue += "_" + sData[template.key[i_2]];
+                                        for (let i = 1; i < template.key.length; i++) {
+                                            sValue += "_" + sData[template.key[i]];
                                         }
                                     }
                                     else {
@@ -1412,28 +1254,27 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                                     }
                                     airkit.assertNullOrNil(sValue, "配置表解析错误:" + template.url);
                                     map[sValue] = sData;
-                                    i_1++;
+                                    i++;
                                 }
-                                _this._dicData.add(template.name, map);
+                                this._dicData.add(template.name, map);
                             }
                         }
                         resolve(v);
                     })
-                        .catch(function (e) {
+                        .catch((e) => {
                         airkit.Log.error(e);
                         reject(e);
                     });
                 });
             });
-        };
-        DataProvider.prototype.load = function (list) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                var assets = [];
-                for (var i = 0; i < list.length; i++) {
+        }
+        load(list) {
+            return new Promise((resolve, reject) => {
+                let assets = [];
+                for (let i = 0; i < list.length; i++) {
                     if (!airkit.ResourceManager.Instance.getRes(list[i].url)) {
                         assets.push({ url: list[i].url, type: cc.JsonAsset });
-                        _this._dicTemplate.add(list[i].url, list[i]);
+                        this._dicTemplate.add(list[i].url, list[i]);
                     }
                 }
                 if (assets.length == 0) {
@@ -1441,19 +1282,19 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     return;
                 }
                 airkit.ResourceManager.Instance.loadArrayRes(assets, null, null, null, null, airkit.ResourceManager.SystemGroup)
-                    .then(function (v) {
-                    for (var i = 0; i < v.length; i++) {
-                        _this.onLoadComplete(v[i]);
+                    .then((v) => {
+                    for (let i = 0; i < v.length; i++) {
+                        this.onLoadComplete(v[i]);
                         resolve(v);
                     }
                 })
-                    .catch(function (e) {
+                    .catch((e) => {
                     reject(e);
                 });
             });
-        };
-        DataProvider.prototype.unload = function (url) {
-            var template = this._dicTemplate.getValue(url);
+        }
+        unload(url) {
+            let template = this._dicTemplate.getValue(url);
             if (template) {
                 this._dicData.remove(template.name);
             }
@@ -1463,8 +1304,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 airkit.ResourceManager.Instance.clearRes(url);
             }
             this._dicTemplate.remove(url);
-        };
-        DataProvider.prototype.unloadAll = function () {
+        }
+        unloadAll() {
             if (!this._dicTemplate)
                 return;
             this._dicTemplate.foreach(function (key, value) {
@@ -1473,52 +1314,52 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             });
             this._dicData.clear();
             this._dicTemplate.clear();
-        };
+        }
         /**返回表*/
-        DataProvider.prototype.getConfig = function (table) {
-            var data = this._dicData.getValue(table);
+        getConfig(table) {
+            let data = this._dicData.getValue(table);
             return data;
-        };
+        }
         /**返回一行*/
-        DataProvider.prototype.getInfo = function (table, key) {
-            var data = this._dicData.getValue(table);
+        getInfo(table, key) {
+            let data = this._dicData.getValue(table);
             if (data) {
-                var isArrayKey = Array.isArray(key);
-                var sValue = void 0;
+                let isArrayKey = Array.isArray(key);
+                let sValue;
                 if (isArrayKey) {
                     sValue = key[0];
-                    for (var i = 1; i < key.length; i++) {
+                    for (let i = 1; i < key.length; i++) {
                         sValue += "_" + key[i];
                     }
                 }
                 else {
                     sValue = key;
                 }
-                var info = data[sValue];
+                let info = data[sValue];
                 return info;
             }
             return null;
-        };
-        DataProvider.prototype.getRes = function (url) {
+        }
+        getRes(url) {
             airkit.Log.debug("[load]加载配置表:" + url);
-            var template = this._dicTemplate.getValue(url);
+            let template = this._dicTemplate.getValue(url);
             if (template) {
-                var json_res = airkit.ResourceManager.Instance.getRes(url);
+                let json_res = airkit.ResourceManager.Instance.getRes(url);
                 if (airkit.StringUtils.isNullOrEmpty(template.key)) {
                     this._dicData.add(template.name, json_res);
                 }
                 else {
-                    var map = {};
-                    var sValue = void 0;
-                    var sData = void 0;
-                    var i = 0;
-                    var isArrayKey = Array.isArray(template.key);
+                    let map = {};
+                    let sValue;
+                    let sData;
+                    let i = 0;
+                    let isArrayKey = Array.isArray(template.key);
                     while (json_res[i]) {
                         sData = json_res[i];
                         if (isArrayKey) {
                             sValue = sData[template.key[0]];
-                            for (var i_3 = 1; i_3 < template.key.length; i_3++) {
-                                sValue += "_" + sData[template.key[i_3]];
+                            for (let i = 1; i < template.key.length; i++) {
+                                sValue += "_" + sData[template.key[i]];
                             }
                         }
                         else {
@@ -1531,21 +1372,20 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     this._dicData.add(template.name, map);
                 }
             }
-        };
-        DataProvider.prototype.onLoadComplete = function (url) {
+        }
+        onLoadComplete(url) {
             this.getRes(url);
-        };
-        DataProvider.instance = null;
-        return DataProvider;
-    }(airkit.Singleton));
+        }
+    }
+    DataProvider.instance = null;
     airkit.DataProvider = DataProvider;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
     function base64_encode(data) {
-        var base = new Base64();
-        var buffer = stringToArrayBuffer(data);
-        var str = base.encode(buffer);
+        let base = new Base64();
+        let buffer = stringToArrayBuffer(data);
+        let str = base.encode(buffer);
         return str;
     }
     airkit.base64_encode = base64_encode;
@@ -1560,8 +1400,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }
     airkit.stringToArrayBuffer = stringToArrayBuffer;
     // For the base64 encoding pieces.
-    var Base64 = /** @class */ (function () {
-        function Base64() {
+    class Base64 {
+        constructor() {
             this.alphabet = [
                 "A",
                 "B",
@@ -1629,16 +1469,16 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 "/"
             ];
             this.values = {};
-            for (var i = 0; i < 64; ++i) {
+            for (let i = 0; i < 64; ++i) {
                 this.values[this.alphabet[i]] = i;
             }
         }
-        Base64.prototype.encode = function (bytes) {
-            var array = new Uint8Array(bytes);
-            var base64 = [];
-            var index = 0;
-            var quantum;
-            var value;
+        encode(bytes) {
+            const array = new Uint8Array(bytes);
+            const base64 = [];
+            let index = 0;
+            let quantum;
+            let value;
             /* tslint:disable:no-bitwise */
             // Grab as many sets of 3 bytes as we can, that form 24 bits.
             while (index + 2 < array.byteLength) {
@@ -1678,9 +1518,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             }
             /* tslint:enable:no-bitwise */
             return base64.join("");
-        };
-        Base64.prototype.decode = function (string) {
-            var size = string.length;
+        }
+        decode(string) {
+            let size = string.length;
             if (size === 0) {
                 return new Uint8Array(new ArrayBuffer(0));
             }
@@ -1692,8 +1532,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             }
             // Every 4 base64 chars = 24 bits = 3 bytes. But, we also need to figure out
             // padding, if any.
-            var bytes = 3 * (size / 4);
-            var numPad = 0;
+            let bytes = 3 * (size / 4);
+            let numPad = 0;
             if (string.charAt(size - 1) === "=") {
                 numPad++;
                 bytes--;
@@ -1702,17 +1542,17 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 numPad++;
                 bytes--;
             }
-            var buffer = new Uint8Array(new ArrayBuffer(bytes));
-            var index = 0;
-            var bufferIndex = 0;
-            var quantum;
+            const buffer = new Uint8Array(new ArrayBuffer(bytes));
+            let index = 0;
+            let bufferIndex = 0;
+            let quantum;
             if (numPad > 0) {
                 size -= 4; // handle the last one specially
             }
             /* tslint:disable:no-bitwise */
             while (index < size) {
                 quantum = 0;
-                for (var i = 0; i < 4; ++i) {
+                for (let i = 0; i < 4; ++i) {
                     quantum = (quantum << 6) | this.values[string.charAt(index + i)];
                 }
                 // quantum is now a 24-bit value.
@@ -1726,7 +1566,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 // if numPad == 2, there is two ==, and we have 12 bits with 4 0s at end.
                 // First, grab my quantum.
                 quantum = 0;
-                for (var i = 0; i < 4 - numPad; ++i) {
+                for (let i = 0; i < 4 - numPad; ++i) {
                     quantum = (quantum << 6) | this.values[string.charAt(index + i)];
                 }
                 if (numPad === 1) {
@@ -1743,20 +1583,19 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             }
             /* tslint:enable:no-bitwise */
             return buffer;
-        };
-        return Base64;
-    }());
+        }
+    }
     airkit.Base64 = Base64;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
     function md5_encrypt(data) {
-        var base = new MD5();
+        let base = new MD5();
         return base.hex_md5(data);
     }
     airkit.md5_encrypt = md5_encrypt;
-    var MD5 = /** @class */ (function () {
-        function MD5() {
+    class MD5 {
+        constructor() {
             this.hexcase = 0; /* hex output format. 0 - lowercase 1 - uppercase        */
             this.b64pad = ""; /* base-64 pad character. "=" for strict RFC compliance   */
         }
@@ -1764,40 +1603,40 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * These are the privates you'll usually want to call
          * They take string arguments and return either hex or base-64 encoded strings
          */
-        MD5.prototype.hex_md5 = function (s) {
+        hex_md5(s) {
             return this.rstr2hex(this.rstr_md5(this.str2rstr_utf8(s)));
-        }; //这个函数就行了，
-        MD5.prototype.b64_md5 = function (s) {
+        } //这个函数就行了，
+        b64_md5(s) {
             return this.rstr2b64(this.rstr_md5(this.str2rstr_utf8(s)));
-        };
-        MD5.prototype.any_md5 = function (s, e) {
+        }
+        any_md5(s, e) {
             return this.rstr2any(this.rstr_md5(this.str2rstr_utf8(s)), e);
-        };
-        MD5.prototype.hex_hmac_md5 = function (k, d) {
+        }
+        hex_hmac_md5(k, d) {
             return this.rstr2hex(this.rstr_hmac_md5(this.str2rstr_utf8(k), this.str2rstr_utf8(d)));
-        };
-        MD5.prototype.b64_hmac_md5 = function (k, d) {
+        }
+        b64_hmac_md5(k, d) {
             return this.rstr2b64(this.rstr_hmac_md5(this.str2rstr_utf8(k), this.str2rstr_utf8(d)));
-        };
-        MD5.prototype.any_hmac_md5 = function (k, d, e) {
+        }
+        any_hmac_md5(k, d, e) {
             return this.rstr2any(this.rstr_hmac_md5(this.str2rstr_utf8(k), this.str2rstr_utf8(d)), e);
-        };
+        }
         /*
          * Perform a simple self-test to see if the VM is working
          */
-        MD5.prototype.md5_vm_test = function () {
+        md5_vm_test() {
             return (this.hex_md5("abc").toLowerCase() == "900150983cd24fb0d6963f7d28e17f72");
-        };
+        }
         /*
          * Calculate the MD5 of a raw string
          */
-        MD5.prototype.rstr_md5 = function (s) {
+        rstr_md5(s) {
             return this.binl2rstr(this.binl_md5(this.rstr2binl(s), s.length * 8));
-        };
+        }
         /*
          * Calculate the HMAC-MD5, of a key and some data (raw strings)
          */
-        MD5.prototype.rstr_hmac_md5 = function (key, data) {
+        rstr_hmac_md5(key, data) {
             var bkey = this.rstr2binl(key);
             if (bkey.length > 16)
                 bkey = this.binl_md5(bkey, key.length * 8);
@@ -1808,11 +1647,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             }
             var hash = this.binl_md5(ipad.concat(this.rstr2binl(data)), 512 + data.length * 8);
             return this.binl2rstr(this.binl_md5(opad.concat(hash), 512 + 128));
-        };
+        }
         /*
          * Convert a raw string to a hex string
          */
-        MD5.prototype.rstr2hex = function (input) {
+        rstr2hex(input) {
             try {
                 this.hexcase;
             }
@@ -1827,11 +1666,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 output += hex_tab.charAt((x >>> 4) & 0x0f) + hex_tab.charAt(x & 0x0f);
             }
             return output;
-        };
+        }
         /*
          * Convert a raw string to a base-64 string
          */
-        MD5.prototype.rstr2b64 = function (input) {
+        rstr2b64(input) {
             try {
                 this.b64pad;
             }
@@ -1853,11 +1692,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
             return output;
-        };
+        }
         /*
          * Convert a raw string to an arbitrary string encoding
          */
-        MD5.prototype.rstr2any = function (input, encoding) {
+        rstr2any(input, encoding) {
             var divisor = encoding.length;
             var i, j, q, x, quotient;
             /* Convert to an array of 16-bit big-endian values, forming the dividend */
@@ -1892,12 +1731,12 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             for (i = remainders.length - 1; i >= 0; i--)
                 output += encoding.charAt(remainders[i]);
             return output;
-        };
+        }
         /*
          * Encode a string as utf-8.
          * For efficiency, this assumes the input is valid utf-16.
          */
-        MD5.prototype.str2rstr_utf8 = function (input) {
+        str2rstr_utf8(input) {
             var output = "";
             var i = -1;
             var x, y;
@@ -1920,47 +1759,47 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     output += String.fromCharCode(0xf0 | ((x >>> 18) & 0x07), 0x80 | ((x >>> 12) & 0x3f), 0x80 | ((x >>> 6) & 0x3f), 0x80 | (x & 0x3f));
             }
             return output;
-        };
+        }
         /*
          * Encode a string as utf-16
          */
-        MD5.prototype.str2rstr_utf16le = function (input) {
+        str2rstr_utf16le(input) {
             var output = "";
             for (var i = 0; i < input.length; i++)
                 output += String.fromCharCode(input.charCodeAt(i) & 0xff, (input.charCodeAt(i) >>> 8) & 0xff);
             return output;
-        };
-        MD5.prototype.str2rstr_utf16be = function (input) {
+        }
+        str2rstr_utf16be(input) {
             var output = "";
             for (var i = 0; i < input.length; i++)
                 output += String.fromCharCode((input.charCodeAt(i) >>> 8) & 0xff, input.charCodeAt(i) & 0xff);
             return output;
-        };
+        }
         /*
          * Convert a raw string to an array of little-endian words
          * Characters >255 have their high-byte silently ignored.
          */
-        MD5.prototype.rstr2binl = function (input) {
+        rstr2binl(input) {
             var output = Array(input.length >> 2);
             for (var i = 0; i < output.length; i++)
                 output[i] = 0;
             for (var i = 0; i < input.length * 8; i += 8)
                 output[i >> 5] |= (input.charCodeAt(i / 8) & 0xff) << i % 32;
             return output;
-        };
+        }
         /*
          * Convert an array of little-endian words to a string
          */
-        MD5.prototype.binl2rstr = function (input) {
+        binl2rstr(input) {
             var output = "";
             for (var i = 0; i < input.length * 32; i += 8)
                 output += String.fromCharCode((input[i >> 5] >>> i % 32) & 0xff);
             return output;
-        };
+        }
         /*
          * Calculate the MD5 of an array of little-endian words, and a bit length.
          */
-        MD5.prototype.binl_md5 = function (x, len) {
+        binl_md5(x, len) {
             /* append padding */
             x[len >> 5] |= 0x80 << len % 32;
             x[(((len + 64) >>> 9) << 4) + 14] = len;
@@ -2043,42 +1882,41 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 d = this.safe_add(d, oldd);
             }
             return [a, b, c, d];
-        };
+        }
         /*
          * These privates implement the four basic operations the algorithm uses.
          */
-        MD5.prototype.md5_cmn = function (q, a, b, x, s, t) {
+        md5_cmn(q, a, b, x, s, t) {
             return this.safe_add(this.bit_rol(this.safe_add(this.safe_add(a, q), this.safe_add(x, t)), s), b);
-        };
-        MD5.prototype.md5_ff = function (a, b, c, d, x, s, t) {
+        }
+        md5_ff(a, b, c, d, x, s, t) {
             return this.md5_cmn((b & c) | (~b & d), a, b, x, s, t);
-        };
-        MD5.prototype.md5_gg = function (a, b, c, d, x, s, t) {
+        }
+        md5_gg(a, b, c, d, x, s, t) {
             return this.md5_cmn((b & d) | (c & ~d), a, b, x, s, t);
-        };
-        MD5.prototype.md5_hh = function (a, b, c, d, x, s, t) {
+        }
+        md5_hh(a, b, c, d, x, s, t) {
             return this.md5_cmn(b ^ c ^ d, a, b, x, s, t);
-        };
-        MD5.prototype.md5_ii = function (a, b, c, d, x, s, t) {
+        }
+        md5_ii(a, b, c, d, x, s, t) {
             return this.md5_cmn(c ^ (b | ~d), a, b, x, s, t);
-        };
+        }
         /*
          * Add integers, wrapping at 2^32. This uses 16-bit operations internally
          * to work around bugs in some JS interpreters.
          */
-        MD5.prototype.safe_add = function (x, y) {
+        safe_add(x, y) {
             var lsw = (x & 0xffff) + (y & 0xffff);
             var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
             return (msw << 16) | (lsw & 0xffff);
-        };
+        }
         /*
          * Bitwise rotate a 32-bit number to the left.
          */
-        MD5.prototype.bit_rol = function (num, cnt) {
+        bit_rol(num, cnt) {
             return (num << cnt) | (num >>> (32 - cnt));
-        };
-        return MD5;
-    }());
+        }
+    }
     airkit.MD5 = MD5;
 })(airkit || (airkit = {}));
 // import { ArrayUtils } from "../utils/ArrayUtils";
@@ -2089,12 +1927,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-6
      */
-    var EventArgs = /** @class */ (function () {
-        function EventArgs() {
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
+    class EventArgs {
+        constructor(...args) {
             this._type = "";
             this._data = null;
             if (!args || args.length == 0)
@@ -2104,37 +1938,28 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             else
                 this._data = airkit.ArrayUtils.copy(args);
         }
-        EventArgs.prototype.init = function () {
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
+        init(...args) {
             if (args.length == 0)
                 return;
             if (args instanceof Array)
                 this._data = airkit.ArrayUtils.copy(args[0]);
             else
                 this._data = airkit.ArrayUtils.copy(args);
-        };
-        EventArgs.prototype.get = function (index) {
+        }
+        get(index) {
             if (!this._data || this._data.length == 0)
                 return null;
             if (index < 0 || index >= this._data.length)
                 return null;
             return this._data[index];
-        };
-        Object.defineProperty(EventArgs.prototype, "type", {
-            get: function () {
-                return this._type;
-            },
-            set: function (t) {
-                this._type = t;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        return EventArgs;
-    }());
+        }
+        get type() {
+            return this._type;
+        }
+        set type(t) {
+            this._type = t;
+        }
+    }
     airkit.EventArgs = EventArgs;
 })(airkit || (airkit = {}));
 // import { EventArgs } from "./EventArgs";
@@ -2147,57 +1972,46 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-6
      */
-    var EventCenter = /** @class */ (function (_super) {
-        __extends(EventCenter, _super);
-        function EventCenter() {
-            var _this = _super.call(this) || this;
-            _this._event = null;
-            _this._evtArgs = null;
-            _this._event = new airkit.EventDispatcher();
-            _this._evtArgs = new airkit.EventArgs();
-            return _this;
+    class EventCenter extends airkit.Singleton {
+        constructor() {
+            super();
+            this._event = null;
+            this._evtArgs = null;
+            this._event = new airkit.EventDispatcher();
+            this._evtArgs = new airkit.EventArgs();
         }
-        Object.defineProperty(EventCenter, "Instance", {
-            get: function () {
-                if (!this.instance)
-                    this.instance = new EventCenter();
-                return this.instance;
-            },
-            enumerable: false,
-            configurable: true
-        });
+        static get Instance() {
+            if (!this.instance)
+                this.instance = new EventCenter();
+            return this.instance;
+        }
         /**
          * 添加监听
          * @param type      事件类型
          * @param caller    调用者
          * @param fun       回调函数，注意回调函数的参数是共用一个，所有不要持有引用[let evt = args（不建议这样写）]
          */
-        EventCenter.on = function (type, caller, fun) {
+        static on(type, caller, fun) {
             EventCenter.Instance._event.on(type, caller, fun);
-        };
+        }
         /**
          * 移除监听
          */
-        EventCenter.off = function (type, caller, fun) {
+        static off(type, caller, fun) {
             EventCenter.Instance._event.off(type, caller, fun);
-        };
+        }
         /**
          * 派发事件
          */
-        EventCenter.dispatchEvent = function (type) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
+        static dispatchEvent(type, ...args) {
             EventCenter.Instance._evtArgs.init(args);
             EventCenter.Instance._event.dispatchEvent(type, EventCenter.Instance._evtArgs);
-        };
-        EventCenter.clear = function () {
+        }
+        static clear() {
             EventCenter.Instance._event.clear();
-        };
-        EventCenter.instance = null;
-        return EventCenter;
-    }(airkit.Singleton));
+        }
+    }
+    EventCenter.instance = null;
     airkit.EventCenter = EventCenter;
 })(airkit || (airkit = {}));
 // import { DicUtils } from "../utils/DicUtils";
@@ -2209,8 +2023,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-6
      */
-    var EventDispatcher = /** @class */ (function () {
-        function EventDispatcher() {
+    class EventDispatcher {
+        constructor() {
             this._dicFuns = {};
             this._evtArgs = null;
             this._evtArgs = new airkit.EventArgs();
@@ -2221,221 +2035,196 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param caller    调用者
          * @param fun       回调函数，注意回调函数的参数是共用一个，所有不要持有引用[let evt = args（不建议这样写）]
          */
-        EventDispatcher.prototype.on = function (type, caller, fun) {
+        on(type, caller, fun) {
             if (!this._dicFuns[type]) {
                 this._dicFuns[type] = [];
                 this._dicFuns[type].push(airkit.Handler.create(caller, fun, null, false));
             }
             else {
-                var arr = this._dicFuns[type];
-                for (var _i = 0, arr_1 = arr; _i < arr_1.length; _i++) {
-                    var item = arr_1[_i];
+                let arr = this._dicFuns[type];
+                for (let item of arr) {
                     if (item.caller == caller && item.method == fun)
                         return;
                 }
                 arr.push(airkit.Handler.create(caller, fun, null, false));
             }
-        };
+        }
         /**
          * 移除监听
          */
-        EventDispatcher.prototype.off = function (type, caller, fun) {
-            var arr = this._dicFuns[type];
+        off(type, caller, fun) {
+            let arr = this._dicFuns[type];
             if (!arr)
                 return;
-            for (var i = 0; i < arr.length; ++i) {
-                var item = arr[i];
+            for (let i = 0; i < arr.length; ++i) {
+                let item = arr[i];
                 if (item.caller == caller && item.method == fun) {
                     item.recover();
                     arr.splice(i, 1);
                     break;
                 }
             }
-        };
+        }
         /**
          * 派发事件，注意参数类型为EventArgs
          */
-        EventDispatcher.prototype.dispatchEvent = function (type, args) {
+        dispatchEvent(type, args) {
             args.type = type;
-            var arr = this._dicFuns[type];
+            let arr = this._dicFuns[type];
             if (!arr)
                 return;
-            for (var _i = 0, arr_2 = arr; _i < arr_2.length; _i++) {
-                var item = arr_2[_i];
+            for (let item of arr) {
                 item.runWith(args);
             }
-        };
+        }
         /**
          * 派发事件
          */
-        EventDispatcher.prototype.dispatch = function (type) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
+        dispatch(type, ...args) {
             this._evtArgs.init(args);
             this.dispatchEvent(type, this._evtArgs);
-        };
-        EventDispatcher.prototype.clear = function () {
+        }
+        clear() {
             airkit.DicUtils.clearDic(this._dicFuns);
-        };
-        return EventDispatcher;
-    }());
+        }
+    }
     airkit.EventDispatcher = EventDispatcher;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    var Event = /** @class */ (function () {
-        function Event() {
-        }
-        Event.PROGRESS = "progress";
-        Event.COMPLETE = "complete";
-        Event.ERROR = "error";
-        return Event;
-    }());
+    class Event {
+    }
+    Event.PROGRESS = "progress";
+    Event.COMPLETE = "complete";
+    Event.ERROR = "error";
     airkit.Event = Event;
-    var EventID = /** @class */ (function () {
-        function EventID() {
-        }
-        //～～～～～～～～～～～～～～～～～～～～～～～场景~～～～～～～～～～～～～～～～～～～～～～～～//
-        //游戏
-        EventID.BEGIN_GAME = "BEGIN_GAME";
-        EventID.RESTART_GAEM = "RESTART_GAME";
-        //暂停游戏-主界面暂停按钮
-        EventID.STOP_GAME = "STOP_GAME";
-        EventID.PAUSE_GAME = "PAUSE_GAME";
-        EventID.ON_SHOW = "ON_SHOW";
-        EventID.ON_HIDE = "ON_HIDE";
-        //切换场景
-        EventID.CHANGE_SCENE = "CHANGE_SCENE";
-        EventID.RESIZE = "RESIZE";
-        //模块管理事件
-        EventID.BEGIN_MODULE = "BEGIN_MODULE";
-        EventID.END_MODULE = "END_MODULE";
-        EventID.UI_OPEN = "UI_OPEN"; //界面打开
-        EventID.UI_CLOSE = "UI_CLOSE"; //界面关闭
-        EventID.UI_LANG = "UI_LANG"; //语言设置改变
-        return EventID;
-    }());
+    class EventID {
+    }
+    //～～～～～～～～～～～～～～～～～～～～～～～场景~～～～～～～～～～～～～～～～～～～～～～～～//
+    //游戏
+    EventID.BEGIN_GAME = "BEGIN_GAME";
+    EventID.RESTART_GAEM = "RESTART_GAME";
+    //暂停游戏-主界面暂停按钮
+    EventID.STOP_GAME = "STOP_GAME";
+    EventID.PAUSE_GAME = "PAUSE_GAME";
+    EventID.ON_SHOW = "ON_SHOW";
+    EventID.ON_HIDE = "ON_HIDE";
+    //切换场景
+    EventID.CHANGE_SCENE = "CHANGE_SCENE";
+    EventID.RESIZE = "RESIZE";
+    //模块管理事件
+    EventID.BEGIN_MODULE = "BEGIN_MODULE";
+    EventID.END_MODULE = "END_MODULE";
+    EventID.ENTER_MODULE = "ENTER_MODULE";
+    EventID.EXIT_MODULE = "EXIT_MODULE";
+    EventID.UI_OPEN = "UI_OPEN"; //界面打开
+    EventID.UI_CLOSE = "UI_CLOSE"; //界面关闭
+    EventID.UI_LANG = "UI_LANG"; //语言设置改变
     airkit.EventID = EventID;
-    var LoaderEventID = /** @class */ (function () {
-        function LoaderEventID() {
-        }
-        //加载事件
-        LoaderEventID.RESOURCE_LOAD_COMPLATE = "RESOURCE_LOAD_COMPLATE"; //资源加载完成
-        LoaderEventID.RESOURCE_LOAD_PROGRESS = "RESOURCE_LOAD_PROGRESS"; //资源加载进度
-        LoaderEventID.RESOURCE_LOAD_FAILED = "RESOURCE_LOAD_FAILED"; //资源加载失败
-        //加载界面事件
-        LoaderEventID.LOADVIEW_OPEN = "LOADVIEW_OPEN"; //加载界面打开
-        LoaderEventID.LOADVIEW_COMPLATE = "LOADVIEW_COMPLATE"; //加载进度完成
-        LoaderEventID.LOADVIEW_PROGRESS = "LOADVIEW_PROGRESS"; //加载进度
-        return LoaderEventID;
-    }());
+    class LoaderEventID {
+    }
+    //加载事件
+    LoaderEventID.RESOURCE_LOAD_COMPLATE = "RESOURCE_LOAD_COMPLATE"; //资源加载完成
+    LoaderEventID.RESOURCE_LOAD_PROGRESS = "RESOURCE_LOAD_PROGRESS"; //资源加载进度
+    LoaderEventID.RESOURCE_LOAD_FAILED = "RESOURCE_LOAD_FAILED"; //资源加载失败
+    //加载界面事件
+    LoaderEventID.LOADVIEW_OPEN = "LOADVIEW_OPEN"; //加载界面打开
+    LoaderEventID.LOADVIEW_COMPLATE = "LOADVIEW_COMPLATE"; //加载进度完成
+    LoaderEventID.LOADVIEW_PROGRESS = "LOADVIEW_PROGRESS"; //加载进度
     airkit.LoaderEventID = LoaderEventID;
 })(airkit || (airkit = {}));
 // import { ISignal } from "./ISignal";
 
 (function (airkit) {
-    var Signal = /** @class */ (function () {
-        function Signal() {
-        }
-        Signal.prototype.destory = function () {
+    class Signal {
+        constructor() { }
+        destory() {
             this._listener && this._listener.destory();
             this._listener = null;
-        };
+        }
         /**
          * 派发信号
          * @param arg
          */
-        Signal.prototype.dispatch = function (arg) {
+        dispatch(arg) {
             if (this._listener)
                 this._listener.execute(arg);
-        };
-        Signal.prototype.has = function (caller) {
+        }
+        has(caller) {
             if (this._listener == null)
                 return false;
             return this._listener.has(caller);
-        };
+        }
         /**
          * 注册回调
          * @param caller
          * @param method
          * @param args
          */
-        Signal.prototype.on = function (caller, method) {
-            var args = [];
-            for (var _i = 2; _i < arguments.length; _i++) {
-                args[_i - 2] = arguments[_i];
-            }
+        on(caller, method, ...args) {
             this.makeSureListenerManager();
             this._listener.on(caller, method, args, false);
-        };
+        }
         /**
          * 注册一次性回调
          * @param caller
          * @param method
          * @param args
          */
-        Signal.prototype.once = function (caller, method) {
-            var args = [];
-            for (var _i = 2; _i < arguments.length; _i++) {
-                args[_i - 2] = arguments[_i];
-            }
+        once(caller, method, ...args) {
             this.makeSureListenerManager();
             this._listener.on(caller, method, args, true);
-        };
+        }
         /**
          * 取消回调
          * @param caller
          * @param method
          */
-        Signal.prototype.off = function (caller, method) {
+        off(caller, method) {
             if (this._listener)
                 this._listener.off(caller, method);
-        };
+        }
         /**
          * 保证ListenerManager可用
          */
-        Signal.prototype.makeSureListenerManager = function () {
+        makeSureListenerManager() {
             if (!this._listener)
                 this._listener = new SignalListener();
-        };
-        return Signal;
-    }());
+        }
+    }
     airkit.Signal = Signal;
-    var SignalListener = /** @class */ (function () {
-        function SignalListener() {
+    class SignalListener {
+        constructor() {
             this.stopped = false;
         }
-        SignalListener.prototype.destory = function () {
+        destory() {
             this.stopped = false;
             this.clear();
-        };
-        SignalListener.prototype.has = function (caller) {
-            for (var i = 0; i < this.handlers.length; i++) {
+        }
+        has(caller) {
+            for (let i = 0; i < this.handlers.length; i++) {
                 if (this.handlers[i].caller == caller) {
                     return true;
                 }
             }
             return false;
-        };
-        SignalListener.prototype.on = function (caller, method, args, once) {
-            if (once === void 0) { once = false; }
+        }
+        on(caller, method, args, once = false) {
             if (!this.handlers)
                 this.handlers = [];
-            var handler = new airkit.Handler(caller, method, args, once);
+            let handler = new airkit.Handler(caller, method, args, once);
             this.handlers.push(handler);
             return handler;
-        };
+        }
         /**
          * 解除回调
          * @param caller
          * @param method
          */
-        SignalListener.prototype.off = function (caller, method) {
+        off(caller, method) {
             if (!this.handlers || this.handlers.length <= 0)
                 return;
-            var tempHandlers = [];
+            let tempHandlers = [];
             for (var i = 0; i < this.handlers.length; i++) {
                 var handler = this.handlers[i];
                 if (handler.caller === caller && handler.method === method) {
@@ -2452,18 +2241,18 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 tempHandlers.push(this.handlers[i]);
             }
             this.handlers = tempHandlers;
-        };
+        }
         /**
          * 解除所有回调
          * @param caller
          * @param method
          */
-        SignalListener.prototype.offAll = function (caller, method) {
+        offAll(caller, method) {
             if (!this.handlers || this.handlers.length <= 0)
                 return;
-            var temp = [];
-            var handlers = this.handlers;
-            var len = handlers.length;
+            let temp = [];
+            let handlers = this.handlers;
+            let len = handlers.length;
             for (var i = 0; i < len; ++i) {
                 if (caller !== handlers[i].caller || method !== handlers[i].method) {
                     temp.push(handlers[i]);
@@ -2473,11 +2262,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
             this.handlers = temp;
-        };
+        }
         /**
          * 清除所有回调
          */
-        SignalListener.prototype.clear = function () {
+        clear() {
             if (!this.handlers || this.handlers.length <= 0)
                 return;
             for (var i = 0; i < this.handlers.length; i++) {
@@ -2485,22 +2274,18 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 handler.recover();
             }
             this.handlers = null;
-        };
-        SignalListener.prototype.stop = function () {
+        }
+        stop() {
             this.stopped = true;
-        };
-        SignalListener.prototype.execute = function () {
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
+        }
+        execute(...args) {
             if (!this.handlers || this.handlers.length <= 0)
                 return;
-            var handlers = this.handlers;
-            var len = handlers.length;
-            var handler;
-            var temp = [];
-            var i = 0;
+            let handlers = this.handlers;
+            let len = handlers.length;
+            let handler;
+            let temp = [];
+            let i = 0;
             for (; i < len; ++i) {
                 if (this.stopped)
                     break;
@@ -2518,9 +2303,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             handler = null;
             handlers = null;
             temp = null;
-        };
-        return SignalListener;
-    }());
+        }
+    }
     airkit.SignalListener = SignalListener;
 })(airkit || (airkit = {}));
 // import { DataProvider } from "../config/DataProvider";
@@ -2540,15 +2324,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @param key LK.xxx  {0},{1}..{n}.表示参数占位符
      * @param args
      */
-    function L(key) {
-        var args = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            args[_i - 1] = arguments[_i];
-        }
-        var str = LangManager.Instance.getText(LangManager.Instance.curLang, key);
+    function L(key, ...args) {
+        let str = LangManager.Instance.getText(LangManager.Instance.curLang, key);
         if (str == null)
             return "unknown key:" + key;
-        return airkit.StringUtils.format.apply(airkit.StringUtils, __spreadArrays([str], args));
+        return airkit.StringUtils.format(str, ...args);
     }
     airkit.L = L;
     /**
@@ -2556,30 +2336,22 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2017-7-9
      */
-    var LangManager = /** @class */ (function (_super) {
-        __extends(LangManager, _super);
-        function LangManager() {
-            return _super !== null && _super.apply(this, arguments) || this;
+    class LangManager extends airkit.Singleton {
+        static get Instance() {
+            if (!this.instance)
+                this.instance = new LangManager();
+            return this.instance;
         }
-        Object.defineProperty(LangManager, "Instance", {
-            get: function () {
-                if (!this.instance)
-                    this.instance = new LangManager();
-                return this.instance;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        LangManager.prototype.init = function () {
+        init() {
             //this._langs = new SDictionary<LangConfig>()
             //  this._listTables = []
             this._curLang = null;
-        };
+        }
         // public addLangPack(conf: LangConfig): void {
         //     // this._listTables.push(new ConfigItem(conf.url, conf.name, "id"))
         //     this._langs.add(conf.name, conf)
         // }
-        LangManager.prototype.destory = function () {
+        destory() {
             // if (!this._listTables) return
             // for (let info of this._listTables) {
             //     DataProvider.Instance.unload(info.url)
@@ -2587,7 +2359,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             // ArrayUtils.clear(this._listTables)
             // this._listTables = null
             // this._langs.clear()
-        };
+        }
         /**开始加载*/
         // public loadAll(): void {
         //     DataProvider.Instance.load(this._listTables)
@@ -2599,14 +2371,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * 切换语言
          * @param type  语言类型
          */
-        LangManager.prototype.changeLang = function (lang) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                if (lang == _this._curLang) {
+        changeLang(lang) {
+            return new Promise((resolve, reject) => {
+                if (lang == this._curLang) {
                     resolve(lang);
                     return;
                 }
-                var data = airkit.ConfigManger.Instance.getList(_this._curLang);
+                let data = airkit.ConfigManger.Instance.getList(this._curLang);
                 // for (let i = 0; i < this._listTables.length; i++) {
                 //     if (this._listTables[i].name == lang) {
                 //         data = this._listTables[i]
@@ -2615,8 +2386,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 // }
                 if (data) {
                     if (airkit.DataProvider.Instance.getConfig(lang)) {
-                        _this._curLang = lang;
-                        airkit.EventCenter.dispatchEvent(airkit.EventID.UI_LANG, _this._curLang);
+                        this._curLang = lang;
+                        airkit.EventCenter.dispatchEvent(airkit.EventID.UI_LANG, this._curLang);
                         resolve(lang);
                     }
                 }
@@ -2625,13 +2396,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     reject("no lang package " + lang);
                 }
             });
-        };
+        }
         /**
          * 获取语言包
          * @param key     位置
          */
-        LangManager.prototype.getText = function (lang, key) {
-            var info = airkit.DataProvider.Instance.getInfo(lang, key);
+        getText(lang, key) {
+            let info = airkit.DataProvider.Instance.getInfo(lang, key);
             if (info) {
                 return info["name"];
             }
@@ -2639,20 +2410,15 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 airkit.Log.error("cant get lang key", key);
                 return "";
             }
-        };
-        Object.defineProperty(LangManager.prototype, "curLang", {
-            /**当前语言类型*/
-            get: function () {
-                return this._curLang;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        //public _langs: SDictionary<LangConfig>
-        // private _listTables: Array<ConfigItem>
-        LangManager.instance = null;
-        return LangManager;
-    }(airkit.Singleton));
+        }
+        /**当前语言类型*/
+        get curLang() {
+            return this._curLang;
+        }
+    }
+    //public _langs: SDictionary<LangConfig>
+    // private _listTables: Array<ConfigItem>
+    LangManager.instance = null;
     airkit.LangManager = LangManager;
     // export class LangConfig {
     //     public name: string
@@ -2670,76 +2436,67 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2017-7-25
      */
-    var LoaderManager = /** @class */ (function (_super) {
-        __extends(LoaderManager, _super);
-        function LoaderManager() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
+    class LoaderManager extends airkit.Singleton {
         /**
          * 注册加载类，存放场景id和url的对应关系
          * @param view_type
          * @param className
          */
-        LoaderManager.registerLoadingView = function (view_type, className, cls) {
+        static registerLoadingView(view_type, className, cls) {
             this.loaders.add(view_type, className);
             airkit.ClassUtils.regClass(className, cls);
-        };
-        Object.defineProperty(LoaderManager, "Instance", {
-            get: function () {
-                if (!this.instance)
-                    this.instance = new LoaderManager();
-                return this.instance;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        LoaderManager.prototype.setup = function () {
+        }
+        static get Instance() {
+            if (!this.instance)
+                this.instance = new LoaderManager();
+            return this.instance;
+        }
+        setup() {
             this.registerEvent();
             this._dicLoadView = new airkit.NDictionary();
-        };
-        LoaderManager.prototype.destroy = function () {
-            _super.prototype.destroy.call(this);
+        }
+        destroy() {
             this.unRegisterEvent();
             if (this._dicLoadView) {
-                var view_1 = null;
+                let view = null;
                 this._dicLoadView.foreach(function (key, value) {
-                    view_1 = value;
-                    view_1.close();
+                    view = value;
+                    view.close();
                     return true;
                 });
                 this._dicLoadView.clear();
                 this._dicLoadView = null;
             }
             return true;
-        };
-        LoaderManager.prototype.registerEvent = function () {
+        }
+        registerEvent() {
             airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
             airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
             airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
-        };
-        LoaderManager.prototype.unRegisterEvent = function () {
+        }
+        unRegisterEvent() {
             airkit.EventCenter.off(airkit.LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
             airkit.EventCenter.off(airkit.LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
             airkit.EventCenter.off(airkit.LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
-        };
+        }
         /**加载进度事件*/
-        LoaderManager.prototype.onLoadViewEvt = function (args) {
-            var type = args.type;
-            var viewType = args.get(0);
+        onLoadViewEvt(args) {
+            let type = args.type;
+            let viewType = args.get(0);
             switch (type) {
                 case airkit.LoaderEventID.LOADVIEW_OPEN:
                     {
                         airkit.Log.debug("显示加载界面");
-                        var total = args.get(1);
-                        var tips = args.get(2);
+                        let total = args.get(1);
+                        let tips = args.get(2);
                         this.show(viewType, total, tips);
                     }
                     break;
                 case airkit.LoaderEventID.LOADVIEW_PROGRESS:
                     {
                         //Log.debug("加载界面进度")
-                        var cur = args.get(1);
-                        var total = args.get(2);
+                        let cur = args.get(1);
+                        let total = args.get(2);
                         this.setProgress(viewType, cur, total);
                     }
                     break;
@@ -2750,25 +2507,24 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     }
                     break;
             }
-        };
-        LoaderManager.prototype.show = function (type, total, tips) {
-            var _this = this;
+        }
+        show(type, total, tips) {
             if (type == null || type == airkit.LOADVIEW_TYPE_NONE)
                 return;
-            var view = this._dicLoadView.getValue(type);
+            let view = this._dicLoadView.getValue(type);
             if (!view) {
-                var className = LoaderManager.loaders.getValue(type);
+                let className = LoaderManager.loaders.getValue(type);
                 //切换
                 if (className.length > 0) {
                     view = airkit.ClassUtils.getInstance(className);
                     if (view == null)
                         return;
                     view.setup([]);
-                    var clas = airkit.ClassUtils.getClass(className);
-                    view.loadResource(airkit.ResourceManager.SystemGroup, clas).then(function () {
+                    let clas = airkit.ClassUtils.getClass(className);
+                    view.loadResource(airkit.ResourceManager.SystemGroup, clas).then(() => {
                         airkit.LayerManager.loadingLayer.addChild(view);
-                        _this._dicLoadView.add(type, view);
-                        _this.updateView(view, total, tips);
+                        this._dicLoadView.add(type, view);
+                        this.updateView(view, total, tips);
                     });
                 }
                 else {
@@ -2778,24 +2534,24 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             else {
                 this.updateView(view, total, tips);
             }
-        };
-        LoaderManager.prototype.updateView = function (view, total, tips) {
+        }
+        updateView(view, total, tips) {
             if (!view.parent) {
                 airkit.LayerManager.loadingLayer.addChild(view);
             }
             view.onOpen(total);
             view.setTips(tips);
             view.setVisible(true);
-        };
-        LoaderManager.prototype.setProgress = function (type, cur, total) {
-            var view = this._dicLoadView.getValue(type);
+        }
+        setProgress(type, cur, total) {
+            let view = this._dicLoadView.getValue(type);
             if (!view) {
                 return;
             }
             view.setProgress(cur, total);
-        };
-        LoaderManager.prototype.close = function (type) {
-            var view = this._dicLoadView.getValue(type);
+        }
+        close(type) {
+            let view = this._dicLoadView.getValue(type);
             if (!view) {
                 return;
             }
@@ -2806,11 +2562,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             // TweenUtils.get(view).to({ alpha: 0 }, 500, Laya.Ease.bounceIn, LayaHandler.create(null, v => {
             // 	view.setVisible(false)
             // }))
-        };
-        LoaderManager.loaders = new airkit.NDictionary();
-        LoaderManager.instance = null;
-        return LoaderManager;
-    }(airkit.Singleton));
+        }
+    }
+    LoaderManager.loaders = new airkit.NDictionary();
+    LoaderManager.instance = null;
     airkit.LoaderManager = LoaderManager;
 })(airkit || (airkit = {}));
 
@@ -2824,34 +2579,23 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     airkit.FONT_SIZE_5 = 22;
     airkit.FONT_SIZE_6 = 25;
     airkit.FONT_SIZE_7 = 29;
-    var FguiAsset = /** @class */ (function (_super) {
-        __extends(FguiAsset, _super);
-        function FguiAsset() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        return FguiAsset;
-    }(cc.BufferAsset));
+    class FguiAsset extends cc.BufferAsset {
+    }
     airkit.FguiAsset = FguiAsset;
-    var ResourceManager = /** @class */ (function (_super) {
-        __extends(ResourceManager, _super);
-        function ResourceManager() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._dicResInfo = null; //加载过的信息，方便资源释放
-            return _this;
+    class ResourceManager extends airkit.Singleton {
+        constructor() {
+            super(...arguments);
+            this._dicResInfo = null; //加载过的信息，方便资源释放
         }
-        Object.defineProperty(ResourceManager, "Instance", {
-            get: function () {
-                if (!this.instance)
-                    this.instance = new ResourceManager();
-                return this.instance;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        ResourceManager.prototype.setup = function () {
+        static get Instance() {
+            if (!this.instance)
+                this.instance = new ResourceManager();
+            return this.instance;
+        }
+        setup() {
             this._dicResInfo = new airkit.SDictionary();
             this._minLoaderTime = 1000;
-        };
+        }
         /**
          * 异步加载
          * @param    url  要加载的单个资源地址或资源信息数组。比如：简单数组：["a.png","b.png"]；复杂数组[{url:"a.png",type:Loader.IMAGE,size:100,priority:1},{url:"b.json",type:Loader.JSON,size:50,priority:1}]。
@@ -2862,10 +2606,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	group		分组，方便对资源进行管理。
          * @param    ignoreCache	是否忽略缓存，强制重新加载。
          */
-        ResourceManager.prototype.destroy = function () {
-            _super.prototype.destroy.call(this);
+        destroy() {
             if (this._dicResInfo) {
-                this._dicResInfo.foreach(function (k, v) {
+                this._dicResInfo.foreach((k, v) => {
                     ResourceManager.Instance.clearRes(k);
                     return true;
                 });
@@ -2873,19 +2616,19 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 this._dicResInfo = null;
             }
             return true;
-        };
-        ResourceManager.prototype.update = function (dt) { };
+        }
+        update(dt) { }
         /**获取资源*/
-        ResourceManager.prototype.getRes = function (url) {
+        getRes(url) {
             //修改访问时间
             return cc.resources.get(url);
-        };
-        ResourceManager.prototype.dump = function () {
-            this._dicResInfo.foreach(function (k, v) {
+        }
+        dump() {
+            this._dicResInfo.foreach((k, v) => {
                 console.log("url:" + k + " refCount=" + v.ref + "\n");
                 return true;
             });
-        };
+        }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～加载～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**
          * 加载资源，如果资源在此之前已经加载过，则当前帧会调用complete
@@ -2898,14 +2641,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	ignoreCache 是否忽略缓存，强制重新加载
          * @return 	结束回调(参数：string 加载的资源url)
          */
-        ResourceManager.prototype.loadRes = function (url, type, viewType, priority, cache, group, ignoreCache) {
+        loadRes(url, type, viewType = airkit.LOADVIEW_TYPE_NONE, priority = 1, cache = true, group = "default", ignoreCache = false) {
             //添加到加载目录
-            var _this = this;
-            if (viewType === void 0) { viewType = airkit.LOADVIEW_TYPE_NONE; }
-            if (priority === void 0) { priority = 1; }
-            if (cache === void 0) { cache = true; }
-            if (group === void 0) { group = "default"; }
-            if (ignoreCache === void 0) { ignoreCache = false; }
             if (viewType == null)
                 viewType = airkit.LOADVIEW_TYPE_NONE;
             //判断是否需要显示加载界面
@@ -2917,17 +2654,17 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, 1);
             }
-            var resInfo = this._dicResInfo.getValue(url);
+            let resInfo = this._dicResInfo.getValue(url);
             if (!resInfo) {
                 resInfo = new ResInfo(url, type, group);
                 this._dicResInfo.set(url, resInfo);
             }
             resInfo.incRef();
             resInfo.updateStatus(eLoaderStatus.LOADING);
-            return new Promise(function (resolve, reject) {
-                cc.resources.load(url, type, function (completedCount, totalCount, item) {
-                    _this.onLoadProgress(viewType, totalCount, "", completedCount / totalCount);
-                }, function (error, resource) {
+            return new Promise((resolve, reject) => {
+                cc.resources.load(url, type, (completedCount, totalCount, item) => {
+                    this.onLoadProgress(viewType, totalCount, "", completedCount / totalCount);
+                }, (error, resource) => {
                     if (error) {
                         resInfo.updateStatus(eLoaderStatus.READY);
                         resInfo.decRef();
@@ -2935,11 +2672,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         return;
                     }
                     resInfo.updateStatus(eLoaderStatus.LOADED);
-                    _this.onLoadComplete(viewType, [url], [type], "");
+                    this.onLoadComplete(viewType, [url], [type], "");
                     resolve(url);
                 });
             });
-        };
+        }
         /**
          * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
          * @param	arr_res 	需要加载的资源数组
@@ -2951,25 +2688,17 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	ignoreCache 是否忽略缓存，强制重新加载
          * @return 	结束回调(参数：Array<string>，加载的url数组)
          */
-        ResourceManager.prototype.loadArrayRes = function (arr_res, viewType, tips, priority, cache, group, ignoreCache) {
-            var _this = this;
-            if (viewType === void 0) { viewType = airkit.LOADVIEW_TYPE_NONE; }
-            if (tips === void 0) { tips = null; }
-            if (priority === void 0) { priority = 1; }
-            if (cache === void 0) { cache = true; }
-            if (group === void 0) { group = "default"; }
-            if (ignoreCache === void 0) { ignoreCache = false; }
-            var has_unload = false;
-            var urls = [];
-            var types = new Array();
+        loadArrayRes(arr_res, viewType = airkit.LOADVIEW_TYPE_NONE, tips = null, priority = 1, cache = true, group = "default", ignoreCache = false) {
+            let has_unload = false;
+            let urls = [];
+            let types = new Array();
             if (viewType == null)
                 viewType = airkit.LOADVIEW_TYPE_NONE;
             if (priority == null)
                 priority = 1;
             if (cache == null)
                 cache = true;
-            for (var _i = 0, arr_res_1 = arr_res; _i < arr_res_1.length; _i++) {
-                var res = arr_res_1[_i];
+            for (let res of arr_res) {
                 urls.push(res.url);
                 types.push(res.type);
                 //判断是否有未加载资源
@@ -2985,8 +2714,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, urls.length, tips);
             }
-            for (var i = 0; i < urls.length; i++) {
-                var resInfo = this._dicResInfo.getValue(urls[i]);
+            for (let i = 0; i < urls.length; i++) {
+                let resInfo = this._dicResInfo.getValue(urls[i]);
                 if (!resInfo) {
                     resInfo = new ResInfo(urls[i], types[i], group);
                     this._dicResInfo.set(urls[i], resInfo);
@@ -2994,13 +2723,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 resInfo.incRef();
                 resInfo.updateStatus(eLoaderStatus.LOADING);
             }
-            return new Promise(function (resolve, reject) {
-                cc.resources.load(urls, function (completedCount, totalCount, item) {
-                    _this.onLoadProgress(viewType, totalCount, tips, completedCount / totalCount);
-                }, function (error, resource) {
+            return new Promise((resolve, reject) => {
+                cc.resources.load(urls, (completedCount, totalCount, item) => {
+                    this.onLoadProgress(viewType, totalCount, tips, completedCount / totalCount);
+                }, (error, resource) => {
                     if (error) {
-                        for (var i = 0; i < urls.length; i++) {
-                            var resInfo = _this._dicResInfo.getValue(urls[i]);
+                        for (let i = 0; i < urls.length; i++) {
+                            let resInfo = this._dicResInfo.getValue(urls[i]);
                             if (resInfo) {
                                 resInfo.decRef();
                                 resInfo.updateStatus(eLoaderStatus.READY);
@@ -3009,36 +2738,36 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         reject(urls);
                         return;
                     }
-                    for (var i = 0; i < urls.length; i++) {
-                        var resInfo = _this._dicResInfo.getValue(urls[i]);
+                    for (let i = 0; i < urls.length; i++) {
+                        let resInfo = this._dicResInfo.getValue(urls[i]);
                         if (resInfo) {
                             resInfo.updateStatus(eLoaderStatus.READY);
                         }
                     }
                     if (viewType != airkit.LOADVIEW_TYPE_NONE) {
-                        airkit.TimerManager.Instance.addOnce(_this._minLoaderTime, null, function (v) {
-                            _this.onLoadComplete(viewType, urls, types, tips);
+                        airkit.TimerManager.Instance.addOnce(this._minLoaderTime, null, (v) => {
+                            this.onLoadComplete(viewType, urls, types, tips);
                             resolve(urls);
                         });
                     }
                     else {
-                        _this.onLoadComplete(viewType, urls, types, tips);
+                        this.onLoadComplete(viewType, urls, types, tips);
                         resolve(urls);
                     }
                 });
             });
-        };
+        }
         /**
          * 加载完成
          * @param	viewType	显示的加载界面类型
          * @param 	handle 		加载时，传入的回调函数
          * @param 	args		第一个参数为加载的资源url列表；第二个参数为是否加载成功
          */
-        ResourceManager.prototype.onLoadComplete = function (viewType, urls, types, tips) {
+        onLoadComplete(viewType, urls, types, tips) {
             //显示加载日志
             if (urls) {
-                var arr = urls;
-                for (var i = 0; i < urls.length; i++) {
+                let arr = urls;
+                for (let i = 0; i < urls.length; i++) {
                     if (types[i] == airkit.FguiAsset) {
                         fgui.UIPackage.addPackage(urls[i]);
                     }
@@ -3048,60 +2777,59 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_COMPLATE, viewType);
             }
-        };
+        }
         /**
          * 加载进度
          * @param	viewType	显示的加载界面类型
          * @param	total		总共需要加载的资源数量
          * @param	progress	已经加载的数量，百分比；注意，有可能相同进度会下发多次
          */
-        ResourceManager.prototype.onLoadProgress = function (viewType, total, tips, progress) {
-            var cur = airkit.NumberUtils.toInt(Math.floor(progress * total));
+        onLoadProgress(viewType, total, tips, progress) {
+            let cur = airkit.NumberUtils.toInt(Math.floor(progress * total));
             airkit.Log.debug("[load]进度: current={0} total={1} precent = {2}", cur, total, progress);
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_PROGRESS, viewType, cur, total, tips);
             }
-        };
+        }
         /**
          * 释放指定资源
          * @param	url	资源路径
          */
-        ResourceManager.prototype.clearRes = function (url) {
-            var res = this._dicResInfo.getValue(url);
+        clearRes(url) {
+            let res = this._dicResInfo.getValue(url);
             if (res) {
                 res.decRef();
             }
-        };
-        ResourceManager.prototype.releaseRes = function (url) {
+        }
+        releaseRes(url) {
             this._dicResInfo.remove(url);
             cc.resources.release(url);
             airkit.Log.info("[res]释放资源:" + url);
-        };
-        ResourceManager.prototype.createFuiAnim = function (pkgName, resName, path, group) {
-            if (group === void 0) { group = "default"; }
-            return new Promise(function (resolve, reject) {
-                var atlas = path + "_atlas0";
-                var bin = path;
-                var res = ResourceManager.Instance.getRes(atlas);
+        }
+        createFuiAnim(pkgName, resName, path, group = "default") {
+            return new Promise((resolve, reject) => {
+                let atlas = path + "_atlas0";
+                let bin = path;
+                let res = ResourceManager.Instance.getRes(atlas);
                 if (res == null) {
                     ResourceManager.Instance.loadArrayRes([
                         { url: atlas, type: cc.BufferAsset },
                         { url: bin, type: FguiAsset },
                     ], null, null, 0, true, group)
-                        .then(function (v) {
-                        var obj = fgui.UIPackage.createObject(pkgName, resName);
+                        .then((v) => {
+                        let obj = fgui.UIPackage.createObject(pkgName, resName);
                         resolve(obj.asCom);
                     })
-                        .catch(function (e) {
+                        .catch((e) => {
                         reject(e);
                     });
                 }
                 else {
-                    var obj = fgui.UIPackage.createObject(pkgName, resName);
+                    let obj = fgui.UIPackage.createObject(pkgName, resName);
                     resolve(obj.asCom);
                 }
             });
-        };
+        }
         /**
          * 图片代理，可以远程加载图片显示
          * @param image
@@ -3109,43 +2837,42 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param proxy
          * @param atlas
          */
-        ResourceManager.imageProxy = function (image, skin, proxy, atlas) {
-            return new Promise(function (resolve, reject) {
-                var texture = ResourceManager.Instance.getRes(skin);
+        static imageProxy(image, skin, proxy, atlas) {
+            return new Promise((resolve, reject) => {
+                let texture = ResourceManager.Instance.getRes(skin);
                 if (texture != null) {
                     image.url = skin;
                 }
                 else {
-                    var res_1 = skin;
+                    let res = skin;
                     if (atlas != null) {
-                        res_1 = atlas;
+                        res = atlas;
                     }
                     if (proxy) {
                         image.url = proxy;
                     }
-                    airkit.Log.info("imageProxy start load {0} ", res_1);
-                    ResourceManager.Instance.loadRes(res_1)
-                        .then(function (v) {
+                    airkit.Log.info("imageProxy start load {0} ", res);
+                    ResourceManager.Instance.loadRes(res)
+                        .then((v) => {
                         image.url = skin;
                         image.alpha = 0.1;
                         airkit.TweenUtils.get(image).to({ alpha: 1.0 }, 0.3);
-                        airkit.Log.info("imageProxy start load done {0} ", res_1);
+                        airkit.Log.info("imageProxy start load done {0} ", res);
                     })
-                        .catch(function (e) { return airkit.Log.error(e); });
+                        .catch((e) => airkit.Log.error(e));
                 }
             });
-        };
-        ResourceManager.FONT_Yuanti = "Yuanti SC Regular";
-        ResourceManager.Font_Helvetica = "Helvetica";
-        ResourceManager.FONT_DEFAULT = "";
-        ResourceManager.FONT_DEFAULT_SIZE = airkit.FONT_SIZE_5;
-        ResourceManager.DefaultGroup = "airkit";
-        ResourceManager.SystemGroup = "system";
-        ResourceManager.instance = null;
-        return ResourceManager;
-    }(airkit.Singleton));
+        }
+    }
+    ResourceManager.FONT_Yuanti = "Yuanti SC Regular";
+    ResourceManager.Font_Helvetica = "Helvetica";
+    ResourceManager.FONT_DEFAULT = "";
+    ResourceManager.FONT_DEFAULT_SIZE = airkit.FONT_SIZE_5;
+    ResourceManager.DefaultGroup = "airkit";
+    ResourceManager.SystemGroup = "system";
+    ResourceManager.instance = null;
     airkit.ResourceManager = ResourceManager;
-    var eLoaderStatus;
+    let eLoaderStatus;
     (function (eLoaderStatus) {
         eLoaderStatus[eLoaderStatus["READY"] = 0] = "READY";
         eLoaderStatus[eLoaderStatus["LOADING"] = 1] = "LOADING";
@@ -3154,23 +2881,21 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     /**
      * 保存加载过的url
      */
-    var ResInfo = /** @class */ (function (_super) {
-        __extends(ResInfo, _super);
-        function ResInfo(url, type, group) {
-            var _this = _super.call(this) || this;
-            _this.url = url;
-            _this.ref = 0;
-            _this.group = group;
-            _this.status = eLoaderStatus.READY;
-            return _this;
+    class ResInfo extends airkit.EventDispatcher {
+        constructor(url, type, group) {
+            super();
+            this.url = url;
+            this.ref = 0;
+            this.group = group;
+            this.status = eLoaderStatus.READY;
         }
-        ResInfo.prototype.updateStatus = function (status) {
+        updateStatus(status) {
             this.status = status;
-        };
-        ResInfo.prototype.incRef = function () {
+        }
+        incRef() {
             this.ref++;
-        };
-        ResInfo.prototype.decRef = function () {
+        }
+        decRef() {
             this.ref--;
             if (this.ref <= 0) {
                 if (this.type == FguiAsset) {
@@ -3178,9 +2903,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
                 ResourceManager.Instance.releaseRes(this.url);
             }
-        };
-        return ResInfo;
-    }(airkit.EventDispatcher));
+        }
+    }
 })(airkit || (airkit = {}));
 // import { StringUtils } from "../utils/StringUtils";
 // import { DateUtils } from "../utils/DateUtils";
@@ -3192,20 +2916,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-8
      */
-    var Log = /** @class */ (function () {
-        function Log() {
-        }
-        Log.format = function (format) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
+    class Log {
+        static format(format, ...args) {
             if (format == null)
                 return "null";
             if (airkit.StringUtils.isString(format)) {
-                var arr = [];
-                for (var i = 0; i < args.length; i++) {
-                    var arg = args[i];
+                let arr = [];
+                for (let i = 0; i < args.length; i++) {
+                    let arg = args[i];
                     if (airkit.StringUtils.isString(arg)) {
                         arr.push(arg);
                     }
@@ -3213,7 +2931,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         arr.push(JSON.stringify(arg, null, 4));
                     }
                 }
-                var content = airkit.StringUtils.format.apply(airkit.StringUtils, __spreadArrays([format], arr));
+                let content = airkit.StringUtils.format(format, ...arr);
                 return content;
             }
             else {
@@ -3224,63 +2942,43 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     return JSON.stringify(format, null, 4);
                 }
             }
-        };
-        Log.debug = function (format) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
+        }
+        static debug(format, ...args) {
             if (this.LEVEL < airkit.LogLevel.DEBUG)
                 return;
-            var content = this.format.apply(this, __spreadArrays([format], args));
+            let content = this.format(format, ...args);
             console.log(airkit.DateUtils.currentYMDHMS(), "[debug]", content);
             return content;
-        };
-        Log.info = function (format) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
+        }
+        static info(format, ...args) {
             if (this.LEVEL < airkit.LogLevel.INFO)
                 return;
-            var content = this.format.apply(this, __spreadArrays([format], args));
+            let content = this.format(format, ...args);
             console.log(airkit.DateUtils.currentYMDHMS(), "[info]", content);
             return content;
-        };
-        Log.warning = function (format) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
+        }
+        static warning(format, ...args) {
             if (this.LEVEL < airkit.LogLevel.WARNING)
                 return;
-            var content = this.format.apply(this, __spreadArrays([format], args));
+            let content = this.format(format, ...args);
             console.warn(airkit.DateUtils.currentYMDHMS(), "[warn]", content);
             return content;
-        };
-        Log.error = function (format) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
+        }
+        static error(format, ...args) {
             if (this.LEVEL < airkit.LogLevel.ERROR)
                 return;
-            var content = this.format.apply(this, __spreadArrays([format], args));
+            let content = this.format(format, ...args);
             console.error(airkit.DateUtils.currentYMDHMS(), "[error]", content);
             return content;
-        };
-        Log.exception = function (format) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
+        }
+        static exception(format, ...args) {
             if (this.LEVEL < airkit.LogLevel.EXCEPTION)
                 return;
-            var content = this.format.apply(this, __spreadArrays([format], args));
+            let content = this.format(format, ...args);
             console.exception(airkit.DateUtils.currentYMDHMS(), "[exce]", content);
             return content;
-        };
-        Log.dump = function (value) {
+        }
+        static dump(value) {
             if (this.LEVEL < airkit.LogLevel.INFO)
                 return;
             if (value instanceof Object) {
@@ -3292,10 +2990,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
             console.log(airkit.DateUtils.currentYMDHMS(), "[Dump]", value);
-        };
-        Log.LEVEL = airkit.LogLevel.INFO;
-        return Log;
-    }());
+        }
+    }
+    Log.LEVEL = airkit.LogLevel.INFO;
     airkit.Log = Log;
 })(airkit || (airkit = {}));
 // import { ISignal } from "../event/ISignal";
@@ -3303,23 +3000,27 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 // import { LOADVIEW_TYPE_NONE } from "../common/Constant";
 
 (function (airkit) {
-    var BaseModule = /** @class */ (function (_super) {
-        __extends(BaseModule, _super);
-        function BaseModule() {
-            return _super.call(this) || this;
+    class BaseModule extends cc.Node {
+        constructor() {
+            super();
         }
-        BaseModule.prototype.setup = function (args) {
+        setup(args) {
             this.emit(airkit.EventID.BEGIN_MODULE, this.name);
             this.registerEvent();
-        };
-        BaseModule.prototype.start = function () { };
-        BaseModule.prototype.update = function (dt) { };
-        BaseModule.prototype.registerEvent = function () {
+        }
+        enter() {
+            this.emit(airkit.EventID.ENTER_MODULE, this.name);
+        }
+        exit() {
+            this.emit(airkit.EventID.EXIT_MODULE, this.name);
+        }
+        update(dt) { }
+        registerEvent() {
             this.registerSignalEvent();
-        };
-        BaseModule.prototype.unRegisterEvent = function () {
+        }
+        unRegisterEvent() {
             this.unregisterSignalEvent();
-        };
+        }
         /**需要提前加载的资源
      * 例:
      *  return [
@@ -3328,45 +3029,42 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             ["res/image/3.png", Laya.Loader.IMAGE],
         ]
     */
-        BaseModule.res = function () {
+        static res() {
             return null;
-        };
-        BaseModule.loaderTips = function () {
+        }
+        static loaderTips() {
             return "资源加载中";
-        };
+        }
         /**是否显示加载界面*/
-        BaseModule.loaderType = function () {
+        static loaderType() {
             return airkit.LOADVIEW_TYPE_NONE;
-        };
-        BaseModule.prototype.registerSignalEvent = function () {
-            var event_list = this.signalMap();
+        }
+        registerSignalEvent() {
+            let event_list = this.signalMap();
             if (!event_list)
                 return;
-            for (var _i = 0, event_list_1 = event_list; _i < event_list_1.length; _i++) {
-                var item = event_list_1[_i];
-                var signal = item[0];
+            for (let item of event_list) {
+                let signal = item[0];
                 signal.on(item[1], item[2], item.slice(3));
             }
-        };
-        BaseModule.prototype.unregisterSignalEvent = function () {
-            var event_list = this.signalMap();
+        }
+        unregisterSignalEvent() {
+            let event_list = this.signalMap();
             if (!event_list)
                 return;
-            for (var _i = 0, event_list_2 = event_list; _i < event_list_2.length; _i++) {
-                var item = event_list_2[_i];
-                var signal = item[0];
+            for (let item of event_list) {
+                let signal = item[0];
                 signal.off(item[1], item[2]);
             }
-        };
-        BaseModule.prototype.signalMap = function () {
+        }
+        signalMap() {
             return null;
-        };
-        BaseModule.prototype.dispose = function () {
+        }
+        dispose() {
             this.emit(airkit.EventID.END_MODULE, this.name);
             this.unRegisterEvent();
-        };
-        return BaseModule;
-    }(cc.Node));
+        }
+    }
     airkit.BaseModule = BaseModule;
 })(airkit || (airkit = {}));
 // import { ResourceManager } from "../loader/ResourceManager";
@@ -3376,63 +3074,52 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 // import { EventID } from "../event/EventID";
 
 (function (airkit) {
-    var Mediator = /** @class */ (function () {
-        function Mediator() {
+    class Mediator {
+        static get Instance() {
+            if (!this.instance)
+                this.instance = new Mediator();
+            return this.instance;
         }
-        Object.defineProperty(Mediator, "Instance", {
-            get: function () {
-                if (!this.instance)
-                    this.instance = new Mediator();
-                return this.instance;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Mediator.prototype.setup = function () {
+        setup() {
             this.registerEvent();
-        };
+        }
         /**
          * 注册模块
          * @param name
          * @param cls
          */
-        Mediator.register = function (name, cls) {
+        static register(name, cls) {
             airkit.ClassUtils.regClass(name, cls);
-        };
+        }
         //远程调用
-        Mediator.call = function (name, funcName) {
-            var _this = this;
-            var args = [];
-            for (var _i = 2; _i < arguments.length; _i++) {
-                args[_i - 2] = arguments[_i];
-            }
-            return new Promise(function (resolve, reject) {
-                var m = _this.modules.getValue(name);
+        static call(name, funcName, ...args) {
+            return new Promise((resolve, reject) => {
+                let m = this.modules.getValue(name);
                 if (m == null) {
                     m = airkit.ClassUtils.getInstance(name);
-                    var clas = airkit.ClassUtils.getClass(name);
+                    let clas = airkit.ClassUtils.getClass(name);
                     if (m == null) {
                         airkit.Log.warning("Cant find module {0}", name);
                         reject("Cant find module" + name);
                     }
-                    _this.modules.add(name, m);
+                    this.modules.add(name, m);
                     m.name = name;
-                    _this.loadResource(m, clas)
-                        .then(function (v) {
-                        var onInitModuleOver = function () {
-                            m.start();
+                    this.loadResource(m, clas)
+                        .then((v) => {
+                        var onInitModuleOver = () => {
+                            m.enter();
                             if (funcName == null) {
                                 resolve(m);
                             }
                             else {
-                                var result = _this.callFunc(m, funcName, args);
+                                let result = this.callFunc(m, funcName, args);
                                 resolve(result);
                             }
                         };
                         m.once(airkit.EventID.BEGIN_MODULE, onInitModuleOver, null);
                         m.setup(null);
                     })
-                        .catch(function (e) {
+                        .catch((e) => {
                         airkit.Log.warning("Load module Resource Failed {0}", name);
                         reject("Load module Resource Failed " + name);
                     });
@@ -3442,18 +3129,18 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         resolve(m);
                     }
                     else {
-                        var result = _this.callFunc(m, funcName, args);
+                        let result = this.callFunc(m, funcName, args);
                         resolve(result);
                     }
                 }
             });
-        };
-        Mediator.callFunc = function (m, funcName, args) {
+        }
+        static callFunc(m, funcName, args) {
             if (funcName == null) {
                 return;
             }
             var func = m[funcName];
-            var result = null;
+            let result = null;
             if (func) {
                 if (args) {
                     result = func.apply(m, args);
@@ -3466,28 +3153,28 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 airkit.Log.error("cant find funcName {0} from Module:{1}", funcName, m.name);
             }
             return result;
-        };
+        }
         /**处理需要提前加载的资源*/
-        Mediator.loadResource = function (m, clas) {
-            var assets = [];
-            var res_map = clas.res();
+        static loadResource(m, clas) {
+            let assets = [];
+            let res_map = clas.res();
             if (res_map && res_map.length > 0) {
-                for (var i = 0; i < res_map.length; ++i) {
-                    var res = res_map[i];
+                for (let i = 0; i < res_map.length; ++i) {
+                    let res = res_map[i];
                     if (!airkit.ResourceManager.Instance.getRes(res[0])) {
                         assets.push({ url: res[0], type: res[1] });
                     }
                 }
             }
-            return new Promise(function (resolve, reject) {
+            return new Promise((resolve, reject) => {
                 if (assets.length > 0) {
-                    var load_view = clas.loaderType();
-                    var tips = clas.loaderTips();
+                    let load_view = clas.loaderType();
+                    let tips = clas.loaderTips();
                     airkit.ResourceManager.Instance.loadArrayRes(assets, load_view, tips, 1, true, airkit.ResourceManager.DefaultGroup)
-                        .then(function (v) {
+                        .then((v) => {
                         resolve(v);
                     })
-                        .catch(function (e) {
+                        .catch((e) => {
                         reject(e);
                     });
                 }
@@ -3495,32 +3182,32 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     resolve([]);
                 }
             });
-        };
-        Mediator.prototype.destroy = function () {
+        }
+        destroy() {
             this.unRegisterEvent();
             this.clear();
-        };
-        Mediator.prototype.clear = function () {
+        }
+        clear() {
             if (Mediator.modules) {
-                Mediator.modules.foreach(function (k, v) {
+                Mediator.modules.foreach((k, v) => {
+                    v.exit();
                     v.dispose();
                     return true;
                 });
                 Mediator.modules.clear();
             }
-        };
-        Mediator.prototype.update = function (dt) {
-            Mediator.modules.foreach(function (k, v) {
+        }
+        update(dt) {
+            Mediator.modules.foreach((k, v) => {
                 v.update(dt);
                 return true;
             });
-        };
-        Mediator.prototype.registerEvent = function () { };
-        Mediator.prototype.unRegisterEvent = function () { };
-        Mediator.modules = new airkit.SDictionary();
-        Mediator.instance = null;
-        return Mediator;
-    }());
+        }
+        registerEvent() { }
+        unRegisterEvent() { }
+    }
+    Mediator.modules = new airkit.SDictionary();
+    Mediator.instance = null;
     airkit.Mediator = Mediator;
 })(airkit || (airkit = {}));
 // import { Log } from "../../log/Log";
@@ -3547,7 +3234,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      *			Log.Dump(reason)
      *		})
      */
-    var eHttpRequestType;
+    let eHttpRequestType;
     (function (eHttpRequestType) {
         eHttpRequestType[eHttpRequestType["TypeText"] = 0] = "TypeText";
         eHttpRequestType[eHttpRequestType["TypeJson"] = 1] = "TypeJson";
@@ -3564,9 +3251,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     airkit.RESPONSE_TYPE_XML = "xml";
     airkit.RESPONSE_TYPE_BYTE = "arraybuffer";
     airkit.HTTP_REQUEST_TIMEOUT = 10000; //设置超时时间
-    var Http = /** @class */ (function () {
-        function Http() {
-        }
+    class Http {
         /**
          * 请求request封装
          *
@@ -3580,9 +3265,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @returns {Promise<any>}
          * @memberof Http
          */
-        Http.request = function (url, method, reqType, header, data, responseType) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
+        static request(url, method, reqType, header, data, responseType) {
+            return new Promise((resolve, reject) => {
                 if (Http.currentRequsts > Http.maxRequest) {
                     airkit.Log.error("reached max request {0}", Http.currentRequsts);
                 }
@@ -3598,7 +3282,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
                 if (!header)
                     header = [];
-                var key = "Content-Type";
+                let key = "Content-Type";
                 switch (reqType) {
                     case eHttpRequestType.TypeText:
                         header.push(key, airkit.CONTENT_TYPE_TEXT);
@@ -3621,8 +3305,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     Http.currentRequsts--;
                     reject("timeout");
                 };
-                request.once(airkit.Event.COMPLETE, _this, function (event) {
-                    var data;
+                request.once(airkit.Event.COMPLETE, this, function (event) {
+                    let data;
                     switch (responseType) {
                         case airkit.RESPONSE_TYPE_TEXT:
                             data = request.data;
@@ -3644,13 +3328,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     Http.currentRequsts--;
                     resolve(data);
                 });
-                request.once(airkit.Event.ERROR, _this, function (event) {
+                request.once(airkit.Event.ERROR, this, function (event) {
                     airkit.Log.error("req:{0} error:{1}", url, event);
                     request.targetOff(request);
                     Http.currentRequsts--;
                     reject(event);
                 });
-                request.on(airkit.Event.PROGRESS, _this, function (event) { });
+                request.on(airkit.Event.PROGRESS, this, function (event) { });
                 if (method == airkit.GET) {
                     request.send(url, null, method, responseType, header);
                 }
@@ -3658,7 +3342,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     request.send(url, data, method, responseType, header);
                 }
             });
-        };
+        }
         /**
          * Get 请求
          *
@@ -3670,7 +3354,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @returns {Promise<any>}
          * @memberof Http
          */
-        Http.get = function (url, reqType, header, responseType) {
+        static get(url, reqType, header, responseType) {
             if (reqType == undefined) {
                 reqType = eHttpRequestType.TypeText;
             }
@@ -3678,7 +3362,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 responseType = airkit.RESPONSE_TYPE_TEXT;
             }
             return this.request(url, airkit.GET, reqType, header, null, responseType);
-        };
+        }
         /**
          * POST请求
          *
@@ -3691,7 +3375,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @returns {Promise<any>}
          * @memberof Http
          */
-        Http.post = function (url, params, reqType, header, responseType) {
+        static post(url, params, reqType, header, responseType) {
             var data = null;
             if (reqType == undefined) {
                 reqType = eHttpRequestType.TypeText;
@@ -3713,22 +3397,19 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 responseType = airkit.RESPONSE_TYPE_TEXT;
             }
             return this.request(url, airkit.POST, reqType, header, data, responseType);
-        };
-        Http.currentRequsts = 0;
-        Http.maxRequest = 6;
-        return Http;
-    }());
+        }
+    }
+    Http.currentRequsts = 0;
+    Http.maxRequest = 6;
     airkit.Http = Http;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    var HttpRequest = /** @class */ (function (_super) {
-        __extends(HttpRequest, _super);
-        function HttpRequest() {
-            var _this_1 = _super !== null && _super.apply(this, arguments) || this;
+    class HttpRequest extends cc.Node {
+        constructor() {
+            super(...arguments);
             /**@private */
-            _this_1._http = new XMLHttpRequest();
-            return _this_1;
+            this._http = new XMLHttpRequest();
         }
         /**
          * 发送 HTTP 请求。
@@ -3738,18 +3419,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	responseType	(default = "text")Web 服务器的响应类型，可设置为 "text"、"json"、"xml"、"arraybuffer"。
          * @param	headers			(default = null) HTTP 请求的头部信息。参数形如key-value数组：key是头部的名称，不应该包括空白、冒号或换行；value是头部的值，不应该包括换行。比如["Content-Type", "application/json"]。
          */
-        HttpRequest.prototype.send = function (url, data, method, responseType, headers) {
-            if (data === void 0) { data = null; }
-            if (method === void 0) { method = "get"; }
-            if (responseType === void 0) { responseType = "text"; }
-            if (headers === void 0) { headers = null; }
+        send(url, data = null, method = "get", responseType = "text", headers = null) {
             this._responseType = responseType;
             this._data = null;
             this._url = url;
             var _this = this;
             var http = this._http;
             http.open(method, url, true);
-            var isJson = false;
+            let isJson = false;
             if (headers) {
                 for (var i = 0; i < headers.length; i++) {
                     http.setRequestHeader(headers[i++], headers[i]);
@@ -3763,7 +3440,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     isJson = true;
                 }
             }
-            var restype = responseType !== "arraybuffer" ? "text" : "arraybuffer";
+            let restype = responseType !== "arraybuffer" ? "text" : "arraybuffer";
             http.responseType = restype;
             if (http.dataType) {
                 //for Ali
@@ -3782,38 +3459,38 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 _this._onLoad(e);
             };
             http.send(isJson ? JSON.stringify(data) : data);
-        };
+        }
         /**
          * @private
          * 请求进度的侦听处理函数。
          * @param	e 事件对象。
          */
-        HttpRequest.prototype._onProgress = function (e) {
+        _onProgress(e) {
             if (e && e.lengthComputable)
                 this.emit(airkit.Event.PROGRESS, e.loaded / e.total);
-        };
+        }
         /**
          * @private
          * 请求中断的侦听处理函数。
          * @param	e 事件对象。
          */
-        HttpRequest.prototype._onAbort = function (e) {
+        _onAbort(e) {
             this.error("Request was aborted by user");
-        };
+        }
         /**
          * @private
          * 请求出错侦的听处理函数。
          * @param	e 事件对象。
          */
-        HttpRequest.prototype._onError = function (e) {
+        _onError(e) {
             this.error("Request failed Status:" + this._http.status + " text:" + this._http.statusText);
-        };
+        }
         /**
          * @private
          * 请求消息返回的侦听处理函数。
          * @param	e 事件对象。
          */
-        HttpRequest.prototype._onLoad = function (e) {
+        _onLoad(e) {
             var http = this._http;
             var status = http.status !== undefined ? http.status : 200;
             if (status === 200 || status === 204 || status === 0) {
@@ -3822,22 +3499,22 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             else {
                 this.error("[" + http.status + "]" + http.statusText + ":" + http.responseURL);
             }
-        };
+        }
         /**
          * @private
          * 请求错误的处理函数。
          * @param	message 错误信息。
          */
-        HttpRequest.prototype.error = function (message) {
+        error(message) {
             this.clear();
             console.warn(this.url, message);
             this.emit(airkit.Event.ERROR, message);
-        };
+        }
         /**
          * @private
          * 请求成功完成的处理函数。
          */
-        HttpRequest.prototype.complete = function () {
+        complete() {
             this.clear();
             var flag = true;
             try {
@@ -3856,53 +3533,40 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 this.error(e.message);
             }
             flag && this.emit(airkit.Event.COMPLETE, this._data instanceof Array ? [this._data] : this._data);
-        };
+        }
         /**
          * @private
          * 清除当前请求。
          */
-        HttpRequest.prototype.clear = function () {
+        clear() {
             var http = this._http;
             http.onerror = http.onabort = http.onprogress = http.onload = null;
-        };
-        Object.defineProperty(HttpRequest.prototype, "url", {
-            /** 请求的地址。*/
-            get: function () {
-                return this._url;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(HttpRequest.prototype, "data", {
-            /** 返回的数据。*/
-            get: function () {
-                return this._data;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(HttpRequest.prototype, "http", {
-            /**
-             * 本对象所封装的原生 XMLHttpRequest 引用。
-             */
-            get: function () {
-                return this._http;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        /**@private */
-        HttpRequest._urlEncode = encodeURI;
-        return HttpRequest;
-    }(cc.Node));
+        }
+        /** 请求的地址。*/
+        get url() {
+            return this._url;
+        }
+        /** 返回的数据。*/
+        get data() {
+            return this._data;
+        }
+        /**
+         * 本对象所封装的原生 XMLHttpRequest 引用。
+         */
+        get http() {
+            return this._http;
+        }
+    }
+    /**@private */
+    HttpRequest._urlEncode = encodeURI;
     airkit.HttpRequest = HttpRequest;
 })(airkit || (airkit = {}));
 // import { StateMachine } from "./StateMachine";
 // import { Log } from "../../log/Log";
 
 (function (airkit) {
-    var State = /** @class */ (function () {
-        function State(entity, status) {
+    class State {
+        constructor(entity, status) {
             this._owner = null;
             this._status = 0;
             //帧数统计,每帧update的时候+1,每次enter和exit的时候清零,用于处理一些定时事件,比较通用
@@ -3912,61 +3576,60 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this._entity = entity;
             this._status = status;
         }
-        State.prototype.enter = function () {
+        enter() {
             airkit.Log.info("you must overwrite the func state.enter !");
-        };
-        State.prototype.update = function (dt) {
+        }
+        update(dt) {
             airkit.Log.info("you must overwrite the func state.update !");
-        };
-        State.prototype.exit = function () {
+        }
+        exit() {
             airkit.Log.info("you must overwrite the func state.exit !");
-        };
-        return State;
-    }());
+        }
+    }
     airkit.State = State;
 })(airkit || (airkit = {}));
 // import { State } from "./State";
 
 (function (airkit) {
-    var StateMachine = /** @class */ (function () {
-        function StateMachine() {
+    class StateMachine {
+        constructor() {
             this._currentState = null;
             this._previousState = null;
             this._globalState = null;
         }
-        StateMachine.prototype.update = function (dt) {
+        update(dt) {
             if (this._globalState) {
                 this._globalState.update(dt);
             }
             if (this._currentState) {
                 this._currentState.update(dt);
             }
-        };
-        StateMachine.prototype.changeState = function (_state) {
+        }
+        changeState(_state) {
             this._previousState = this._currentState;
             this._currentState = _state;
             this._currentState._owner = this;
             if (this._previousState)
                 this._previousState.exit();
             this._currentState.enter();
-        };
-        StateMachine.prototype.setCurrentState = function (_state) {
+        }
+        setCurrentState(_state) {
             if (this._currentState) {
                 this._currentState.exit();
             }
             this._currentState = _state;
             this._currentState._owner = this;
             this._currentState.enter();
-        };
-        StateMachine.prototype.setGlobalState = function (_state) {
+        }
+        setGlobalState(_state) {
             if (this._globalState) {
                 this._globalState.exit();
             }
             this._globalState = _state;
             this._globalState._owner = this;
             this._globalState.enter();
-        };
-        StateMachine.prototype.clearAllState = function () {
+        }
+        clearAllState() {
             if (this._globalState) {
                 this._globalState.exit();
                 this._globalState = null;
@@ -3976,30 +3639,17 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 this._currentState = null;
             }
             this._previousState = null;
-        };
-        Object.defineProperty(StateMachine.prototype, "currentState", {
-            get: function () {
-                return this._currentState;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(StateMachine.prototype, "previousState", {
-            get: function () {
-                return this._previousState;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(StateMachine.prototype, "globalState", {
-            get: function () {
-                return this._globalState;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        return StateMachine;
-    }());
+        }
+        get currentState() {
+            return this._currentState;
+        }
+        get previousState() {
+            return this._previousState;
+        }
+        get globalState() {
+            return this._globalState;
+        }
+    }
     airkit.StateMachine = StateMachine;
 })(airkit || (airkit = {}));
 
@@ -4011,15 +3661,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     // msgType int
     // userdata int
     // payload string
-    var JSONMsg = /** @class */ (function () {
-        function JSONMsg() {
-        }
-        JSONMsg.getSeq = function () {
+    class JSONMsg {
+        static getSeq() {
             return JSONMsg.REQ_ID++;
-        };
-        JSONMsg.prototype.decode = function (msg, endian) {
-            var str = airkit.bytes2String(msg, endian);
-            var m = JSON.parse(str);
+        }
+        decode(msg, endian) {
+            let str = airkit.bytes2String(msg, endian);
+            let m = JSON.parse(str);
             if (m && m.payload) {
                 this.uid = m.uid;
                 this.cmd = m.cmd;
@@ -4030,10 +3678,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             }
             str = null;
             return false;
-        };
-        JSONMsg.prototype.encode = function (endian) {
+        }
+        encode(endian) {
             this.ID = JSONMsg.getSeq();
-            var msg = {
+            let msg = {
                 uid: this.uid,
                 cmd: this.cmd,
                 msgType: this.msgType,
@@ -4042,46 +3690,44 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 payload: JSON.stringify(this.data),
             };
             return JSON.stringify(msg);
-        };
-        JSONMsg.prototype.getID = function () {
+        }
+        getID() {
             return this.ID;
-        };
-        JSONMsg.REQ_ID = 1;
-        return JSONMsg;
-    }());
+        }
+    }
+    JSONMsg.REQ_ID = 1;
     airkit.JSONMsg = JSONMsg;
-    var PBMsg = /** @class */ (function () {
-        function PBMsg() {
+    class PBMsg {
+        constructor() {
             this.receiveByte = new airkit.Byte();
             this.receiveByte.endian = airkit.Byte.LITTLE_ENDIAN;
         }
-        PBMsg.prototype.getID = function () {
+        getID() {
             return this.ID;
-        };
-        PBMsg.prototype.decode = function (msg, endian) {
+        }
+        decode(msg, endian) {
             this.receiveByte.clear();
             this.receiveByte.writeArrayBuffer(msg);
             this.receiveByte.pos = 0;
             var len = this.receiveByte.getInt16();
             var id = this.receiveByte.getInt16();
             if (this.receiveByte.bytesAvailable >= len) {
-                var data = new airkit.Byte();
+                let data = new airkit.Byte();
                 data.writeArrayBuffer(this.receiveByte, 4, len);
                 return true;
             }
             return false;
-        };
-        PBMsg.prototype.encode = function (endian) {
-            var msg = new airkit.Byte();
+        }
+        encode(endian) {
+            let msg = new airkit.Byte();
             msg.endian = airkit.Byte.LITTLE_ENDIAN;
             // msg.writeUint16(data.length + 4)
             // msg.writeUint16(id)
             // msg.writeArrayBuffer(data)
             msg.pos = 0;
             return msg;
-        };
-        return PBMsg;
-    }());
+        }
+    }
     airkit.PBMsg = PBMsg;
 })(airkit || (airkit = {}));
 // namespace airkit {
@@ -4244,36 +3890,23 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-19
      */
-    var BaseView = /** @class */ (function (_super) {
-        __extends(BaseView, _super);
-        function BaseView() {
-            var _this = _super.call(this) || this;
-            _this._isOpen = false;
-            _this._UIID = 0;
-            _this.objectData = null;
-            _this._destory = false;
-            _this._viewID = BaseView.__ViewIDSeq++;
-            return _this;
+    class BaseView extends fgui.GComponent {
+        constructor() {
+            super();
+            this._isOpen = false;
+            this._UIID = 0;
+            this.objectData = null;
+            this._destory = false;
+            this._viewID = BaseView.__ViewIDSeq++;
         }
-        BaseView.prototype.createPanel = function (pkgName, resName) {
-            var v = fgui.UIPackage.createObjectFromURL("ui://" + pkgName + "/" + resName);
-            if (v == null)
-                return;
-            this._view = v.asCom; // fgui.UIPackage.createObject(pkgName, resName).asCom
-            this._view.setSize(this.width, this.height);
-            this._view.addRelation(this, fgui.RelationType.Width);
-            this._view.addRelation(this, fgui.RelationType.Height);
-            this.addChild(this._view);
-            //fgui.GRoot.inst.addChild(this._view)
-        };
-        BaseView.prototype.debug = function () {
-            var bgColor = "#4aa7a688";
+        debug() {
+            let bgColor = "#4aa7a688";
             // this.graphics.clear()
             // this.graphics.drawRect(0, 0, this.width, this.height, bgColor)
-        };
+        }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～公共方法～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**打开*/
-        BaseView.prototype.setup = function (args) {
+        setup(args) {
             this._isOpen = true;
             this.onLangChange();
             this.onCreate(args);
@@ -4282,9 +3915,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this.registerEvent();
             this.registeGUIEvent();
             this.registerSignalEvent();
-        };
+        }
         /**关闭*/
-        BaseView.prototype.dispose = function () {
+        dispose() {
             if (this._destory)
                 return;
             this._destory = true;
@@ -4296,67 +3929,44 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this.objectData = null;
             airkit.EventCenter.dispatchEvent(airkit.EventID.UI_CLOSE, this._UIID);
             airkit.EventCenter.off(airkit.EventID.UI_LANG, this, this.onLangChange);
-            _super.prototype.dispose.call(this);
-        };
-        BaseView.prototype.isDestory = function () {
+            super.dispose();
+        }
+        isDestory() {
             return this._destory;
-        };
-        BaseView.prototype.panel = function () {
-            var panel = this.getGObject("panel");
-            if (panel != null)
-                return panel.asCom;
-            return null;
-        };
-        BaseView.prototype.bg = function () {
-            var view = this.getGObject("bg");
-            if (view != null)
-                return view.asCom;
-            return null;
-        };
+        }
         /**是否可见*/
-        BaseView.prototype.setVisible = function (bVisible) {
-            var old = this.visible;
+        setVisible(bVisible) {
+            let old = this.visible;
             this.visible = bVisible;
             // if (old != bVisible) {
             //     if (bVisible)
             //     else
             //         this.onDisable()
             // }
-        };
+        }
         /**设置界面唯一id，只在UIManager设置，其他地方不要再次设置*/
-        BaseView.prototype.setUIID = function (id) {
+        setUIID(id) {
             this._UIID = id;
-        };
-        Object.defineProperty(BaseView.prototype, "UIID", {
-            get: function () {
-                return this._UIID;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(BaseView.prototype, "viewID", {
-            get: function () {
-                return this._viewID;
-            },
-            enumerable: false,
-            configurable: true
-        });
+        }
+        get UIID() {
+            return this._UIID;
+        }
+        get viewID() {
+            return this._viewID;
+        }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～可重写的方法，注意逻辑层不要再次调用～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**初始化，和onDestroy是一对*/
-        BaseView.prototype.onCreate = function (args) { };
+        onCreate(args) { }
         /**销毁*/
-        BaseView.prototype.onDestroy = function () { };
+        onDestroy() { }
         /**每帧循环：如果覆盖，必须调用super.update()*/
-        BaseView.prototype.update = function (dt) {
+        update(dt) {
             return true;
-        };
-        BaseView.prototype.getGObject = function (name) {
-            return this._view.getChild(name);
-        };
+        }
         /**资源加载结束*/
-        BaseView.prototype.onEnter = function () { };
+        onEnter() { }
         /**多语言初始化，或语音设定改变时触发*/
-        BaseView.prototype.onLangChange = function () { };
+        onLangChange() { }
         /**需要提前加载的资源
      * 例:
      *  return [
@@ -4365,32 +3975,32 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             ["res/image/3.png", Laya.Loader.IMAGE],
         ]
     */
-        BaseView.res = function () {
+        static res() {
             return null;
-        };
-        BaseView.unres = function () {
-            var arr = this.res();
+        }
+        static unres() {
+            let arr = this.res();
             if (arr && arr.length > 0) {
-                for (var i = 0; i < arr.length; i++) {
-                    airkit.ResourceManager.Instance.clearRes(arr[i][0]);
+                for (let i = 0; i < arr.length; i++) {
+                    airkit.ResourceManager.Instance.clearRes(arr[i].url);
                 }
             }
-        };
-        BaseView.loaderTips = function () {
+        }
+        static loaderTips() {
             return "资源加载中";
-        };
+        }
         //显示加载界面 默认不显示
-        BaseView.loaderType = function () {
+        static loaderType() {
             return airkit.LOADVIEW_TYPE_NONE;
-        };
+        }
         //信号事件注册，适合单体物件事件传递
         // return [
         //     [me.updateSignal, this, this.refreshUser],
         // ]
         //   public refreshUser(val: any, result: [model.eUserAttr, number]): void
-        BaseView.prototype.signalMap = function () {
+        signalMap() {
             return null;
-        };
+        }
         /**
      * UI按钮等注册事件列表，内部会在界面销毁时，自动反注册
      * 例：
@@ -4398,12 +4008,12 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 [this._loginBtn, Laya.Event.CLICK, this.onPressLogin],
             ]
      */
-        BaseView.prototype.eventMap = function () {
+        eventMap() {
             return null;
-        };
+        }
         /**自定义事件注册，用于EventCenter派发的事件*/
-        BaseView.prototype.registerEvent = function () { };
-        BaseView.prototype.unRegisterEvent = function () { };
+        registerEvent() { }
+        unRegisterEvent() { }
         /**
          * 是否优化界面显示,原则：
          * 1.对于容器内有大量静态内容或者不经常变化的内容（比如按钮），可以对整个容器设置cacheAs属性，能大量减少Sprite的数量，显著提高性能。
@@ -4411,91 +4021,86 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * 3.容器内有经常变化的内容，比如容器内有一个动画或者倒计时，如果再对这个容器设置cacheAs=”bitmap”，会损失性能。
          * 4.对象非常简单，比如一个字或者一个图片，设置cacheAs=”bitmap”不但不提高性能，反而会损失性能。
          */
-        BaseView.prototype.staticCacheUI = function () {
+        staticCacheUI() {
             return null;
-        };
+        }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～内部方法～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**处理需要提前加载的资源,手动创建的view需要手动调用*/
-        BaseView.prototype.loadResource = function (group, clas) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                var assets = [];
-                var res_map = clas.res();
+        loadResource(group, clas) {
+            return new Promise((resolve, reject) => {
+                let assets = [];
+                let res_map = clas.res();
                 if (res_map && res_map.length > 0) {
-                    for (var i = 0; i < res_map.length; ++i) {
-                        var res = res_map[i];
-                        if (!airkit.ResourceManager.Instance.getRes(res[0])) {
-                            assets.push({ url: res[0], type: res[1] });
+                    for (let i = 0; i < res_map.length; ++i) {
+                        let res = res_map[i];
+                        if (!airkit.ResourceManager.Instance.getRes(res.url)) {
+                            assets.push({ url: res.url, type: res.type });
                         }
                     }
                 }
                 if (assets.length > 0) {
-                    var tips = clas.loaderTips();
-                    var loaderType = clas.loaderType();
+                    let tips = clas.loaderTips();
+                    let loaderType = clas.loaderType();
                     airkit.ResourceManager.Instance.loadArrayRes(assets, loaderType, tips, 1, true, group)
-                        .then(function (v) {
-                        _this.onAssetLoaded();
-                        resolve(_this);
-                        _this.onEnter();
+                        .then((v) => {
+                        this.onAssetLoaded();
+                        resolve(this);
+                        this.onEnter();
                     })
-                        .catch(function (e) {
+                        .catch((e) => {
                         airkit.Log.error(e);
                         reject(e);
                     });
                 }
                 else {
-                    _this.onAssetLoaded();
-                    resolve(_this);
-                    _this.onEnter();
+                    this.onAssetLoaded();
+                    resolve(this);
+                    this.onEnter();
                 }
             });
-        };
-        BaseView.prototype.onAssetLoaded = function () {
+        }
+        onAssetLoaded() {
             if (!this._isOpen)
                 return;
-        };
-        BaseView.prototype.registerSignalEvent = function () {
-            var event_list = this.signalMap();
+        }
+        registerSignalEvent() {
+            let event_list = this.signalMap();
             if (!event_list)
                 return;
-            for (var _i = 0, event_list_3 = event_list; _i < event_list_3.length; _i++) {
-                var item = event_list_3[_i];
-                var signal = item[0];
+            for (let item of event_list) {
+                let signal = item[0];
                 signal.on(item[1], item[2], item.slice(3));
             }
-        };
-        BaseView.prototype.unregisterSignalEvent = function () {
-            var event_list = this.signalMap();
+        }
+        unregisterSignalEvent() {
+            let event_list = this.signalMap();
             if (!event_list)
                 return;
-            for (var _i = 0, event_list_4 = event_list; _i < event_list_4.length; _i++) {
-                var item = event_list_4[_i];
-                var signal = item[0];
+            for (let item of event_list) {
+                let signal = item[0];
                 signal.off(item[1], item[2]);
             }
-        };
+        }
         /**注册界面事件*/
-        BaseView.prototype.registeGUIEvent = function () {
-            var event_list = this.eventMap();
+        registeGUIEvent() {
+            let event_list = this.eventMap();
             if (!event_list)
                 return;
-            for (var _i = 0, event_list_5 = event_list; _i < event_list_5.length; _i++) {
-                var item = event_list_5[_i];
-                var gui_control = item[0];
+            for (let item of event_list) {
+                let gui_control = item[0];
                 gui_control.on(item[1], item[2], this);
             }
-        };
-        BaseView.prototype.unregisteGUIEvent = function () {
-            var event_list = this.eventMap();
+        }
+        unregisteGUIEvent() {
+            let event_list = this.eventMap();
             if (!event_list)
                 return;
-            for (var _i = 0, event_list_6 = event_list; _i < event_list_6.length; _i++) {
-                var item = event_list_6[_i];
-                var gui_control = item[0];
+            for (let item of event_list) {
+                let gui_control = item[0];
                 gui_control.off(item[1], item[2], this);
             }
-        };
-        BaseView.prototype.doClose = function () {
+        }
+        doClose() {
             if (this._isOpen === false) {
                 airkit.Log.error("连续点击");
                 return false; //避免连续点击关闭
@@ -4503,10 +4108,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this._isOpen = false;
             airkit.UIManager.Instance.close(this.UIID, airkit.eCloseAnim.CLOSE_CENTER);
             return true;
-        };
-        BaseView.__ViewIDSeq = 0;
-        return BaseView;
-    }(fgui.GComponent));
+        }
+    }
+    BaseView.__ViewIDSeq = 0;
     airkit.BaseView = BaseView;
 })(airkit || (airkit = {}));
 // import { Singleton } from "../collection/Singleton";
@@ -4522,38 +4126,28 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * 声音事件
      */
     //调试方便，封装一次fgui.GComponent
-    var Layer = /** @class */ (function (_super) {
-        __extends(Layer, _super);
-        function Layer() {
-            return _super.call(this) || this;
+    class Layer extends fgui.GComponent {
+        constructor() {
+            super();
         }
-        Layer.prototype.debug = function () {
-            var bgColor = "#f4e1e188";
+        debug() {
+            let bgColor = "#f4e1e188";
             //	this.graphics.clear()
             //	this.graphics.drawRect(0, 0, this.width, this.height, bgColor)
-        };
-        return Layer;
-    }(fgui.GComponent));
+        }
+    }
     airkit.Layer = Layer;
     /**
      * 场景层级
      * @author ankye
      * @time 2017-7-13
      */
-    var LayerManager = /** @class */ (function (_super) {
-        __extends(LayerManager, _super);
-        function LayerManager() {
-            return _super !== null && _super.apply(this, arguments) || this;
+    class LayerManager extends airkit.Singleton {
+        static get stage() {
+            return this._root;
         }
-        Object.defineProperty(LayerManager, "stage", {
-            get: function () {
-                return this._root;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        LayerManager.getLayer = function (t) {
-            var layer = null;
+        static getLayer(t) {
+            let layer = null;
             switch (t) {
                 case airkit.eUILayer.BG:
                     layer = this.bgLayer;
@@ -4564,21 +4158,21 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 case airkit.eUILayer.GUI:
                     layer = this.uiLayer;
                     break;
-                case airkit.eUILayer.POPUP:
-                    layer = this.popupLayer;
-                    break;
-                case airkit.eUILayer.TOOLTIP:
-                    layer = this.tooltipLayer;
-                    break;
-                case airkit.eUILayer.SYSTEM:
-                    layer = this.systemLayer;
-                    break;
+                // case eUILayer.POPUP:
+                //     layer = this.popupLayer;
+                //     break;
+                // case eUILayer.TOOLTIP:
+                //     layer = this.tooltipLayer;
+                //     break;
+                // case eUILayer.SYSTEM:
+                //     layer = this.systemLayer;
+                //     break;
                 case airkit.eUILayer.LOADING:
                     layer = this.loadingLayer;
                     break;
-                case airkit.eUILayer.TOP:
-                    layer = this.topLayer;
-                    break;
+                // case eUILayer.TOP:
+                //     layer = this.topLayer;
+                //     break;
             }
             if (cc.winSize.width != layer.width ||
                 cc.winSize.height != layer.height) {
@@ -4587,8 +4181,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             }
             //layer.debug()
             return layer;
-        };
-        LayerManager.setup = function (root) {
+        }
+        static setup(root) {
             this._root = root;
             this._bgLayer = new Layer();
             this._bgLayer.node.name = "bgLayer";
@@ -4600,62 +4194,61 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this._mainLayer.touchable = true;
             this._root.addChild(this._mainLayer);
             this._mainLayer.sortingOrder = 2;
-            this._tooltipLayer = new Layer();
-            this._tooltipLayer.node.name = "tooltipLayer";
-            this._tooltipLayer.touchable = false;
-            this._root.addChild(this._tooltipLayer);
-            this._tooltipLayer.sortingOrder = 3;
+            // this._tooltipLayer = new Layer();
+            // this._tooltipLayer.node.name = "tooltipLayer";
+            // this._tooltipLayer.touchable = false;
+            // this._root.addChild(this._tooltipLayer);
+            // this._tooltipLayer.sortingOrder = 3;
             this._uiLayer = new Layer();
             this._uiLayer.node.name = "uiLayer";
             this._uiLayer.touchable = true;
             this._root.addChild(this._uiLayer);
             this._uiLayer.sortingOrder = 4;
-            this._popupLayer = new Layer();
-            this._popupLayer.node.name = "popupLayer";
-            this._popupLayer.touchable = true;
-            this._root.addChild(this._popupLayer);
-            this._popupLayer.sortingOrder = 5;
-            this._systemLayer = new Layer();
-            this._systemLayer.node.name = "systemLayer";
-            this._systemLayer.touchable = true;
-            this._root.addChild(this._systemLayer);
-            this._systemLayer.sortingOrder = 6;
+            // this._popupLayer = new Layer();
+            // this._popupLayer.node.name = "popupLayer";
+            // this._popupLayer.touchable = true;
+            // this._root.addChild(this._popupLayer);
+            // this._popupLayer.sortingOrder = 5;
+            // this._systemLayer = new Layer();
+            // this._systemLayer.node.name = "systemLayer";
+            // this._systemLayer.touchable = true;
+            // this._root.addChild(this._systemLayer);
+            // this._systemLayer.sortingOrder = 6;
             this._loadingLayer = new Layer();
             this._loadingLayer.node.name = "loadingLayer";
             this._loadingLayer.touchable = true;
             this._root.addChild(this._loadingLayer);
             this._loadingLayer.sortingOrder = 1001;
-            this._topLayer = new Layer();
-            this._topLayer.node.name = "topLayer";
-            this._topLayer.touchable = true;
-            this._root.addChild(this._topLayer);
-            this._topLayer.sortingOrder = 1002;
+            // this._topLayer = new Layer();
+            // this._topLayer.node.name = "topLayer";
+            // this._topLayer.touchable = true;
+            // this._root.addChild(this._topLayer);
+            // this._topLayer.sortingOrder = 1002;
             this.layers = [
                 this._bgLayer,
                 this._mainLayer,
                 this._uiLayer,
-                this._popupLayer,
-                this._tooltipLayer,
-                this._systemLayer,
+                // this._popupLayer,
+                // this._tooltipLayer,
+                // this._systemLayer,
                 this._loadingLayer,
-                this._topLayer,
             ];
             this.registerEvent();
             this.resize();
-        };
-        LayerManager.registerEvent = function () {
+        }
+        static registerEvent() {
             airkit.EventCenter.on(airkit.EventID.RESIZE, this, this.resize);
-        };
-        LayerManager.unRegisterEvent = function () {
+        }
+        static unRegisterEvent() {
             airkit.EventCenter.off(airkit.EventID.RESIZE, this, this.resize);
-        };
-        LayerManager.resize = function () {
+        }
+        static resize() {
             airkit.Log.info("LayerManager Receive Resize {0} {1}", cc.winSize.width, cc.winSize.height);
             var i;
             var l;
-            var w = cc.winSize.width;
-            var h = cc.winSize.height;
-            fgui.GRoot.inst.setSize(w, h);
+            let w = cc.winSize.width;
+            let h = cc.winSize.height;
+            this._root.setSize(w, h);
             for (i = 0, l = this.layers.length; i < l; i++) {
                 this.layers[i].setSize(w, h);
                 // this.layers[i].touchable = true
@@ -4663,21 +4256,21 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             }
             if (this._bgLayer.numChildren) {
                 var bg = this._bgLayer.getChildAt(0);
-                var x = (w - LayerManager.BG_WIDTH) >> 1;
-                var y = h - LayerManager.BG_HEIGHT;
+                let x = (w - LayerManager.BG_WIDTH) >> 1;
+                let y = h - LayerManager.BG_HEIGHT;
                 bg.setPosition(x, y);
             }
             fgui.GRoot.inst.setSize(w, h);
-            var needUpChilds = [
+            let needUpChilds = [
                 this._uiLayer,
-                this._popupLayer,
-                this._systemLayer,
-                this._topLayer,
+                // this._popupLayer,
+                // this._systemLayer,
+                // this._topLayer,
                 this._loadingLayer,
             ];
-            for (var i_4 = 0; i_4 < needUpChilds.length; i_4++) {
-                var layer = needUpChilds[i_4];
-                for (var j = 0, l_1 = layer.numChildren; j < l_1; j++) {
+            for (let i = 0; i < needUpChilds.length; i++) {
+                let layer = needUpChilds[i];
+                for (let j = 0, l = layer.numChildren; j < l; j++) {
                     var child = layer.getChildAt(j);
                     child.setSize(w, h);
                 }
@@ -4685,44 +4278,36 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             // let obj = this._uiLayer
             // obj.node.graphics.clear()
             // obj.node.graphics.drawRect(0, 0, obj.width, obj.height, "#33333333")
-        };
-        LayerManager.destroy = function () {
+        }
+        static destroy() {
             LayerManager.removeAll();
-            airkit.DisplayUtils.removeAllChild(this._topLayer);
+            //   DisplayUtils.removeAllChild(this._topLayer);
             airkit.DisplayUtils.removeAllChild(this._root);
-            this._topLayer = null; //最高层
+            //   this._topLayer = null; //最高层
             this._loadingLayer = null; //loading层
-            this._systemLayer = null; //system层
-            this._tooltipLayer = null; //提示层
-            this._popupLayer = null; //弹出层
+            //    this._systemLayer = null; //system层
+            //     this._tooltipLayer = null; //提示层
+            //     this._popupLayer = null; //弹出层
             this._uiLayer = null; //ui层		角色信息、快捷菜单、聊天等工具视图
             this._mainLayer = null; //游戏层		游戏主内容
             this._bgLayer = null;
-        };
-        LayerManager.removeAll = function () {
+        }
+        static removeAll() {
             airkit.DisplayUtils.removeAllChild(this._bgLayer);
             airkit.DisplayUtils.removeAllChild(this._mainLayer);
             airkit.DisplayUtils.removeAllChild(this._uiLayer);
-            airkit.DisplayUtils.removeAllChild(this._popupLayer);
-            airkit.DisplayUtils.removeAllChild(this._tooltipLayer);
-            airkit.DisplayUtils.removeAllChild(this._systemLayer);
+            // DisplayUtils.removeAllChild(this._popupLayer);
+            // DisplayUtils.removeAllChild(this._tooltipLayer);
+            // DisplayUtils.removeAllChild(this._systemLayer);
             airkit.DisplayUtils.removeAllChild(this._loadingLayer);
-        };
-        Object.defineProperty(LayerManager, "root", {
-            get: function () {
-                return this._root;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(LayerManager, "bgLayer", {
-            get: function () {
-                return this._bgLayer;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        LayerManager.addBg = function (url) {
+        }
+        static get root() {
+            return this._root;
+        }
+        static get bgLayer() {
+            return this._bgLayer;
+        }
+        static addBg(url) {
             var child;
             if (this.bgLayer.numChildren)
                 child = this.bgLayer.getChildAt(0);
@@ -4736,61 +4321,29 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             }
             child.url = url;
             return child;
-        };
-        Object.defineProperty(LayerManager, "mainLayer", {
-            get: function () {
-                return this._mainLayer;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(LayerManager, "uiLayer", {
-            get: function () {
-                return this._uiLayer;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(LayerManager, "popupLayer", {
-            get: function () {
-                return this._popupLayer;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(LayerManager, "tooltipLayer", {
-            get: function () {
-                return this._tooltipLayer;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(LayerManager, "systemLayer", {
-            get: function () {
-                return this._systemLayer;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(LayerManager, "loadingLayer", {
-            get: function () {
-                return this._loadingLayer;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(LayerManager, "topLayer", {
-            get: function () {
-                return this._topLayer;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        //背景宽高,按中下往上扩展图片
-        LayerManager.BG_WIDTH = 750;
-        LayerManager.BG_HEIGHT = 1650;
-        return LayerManager;
-    }(airkit.Singleton));
+        }
+        static get mainLayer() {
+            return this._mainLayer;
+        }
+        static get uiLayer() {
+            return this._uiLayer;
+        }
+        // public static get popupLayer(): fgui.GComponent {
+        //     return this._popupLayer;
+        // }
+        // public static get tooltipLayer(): fgui.GComponent {
+        //     return this._tooltipLayer;
+        // }
+        // public static get systemLayer(): fgui.GComponent {
+        //     return this._systemLayer;
+        // }
+        static get loadingLayer() {
+            return this._loadingLayer;
+        }
+    }
+    //背景宽高,按中下往上扩展图片
+    LayerManager.BG_WIDTH = 750;
+    LayerManager.BG_HEIGHT = 1650;
     airkit.LayerManager = LayerManager;
 })(airkit || (airkit = {}));
 
@@ -4800,72 +4353,68 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-19
      */
-    var PopupView = /** @class */ (function (_super) {
-        __extends(PopupView, _super);
-        function PopupView() {
-            var _this = _super.call(this) || this;
-            _this.bgTouch = true;
-            return _this;
+    class PopupView extends airkit.BaseView {
+        constructor() {
+            super();
+            this.bgTouch = true;
         }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～重写方法～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**每帧循环*/
-        PopupView.prototype.update = function (dt) {
-            return _super.prototype.update.call(this, dt);
-        };
-        PopupView.prototype.setup = function (args) {
-            _super.prototype.setup.call(this, args);
+        update(dt) {
+            return super.update(dt);
+        }
+        setup(args) {
+            super.setup(args);
             this.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
-        };
-        PopupView.prototype.onEnter = function () {
-            _super.prototype.onEnter.call(this);
-            this.createPanel(this.pkgName, this.resName);
-            var panel = this.panel();
-            if (panel) {
-                airkit.DisplayUtils.popup(panel, airkit.Handler.create(this, this.onOpen));
-                //  this.panel().displayObject.cacheAs = "bitmap";
-                this.closeBtn = this.closeButton();
-                if (this.closeBtn) {
-                    this.closeBtn.visible = false;
-                }
-            }
+        }
+        onEnter() {
+            super.onEnter();
+            //  this.createPanel(this.pkgName, this.resName);
+            // let panel = this.panel();
+            // if (panel) {
+            //     DisplayUtils.popup(panel, Handler.create(this, this.onOpen));
+            //     //  this.panel().displayObject.cacheAs = "bitmap";
+            //     this.closeBtn = this.closeButton();
+            //     if (this.closeBtn) {
+            //         this.closeBtn.visible = false;
+            //     }
+            // }
             airkit.TimerManager.Instance.addOnce(250, this, this.setupTouchClose);
-        };
-        PopupView.prototype.onOpen = function () { };
-        PopupView.prototype.closeButton = function () {
-            var btn = this.panel().getChild("closeBtn");
-            if (btn != null)
-                return btn.asButton;
+        }
+        onOpen() { }
+        closeButton() {
+            // let btn = this.panel().getChild("closeBtn");
+            // if (btn != null) return btn.asButton;
             return null;
-        };
-        PopupView.prototype.setupTouchClose = function () {
-            var bg = this.bg();
-            if (bg && this.bgTouch) {
-                bg.touchable = true;
-                bg.onClick(this.onClose, this);
-            }
-            if (this.closeBtn) {
-                this.closeBtn.visible = true;
-                this.closeBtn.onClick(this.pressClose, this);
-            }
-        };
-        PopupView.prototype.pressClose = function () {
+        }
+        setupTouchClose() {
+            // let bg = this.bg();
+            // if (bg && this.bgTouch) {
+            //     bg.touchable = true;
+            //     bg.onClick(this.onClose, this);
+            // }
+            // if (this.closeBtn) {
+            //     this.closeBtn.visible = true;
+            //     this.closeBtn.onClick(this.pressClose, this);
+            // }
+        }
+        pressClose() {
             if (this.closeBtn)
                 airkit.TweenUtils.scale(this.closeBtn);
             this.onClose();
-        };
-        PopupView.prototype.onClose = function () {
+        }
+        onClose() {
             this.doClose();
-        };
-        PopupView.prototype.dispose = function () {
-            _super.prototype.dispose.call(this);
+        }
+        dispose() {
+            super.dispose();
             if (this.callback != null)
                 this.callback();
-        };
-        PopupView.prototype.loadResource = function (group, clas) {
-            return _super.prototype.loadResource.call(this, group, clas);
-        };
-        return PopupView;
-    }(airkit.BaseView));
+        }
+        loadResource(group, clas) {
+            return super.loadResource(group, clas);
+        }
+    }
     airkit.PopupView = PopupView;
 })(airkit || (airkit = {}));
 // import { EventCenter } from "../event/EventCenter";
@@ -4886,93 +4435,88 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2017-7-13
      */
-    var SceneManager = /** @class */ (function () {
-        function SceneManager() {
-        }
+    class SceneManager {
+        //  public static scenes: NDictionary<string> = new NDictionary<string>();
         /**
          * 注册场景类，存放场景id和name的对应关系
-         * @param scene_type
          * @param name
          * @param cls
          */
-        SceneManager.registerScene = function (scene_type, name, cls) {
-            SceneManager.scenes.add(scene_type, name);
+        static register(name, cls) {
+            //  SceneManager.scenes.add(scene_type, name);
             airkit.ClassUtils.regClass(name, cls);
-        };
-        Object.defineProperty(SceneManager, "Instance", {
-            get: function () {
-                if (!this.instance)
-                    this.instance = new SceneManager();
-                return this.instance;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        SceneManager.prototype.setup = function () {
+        }
+        static get Instance() {
+            if (!this.instance)
+                this.instance = new SceneManager();
+            return this.instance;
+        }
+        setup() {
             this.registerEvent();
-        };
-        SceneManager.prototype.destroy = function () {
+        }
+        destroy() {
             this.unRegisterEvent();
-        };
-        SceneManager.prototype.update = function (dt) {
+        }
+        update(dt) {
             //do update
             if (this._curScene) {
                 this._curScene.update(dt);
             }
-        };
-        SceneManager.prototype.registerEvent = function () {
+        }
+        registerEvent() {
             airkit.EventCenter.on(airkit.EventID.CHANGE_SCENE, this, this.onChangeScene);
             airkit.EventCenter.on(airkit.EventID.RESIZE, this, this.resize);
-        };
-        SceneManager.prototype.unRegisterEvent = function () {
+        }
+        unRegisterEvent() {
             airkit.EventCenter.off(airkit.EventID.CHANGE_SCENE, this, this.onChangeScene);
             airkit.EventCenter.off(airkit.EventID.RESIZE, this, this.resize);
-        };
-        SceneManager.prototype.resize = function () {
+        }
+        resize() {
             airkit.Log.info("SceneManager Receive Resize {0} {1}", cc.winSize.width, cc.winSize.height);
             if (this._curScene) {
                 this._curScene.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
                 var func = this._curScene["resize"];
-                var result = null;
+                let result = null;
                 if (func) {
                     result = func.apply(this._curScene);
                 }
             }
-        };
-        SceneManager.prototype.onChangeScene = function (evt) {
-            var info = evt.get(0);
+        }
+        onChangeScene(evt) {
+            let info = evt.get(0);
             this.gotoScene(info);
-        };
+        }
         //～～～～～～～～～～～～～～～～～～～～～～～场景切换~～～～～～～～～～～～～～～～～～～～～～～～//
-        SceneManager.prototype.onComplete = function (v) {
+        onComplete(v) {
             this._curScene = v;
-        };
+        }
         /**进入场景*/
-        SceneManager.prototype.gotoScene = function (scene_type, args) {
-            var _this = this;
+        gotoScene(sceneName, args) {
             this.exitScene();
-            var sceneName = SceneManager.scenes.getValue(scene_type);
+            //  let sceneName = SceneManager.scenes.getValue(scene_type);
             //切换
-            var clas = airkit.ClassUtils.getClass(sceneName);
-            var scene = new clas();
-            scene["__scene_type__"] = scene_type;
+            let clas = airkit.ClassUtils.getClass(sceneName);
+            let scene = new clas();
+            scene["__scene_type__"] = sceneName;
             scene.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
             scene.setup(args);
             scene
                 .loadResource(airkit.ResourceManager.DefaultGroup, clas)
-                .then(function (v) {
-                _this.onComplete(v);
+                .then((v) => {
+                this.onComplete(v);
             })
-                .catch(function (e) {
+                .catch((e) => {
                 airkit.Log.error(e);
             });
             airkit.LayerManager.mainLayer.addChild(scene);
-        };
-        SceneManager.prototype.exitScene = function () {
+        }
+        exitScene() {
             if (this._curScene) {
                 //切换
-                var sceneName = SceneManager.scenes.getValue(this._curScene["__scene_type__"]);
-                var clas = airkit.ClassUtils.getClass(sceneName);
+                let sceneName = //SceneManager.scenes.getValue(
+                 this._curScene["__scene_type__"];
+                // );
+                let clas = airkit.ClassUtils.getClass(sceneName);
                 clas.unres();
                 this._curScene.removeFromParent();
                 this._curScene.dispose();
@@ -4980,11 +4524,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 airkit.UIManager.Instance.closeAll();
                 airkit.ObjectPools.clearAll();
             }
-        };
-        SceneManager.scenes = new airkit.NDictionary();
-        SceneManager.instance = null;
-        return SceneManager;
-    }());
+        }
+    }
+    SceneManager.instance = null;
     airkit.SceneManager = SceneManager;
 })(airkit || (airkit = {}));
 /**
@@ -4994,57 +4536,46 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
  */
 
 (function (airkit) {
-    var UIManager = /** @class */ (function (_super) {
-        __extends(UIManager, _super);
-        function UIManager() {
-            var _this = _super.call(this) || this;
-            _this._dicConfig = null;
-            _this._dicUIView = null;
-            _this._UIQueues = null;
-            _this._dicConfig = new airkit.NDictionary();
-            _this._dicUIView = new airkit.NDictionary();
-            _this._UIQueues = new airkit.NDictionary();
+    class UIManager extends airkit.Singleton {
+        constructor() {
+            super();
+            this._dicConfig = null;
+            this._dicUIView = null;
+            this._UIQueues = null;
+            this._dicConfig = new airkit.NDictionary();
+            this._dicUIView = new airkit.NDictionary();
+            this._UIQueues = new airkit.NDictionary();
             //预创建2个队列,通常情况下都能满足需求了
-            _this._UIQueues.add(airkit.eUIQueueType.POPUP, new UIQueue());
-            _this._UIQueues.add(airkit.eUIQueueType.ALERT, new UIQueue());
-            return _this;
+            this._UIQueues.add(airkit.eUIQueueType.POPUP, new UIQueue());
+            this._UIQueues.add(airkit.eUIQueueType.ALERT, new UIQueue());
         }
-        Object.defineProperty(UIManager, "Instance", {
-            get: function () {
-                if (!this.instance)
-                    this.instance = new UIManager();
-                return this.instance;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        UIManager.prototype.empty = function () {
-            var queue = this._UIQueues.getValue(airkit.eUIQueueType.POPUP);
+        static get Instance() {
+            if (!this.instance)
+                this.instance = new UIManager();
+            return this.instance;
+        }
+        empty() {
+            let queue = this._UIQueues.getValue(airkit.eUIQueueType.POPUP);
             if (!queue.empty())
                 return false;
             if (this._dicUIView.length > 0)
                 return false;
             return true;
-        };
+        }
         //～～～～～～～～～～～～～～～～～～～～～～～显示~～～～～～～～～～～～～～～～～～～～～～～～//
         /**
          * 显示界面
          * @param id        界面id
          * @param args      参数
          */
-        UIManager.prototype.show = function (id) {
-            var _this = this;
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
-            return new Promise(function (resolve, reject) {
+        show(id, ...args) {
+            return new Promise((resolve, reject) => {
                 airkit.Log.info("show panel {0}", id);
                 //从缓存中查找
-                var obj = _this._dicUIView.getValue(id);
+                let obj = this._dicUIView.getValue(id);
                 if (obj != null) {
                     if (obj["displayObject"] == null) {
-                        _this._dicUIView.remove(id);
+                        this._dicUIView.remove(id);
                         obj = null;
                     }
                     else {
@@ -5055,58 +4586,56 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     }
                 }
                 //获取数据
-                var conf = _this._dicConfig.getValue(id);
+                let conf = this._dicConfig.getValue(id);
                 airkit.assert(conf != null, "UIManager::Show - not find id:" + conf.mID);
-                var params = args.slice(0);
+                let params = args.slice(0);
                 //切换
-                var clas = airkit.ClassUtils.getClass(conf.name);
-                var v = new clas();
+                let clas = airkit.ClassUtils.getClass(conf.name);
+                let v = new clas();
                 airkit.assert(v != null, "UIManager::Show - cannot create ui:" + id);
                 v.setUIID(id);
                 v.setup(params);
                 v.loadResource(airkit.ResourceManager.DefaultGroup, clas)
-                    .then(function (p) {
-                    var layer = airkit.LayerManager.getLayer(conf.mLayer);
+                    .then((p) => {
+                    let layer = airkit.LayerManager.getLayer(conf.mLayer);
                     layer.addChild(p);
-                    _this._dicUIView.add(id, p);
+                    this._dicUIView.add(id, p);
                     resolve(p);
                 })
-                    .catch(function (e) {
+                    .catch((e) => {
                     airkit.Log.error(e);
                 });
             });
-        };
+        }
         /**
          * 关闭界面
          * @param id    界面id
          */
-        UIManager.prototype.close = function (id, animType) {
-            var _this = this;
-            if (animType === void 0) { animType = 0; }
-            return new Promise(function (resolve, reject) {
+        close(id, animType = 0) {
+            return new Promise((resolve, reject) => {
                 airkit.Log.info("close panel {0}", id);
                 //获取数据
-                var conf = _this._dicConfig.getValue(id);
+                let conf = this._dicConfig.getValue(id);
                 airkit.assert(conf != null, "UIManager::Close - not find id:" + conf.mID);
-                var panel = _this._dicUIView.getValue(id);
+                let panel = this._dicUIView.getValue(id);
                 if (!panel)
                     return;
                 //切换
-                var clas = airkit.ClassUtils.getClass(conf.name);
+                let clas = airkit.ClassUtils.getClass(conf.name);
                 clas.unres();
                 if (animType == 0) {
-                    var result = _this.clearPanel(id, panel, conf);
+                    let result = this.clearPanel(id, panel, conf);
                     resolve([id, result]);
                 }
                 else {
-                    airkit.DisplayUtils.hide(panel, airkit.Handler.create(null, function (v) {
-                        var result = _this.clearPanel(id, panel, conf);
+                    airkit.DisplayUtils.hide(panel, airkit.Handler.create(null, (v) => {
+                        let result = this.clearPanel(id, panel, conf);
                         resolve([id, result]);
                     }));
                 }
             });
-        };
-        UIManager.prototype.clearPanel = function (id, panel, resInfo) {
+        }
+        clearPanel(id, panel, resInfo) {
             //销毁或隐藏
             if (resInfo.mHideDestroy) {
                 this._dicUIView.remove(id);
@@ -5119,32 +4648,27 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 panel.setVisible(false);
                 return false;
             }
-        };
+        }
         /**
          * 关闭所有界面
          * @param   exclude_list    需要排除关闭的列表
          */
-        UIManager.prototype.closeAll = function (exclude_list) {
-            if (exclude_list === void 0) { exclude_list = null; }
+        closeAll(exclude_list = null) {
             this._dicUIView.foreach(function (key, value) {
                 if (exclude_list && airkit.ArrayUtils.containsValue(exclude_list, key))
                     return true;
                 UIManager.Instance.close(key);
                 return true;
             });
-        };
+        }
         /**
          * 弹窗UI，默认用队列显示
          * @param id
          * @param args
          */
-        UIManager.prototype.popup = function (id) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
+        popup(id, ...args) {
             this._UIQueues.getValue(airkit.eUIQueueType.POPUP).show(id, args);
-        };
+        }
         /**
          * alert框，默认队列显示
          *
@@ -5152,43 +4676,35 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param {...any[]} args
          * @memberof UIManager
          */
-        UIManager.prototype.alert = function (id) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
+        alert(id, ...args) {
             this._UIQueues.getValue(airkit.eUIQueueType.ALERT).show(id, args);
-        };
+        }
         /**查找界面*/
-        UIManager.prototype.findPanel = function (id) {
-            var panel = this._dicUIView.getValue(id);
+        findPanel(id) {
+            let panel = this._dicUIView.getValue(id);
             return panel;
-        };
+        }
         /**界面是否打开*/
-        UIManager.prototype.isPanelOpen = function (id) {
-            var panel = this._dicUIView.getValue(id);
+        isPanelOpen(id) {
+            let panel = this._dicUIView.getValue(id);
             if (panel)
                 return true;
             else
                 return false;
-        };
+        }
         //toast
-        UIManager.prototype.tipsPopup = function (toastLayer, target, view, duration, fromProps, toProps, usePool) {
-            if (duration === void 0) { duration = 0.5; }
-            if (fromProps === void 0) { fromProps = null; }
-            if (toProps === void 0) { toProps = null; }
-            if (usePool === void 0) { usePool = true; }
-            return new Promise(function (resolve, reject) {
+        tipsPopup(toastLayer, target, view, duration = 0.5, fromProps = null, toProps = null, usePool = true) {
+            return new Promise((resolve, reject) => {
                 //  target.addChild(view)
                 toastLayer.addChild(view);
                 view.setScale(0.1, 0.1);
                 //fgui坐标转化有问题，临时处理一下
-                var point = target.localToGlobal(target.width / 2.0 - target.pivotX * target.width, target.height * 0.382 - target.pivotY * target.height);
-                var localPoint = toastLayer.globalToLocal(point.x, point.y);
+                let point = target.localToGlobal(target.width / 2.0 - target.pivotX * target.width, target.height * 0.382 - target.pivotY * target.height);
+                let localPoint = toastLayer.globalToLocal(point.x, point.y);
                 // view.setXY(target.width / 2.0, target.height * 0.382)
-                var start = 0;
-                var offset = 600;
-                var type = fgui.EaseType.BounceOut;
+                let start = 0;
+                let offset = 600;
+                let type = fgui.EaseType.BounceOut;
                 if (duration > 1.5) {
                     start = toastLayer.height + 600;
                     offset = -600;
@@ -5208,31 +4724,26 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     y: localPoint.y,
                 }, duration, type)
                     .delay(0.5)
-                    .to({ x: localPoint.x, y: start - offset }, duration, fgui.EaseType.ExpoOut, airkit.Handler.create(null, function () {
+                    .to({ x: localPoint.x, y: start - offset }, duration, fgui.EaseType.ExpoOut, airkit.Handler.create(null, () => {
                     view.removeFromParent();
                     resolve();
                 }));
             });
-        };
+        }
         //tips 单toast，具有排他性
-        UIManager.prototype.singleToast = function (toastLayer, target, view, duration, speedUp, usePool, x, y) {
-            var _this = this;
-            if (duration === void 0) { duration = 0.5; }
-            if (usePool === void 0) { usePool = true; }
-            if (x === void 0) { x = null; }
-            if (y === void 0) { y = null; }
-            return new Promise(function (resolve, reject) {
-                var key = "_single_toast";
+        singleToast(toastLayer, target, view, duration = 0.5, speedUp, usePool = true, x = null, y = null) {
+            return new Promise((resolve, reject) => {
+                let key = "_single_toast";
                 if (target[key] == null) {
                     target[key] = [];
                 }
-                var inEase = fgui.EaseType.QuadOut;
-                var outEase = fgui.EaseType.QuadIn;
+                let inEase = fgui.EaseType.QuadOut;
+                let outEase = fgui.EaseType.QuadIn;
                 //  target.addChild(view)
                 toastLayer.addChild(view);
-                var k = airkit.ClassUtils.classKey(view);
+                let k = airkit.ClassUtils.classKey(view);
                 for (var i in target[key]) {
-                    var o = target[key][i];
+                    let o = target[key][i];
                     if (o) {
                         o["toY"] -= o.height + 5;
                         if (airkit.ClassUtils.classKey(o) == k) {
@@ -5248,24 +4759,24 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     x = target.width / 2.0 - target.pivotX * target.width;
                 if (y == null)
                     y = target.height * 0.382 - target.pivotY * target.height;
-                var point = target.localToGlobal(x, y);
-                var localPoint = toastLayer.globalToLocal(point.x, point.y);
+                let point = target.localToGlobal(x, y);
+                let localPoint = toastLayer.globalToLocal(point.x, point.y);
                 // view.setXY(target.width / 2.0, target.height * 0.382)
                 view.setPosition(localPoint.x, localPoint.y);
                 view["toY"] = view.y;
-                var tu = airkit.TweenUtils.get(view);
-                tu.setOnUpdate(function (gt) {
-                    var toY = view["toY"];
+                let tu = airkit.TweenUtils.get(view);
+                tu.setOnUpdate((gt) => {
+                    let toY = view["toY"];
                     if (toY < view.y) {
-                        var offset = (toY - view.y) * 0.4;
-                        var limit = -5 - Math.ceil(view.height / 50);
+                        let offset = (toY - view.y) * 0.4;
+                        let limit = -5 - Math.ceil(view.height / 50);
                         if (offset < limit)
                             offset = limit;
                         view.y += offset;
                     }
                 });
-                var scale = 1.0;
-                tu.to({ scaleX: scale, scaleY: scale, alpha: 1.0 }, duration, inEase).to({ alpha: 0.4 }, duration * 0.7, outEase, airkit.Handler.create(_this, function () {
+                let scale = 1.0;
+                tu.to({ scaleX: scale, scaleY: scale, alpha: 1.0 }, duration, inEase).to({ alpha: 0.4 }, duration * 0.7, outEase, airkit.Handler.create(this, () => {
                     target[key].splice(target[key].indexOf(view), 1);
                     if (target && view && view["parent"]) {
                         view.removeFromParent();
@@ -5280,20 +4791,15 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     resolve();
                 }));
             });
-        };
+        }
         //toast
-        UIManager.prototype.toast = function (toastLayer, target, view, duration, speedUp, usePool, x, y) {
-            var _this = this;
-            if (duration === void 0) { duration = 0.5; }
-            if (usePool === void 0) { usePool = true; }
-            if (x === void 0) { x = null; }
-            if (y === void 0) { y = null; }
-            return new Promise(function (resolve, reject) {
+        toast(toastLayer, target, view, duration = 0.5, speedUp, usePool = true, x = null, y = null) {
+            return new Promise((resolve, reject) => {
                 if (target["_toastList"] == null) {
                     target["_toastList"] = [];
                 }
-                var inEase = fgui.EaseType.QuadOut;
-                var outEase = fgui.EaseType.QuadIn;
+                let inEase = fgui.EaseType.QuadOut;
+                let outEase = fgui.EaseType.QuadIn;
                 //  target.addChild(view)
                 toastLayer.addChild(view);
                 if (speedUp) {
@@ -5323,24 +4829,24 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     x = target.width / 2.0 - target.pivotX * target.width;
                 if (y == null)
                     y = target.height * 0.382 - target.pivotY * target.height;
-                var point = target.localToGlobal(x, y);
-                var localPoint = toastLayer.globalToLocal(point.x, point.y);
+                let point = target.localToGlobal(x, y);
+                let localPoint = toastLayer.globalToLocal(point.x, point.y);
                 // view.setXY(target.width / 2.0, target.height * 0.382)
                 view.setPosition(localPoint.x, localPoint.y);
                 view["toY"] = view.y;
-                var tu = airkit.TweenUtils.get(view);
-                tu.setOnUpdate(function (gt) {
-                    var toY = view["toY"];
+                let tu = airkit.TweenUtils.get(view);
+                tu.setOnUpdate((gt) => {
+                    let toY = view["toY"];
                     if (toY < view.y) {
-                        var offset = (toY - view.y) * 0.4;
-                        var limit = -8 - Math.ceil(view.height / 50);
+                        let offset = (toY - view.y) * 0.4;
+                        let limit = -8 - Math.ceil(view.height / 50);
                         if (offset < limit)
                             offset = limit;
                         view.y += offset;
                     }
                 });
-                var scale = speedUp ? 1.0 : 1.0;
-                tu.to({ scaleX: scale, scaleY: scale, alpha: 1.0 }, duration, inEase).to({ alpha: 0.4 }, duration * 0.7, outEase, airkit.Handler.create(_this, function () {
+                let scale = speedUp ? 1.0 : 1.0;
+                tu.to({ scaleX: scale, scaleY: scale, alpha: 1.0 }, duration, inEase).to({ alpha: 0.4 }, duration * 0.7, outEase, airkit.Handler.create(this, () => {
                     target["_toastList"].splice(target["_toastList"].indexOf(view), 1);
                     if (target && view && view["parent"]) {
                         view.removeFromParent();
@@ -5355,45 +4861,43 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     resolve();
                 }));
             });
-        };
-        UIManager.prototype.setup = function () { };
-        UIManager.prototype.destroy = function () {
-            _super.prototype.destroy.call(this);
+        }
+        setup() { }
+        destroy() {
             this.closeAll();
             this.clearUIConfig();
             return true;
-        };
-        UIManager.prototype.update = function (dt) {
+        }
+        update(dt) {
             this._dicUIView.foreach(function (key, value) {
                 value.update(dt);
                 return true;
             });
-        };
+        }
         //～～～～～～～～～～～～～～～～～～～～～～～加载~～～～～～～～～～～～～～～～～～～～～～～～//
-        UIManager.prototype.addUIConfig = function (info) {
+        addUIConfig(info) {
             if (this._dicConfig.containsKey(info.mID)) {
                 airkit.Log.error("UIManager::Push UIConfig - same id is register:" + info.mID);
                 return;
             }
             this._dicConfig.add(info.mID, info);
             airkit.ClassUtils.regClass(info.name, info.cls);
-        };
-        UIManager.prototype.clearUIConfig = function () {
+        }
+        clearUIConfig() {
             this._dicConfig.clear();
-        };
-        UIManager.prototype.getUIConfig = function (id) {
+        }
+        getUIConfig(id) {
             return this._dicConfig.getValue(id);
-        };
-        UIManager.prototype.getUILayerID = function (id) {
-            var info = this._dicConfig.getValue(id);
+        }
+        getUILayerID(id) {
+            let info = this._dicConfig.getValue(id);
             if (!info) {
                 return -1;
             }
             return info.mLayer;
-        };
-        UIManager.instance = null;
-        return UIManager;
-    }(airkit.Singleton));
+        }
+    }
+    UIManager.instance = null;
     airkit.UIManager = UIManager;
     /**
     显示弹出框信息
@@ -5404,12 +4908,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     @param buttons          按钮的label,不需要显示按钮可以传null,确认按钮[{按钮属性k:v依据Label}]
     @param param            调用方预设的参数，保存在alertView对象中，可以通过getParam方法获取
     */
-    var AlertInfo = /** @class */ (function () {
-        function AlertInfo(callback, title, content, tips, buttons, param) {
-            if (title === void 0) { title = ""; }
-            if (tips === void 0) { tips = ""; }
-            if (buttons === void 0) { buttons = {}; }
-            if (param === void 0) { param = null; }
+    class AlertInfo {
+        constructor(callback, title = "", content, tips = "", buttons = {}, param = null) {
             this.title = "";
             this.tips = "";
             this.buttons = [];
@@ -5421,11 +4921,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this.buttons = buttons;
             this.param = param;
         }
-        return AlertInfo;
-    }());
+    }
     airkit.AlertInfo = AlertInfo;
-    var UIConfig = /** @class */ (function () {
-        function UIConfig(id, name, cls, layer, destroy, alige) {
+    class UIConfig {
+        constructor(id, name, cls, layer, destroy, alige) {
             this.mID = id;
             this.name = name;
             this.cls = cls;
@@ -5433,11 +4932,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this.mHideDestroy = destroy;
             this.mAlige = alige;
         }
-        return UIConfig;
-    }());
+    }
     airkit.UIConfig = UIConfig;
-    var UIQueue = /** @class */ (function () {
-        function UIQueue() {
+    class UIQueue {
+        constructor() {
             /*～～～～～～～～～～～～～～～～～～～～～队列方式显示界面，上一个界面关闭，才会显示下一个界面～～～～～～～～～～～～～～～～～～～～～*/
             this._currentUI = 0;
             this._currentUI = 0;
@@ -5449,38 +4947,37 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param 	id		界面id
          * @param 	args	创建参数，会在界面onCreate时传入
          */
-        UIQueue.prototype.show = function (id, args) {
-            var info = [id, args];
+        show(id, args) {
+            let info = [id, args];
             this._listPanels.enqueue(info);
             this.checkAlertNext();
-        };
-        UIQueue.prototype.empty = function () {
+        }
+        empty() {
             if (this._currentUI > 0 || this._listPanels.length > 0)
                 return false;
             return true;
-        };
+        }
         /**
          * 判断是否弹出下一个界面
          */
-        UIQueue.prototype.checkAlertNext = function () {
-            var _a;
+        checkAlertNext() {
             if (this._currentUI > 0 || this._listPanels.length <= 0)
                 return;
-            var info = this._listPanels.dequeue();
+            let info = this._listPanels.dequeue();
             this.registerEvent();
             this._currentUI = info[0];
-            (_a = UIManager.Instance).show.apply(_a, __spreadArrays([info[0]], info[1]));
-        };
-        UIQueue.prototype.registerEvent = function () {
+            UIManager.Instance.show(info[0], ...info[1]);
+        }
+        registerEvent() {
             airkit.EventCenter.on(airkit.EventID.UI_CLOSE, this, this.onUIEvent);
-        };
-        UIQueue.prototype.unRegisterEvent = function () {
+        }
+        unRegisterEvent() {
             airkit.EventCenter.off(airkit.EventID.UI_CLOSE, this, this.onUIEvent);
-        };
-        UIQueue.prototype.onUIEvent = function (args) {
+        }
+        onUIEvent(args) {
             switch (args.type) {
                 case airkit.EventID.UI_CLOSE:
-                    var id = args.get(0);
+                    let id = args.get(0);
                     if (this._currentUI > 0 && this._currentUI == id) {
                         this._currentUI = 0;
                         this.unRegisterEvent();
@@ -5488,9 +4985,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     }
                     break;
             }
-        };
-        return UIQueue;
-    }());
+        }
+    }
 })(airkit || (airkit = {}));
 /**
  * 本地数据
@@ -5499,49 +4995,46 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
  */
 
 (function (airkit) {
-    var LocalDB = /** @class */ (function () {
-        function LocalDB() {
-        }
+    class LocalDB {
         /**
          * 设置全局id，用于区分同一个设备的不同玩家
          * @param	key	唯一键，可以使用玩家id
          */
-        LocalDB.setGlobalKey = function (key) {
+        static setGlobalKey(key) {
             this._globalKey = key;
-        };
-        LocalDB.has = function (key) {
+        }
+        static has(key) {
             return cc.sys.localStorage.getItem(this.getFullKey(key)) != null;
-        };
-        LocalDB.getInt = function (key) {
+        }
+        static getInt(key) {
             return parseInt(cc.sys.localStorage.getItem(this.getFullKey(key)));
-        };
-        LocalDB.setInt = function (key, value) {
+        }
+        static setInt(key, value) {
             cc.sys.localStorage.setItem(this.getFullKey(key), value.toString());
-        };
-        LocalDB.getFloat = function (key) {
+        }
+        static getFloat(key) {
             return parseInt(cc.sys.localStorage.getItem(this.getFullKey(key)));
-        };
-        LocalDB.setFloat = function (key, value) {
+        }
+        static setFloat(key, value) {
             cc.sys.localStorage.setItem(this.getFullKey(key), value.toString());
-        };
-        LocalDB.getString = function (key) {
+        }
+        static getString(key) {
             return cc.sys.localStorage.getItem(this.getFullKey(key));
-        };
-        LocalDB.setString = function (key, value) {
+        }
+        static setString(key, value) {
             cc.sys.localStorage.setItem(this.getFullKey(key), value);
-        };
-        LocalDB.remove = function (key) {
+        }
+        static remove(key) {
             cc.sys.localStorage.removeItem(this.getFullKey(key));
-        };
-        LocalDB.clear = function () {
+        }
+        static clear() {
             cc.sys.localStorage.clear();
-        };
-        LocalDB.getFullKey = function (key) {
+        }
+        static getFullKey(key) {
             return this._globalKey + "_" + key;
-        };
-        LocalDB._globalKey = "";
-        return LocalDB;
-    }());
+        }
+    }
+    LocalDB._globalKey = "";
     airkit.LocalDB = LocalDB;
 })(airkit || (airkit = {}));
 /**
@@ -5551,8 +5044,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
  */
 
 (function (airkit) {
-    var IntervalTimer = /** @class */ (function () {
-        function IntervalTimer() {
+    class IntervalTimer {
+        constructor() {
             this._nowTime = 0;
         }
         /**
@@ -5560,24 +5053,23 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	interval	触发间隔
          * @param	firstFrame	是否第一帧开始执行
          */
-        IntervalTimer.prototype.init = function (interval, firstFrame) {
+        init(interval, firstFrame) {
             this._intervalTime = interval;
             if (firstFrame)
                 this._nowTime = this._intervalTime;
-        };
-        IntervalTimer.prototype.reset = function () {
+        }
+        reset() {
             this._nowTime = 0;
-        };
-        IntervalTimer.prototype.update = function (elapseTime) {
+        }
+        update(elapseTime) {
             this._nowTime += elapseTime;
             if (this._nowTime >= this._intervalTime) {
                 this._nowTime -= this._intervalTime;
                 return true;
             }
             return false;
-        };
-        return IntervalTimer;
-    }());
+        }
+    }
     airkit.IntervalTimer = IntervalTimer;
 })(airkit || (airkit = {}));
 /**
@@ -5587,37 +5079,22 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
  */
 
 (function (airkit) {
-    var Timer = /** @class */ (function () {
-        function Timer() {
+    class Timer {
+        //两帧之间的时间间隔,单位毫秒
+        static get deltaTimeMS() {
+            return cc.director.getDeltaTime() * 1000;
         }
-        Object.defineProperty(Timer, "deltaTimeMS", {
-            //两帧之间的时间间隔,单位毫秒
-            get: function () {
-                return cc.director.getDeltaTime();
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Timer, "frameCount", {
-            /**游戏启动后，经过的帧数*/
-            get: function () {
-                return cc.director.getTotalFrames();
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Timer, "timeScale", {
-            get: function () {
-                return cc.director.getScheduler().getTimeScale();
-            },
-            set: function (scale) {
-                cc.director.getScheduler().setTimeScale(scale);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        return Timer;
-    }());
+        /**游戏启动后，经过的帧数*/
+        static get frameCount() {
+            return cc.director.getTotalFrames();
+        }
+        static get timeScale() {
+            return cc.director.getScheduler().getTimeScale();
+        }
+        static set timeScale(scale) {
+            cc.director.getScheduler().setTimeScale(scale);
+        }
+    }
     airkit.Timer = Timer;
 })(airkit || (airkit = {}));
 // import { ArrayUtils } from "../utils/ArrayUtils";
@@ -5633,42 +5110,35 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-11
      */
-    var TimerManager = /** @class */ (function (_super) {
-        __extends(TimerManager, _super);
-        function TimerManager() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._idCounter = 0;
-            _this._removalPending = [];
-            _this._timers = [];
-            return _this;
-        }
-        Object.defineProperty(TimerManager, "Instance", {
-            get: function () {
-                if (!this.instance)
-                    this.instance = new TimerManager();
-                return this.instance;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        TimerManager.prototype.setup = function () {
+    class TimerManager extends airkit.Singleton {
+        constructor() {
+            super(...arguments);
             this._idCounter = 0;
-        };
-        TimerManager.prototype.destroy = function () {
-            _super.prototype.destroy.call(this);
+            this._removalPending = [];
+            this._timers = [];
+        }
+        static get Instance() {
+            if (!this.instance)
+                this.instance = new TimerManager();
+            return this.instance;
+        }
+        setup() {
+            this._idCounter = 0;
+        }
+        destroy() {
             airkit.ArrayUtils.clear(this._removalPending);
             airkit.ArrayUtils.clear(this._timers);
             return true;
-        };
-        TimerManager.prototype.update = function (dt) {
+        }
+        update(dt) {
             this.remove();
-            for (var i = 0; i < this._timers.length; i++) {
+            for (let i = 0; i < this._timers.length; i++) {
                 this._timers[i].update(dt);
                 if (this._timers[i].isActive == false) {
                     TimerManager.Instance.removeTimer(this._timers[i].id);
                 }
             }
-        };
+        }
         /**
          * 定时重复执行
          * @param	rate	间隔时间(单位毫秒)。
@@ -5677,50 +5147,47 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	method	定时器回调函数：注意，返回函数第一个参数为定时器id，后面参数依次时传入的参数。例OnTime(timer_id:number, args1:any, args2:any,...):void
          * @param	args	回调参数。
          */
-        TimerManager.prototype.addLoop = function (rate, ticks, caller, method, args) {
-            if (args === void 0) { args = null; }
+        addLoop(rate, ticks, caller, method, args = null) {
             if (ticks <= 0)
                 ticks = 0;
-            var timer = airkit.ObjectPools.get(TimerObject);
+            let timer = airkit.ObjectPools.get(TimerObject);
             ++this._idCounter;
             if (args != null)
                 airkit.ArrayUtils.insert(args, this._idCounter, 0);
-            var handler = airkit.Handler.create(caller, method, args, false);
+            let handler = airkit.Handler.create(caller, method, args, false);
             timer.set(this._idCounter, rate, ticks, handler);
             this._timers.push(timer);
             return timer.id;
-        };
+        }
         /**
          * 单次执行
          * 间隔时间(单位毫秒)。
          */
-        TimerManager.prototype.addOnce = function (rate, caller, method, args) {
-            if (args === void 0) { args = null; }
-            var timer = airkit.ObjectPools.get(TimerObject);
+        addOnce(rate, caller, method, args = null) {
+            let timer = airkit.ObjectPools.get(TimerObject);
             ++this._idCounter;
             if (args != null)
                 airkit.ArrayUtils.insert(args, this._idCounter, 0);
-            var handler = airkit.Handler.create(caller, method, args, false);
+            let handler = airkit.Handler.create(caller, method, args, false);
             timer.set(this._idCounter, rate, 1, handler);
             this._timers.push(timer);
             return timer.id;
-        };
+        }
         /**
          * 移除定时器
          * @param	timerId	定时器id
          */
-        TimerManager.prototype.removeTimer = function (timerId) {
+        removeTimer(timerId) {
             this._removalPending.push(timerId);
-        };
+        }
         /**
          * 移除过期定时器
          */
-        TimerManager.prototype.remove = function () {
-            var t;
+        remove() {
+            let t;
             if (this._removalPending.length > 0) {
-                for (var _i = 0, _a = this._removalPending; _i < _a.length; _i++) {
-                    var id = _a[_i];
-                    for (var i = 0; i < this._timers.length; i++) {
+                for (let id of this._removalPending) {
+                    for (let i = 0; i < this._timers.length; i++) {
                         t = this._timers[i];
                         if (t.id == id) {
                             t.clear();
@@ -5733,24 +5200,23 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
                 airkit.ArrayUtils.clear(this._removalPending);
             }
-        };
-        TimerManager.TIMER_OBJECT = "timerObject";
-        TimerManager.instance = null;
-        return TimerManager;
-    }(airkit.Singleton));
+        }
+    }
+    TimerManager.TIMER_OBJECT = "timerObject";
+    TimerManager.instance = null;
     airkit.TimerManager = TimerManager;
-    var TimerObject = /** @class */ (function () {
-        function TimerObject() {
+    class TimerObject {
+        constructor() {
             this.mTime = new airkit.IntervalTimer();
         }
-        TimerObject.prototype.init = function () { };
-        TimerObject.prototype.clear = function () {
+        init() { }
+        clear() {
             if (this.handle != null) {
                 this.handle.recover();
                 this.handle = null;
             }
-        };
-        TimerObject.prototype.set = function (id, rate, ticks, handle) {
+        }
+        set(id, rate, ticks, handle) {
             this.id = id;
             this.mRate = rate < 0 ? 0 : rate;
             this.mTicks = ticks < 0 ? 0 : ticks;
@@ -5758,9 +5224,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this.mTicksElapsed = 0;
             this.isActive = true;
             this.mTime.init(this.mRate, false);
-        };
-        TimerObject.prototype.update = function (dt) {
-            if (this.isActive && this.mTime.update(airkit.Timer.deltaTimeMS)) {
+        }
+        update(dt) {
+            if (this.isActive && this.mTime.update(dt)) {
                 if (this.handle != null)
                     this.handle.run();
                 this.mTicksElapsed++;
@@ -5768,16 +5234,15 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     this.isActive = false;
                 }
             }
-        };
-        TimerObject.objectKey = "TimerObject";
-        return TimerObject;
-    }());
+        }
+    }
+    TimerObject.objectKey = "TimerObject";
     airkit.TimerObject = TimerObject;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
     /**数组排序方式*/
-    var eArraySortOrder;
+    let eArraySortOrder;
     (function (eArraySortOrder) {
         eArraySortOrder[eArraySortOrder["ASCENDING"] = 0] = "ASCENDING";
         eArraySortOrder[eArraySortOrder["DESCENDING"] = 1] = "DESCENDING";
@@ -5787,30 +5252,28 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-6
      */
-    var ArrayUtils = /** @class */ (function () {
-        function ArrayUtils() {
-        }
+    class ArrayUtils {
         /** 插入元素
          * @param arr 需要操作的数组
          * @param value 需要插入的元素
          * @param index 插入位置
          */
-        ArrayUtils.insert = function (arr, value, index) {
+        static insert(arr, value, index) {
             if (index > arr.length - 1) {
                 arr.push(value);
             }
             else {
                 arr.splice(index, 0, value);
             }
-        };
+        }
         /**
          * Checks if the given argument is a Array.
          * @function
          */
-        ArrayUtils.isArray = function (obj) {
+        static isArray(obj) {
             return Object.prototype.toString.call(obj) === "[object Array]";
-        };
-        ArrayUtils.equip = function (arr, v) {
+        }
+        static equip(arr, v) {
             // if the other array is a falsy value, return
             if (!arr || !v)
                 return false;
@@ -5830,48 +5293,47 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
             return true;
-        };
+        }
         /**从数组移除元素*/
-        ArrayUtils.removeValue = function (arr, v) {
+        static removeValue(arr, v) {
             if (Array.isArray(v)) {
-                for (var i = arr.length - 1; i >= 0; i--) {
+                for (let i = arr.length - 1; i >= 0; i--) {
                     if (this.equip(arr[i], v)) {
                         arr.splice(i, 1);
                     }
                 }
             }
             else {
-                var i = arr.indexOf(v);
+                let i = arr.indexOf(v);
                 if (i != -1) {
                     arr.splice(i, 1);
                 }
             }
-        };
+        }
         /**移除所有值等于v的元素*/
-        ArrayUtils.removeAllValue = function (arr, v) {
-            var i = arr.indexOf(v);
+        static removeAllValue(arr, v) {
+            let i = arr.indexOf(v);
             while (i >= 0) {
                 arr.splice(i, 1);
                 i = arr.indexOf(v);
             }
-        };
+        }
         /**包含元素*/
-        ArrayUtils.containsValue = function (arr, v) {
+        static containsValue(arr, v) {
             return arr.length > 0 ? arr.indexOf(v) != -1 : false;
-        };
+        }
         /**复制*/
-        ArrayUtils.copy = function (arr) {
+        static copy(arr) {
             // return arr.slice()
             return JSON.parse(JSON.stringify(arr));
-        };
+        }
         /**
          * 排序
          * @param arr 需要排序的数组
          * @param key 排序字段
          * @param order 排序方式
          */
-        ArrayUtils.sort = function (arr, key, order) {
-            if (order === void 0) { order = eArraySortOrder.DESCENDING; }
+        static sort(arr, key, order = eArraySortOrder.DESCENDING) {
             if (arr == null)
                 return;
             arr.sort(function (info1, info2) {
@@ -5894,25 +5356,24 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     }
                 }
             });
-        };
+        }
         /**清空数组*/
-        ArrayUtils.clear = function (arr) {
-            var i = 0;
-            var len = arr.length;
+        static clear(arr) {
+            let i = 0;
+            let len = arr.length;
             for (i = 0; i < len; ++i) {
                 arr[i] = null;
             }
             arr.splice(0);
-        };
+        }
         /**数据是否为空*/
-        ArrayUtils.isEmpty = function (arr) {
+        static isEmpty(arr) {
             if (arr == null || arr.length == 0) {
                 return true;
             }
             return false;
-        };
-        return ArrayUtils;
-    }());
+        }
+    }
     airkit.ArrayUtils = ArrayUtils;
 })(airkit || (airkit = {}));
 
@@ -5921,13 +5382,12 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * <p> <code>Byte</code> 类提供用于优化读取、写入以及处理二进制数据的方法和属性。</p>
      * <p> <code>Byte</code> 类适用于需要在字节层访问数据的高级开发人员。</p>
      */
-    var Byte = /** @class */ (function () {
+    class Byte {
         /**
          * 创建一个 <code>Byte</code> 类的实例。
          * @param	data	用于指定初始化的元素数目，或者用于初始化的TypedArray对象、ArrayBuffer对象。如果为 null ，则预分配一定的内存空间，当可用空间不足时，优先使用这部分内存，如果还不够，则重新分配所需内存。
          */
-        function Byte(data) {
-            if (data === void 0) { data = null; }
+        constructor(data = null) {
             /**@private 是否为小端数据。*/
             this._xd_ = true;
             /**@private */
@@ -5952,64 +5412,52 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * <code>LITTLE_ENDIAN</code> ：小端字节序，地址低位存储值的低位，地址高位存储值的高位。</p>
          * @return 当前系统的字节序。
          */
-        Byte.getSystemEndian = function () {
+        static getSystemEndian() {
             if (!Byte._sysEndian) {
                 var buffer = new ArrayBuffer(2);
                 new DataView(buffer).setInt16(0, 256, true);
                 Byte._sysEndian = new Int16Array(buffer)[0] === 256 ? Byte.LITTLE_ENDIAN : Byte.BIG_ENDIAN;
             }
             return Byte._sysEndian;
-        };
-        Object.defineProperty(Byte.prototype, "buffer", {
-            /**
-             * 获取此对象的 ArrayBuffer 数据，数据只包含有效数据部分。
-             */
-            get: function () {
-                var rstBuffer = this._d_.buffer;
-                if (rstBuffer.byteLength === this._length)
-                    return rstBuffer;
-                return rstBuffer.slice(0, this._length);
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Byte.prototype, "endian", {
-            /**
-             * <p> <code>Byte</code> 实例的字节序。取值为：<code>BIG_ENDIAN</code> 或 <code>BIG_ENDIAN</code> 。</p>
-             * <p>主机字节序，是 CPU 存放数据的两种不同顺序，包括小端字节序和大端字节序。通过 <code>getSystemEndian</code> 可以获取当前系统的字节序。</p>
-             * <p> <code>BIG_ENDIAN</code> ：大端字节序，地址低位存储值的高位，地址高位存储值的低位。有时也称之为网络字节序。<br/>
-             *  <code>LITTLE_ENDIAN</code> ：小端字节序，地址低位存储值的低位，地址高位存储值的高位。</p>
-             */
-            get: function () {
-                return this._xd_ ? Byte.LITTLE_ENDIAN : Byte.BIG_ENDIAN;
-            },
-            set: function (value) {
-                this._xd_ = value === Byte.LITTLE_ENDIAN;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Byte.prototype, "length", {
-            get: function () {
-                return this._length;
-            },
-            /**
-             * <p> <code>Byte</code> 对象的长度（以字节为单位）。</p>
-             * <p>如果将长度设置为大于当前长度的值，则用零填充字节数组的右侧；如果将长度设置为小于当前长度的值，将会截断该字节数组。</p>
-             * <p>如果要设置的长度大于当前已分配的内存空间的字节长度，则重新分配内存空间，大小为以下两者较大者：要设置的长度、当前已分配的长度的2倍，并将原有数据拷贝到新的内存空间中；如果要设置的长度小于当前已分配的内存空间的字节长度，也会重新分配内存空间，大小为要设置的长度，并将原有数据从头截断为要设置的长度存入新的内存空间中。</p>
-             */
-            set: function (value) {
-                if (this._allocated_ < value)
-                    this._resizeBuffer((this._allocated_ = Math.floor(Math.max(value, this._allocated_ * 2))));
-                else if (this._allocated_ > value)
-                    this._resizeBuffer((this._allocated_ = value));
-                this._length = value;
-            },
-            enumerable: false,
-            configurable: true
-        });
+        }
+        /**
+         * 获取此对象的 ArrayBuffer 数据，数据只包含有效数据部分。
+         */
+        get buffer() {
+            var rstBuffer = this._d_.buffer;
+            if (rstBuffer.byteLength === this._length)
+                return rstBuffer;
+            return rstBuffer.slice(0, this._length);
+        }
+        /**
+         * <p> <code>Byte</code> 实例的字节序。取值为：<code>BIG_ENDIAN</code> 或 <code>BIG_ENDIAN</code> 。</p>
+         * <p>主机字节序，是 CPU 存放数据的两种不同顺序，包括小端字节序和大端字节序。通过 <code>getSystemEndian</code> 可以获取当前系统的字节序。</p>
+         * <p> <code>BIG_ENDIAN</code> ：大端字节序，地址低位存储值的高位，地址高位存储值的低位。有时也称之为网络字节序。<br/>
+         *  <code>LITTLE_ENDIAN</code> ：小端字节序，地址低位存储值的低位，地址高位存储值的高位。</p>
+         */
+        get endian() {
+            return this._xd_ ? Byte.LITTLE_ENDIAN : Byte.BIG_ENDIAN;
+        }
+        set endian(value) {
+            this._xd_ = value === Byte.LITTLE_ENDIAN;
+        }
+        /**
+         * <p> <code>Byte</code> 对象的长度（以字节为单位）。</p>
+         * <p>如果将长度设置为大于当前长度的值，则用零填充字节数组的右侧；如果将长度设置为小于当前长度的值，将会截断该字节数组。</p>
+         * <p>如果要设置的长度大于当前已分配的内存空间的字节长度，则重新分配内存空间，大小为以下两者较大者：要设置的长度、当前已分配的长度的2倍，并将原有数据拷贝到新的内存空间中；如果要设置的长度小于当前已分配的内存空间的字节长度，也会重新分配内存空间，大小为要设置的长度，并将原有数据从头截断为要设置的长度存入新的内存空间中。</p>
+         */
+        set length(value) {
+            if (this._allocated_ < value)
+                this._resizeBuffer((this._allocated_ = Math.floor(Math.max(value, this._allocated_ * 2))));
+            else if (this._allocated_ > value)
+                this._resizeBuffer((this._allocated_ = value));
+            this._length = value;
+        }
+        get length() {
+            return this._length;
+        }
         /**@private */
-        Byte.prototype._resizeBuffer = function (len) {
+        _resizeBuffer(len) {
             try {
                 var newByteView = new Uint8Array(len);
                 if (this._u8d_ != null) {
@@ -6024,24 +5472,24 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             catch (err) {
                 throw "Invalid typed array length:" + len;
             }
-        };
+        }
         /**
          * @private
          * <p>常用于解析固定格式的字节流。</p>
          * <p>先从字节流的当前字节偏移位置处读取一个 <code>Uint16</code> 值，然后以此值为长度，读取此长度的字符串。</p>
          * @return 读取的字符串。
          */
-        Byte.prototype.getString = function () {
+        getString() {
             return this.readString();
-        };
+        }
         /**
          * <p>常用于解析固定格式的字节流。</p>
          * <p>先从字节流的当前字节偏移位置处读取一个 <code>Uint16</code> 值，然后以此值为长度，读取此长度的字符串。</p>
          * @return 读取的字符串。
          */
-        Byte.prototype.readString = function () {
+        readString() {
             return this._rUTF(this.getUint16());
-        };
+        }
         /**
          * @private
          * <p>从字节流中 <code>start</code> 参数指定的位置开始，读取 <code>len</code> 参数指定的字节数的数据，用于创建一个 <code>Float32Array</code> 对象并返回此对象。</p>
@@ -6050,22 +5498,22 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	len		需要读取的字节长度。如果要读取的长度超过可读取范围，则只返回可读范围内的值。
          * @return  读取的 Float32Array 对象。
          */
-        Byte.prototype.getFloat32Array = function (start, len) {
+        getFloat32Array(start, len) {
             return this.readFloat32Array(start, len);
-        };
+        }
         /**
          * 从字节流中 <code>start</code> 参数指定的位置开始，读取 <code>len</code> 参数指定的字节数的数据，用于创建一个 <code>Float32Array</code> 对象并返回此对象。
          * @param	start	开始位置。
          * @param	len		需要读取的字节长度。如果要读取的长度超过可读取范围，则只返回可读范围内的值。
          * @return  读取的 Float32Array 对象。
          */
-        Byte.prototype.readFloat32Array = function (start, len) {
+        readFloat32Array(start, len) {
             var end = start + len;
             end = end > this._length ? this._length : end;
             var v = new Float32Array(this._d_.buffer.slice(start, end));
             this._pos_ = end;
             return v;
-        };
+        }
         /**
          * @private
          * 从字节流中 <code>start</code> 参数指定的位置开始，读取 <code>len</code> 参数指定的字节数的数据，用于创建一个 <code>Uint8Array</code> 对象并返回此对象。
@@ -6073,22 +5521,22 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	len		需要读取的字节长度。如果要读取的长度超过可读取范围，则只返回可读范围内的值。
          * @return  读取的 Uint8Array 对象。
          */
-        Byte.prototype.getUint8Array = function (start, len) {
+        getUint8Array(start, len) {
             return this.readUint8Array(start, len);
-        };
+        }
         /**
          * 从字节流中 <code>start</code> 参数指定的位置开始，读取 <code>len</code> 参数指定的字节数的数据，用于创建一个 <code>Uint8Array</code> 对象并返回此对象。
          * @param	start	开始位置。
          * @param	len		需要读取的字节长度。如果要读取的长度超过可读取范围，则只返回可读范围内的值。
          * @return  读取的 Uint8Array 对象。
          */
-        Byte.prototype.readUint8Array = function (start, len) {
+        readUint8Array(start, len) {
             var end = start + len;
             end = end > this._length ? this._length : end;
             var v = new Uint8Array(this._d_.buffer.slice(start, end));
             this._pos_ = end;
             return v;
-        };
+        }
         /**
          * @private
          * <p>从字节流中 <code>start</code> 参数指定的位置开始，读取 <code>len</code> 参数指定的字节数的数据，用于创建一个 <code>Int16Array</code> 对象并返回此对象。</p>
@@ -6097,216 +5545,216 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	len		需要读取的字节长度。如果要读取的长度超过可读取范围，则只返回可读范围内的值。
          * @return  读取的 Int16Array 对象。
          */
-        Byte.prototype.getInt16Array = function (start, len) {
+        getInt16Array(start, len) {
             return this.readInt16Array(start, len);
-        };
+        }
         /**
          * 从字节流中 <code>start</code> 参数指定的位置开始，读取 <code>len</code> 参数指定的字节数的数据，用于创建一个 <code>Int16Array</code> 对象并返回此对象。
          * @param	start	开始读取的字节偏移量位置。
          * @param	len		需要读取的字节长度。如果要读取的长度超过可读取范围，则只返回可读范围内的值。
          * @return  读取的 Uint8Array 对象。
          */
-        Byte.prototype.readInt16Array = function (start, len) {
+        readInt16Array(start, len) {
             var end = start + len;
             end = end > this._length ? this._length : end;
             var v = new Int16Array(this._d_.buffer.slice(start, end));
             this._pos_ = end;
             return v;
-        };
+        }
         /**
          * @private
          * 从字节流的当前字节偏移位置处读取一个 IEEE 754 单精度（32 位）浮点数。
          * @return 单精度（32 位）浮点数。
          */
-        Byte.prototype.getFloat32 = function () {
+        getFloat32() {
             return this.readFloat32();
-        };
+        }
         /**
          * 从字节流的当前字节偏移位置处读取一个 IEEE 754 单精度（32 位）浮点数。
          * @return 单精度（32 位）浮点数。
          */
-        Byte.prototype.readFloat32 = function () {
+        readFloat32() {
             if (this._pos_ + 4 > this._length)
                 throw "getFloat32 error - Out of bounds";
             var v = this._d_.getFloat32(this._pos_, this._xd_);
             this._pos_ += 4;
             return v;
-        };
+        }
         /**
          * @private
          * 从字节流的当前字节偏移量位置处读取一个 IEEE 754 双精度（64 位）浮点数。
          * @return 双精度（64 位）浮点数。
          */
-        Byte.prototype.getFloat64 = function () {
+        getFloat64() {
             return this.readFloat64();
-        };
+        }
         /**
          * 从字节流的当前字节偏移量位置处读取一个 IEEE 754 双精度（64 位）浮点数。
          * @return 双精度（64 位）浮点数。
          */
-        Byte.prototype.readFloat64 = function () {
+        readFloat64() {
             if (this._pos_ + 8 > this._length)
                 throw "getFloat64 error - Out of bounds";
             var v = this._d_.getFloat64(this._pos_, this._xd_);
             this._pos_ += 8;
             return v;
-        };
+        }
         /**
          * 在字节流的当前字节偏移量位置处写入一个 IEEE 754 单精度（32 位）浮点数。
          * @param	value	单精度（32 位）浮点数。
          */
-        Byte.prototype.writeFloat32 = function (value) {
+        writeFloat32(value) {
             this._ensureWrite(this._pos_ + 4);
             this._d_.setFloat32(this._pos_, value, this._xd_);
             this._pos_ += 4;
-        };
+        }
         /**
          * 在字节流的当前字节偏移量位置处写入一个 IEEE 754 双精度（64 位）浮点数。
          * @param	value	双精度（64 位）浮点数。
          */
-        Byte.prototype.writeFloat64 = function (value) {
+        writeFloat64(value) {
             this._ensureWrite(this._pos_ + 8);
             this._d_.setFloat64(this._pos_, value, this._xd_);
             this._pos_ += 8;
-        };
+        }
         /**
          * @private
          * 从字节流的当前字节偏移量位置处读取一个 Int32 值。
          * @return Int32 值。
          */
-        Byte.prototype.getInt32 = function () {
+        getInt32() {
             return this.readInt32();
-        };
+        }
         /**
          * 从字节流的当前字节偏移量位置处读取一个 Int32 值。
          * @return Int32 值。
          */
-        Byte.prototype.readInt32 = function () {
+        readInt32() {
             if (this._pos_ + 4 > this._length)
                 throw "getInt32 error - Out of bounds";
             var float = this._d_.getInt32(this._pos_, this._xd_);
             this._pos_ += 4;
             return float;
-        };
+        }
         /**
          * @private
          * 从字节流的当前字节偏移量位置处读取一个 Uint32 值。
          * @return Uint32 值。
          */
-        Byte.prototype.getUint32 = function () {
+        getUint32() {
             return this.readUint32();
-        };
+        }
         /**
          * 从字节流的当前字节偏移量位置处读取一个 Uint32 值。
          * @return Uint32 值。
          */
-        Byte.prototype.readUint32 = function () {
+        readUint32() {
             if (this._pos_ + 4 > this._length)
                 throw "getUint32 error - Out of bounds";
             var v = this._d_.getUint32(this._pos_, this._xd_);
             this._pos_ += 4;
             return v;
-        };
+        }
         /**
          * 在字节流的当前字节偏移量位置处写入指定的 Int32 值。
          * @param	value	需要写入的 Int32 值。
          */
-        Byte.prototype.writeInt32 = function (value) {
+        writeInt32(value) {
             this._ensureWrite(this._pos_ + 4);
             this._d_.setInt32(this._pos_, value, this._xd_);
             this._pos_ += 4;
-        };
+        }
         /**
          * 在字节流的当前字节偏移量位置处写入 Uint32 值。
          * @param	value	需要写入的 Uint32 值。
          */
-        Byte.prototype.writeUint32 = function (value) {
+        writeUint32(value) {
             this._ensureWrite(this._pos_ + 4);
             this._d_.setUint32(this._pos_, value, this._xd_);
             this._pos_ += 4;
-        };
+        }
         /**
          * @private
          * 从字节流的当前字节偏移量位置处读取一个 Int16 值。
          * @return Int16 值。
          */
-        Byte.prototype.getInt16 = function () {
+        getInt16() {
             return this.readInt16();
-        };
+        }
         /**
          * 从字节流的当前字节偏移量位置处读取一个 Int16 值。
          * @return Int16 值。
          */
-        Byte.prototype.readInt16 = function () {
+        readInt16() {
             if (this._pos_ + 2 > this._length)
                 throw "getInt16 error - Out of bounds";
             var us = this._d_.getInt16(this._pos_, this._xd_);
             this._pos_ += 2;
             return us;
-        };
+        }
         /**
          * @private
          * 从字节流的当前字节偏移量位置处读取一个 Uint16 值。
          * @return Uint16 值。
          */
-        Byte.prototype.getUint16 = function () {
+        getUint16() {
             return this.readUint16();
-        };
+        }
         /**
          * 从字节流的当前字节偏移量位置处读取一个 Uint16 值。
          * @return Uint16 值。
          */
-        Byte.prototype.readUint16 = function () {
+        readUint16() {
             if (this._pos_ + 2 > this._length)
                 throw "getUint16 error - Out of bounds";
             var us = this._d_.getUint16(this._pos_, this._xd_);
             this._pos_ += 2;
             return us;
-        };
+        }
         /**
          * 在字节流的当前字节偏移量位置处写入指定的 Uint16 值。
          * @param	value	需要写入的Uint16 值。
          */
-        Byte.prototype.writeUint16 = function (value) {
+        writeUint16(value) {
             this._ensureWrite(this._pos_ + 2);
             this._d_.setUint16(this._pos_, value, this._xd_);
             this._pos_ += 2;
-        };
+        }
         /**
          * 在字节流的当前字节偏移量位置处写入指定的 Int16 值。
          * @param	value	需要写入的 Int16 值。
          */
-        Byte.prototype.writeInt16 = function (value) {
+        writeInt16(value) {
             this._ensureWrite(this._pos_ + 2);
             this._d_.setInt16(this._pos_, value, this._xd_);
             this._pos_ += 2;
-        };
+        }
         /**
          * @private
          * 从字节流的当前字节偏移量位置处读取一个 Uint8 值。
          * @return Uint8 值。
          */
-        Byte.prototype.getUint8 = function () {
+        getUint8() {
             return this.readUint8();
-        };
+        }
         /**
          * 从字节流的当前字节偏移量位置处读取一个 Uint8 值。
          * @return Uint8 值。
          */
-        Byte.prototype.readUint8 = function () {
+        readUint8() {
             if (this._pos_ + 1 > this._length)
                 throw "getUint8 error - Out of bounds";
             return this._u8d_[this._pos_++];
-        };
+        }
         /**
          * 在字节流的当前字节偏移量位置处写入指定的 Uint8 值。
          * @param	value	需要写入的 Uint8 值。
          */
-        Byte.prototype.writeUint8 = function (value) {
+        writeUint8(value) {
             this._ensureWrite(this._pos_ + 1);
             this._d_.setUint8(this._pos_, value);
             this._pos_++;
-        };
+        }
         /**
          * @internal
          * 从字节流的指定字节偏移量位置处读取一个 Uint8 值。
@@ -6314,9 +5762,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @return Uint8 值。
          */
         //TODO:coverage
-        Byte.prototype._getUInt8 = function (pos) {
+        _getUInt8(pos) {
             return this._readUInt8(pos);
-        };
+        }
         /**
          * @internal
          * 从字节流的指定字节偏移量位置处读取一个 Uint8 值。
@@ -6324,9 +5772,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @return Uint8 值。
          */
         //TODO:coverage
-        Byte.prototype._readUInt8 = function (pos) {
+        _readUInt8(pos) {
             return this._d_.getUint8(pos);
-        };
+        }
         /**
          * @internal
          * 从字节流的指定字节偏移量位置处读取一个 Uint16 值。
@@ -6334,9 +5782,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @return Uint16 值。
          */
         //TODO:coverage
-        Byte.prototype._getUint16 = function (pos) {
+        _getUint16(pos) {
             return this._readUint16(pos);
-        };
+        }
         /**
          * @internal
          * 从字节流的指定字节偏移量位置处读取一个 Uint16 值。
@@ -6344,16 +5792,16 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @return Uint16 值。
          */
         //TODO:coverage
-        Byte.prototype._readUint16 = function (pos) {
+        _readUint16(pos) {
             return this._d_.getUint16(pos, this._xd_);
-        };
+        }
         /**
          * @private
          * 读取指定长度的 UTF 型字符串。
          * @param	len 需要读取的长度。
          * @return 读取的字符串。
          */
-        Byte.prototype._rUTF = function (len) {
+        _rUTF(len) {
             var v = "", max = this._pos_ + len, c, c2, c3, f = String.fromCharCode;
             var u = this._u8d_, i = 0;
             var strs = [];
@@ -6379,11 +5827,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     c2 = u[this._pos_++];
                     c3 = u[this._pos_++];
                     //v += f(((c & 0x0F) << 18) | ((c2 & 0x7F) << 12) | ((c3 << 6) & 0x7F) | (u[_pos_++] & 0x7F));
-                    var _code = ((c & 0x0f) << 18) | ((c2 & 0x7f) << 12) | ((c3 & 0x7f) << 6) | (u[this._pos_++] & 0x7f);
+                    const _code = ((c & 0x0f) << 18) | ((c2 & 0x7f) << 12) | ((c3 & 0x7f) << 6) | (u[this._pos_++] & 0x7f);
                     if (_code >= 0x10000) {
-                        var _offset = _code - 0x10000;
-                        var _lead = 0xd800 | (_offset >> 10);
-                        var _trail = 0xdc00 | (_offset & 0x3ff);
+                        const _offset = _code - 0x10000;
+                        const _lead = 0xd800 | (_offset >> 10);
+                        const _trail = 0xdc00 | (_offset & 0x3ff);
                         strs[n++] = f(_lead);
                         strs[n++] = f(_trail);
                     }
@@ -6396,7 +5844,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             strs.length = n;
             return strs.join("");
             //return v;
-        };
+        }
         /**
          * @private
          * 读取 <code>len</code> 参数指定的长度的字符串。
@@ -6404,9 +5852,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @return 指定长度的字符串。
          */
         //TODO:coverage
-        Byte.prototype.getCustomString = function (len) {
+        getCustomString(len) {
             return this.readCustomString(len);
-        };
+        }
         /**
          * @private
          * 读取 <code>len</code> 参数指定的长度的字符串。
@@ -6414,7 +5862,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @return 指定长度的字符串。
          */
         //TODO:coverage
-        Byte.prototype.readCustomString = function (len) {
+        readCustomString(len) {
             var v = "", ulen = 0, c, c2, f = String.fromCharCode;
             var u = this._u8d_, i = 0;
             while (len > 0) {
@@ -6437,54 +5885,46 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
             return v;
-        };
-        Object.defineProperty(Byte.prototype, "pos", {
-            /**
-             * 移动或返回 Byte 对象的读写指针的当前位置（以字节为单位）。下一次调用读取方法时将在此位置开始读取，或者下一次调用写入方法时将在此位置开始写入。
-             */
-            get: function () {
-                return this._pos_;
-            },
-            set: function (value) {
-                this._pos_ = value;
-                //$MOD byteOffset是只读的，这里进行赋值没有意义。
-                //_d_.byteOffset = value;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(Byte.prototype, "bytesAvailable", {
-            /**
-             * 可从字节流的当前位置到末尾读取的数据的字节数。
-             */
-            get: function () {
-                return this._length - this._pos_;
-            },
-            enumerable: false,
-            configurable: true
-        });
+        }
+        /**
+         * 移动或返回 Byte 对象的读写指针的当前位置（以字节为单位）。下一次调用读取方法时将在此位置开始读取，或者下一次调用写入方法时将在此位置开始写入。
+         */
+        get pos() {
+            return this._pos_;
+        }
+        set pos(value) {
+            this._pos_ = value;
+            //$MOD byteOffset是只读的，这里进行赋值没有意义。
+            //_d_.byteOffset = value;
+        }
+        /**
+         * 可从字节流的当前位置到末尾读取的数据的字节数。
+         */
+        get bytesAvailable() {
+            return this._length - this._pos_;
+        }
         /**
          * 清除字节数组的内容，并将 length 和 pos 属性重置为 0。调用此方法将释放 Byte 实例占用的内存。
          */
-        Byte.prototype.clear = function () {
+        clear() {
             this._pos_ = 0;
             this.length = 0;
-        };
+        }
         /**
          * @internal
          * 获取此对象的 ArrayBuffer 引用。
          * @return
          */
-        Byte.prototype.__getBuffer = function () {
+        __getBuffer() {
             //this._d_.buffer.byteLength = this.length;
             return this._d_.buffer;
-        };
+        }
         /**
          * <p>将 UTF-8 字符串写入字节流。类似于 writeUTF() 方法，但 writeUTFBytes() 不使用 16 位长度的字为字符串添加前缀。</p>
          * <p>对应的读取方法为： getUTFBytes 。</p>
          * @param value 要写入的字符串。
          */
-        Byte.prototype.writeUTFBytes = function (value) {
+        writeUTFBytes(value) {
             // utf8-decode
             value = value + "";
             for (var i = 0, sz = value.length; i < sz; i++) {
@@ -6500,14 +5940,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
                 else if (c >= 0xd800 && c <= 0xdbff) {
                     i++;
-                    var c2 = value.charCodeAt(i);
+                    const c2 = value.charCodeAt(i);
                     if (!Number.isNaN(c2) && c2 >= 0xdc00 && c2 <= 0xdfff) {
-                        var _p1 = (c & 0x3ff) + 0x40;
-                        var _p2 = c2 & 0x3ff;
-                        var _b1 = 0xf0 | ((_p1 >> 8) & 0x3f);
-                        var _b2 = 0x80 | ((_p1 >> 2) & 0x3f);
-                        var _b3 = 0x80 | ((_p1 & 0x3) << 4) | ((_p2 >> 6) & 0xf);
-                        var _b4 = 0x80 | (_p2 & 0x3f);
+                        const _p1 = (c & 0x3ff) + 0x40;
+                        const _p2 = c2 & 0x3ff;
+                        const _b1 = 0xf0 | ((_p1 >> 8) & 0x3f);
+                        const _b2 = 0x80 | ((_p1 >> 2) & 0x3f);
+                        const _b3 = 0x80 | ((_p1 & 0x3) << 4) | ((_p2 >> 6) & 0xf);
+                        const _b4 = 0x80 | (_p2 & 0x3f);
                         this._ensureWrite(this._pos_ + 4);
                         this._u8d_.set([_b1, _b2, _b3, _b4], this._pos_);
                         this._pos_ += 4;
@@ -6524,47 +5964,46 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     this._pos_ += 4;
                 }
             }
-        };
+        }
         /**
          * <p>将 UTF-8 字符串写入字节流。先写入以字节表示的 UTF-8 字符串长度（作为 16 位整数），然后写入表示字符串字符的字节。</p>
          * <p>对应的读取方法为： getUTFString 。</p>
          * @param	value 要写入的字符串值。
          */
-        Byte.prototype.writeUTFString = function (value) {
+        writeUTFString(value) {
             var tPos = this.pos;
             this.writeUint16(1);
             this.writeUTFBytes(value);
             var dPos = this.pos - tPos - 2;
             //trace("writeLen:",dPos,"pos:",tPos);
             this._d_.setUint16(tPos, dPos, this._xd_);
-        };
+        }
         /**
          * @private
          * 读取 UTF-8 字符串。
          * @return 读取的字符串。
          */
-        Byte.prototype.readUTFString = function () {
+        readUTFString() {
             //var tPos:int = pos;
             //var len:int = getUint16();
             ////trace("readLen:"+len,"pos,",tPos);
             return this.readUTFBytes(this.getUint16());
-        };
+        }
         /**
          * <p>从字节流中读取一个 UTF-8 字符串。假定字符串的前缀是一个无符号的短整型（以此字节表示要读取的长度）。</p>
          * <p>对应的写入方法为： writeUTFString 。</p>
          * @return 读取的字符串。
          */
-        Byte.prototype.getUTFString = function () {
+        getUTFString() {
             return this.readUTFString();
-        };
+        }
         /**
          * @private
          * 读字符串，必须是 writeUTFBytes 方法写入的字符串。
          * @param len	要读的buffer长度，默认将读取缓冲区全部数据。
          * @return 读取的字符串。
          */
-        Byte.prototype.readUTFBytes = function (len) {
-            if (len === void 0) { len = -1; }
+        readUTFBytes(len = -1) {
             if (len === 0)
                 return "";
             var lastBytes = this.bytesAvailable;
@@ -6572,55 +6011,54 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 throw "readUTFBytes error - Out of bounds";
             len = len > 0 ? len : lastBytes;
             return this._rUTF(len);
-        };
+        }
         /**
          * <p>从字节流中读取一个由 length 参数指定的长度的 UTF-8 字节序列，并返回一个字符串。</p>
          * <p>一般读取的是由 writeUTFBytes 方法写入的字符串。</p>
          * @param len	要读的buffer长度，默认将读取缓冲区全部数据。
          * @return 读取的字符串。
          */
-        Byte.prototype.getUTFBytes = function (len) {
-            if (len === void 0) { len = -1; }
+        getUTFBytes(len = -1) {
             return this.readUTFBytes(len);
-        };
+        }
         /**
          * <p>在字节流中写入一个字节。</p>
          * <p>使用参数的低 8 位。忽略高 24 位。</p>
          * @param	value
          */
-        Byte.prototype.writeByte = function (value) {
+        writeByte(value) {
             this._ensureWrite(this._pos_ + 1);
             this._d_.setInt8(this._pos_, value);
             this._pos_ += 1;
-        };
+        }
         /**
          * <p>从字节流中读取带符号的字节。</p>
          * <p>返回值的范围是从 -128 到 127。</p>
          * @return 介于 -128 和 127 之间的整数。
          */
-        Byte.prototype.readByte = function () {
+        readByte() {
             if (this._pos_ + 1 > this._length)
                 throw "readByte error - Out of bounds";
             return this._d_.getInt8(this._pos_++);
-        };
+        }
         /**
          * @private
          * 从字节流中读取带符号的字节。
          */
-        Byte.prototype.getByte = function () {
+        getByte() {
             return this.readByte();
-        };
+        }
         /**
          * @internal
          * <p>保证该字节流的可用长度不小于 <code>lengthToEnsure</code> 参数指定的值。</p>
          * @param	lengthToEnsure	指定的长度。
          */
-        Byte.prototype._ensureWrite = function (lengthToEnsure) {
+        _ensureWrite(lengthToEnsure) {
             if (this._length < lengthToEnsure)
                 this._length = lengthToEnsure;
             if (this._allocated_ < lengthToEnsure)
                 this.length = lengthToEnsure;
-        };
+        }
         /**
          * <p>将指定 arraybuffer 对象中的以 offset 为起始偏移量， length 为长度的字节序列写入字节流。</p>
          * <p>如果省略 length 参数，则使用默认长度 0，该方法将从 offset 开始写入整个缓冲区；如果还省略了 offset 参数，则写入整个缓冲区。</p>
@@ -6629,9 +6067,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	offset		Arraybuffer 对象的索引的偏移量（以字节为单位）
          * @param	length		从 Arraybuffer 对象写入到 Byte 对象的长度（以字节为单位）
          */
-        Byte.prototype.writeArrayBuffer = function (arraybuffer, offset, length) {
-            if (offset === void 0) { offset = 0; }
-            if (length === void 0) { length = 0; }
+        writeArrayBuffer(arraybuffer, offset = 0, length = 0) {
             if (offset < 0 || length < 0)
                 throw "writeArrayBuffer error - Out of bounds";
             if (length == 0)
@@ -6640,34 +6076,33 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             var uint8array = new Uint8Array(arraybuffer);
             this._u8d_.set(uint8array.subarray(offset, offset + length), this._pos_);
             this._pos_ += length;
-        };
+        }
         /**
          * 读取ArrayBuffer数据
          * @param	length
          * @return
          */
-        Byte.prototype.readArrayBuffer = function (length) {
+        readArrayBuffer(length) {
             var rst;
             rst = this._u8d_.buffer.slice(this._pos_, this._pos_ + length);
             this._pos_ = this._pos_ + length;
             return rst;
-        };
-        /**
-         * <p>主机字节序，是 CPU 存放数据的两种不同顺序，包括小端字节序和大端字节序。通过 <code>getSystemEndian</code> 可以获取当前系统的字节序。</p>
-         * <p> <code>BIG_ENDIAN</code> ：大端字节序，地址低位存储值的高位，地址高位存储值的低位。有时也称之为网络字节序。<br/>
-         * <code>LITTLE_ENDIAN</code> ：小端字节序，地址低位存储值的低位，地址高位存储值的高位。</p>
-         */
-        Byte.BIG_ENDIAN = "bigEndian";
-        /**
-         * <p>主机字节序，是 CPU 存放数据的两种不同顺序，包括小端字节序和大端字节序。通过 <code>getSystemEndian</code> 可以获取当前系统的字节序。</p>
-         * <p> <code>LITTLE_ENDIAN</code> ：小端字节序，地址低位存储值的低位，地址高位存储值的高位。<br/>
-         * <code>BIG_ENDIAN</code> ：大端字节序，地址低位存储值的高位，地址高位存储值的低位。有时也称之为网络字节序。</p>
-         */
-        Byte.LITTLE_ENDIAN = "littleEndian";
-        /**@private */
-        Byte._sysEndian = null;
-        return Byte;
-    }());
+        }
+    }
+    /**
+     * <p>主机字节序，是 CPU 存放数据的两种不同顺序，包括小端字节序和大端字节序。通过 <code>getSystemEndian</code> 可以获取当前系统的字节序。</p>
+     * <p> <code>BIG_ENDIAN</code> ：大端字节序，地址低位存储值的高位，地址高位存储值的低位。有时也称之为网络字节序。<br/>
+     * <code>LITTLE_ENDIAN</code> ：小端字节序，地址低位存储值的低位，地址高位存储值的高位。</p>
+     */
+    Byte.BIG_ENDIAN = "bigEndian";
+    /**
+     * <p>主机字节序，是 CPU 存放数据的两种不同顺序，包括小端字节序和大端字节序。通过 <code>getSystemEndian</code> 可以获取当前系统的字节序。</p>
+     * <p> <code>LITTLE_ENDIAN</code> ：小端字节序，地址低位存储值的低位，地址高位存储值的高位。<br/>
+     * <code>BIG_ENDIAN</code> ：大端字节序，地址低位存储值的高位，地址高位存储值的低位。有时也称之为网络字节序。</p>
+     */
+    Byte.LITTLE_ENDIAN = "littleEndian";
+    /**@private */
+    Byte._sysEndian = null;
     airkit.Byte = Byte;
 })(airkit || (airkit = {}));
 
@@ -6685,7 +6120,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }
     airkit.bytes2Uint8Array = bytes2Uint8Array;
     function bytes2String(data, endian) {
-        var body = bytes2Uint8Array(data, endian);
+        let body = bytes2Uint8Array(data, endian);
         return uint8Array2String(body);
     }
     airkit.bytes2String = bytes2String;
@@ -6725,76 +6160,73 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-11
      */
-    var ClassUtils = /** @class */ (function () {
-        function ClassUtils() {
-        }
+    class ClassUtils {
         /**
          * 注册 Class 映射，方便在class反射时获取。
          * @param	className 映射的名字或者别名。
          * @param	classDef 类的全名或者类的引用，全名比如:"cc.Sprite"。
          */
-        ClassUtils.regClass = function (className, classDef) {
+        static regClass(className, classDef) {
             ClassUtils._classMap[className] = classDef;
-        };
+        }
         /**
          * 根据类名短名字注册类，比如传入[Sprite]，功能同regClass("Sprite",Sprite);
          * @param	classes 类数组
          */
-        ClassUtils.regShortClassName = function (classes) {
+        static regShortClassName(classes) {
             for (var i = 0; i < classes.length; i++) {
                 var classDef = classes[i];
                 var className = classDef.name;
                 ClassUtils._classMap[className] = classDef;
             }
-        };
+        }
         /**
          * 返回注册的 Class 映射。
          * @param	className 映射的名字。
          */
-        ClassUtils.getRegClass = function (className) {
+        static getRegClass(className) {
             return ClassUtils._classMap[className];
-        };
+        }
         /**
          * 根据名字返回类对象。
          * @param	className 类名(比如Sprite)或者注册的别名(比如Sprite)。
          * @return 类对象
          */
-        ClassUtils.getClass = function (className) {
+        static getClass(className) {
             var classObject = ClassUtils._classMap[className] || ClassUtils._classMap["cc." + className] || className;
             return classObject;
-        };
+        }
         /**
          * 根据名称创建 Class 实例。
          * @param	className 类名(比如Sprite)或者注册的别名(比如Sprite)。
          * @return	返回类的实例。
          */
-        ClassUtils.getInstance = function (className) {
+        static getInstance(className) {
             var compClass = ClassUtils.getClass(className);
             if (compClass)
                 return new compClass();
             else
                 console.warn("[error] Undefined class:", className);
             return null;
-        };
+        }
         /**深复制一个对象*/
-        ClassUtils.copyObject = function (obj) {
-            var js = JSON.stringify(obj);
+        static copyObject(obj) {
+            let js = JSON.stringify(obj);
             return JSON.parse(js);
-        };
+        }
         /**获取一个对象里的值*/
-        ClassUtils.getObjectValue = function (obj, key, defVal) {
+        static getObjectValue(obj, key, defVal) {
             if (obj[key]) {
                 return obj[key];
             }
             return defVal;
-        };
-        ClassUtils.callFunc = function (obj, funcName, args) {
-            if (args === void 0) { args = null; }
+        }
+        static callFunc(obj, funcName, args = null) {
             if (funcName == null) {
                 return;
             }
             var func = obj[funcName];
-            var result = null;
+            let result = null;
             if (func) {
                 if (args == null) {
                     result = func.apply(obj);
@@ -6807,17 +6239,16 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 airkit.Log.error("cant find funcName {0} from Module:{1}", funcName, obj.name);
             }
             return result;
-        };
-        ClassUtils.classKey = function (obj) {
-            var proto = Object.getPrototypeOf(obj);
-            var clazz = proto["constructor"];
-            var sign = clazz["objectKey"];
+        }
+        static classKey(obj) {
+            let proto = Object.getPrototypeOf(obj);
+            let clazz = proto["constructor"];
+            let sign = clazz["objectKey"];
             return sign;
-        };
-        /**@private */
-        ClassUtils._classMap = {};
-        return ClassUtils;
-    }());
+        }
+    }
+    /**@private */
+    ClassUtils._classMap = {};
     airkit.ClassUtils = ClassUtils;
 })(airkit || (airkit = {}));
 // import { StringUtils } from "./StringUtils";
@@ -6828,58 +6259,55 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-11
      */
-    var DateUtils = /** @class */ (function () {
-        function DateUtils() {
-        }
-        DateUtils.setServerTime = function (time) {
+    class DateUtils {
+        static setServerTime(time) {
             this.serverTime = time;
             this.serverTimeDiff = Date.now() - time;
-        };
+        }
         /**获取UNIX时间 */
-        DateUtils.getNow = function () {
-            var now = Math.floor((Date.now() - this.serverTimeDiff) / 1000);
+        static getNow() {
+            let now = Math.floor((Date.now() - this.serverTimeDiff) / 1000);
             return now;
-        };
-        DateUtils.getNowMS = function () {
+        }
+        static getNowMS() {
             return Date.now() - this.serverTimeDiff;
-        };
-        DateUtils.isTheSameMonth = function (nTime, nSecond) {
-            var now = DateUtils.getNow();
-            var curTime = now - nSecond;
-            var date = new Date(curTime * 1000);
-            var defineDate = new Date(date.getFullYear(), date.getMonth(), 1);
-            var nextTime = Math.floor(defineDate.getTime() / 1000) + nSecond;
+        }
+        static isTheSameMonth(nTime, nSecond) {
+            let now = DateUtils.getNow();
+            let curTime = now - nSecond;
+            let date = new Date(curTime * 1000);
+            let defineDate = new Date(date.getFullYear(), date.getMonth(), 1);
+            let nextTime = Math.floor(defineDate.getTime() / 1000) + nSecond;
             return nTime >= nextTime;
-        };
-        DateUtils.isTheSameDayByNow = function (nTime, nSecond) {
-            var date = new Date();
-            var offset = date.getTimezoneOffset() * 60;
-            var now = DateUtils.getNow();
-            var day1 = (nTime - offset - nSecond) / 86400;
-            var day2 = (now - offset - nSecond) / 86400;
+        }
+        static isTheSameDayByNow(nTime, nSecond) {
+            let date = new Date();
+            let offset = date.getTimezoneOffset() * 60;
+            let now = DateUtils.getNow();
+            let day1 = (nTime - offset - nSecond) / 86400;
+            let day2 = (now - offset - nSecond) / 86400;
             if (Math.floor(day1) === Math.floor(day2)) {
                 return true;
             }
             return false;
-        };
+        }
         /**计算从nTime1到nTime2过去了多少天*/
-        DateUtils.passedDays = function (nTime1, nTime2, nSecondOffset) {
-            if (nSecondOffset === void 0) { nSecondOffset = 0; }
-            var date = new Date();
-            var offset = date.getTimezoneOffset() * 60;
-            var day1 = (nTime1 - offset - nSecondOffset) / 86400;
-            var day2 = (nTime2 - offset - nSecondOffset) / 86400;
+        static passedDays(nTime1, nTime2, nSecondOffset = 0) {
+            let date = new Date();
+            let offset = date.getTimezoneOffset() * 60;
+            let day1 = (nTime1 - offset - nSecondOffset) / 86400;
+            let day2 = (nTime2 - offset - nSecondOffset) / 86400;
             return Math.floor(day2) - Math.floor(day1);
-        };
-        DateUtils.currentYMDHMS = function () {
+        }
+        static currentYMDHMS() {
             return this.formatDateTime(this.getNowMS());
-        };
-        DateUtils.currentHour = function () {
+        }
+        static currentHour() {
             var date = new Date(this.getNowMS());
             return date.getHours();
-        };
+        }
         //时间戳转换日期 (yyyy-MM-dd HH:mm:ss)
-        DateUtils.formatDateTime = function (timeValue) {
+        static formatDateTime(timeValue) {
             var date = new Date(timeValue);
             var y = date.getFullYear();
             var m = date.getMonth() + 1;
@@ -6893,42 +6321,40 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             var minut = minute < 10 ? "0" + minute : minute;
             var secon = second < 10 ? "0" + second : second;
             return y + "-" + M + "-" + D + " " + H + ":" + minut + ":" + secon;
-        };
+        }
         //返回时:分:秒
-        DateUtils.countdown = function (time, format) {
-            if (format === void 0) { format = "D天H时M分S秒"; }
-            var s = Math.max(0, time / 1000);
-            var d = Math.floor(s / 24 / 3600);
-            var h = Math.floor((s / 3600) % 24);
-            var m = Math.floor((s / 60) % 60);
+        static countdown(time, format = "D天H时M分S秒") {
+            let s = Math.max(0, time / 1000);
+            let d = Math.floor(s / 24 / 3600);
+            let h = Math.floor((s / 3600) % 24);
+            let m = Math.floor((s / 60) % 60);
             s = Math.floor(s % 60);
-            var f = format.replace(/D/, d.toString());
+            let f = format.replace(/D/, d.toString());
             f = f.replace(/H/, h.toString());
             f = f.replace(/M/, m.toString());
             f = f.replace(/S/, s.toString());
             return f;
-        };
-        DateUtils.formatTime = function (time, format) {
-            if (format === void 0) { format = "{0}:{1}:{2}"; }
-            var s = Math.max(0, time);
-            var h = Math.floor((s / 3600) % 24);
-            var m = Math.floor((s / 60) % 60);
+        }
+        static formatTime(time, format = "{0}:{1}:{2}") {
+            let s = Math.max(0, time);
+            let h = Math.floor((s / 3600) % 24);
+            let m = Math.floor((s / 60) % 60);
             s = Math.floor(s % 60);
             return airkit.StringUtils.format(format, h < 10 ? "0" + h : h, m < 10 ? "0" + m : m, s < 10 ? "0" + s : s);
-        };
-        DateUtils.format2Time = function (time) {
-            var format = "{0}:{1}";
-            var s = Math.max(0, time);
-            var d = Math.floor(s / 24 / 3600);
+        }
+        static format2Time(time) {
+            let format = "{0}:{1}";
+            let s = Math.max(0, time);
+            let d = Math.floor(s / 24 / 3600);
             if (d > 0) {
                 return airkit.StringUtils.format("{0}天", d);
             }
-            var h = Math.floor((s / 3600) % 24);
-            var m = Math.floor((s / 60) % 60);
+            let h = Math.floor((s / 3600) % 24);
+            let m = Math.floor((s / 60) % 60);
             s = Math.floor(s % 60);
-            var M = m < 10 ? "0" + m : m;
-            var H = h < 10 ? "0" + h : h;
-            var S = s < 10 ? "0" + s : s;
+            let M = m < 10 ? "0" + m : m;
+            let H = h < 10 ? "0" + h : h;
+            let S = s < 10 ? "0" + s : s;
             if (h > 0) {
                 return airkit.StringUtils.format(format, H, M);
             }
@@ -6936,20 +6362,20 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 format = format.replace(":", "’");
                 return airkit.StringUtils.format(format, M, S);
             }
-        };
-        DateUtils.format2Time2 = function (time) {
-            var format = "{0}:{1}";
-            var s = Math.max(0, time);
-            var d = Math.floor(s / 24 / 3600);
+        }
+        static format2Time2(time) {
+            let format = "{0}:{1}";
+            let s = Math.max(0, time);
+            let d = Math.floor(s / 24 / 3600);
             if (d > 0) {
                 return airkit.StringUtils.format("{0}天", d);
             }
-            var h = Math.floor((s / 3600) % 24);
-            var m = Math.floor((s / 60) % 60);
+            let h = Math.floor((s / 3600) % 24);
+            let m = Math.floor((s / 60) % 60);
             s = Math.floor(s % 60);
-            var M = m < 10 ? "0" + m : m;
-            var H = h < 10 ? "0" + h : h;
-            var S = s < 10 ? "0" + s : s;
+            let M = m < 10 ? "0" + m : m;
+            let H = h < 10 ? "0" + h : h;
+            let S = s < 10 ? "0" + s : s;
             if (h > 0) {
                 return airkit.StringUtils.format(format, H, M);
             }
@@ -6957,12 +6383,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 format = format.replace(":", "’");
                 return airkit.StringUtils.format(format, M, S);
             }
-        };
-        /**服务器时间*/
-        DateUtils.serverTimeDiff = 0;
-        DateUtils.serverTime = 0;
-        return DateUtils;
-    }());
+        }
+    }
+    /**服务器时间*/
+    DateUtils.serverTimeDiff = 0;
+    DateUtils.serverTime = 0;
     airkit.DateUtils = DateUtils;
 })(airkit || (airkit = {}));
 /**
@@ -6972,73 +6397,70 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
  */
 
 (function (airkit) {
-    var DicUtils = /** @class */ (function () {
-        function DicUtils() {
-        }
+    class DicUtils {
         /**
          * 键列表
          */
-        DicUtils.getKeys = function (d) {
-            var a = [];
-            for (var key in d) {
+        static getKeys(d) {
+            let a = [];
+            for (let key in d) {
                 a.push(key);
             }
             return a;
-        };
+        }
         /**
          * 值列表
          */
-        DicUtils.getValues = function (d) {
-            var a = [];
-            for (var key in d) {
+        static getValues(d) {
+            let a = [];
+            for (let key in d) {
                 a.push(d[key]);
             }
             return a;
-        };
+        }
         /**
          * 清空字典
          */
-        DicUtils.clearDic = function (dic) {
-            var v;
-            for (var key in dic) {
+        static clearDic(dic) {
+            let v;
+            for (let key in dic) {
                 v = dic[key];
                 if (v instanceof Object) {
                     DicUtils.clearDic(v);
                 }
                 delete dic[key];
             }
-        };
+        }
         /**
          * 全部应用
          */
-        DicUtils.foreach = function (dic, compareFn) {
-            for (var key in dic) {
+        static foreach(dic, compareFn) {
+            for (let key in dic) {
                 if (!compareFn.call(null, key, dic[key]))
                     break;
             }
-        };
-        DicUtils.isEmpty = function (dic) {
+        }
+        static isEmpty(dic) {
             if (dic == null)
                 return true;
-            for (var key in dic) {
+            for (let key in dic) {
                 return false;
             }
             return true;
-        };
-        DicUtils.getLength = function (dic) {
+        }
+        static getLength(dic) {
             if (dic == null)
                 return 0;
-            var count = 0;
-            for (var key in dic) {
+            let count = 0;
+            for (let key in dic) {
                 ++count;
             }
             return count;
-        };
-        DicUtils.assign = function (obj, dic) {
+        }
+        static assign(obj, dic) {
             Object.assign(obj, dic);
-        };
-        return DicUtils;
-    }());
+        }
+    }
     airkit.DicUtils = DicUtils;
 })(airkit || (airkit = {}));
 // import { TweenUtils } from "./TweenUtils";
@@ -7059,23 +6481,21 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-13
      */
-    var DisplayUtils = /** @class */ (function () {
-        function DisplayUtils() {
-        }
+    class DisplayUtils {
         /**
          * 移除全部子对象
          */
-        DisplayUtils.removeAllChild = function (container) {
+        static removeAllChild(container) {
             if (!container)
                 return;
             if (container.numChildren <= 0)
                 return;
             while (container.numChildren > 0) {
-                var node = container.removeChildAt(0);
+                let node = container.removeChildAt(0);
                 if (node) {
-                    var cons = node["constructor"];
+                    let cons = node["constructor"];
                     if (cons["name"] == "Animation") {
-                        var ani = node;
+                        let ani = node;
                         ani.clear();
                         ani.destroy(true);
                         ani = null;
@@ -7088,7 +6508,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
                 node = null;
             }
-        };
+        }
         // /**获得子节点*/
         // public static getChildByName(parent: laya.display.Node, name: string): laya.display.Node {
         // 	if (!parent) return null
@@ -7133,17 +6553,17 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         /**
          * 创建一个背景层
          */
-        DisplayUtils.colorBG = function (color, w, h) {
-            var bgSp = new fgui.GGraph();
+        static colorBG(color, w, h) {
+            let bgSp = new fgui.GGraph();
             bgSp.drawRect(1, color, color);
             bgSp.setSize(w, h);
             bgSp.alpha = 0.7;
             return bgSp;
-        };
-        DisplayUtils.popupDown = function (panel, handler, ignoreAnchor) {
+        }
+        static popupDown(panel, handler, ignoreAnchor) {
             panel.scale(0.8, 0.8);
-            var x = displayWidth() >> 1;
-            var y = displayHeight() >> 1;
+            let x = displayWidth() >> 1;
+            let y = displayHeight() >> 1;
             if (ignoreAnchor == null || !ignoreAnchor) {
                 panel.anchorX = 0.5;
                 panel.anchorY = 0.5;
@@ -7153,17 +6573,17 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 y = panel.y;
             }
             panel.pos(x, 0);
-            var time = 500;
+            let time = 500;
             airkit.TweenUtils.get(panel).to({ scaleX: 1, scaleY: 1, x: x, y: y }, time, fgui.EaseType.BackOut, handler);
             if (panel.parent && panel.parent.bg) {
                 panel.parent.bg.alpha = 0;
                 airkit.TweenUtils.get(panel.parent.bg).to({ alpha: 1.0 }, time, fgui.EaseType.QuadOut);
             }
-        };
-        DisplayUtils.popup = function (view, handler, ignoreAnchor) {
+        }
+        static popup(view, handler, ignoreAnchor) {
             view.setScale(0.85, 0.85);
-            var x = displayWidth() >> 1;
-            var y = displayHeight() >> 1;
+            let x = displayWidth() >> 1;
+            let y = displayHeight() >> 1;
             if (ignoreAnchor == null || !ignoreAnchor) {
                 view.setPivot(0.5, 0.5, true);
             }
@@ -7172,32 +6592,35 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 y = view.y;
             }
             view.setPosition(x, y);
-            var time = 0.25;
+            let time = 0.25;
             airkit.TweenUtils.get(view).to({ scaleX: 1, scaleY: 1 }, time, fgui.EaseType.QuadOut, handler);
             if (view.parent && view.parent.getChild("bg")) {
-                var bg = view.parent.getChild("bg");
+                let bg = view.parent.getChild("bg");
                 bg.alpha = 0;
                 airkit.TweenUtils.get(bg).to({ alpha: 1.0 }, 0.25, fgui.EaseType.QuadOut);
             }
-        };
-        DisplayUtils.hide = function (panel, handler) {
-            var time = 0.2;
-            var view = panel.panel();
-            var bg = panel.bg();
-            if (view == null) {
-                if (handler) {
-                    handler.run();
-                }
-            }
-            else {
-                airkit.TweenUtils.get(view).to({ scaleX: 0.5, scaleY: 0.5 }, time, fgui.EaseType.BackIn, handler);
-                if (bg) {
-                    airkit.TweenUtils.get(bg).to({ alpha: 0 }, 0.2, fgui.EaseType.QuadOut);
-                }
-            }
-        };
-        return DisplayUtils;
-    }());
+        }
+        static hide(panel, handler) {
+            // let time = 0.2;
+            // let view = panel.panel();
+            // let bg = panel.bg();
+            // if (view == null) {
+            //   if (handler) {
+            //     handler.run();
+            //   }
+            // } else {
+            //   TweenUtils.get(view).to(
+            //     { scaleX: 0.5, scaleY: 0.5 },
+            //     time,
+            //     fgui.EaseType.BackIn,
+            //     handler
+            //   );
+            //   if (bg) {
+            //     TweenUtils.get(bg).to({ alpha: 0 }, 0.2, fgui.EaseType.QuadOut);
+            //   }
+            // }
+        }
+    }
     airkit.DisplayUtils = DisplayUtils;
 })(airkit || (airkit = {}));
 
@@ -7207,7 +6630,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * <p>推荐使用 Handler.create() 方法从对象池创建，减少对象创建消耗。创建的 Handler 对象不再使用后，可以使用 Handler.recover() 将其回收到对象池，回收后不要再使用此对象，否则会导致不可预料的错误。</p>
      * <p><b>注意：</b>由于鼠标事件也用本对象池，不正确的回收及调用，可能会影响鼠标事件的执行。</p>
      */
-    var Handler = /** @class */ (function () {
+    class Handler {
         /**
          * 根据指定的属性值，创建一个 <code>Handler</code> 类的实例。
          * @param	caller 执行域。
@@ -7215,11 +6638,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	args 函数参数。
          * @param	once 是否只执行一次。
          */
-        function Handler(caller, method, args, once) {
-            if (caller === void 0) { caller = null; }
-            if (method === void 0) { method = null; }
-            if (args === void 0) { args = null; }
-            if (once === void 0) { once = false; }
+        constructor(caller = null, method = null, args = null, once = false) {
             /** 表示是否只执行一次。如果为true，回调后执行recover()进行回收，回收后会被再利用，默认为false 。*/
             this.once = false;
             /**@private */
@@ -7234,31 +6653,30 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	once 是否只执行一次，如果为true，执行后执行recover()进行回收。
          * @return  返回 handler 本身。
          */
-        Handler.prototype.setTo = function (caller, method, args, once) {
-            if (once === void 0) { once = false; }
+        setTo(caller, method, args, once = false) {
             this._id = Handler._gid++;
             this.caller = caller;
             this.method = method;
             this.args = args;
             this.once = once;
             return this;
-        };
+        }
         /**
          * 执行处理器。
          */
-        Handler.prototype.run = function () {
+        run() {
             if (this.method == null)
                 return null;
             var id = this._id;
             var result = this.method.apply(this.caller, this.args);
             this._id === id && this.once && this.recover();
             return result;
-        };
+        }
         /**
          * 执行处理器，并携带额外数据。
          * @param	data 附加的回调数据，可以是单数据或者Array(作为多参)。
          */
-        Handler.prototype.runWith = function (data) {
+        runWith(data) {
             if (this.method == null)
                 return null;
             var id = this._id;
@@ -7272,25 +6690,25 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 result = this.method.apply(this.caller, data);
             this._id === id && this.once && this.recover();
             return result;
-        };
+        }
         /**
          * 清理对象引用。
          */
-        Handler.prototype.clear = function () {
+        clear() {
             this.caller = null;
             this.method = null;
             this.args = null;
             return this;
-        };
+        }
         /**
          * 清理并回收到 Handler 对象池内。
          */
-        Handler.prototype.recover = function () {
+        recover() {
             if (this._id > 0) {
                 this._id = 0;
                 Handler._pool.push(this.clear());
             }
-        };
+        }
         /**
          * 从对象池内创建一个Handler，默认会执行一次并立即回收，如果不需要自动回收，设置once参数为false。
          * @param	caller 执行域(this)。
@@ -7299,19 +6717,16 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	once 是否只执行一次，如果为true，回调后执行recover()进行回收，默认为true。
          * @return  返回创建的handler实例。
          */
-        Handler.create = function (caller, method, args, once) {
-            if (args === void 0) { args = null; }
-            if (once === void 0) { once = true; }
+        static create(caller, method, args = null, once = true) {
             if (Handler._pool.length)
                 return Handler._pool.pop().setTo(caller, method, args, once);
             return new Handler(caller, method, args, once);
-        };
-        /**@private handler对象池*/
-        Handler._pool = [];
-        /**@private */
-        Handler._gid = 1;
-        return Handler;
-    }());
+        }
+    }
+    /**@private handler对象池*/
+    Handler._pool = [];
+    /**@private */
+    Handler._gid = 1;
     airkit.Handler = Handler;
 })(airkit || (airkit = {}));
 /**
@@ -7330,123 +6745,121 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
  */
 
 (function (airkit) {
-    var OrbitType;
+    let OrbitType;
     (function (OrbitType) {
         OrbitType[OrbitType["Line"] = 3] = "Line";
         OrbitType[OrbitType["Curve"] = 2] = "Curve";
     })(OrbitType = airkit.OrbitType || (airkit.OrbitType = {}));
-    var MathUtils = /** @class */ (function () {
-        function MathUtils() {
-        }
-        MathUtils.sign = function (n) {
+    class MathUtils {
+        static sign(n) {
             n = +n;
             if (n === 0 || isNaN(n)) {
                 return n;
             }
             return n > 0 ? 1 : -1;
-        };
+        }
         /**
          * 限制范围
          */
-        MathUtils.clamp = function (n, min, max) {
+        static clamp(n, min, max) {
             if (min > max) {
-                var i = min;
+                let i = min;
                 min = max;
                 max = i;
             }
             return n < min ? min : n > max ? max : n;
-        };
-        MathUtils.clamp01 = function (value) {
+        }
+        static clamp01(value) {
             if (value < 0)
                 return 0;
             if (value > 1)
                 return 1;
             return value;
-        };
-        MathUtils.lerp = function (from, to, t) {
+        }
+        static lerp(from, to, t) {
             return from + (to - from) * MathUtils.clamp01(t);
-        };
-        MathUtils.lerpAngle = function (a, b, t) {
-            var num = MathUtils.repeat(b - a, 360);
+        }
+        static lerpAngle(a, b, t) {
+            let num = MathUtils.repeat(b - a, 360);
             if (num > 180)
                 num -= 360;
             return a + num * MathUtils.clamp01(t);
-        };
-        MathUtils.repeat = function (t, length) {
+        }
+        static repeat(t, length) {
             return t - Math.floor(t / length) * length;
-        };
+        }
         /**
          * 产生随机数
          * 结果：x>=param1 && x<param2
          */
-        MathUtils.randRange = function (param1, param2) {
-            var loc = Math.random() * (param2 - param1) + param1;
+        static randRange(param1, param2) {
+            let loc = Math.random() * (param2 - param1) + param1;
             return loc;
-        };
+        }
         /**
          * 产生随机数
          * 结果：x>=param1 && x<=param2
          */
-        MathUtils.randRange_Int = function (param1, param2) {
-            var loc = Math.random() * (param2 - param1 + 1) + param1;
+        static randRange_Int(param1, param2) {
+            let loc = Math.random() * (param2 - param1 + 1) + param1;
             return Math.floor(loc);
-        };
+        }
         /**
          * 从数组中产生随机数[-1,1,2]
          * 结果：-1/1/2中的一个
          */
-        MathUtils.randRange_Array = function (arr) {
+        static randRange_Array(arr) {
             if (arr.length == 0)
                 return null;
-            var loc = arr[MathUtils.randRange_Int(0, arr.length - 1)];
+            let loc = arr[MathUtils.randRange_Int(0, arr.length - 1)];
             return loc;
-        };
+        }
         /**
          * 转换为360度角度
          */
-        MathUtils.clampDegrees = function (degrees) {
+        static clampDegrees(degrees) {
             while (degrees < 0)
                 degrees = degrees + 360;
             while (degrees >= 360)
                 degrees = degrees - 360;
             return degrees;
-        };
+        }
         /**
          * 转换为360度弧度
          */
-        MathUtils.clampRadians = function (radians) {
+        static clampRadians(radians) {
             while (radians < 0)
                 radians = radians + 2 * Math.PI;
             while (radians >= 2 * Math.PI)
                 radians = radians - 2 * Math.PI;
             return radians;
-        };
+        }
         /**
          * 两点间的距离
          */
-        MathUtils.getDistance = function (x1, y1, x2, y2) {
+        static getDistance(x1, y1, x2, y2) {
             return Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2));
-        };
-        MathUtils.getSquareDistance = function (x1, y1, x2, y2) {
+        }
+        static getSquareDistance(x1, y1, x2, y2) {
             return Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2);
-        };
+        }
         /**
          * 两点间的弧度：x正方形为0，Y轴向下,顺时针为正
          */
-        MathUtils.getLineRadians = function (x1, y1, x2, y2) {
+        static getLineRadians(x1, y1, x2, y2) {
             return Math.atan2(y2 - y1, x2 - x1);
-        };
-        MathUtils.getLineDegree = function (x1, y1, x2, y2) {
-            var degree = MathUtils.toDegree(MathUtils.getLineRadians(x1, y1, x2, y2));
+        }
+        static getLineDegree(x1, y1, x2, y2) {
+            let degree = MathUtils.toDegree(MathUtils.getLineRadians(x1, y1, x2, y2));
             return MathUtils.clampDegrees(degree);
-        };
-        MathUtils.getPointRadians = function (x, y) {
+        }
+        static getPointRadians(x, y) {
             return Math.atan2(y, x);
-        };
-        MathUtils.getPointDegree = function (x, y) {
-            var degree = MathUtils.toDegree(MathUtils.getPointRadians(x, y));
+        }
+        static getPointDegree(x, y) {
+            let degree = MathUtils.toDegree(MathUtils.getPointRadians(x, y));
             return MathUtils.clampDegrees(degree);
-        };
+        }
         // /**
         //  * 弧度转向量
         //  * @param 	radians 	弧度
@@ -7462,50 +6875,50 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         /**
          * 弧度转化为度
          */
-        MathUtils.toDegree = function (radian) {
+        static toDegree(radian) {
             return radian * (180.0 / Math.PI);
-        };
+        }
         /**
          * 度转化为弧度
          */
-        MathUtils.toRadian = function (degree) {
+        static toRadian(degree) {
             return degree * (Math.PI / 180.0);
-        };
-        MathUtils.moveTowards = function (current, target, maxDelta) {
+        }
+        static moveTowards(current, target, maxDelta) {
             if (Math.abs(target - current) <= maxDelta) {
                 return target;
             }
             return current + MathUtils.sign(target - current) * maxDelta;
-        };
+        }
         //求两点的夹角（弧度）
-        MathUtils.radians4point = function (ax, ay, bx, by) {
+        static radians4point(ax, ay, bx, by) {
             return Math.atan2(ay - by, bx - ax);
-        };
+        }
         // 求圆上一个点的位置
-        MathUtils.pointAtCircle = function (px, py, radians, radius) {
+        static pointAtCircle(px, py, radians, radius) {
             return new cc.Vec2(px + Math.cos(radians) * radius, py - Math.sin(radians) * radius);
-        };
+        }
         /**
          * 根据位置数组，轨迹类型和时间进度来返回对应的位置
          * @param pts 位置数组
          * @param t 时间进度[0,1]
          * @param type Line:多点折线移动,Curve:贝塞尔曲线移动
          */
-        MathUtils.getPos = function (pts, t, type) {
+        static getPos(pts, t, type) {
             if (pts.length == 0)
                 return null;
             if (pts.length == 1)
                 return pts[0];
             t = Math.min(t, 1); //限定时间值范围,最大为1
-            var target = new cc.Vec2();
-            var count = pts.length;
+            let target = new cc.Vec2();
+            let count = pts.length;
             if (type == OrbitType.Line) {
-                var unitTime = 1 / (count - 1); //每两个顶点之间直线所用的时间
-                var index = Math.floor(t / unitTime);
+                let unitTime = 1 / (count - 1); //每两个顶点之间直线所用的时间
+                let index = Math.floor(t / unitTime);
                 if (index + 1 < count) {
-                    var start = pts[index];
-                    var end = pts[index + 1];
-                    var time = (t - index * unitTime) / unitTime; //每两点之间曲线移动时间[0,1]
+                    let start = pts[index];
+                    let end = pts[index + 1];
+                    let time = (t - index * unitTime) / unitTime; //每两点之间曲线移动时间[0,1]
                     target.x = start.x + (end.x - start.x) * time;
                     target.y = start.y + (end.y - start.y) * time;
                 }
@@ -7518,7 +6931,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 target = this.getBezierat(pts, t);
             }
             return target;
-        };
+        }
         /**
          * 获取两点之间连线向量对应的旋转角度
          * 注意: 只适合图片初始方向向上的情况,像鱼资源头都是向上
@@ -7536,10 +6949,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param endY 终点Y
          *
          */
-        MathUtils.getRotation = function (startX, startY, endX, endY) {
-            var deltaX = endX - startX;
-            var deltaY = endY - startY;
-            var angle = (Math.atan(deltaY / deltaX) * 180) / Math.PI;
+        static getRotation(startX, startY, endX, endY) {
+            let deltaX = endX - startX;
+            let deltaY = endY - startY;
+            let angle = (Math.atan(deltaY / deltaX) * 180) / Math.PI;
             if (deltaX >= 0) {
                 angle += 90;
             }
@@ -7547,14 +6960,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 angle += 270;
             }
             return angle;
-        };
+        }
         /**
          * 根据顶点数组来生成贝塞尔曲线(只支持二阶和三阶)，根据t返回对应的曲线位置
          * @param pts 顶点数组：第一个和最后一个点是曲线轨迹的起点和终点，其他点都是控制点，曲线不会经过这些点
          * @param t 整个轨迹的时间[0-1]
          */
-        MathUtils.getBezierat = function (pts, t) {
-            var target = new cc.Vec2();
+        static getBezierat(pts, t) {
+            let target = new cc.Vec2();
             if (pts.length == 3) {
                 //二阶贝塞尔
                 target.x = Math.pow(1 - t, 2) * pts[0].x + 2 * t * (1 - t) * pts[1].x + Math.pow(t, 2) * pts[2].x;
@@ -7574,13 +6987,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         Math.pow(t, 3) * pts[3].y;
             }
             return target;
-        };
+        }
         /**
          * 根据旋转角度返回二维方向向量(单位化过)
          * @param angle
          */
-        MathUtils.getDirection = function (angle) {
-            var dir = new cc.Vec2();
+        static getDirection(angle) {
+            let dir = new cc.Vec2();
             if (angle == 0 || angle == 180) {
                 dir.x = 0;
                 dir.y = angle == 0 ? -1 : 1;
@@ -7590,8 +7003,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 dir.x = angle == 90 ? 1 : -1;
             }
             else {
-                var idx = Math.floor(angle / 90);
-                var rad = ((90 - angle) * Math.PI) / 180;
+                let idx = Math.floor(angle / 90);
+                let rad = ((90 - angle) * Math.PI) / 180;
                 if (idx == 0 || idx == 1)
                     dir.x = 1;
                 else
@@ -7605,25 +7018,25 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 dir = this.normalize(dir);
             }
             return dir;
-        };
+        }
         /**
          * 单位化向量
          * @param vec
          */
-        MathUtils.normalize = function (vec) {
-            var k = vec.y / vec.x;
-            var x = Math.sqrt(1 / (k * k + 1));
-            var y = Math.abs(k * x);
+        static normalize(vec) {
+            let k = vec.y / vec.x;
+            let x = Math.sqrt(1 / (k * k + 1));
+            let y = Math.abs(k * x);
             vec.x = vec.x > 0 ? x : -x;
             vec.y = vec.y > 0 ? y : -y;
             return vec;
-        };
+        }
         /**
          * 求两点之间的距离长度
          */
-        MathUtils.distance = function (startX, startY, endX, endY) {
+        static distance(startX, startY, endX, endY) {
             return Math.sqrt((endX - startX) * (endX - startX) + (endY - startY) * (endY - startY));
-        };
+        }
         /**
          * 根据起始和终点连线方向，计算垂直于其的向量和连线中心点的位置，通过raise来调整远近，越远贝塞尔曲线计算的曲线越弯
          *  @param start 起始点坐标
@@ -7631,19 +7044,19 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          *  @param raise 调整离中心点远近
          *
          */
-        MathUtils.getVerticalVector = function (start, end, raise) {
-            var dir = new cc.Vec2();
+        static getVerticalVector(start, end, raise) {
+            let dir = new cc.Vec2();
             dir.x = end.x - start.x;
             dir.y = end.y - start.y;
             dir.normalize();
-            var vertial = new cc.Vec2();
+            let vertial = new cc.Vec2();
             vertial.x = 1;
             vertial.y = -dir.x / dir.y;
-            var target = new cc.Vec2();
+            let target = new cc.Vec2();
             target.x = (start.x + end.x) / 2 + vertial.x * raise;
             target.y = (start.y + end.y) / 2 + vertial.y * raise;
             return target;
-        };
+        }
         /**
          * 根据起始点和终点获得控制点
          *
@@ -7653,57 +7066,50 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param xOffset 控制弯曲X方向偏移量
          * @param yOffset 控制弯曲Y方向偏移量
          */
-        MathUtils.getCtrlPoint = function (start, end, raise, xOffset, yOffset) {
-            if (raise === void 0) { raise = 100; }
-            if (xOffset === void 0) { xOffset = 50; }
-            if (yOffset === void 0) { yOffset = 50; }
-            var ctrlPoint = this.getVerticalVector(start, end, raise);
+        static getCtrlPoint(start, end, raise = 100, xOffset = 50, yOffset = 50) {
+            let ctrlPoint = this.getVerticalVector(start, end, raise);
             ctrlPoint.x += xOffset;
             ctrlPoint.y += yOffset;
             return ctrlPoint;
-        };
-        MathUtils.getDefaultPoints = function (start, end, xOffset, yOffset, raise) {
-            if (xOffset === void 0) { xOffset = 150; }
-            if (yOffset === void 0) { yOffset = 150; }
-            if (raise === void 0) { raise = 150; }
+        }
+        static getDefaultPoints(start, end, xOffset = 150, yOffset = 150, raise = 150) {
             if (start.x > airkit.displayWidth() / 2) {
                 xOffset = -xOffset;
             }
             if (start.y > end.y) {
                 yOffset = -yOffset;
             }
-            var ctrlPt1 = this.getCtrlPoint(start, end, raise, xOffset, yOffset);
+            let ctrlPt1 = this.getCtrlPoint(start, end, raise, xOffset, yOffset);
             return [start, ctrlPt1, end];
-        };
-        /**字节转换M*/
-        MathUtils.BYTE_TO_M = 1 / (1024 * 1024);
-        /**字节转换K*/
-        MathUtils.BYTE_TO_K = 1 / 1024;
-        MathUtils.Deg2Rad = 0.01745329;
-        MathUtils.Rad2Deg = 57.29578;
-        MathUtils.Cycle8Points = [
-            [-200, 0],
-            [-127, -74],
-            [0, -100],
-            [127, -74],
-            [200, 0],
-            [127, 74],
-            [0, 100],
-            [-127, 74],
-        ];
-        MathUtils.Cycle9Points = [
-            [0, 0],
-            [-200, 0],
-            [-127, -74],
-            [0, -100],
-            [127, -74],
-            [200, 0],
-            [127, 74],
-            [0, 100],
-            [-127, 74],
-        ];
-        return MathUtils;
-    }());
+        }
+    }
+    /**字节转换M*/
+    MathUtils.BYTE_TO_M = 1 / (1024 * 1024);
+    /**字节转换K*/
+    MathUtils.BYTE_TO_K = 1 / 1024;
+    MathUtils.Deg2Rad = 0.01745329;
+    MathUtils.Rad2Deg = 57.29578;
+    MathUtils.Cycle8Points = [
+        [-200, 0],
+        [-127, -74],
+        [0, -100],
+        [127, -74],
+        [200, 0],
+        [127, 74],
+        [0, 100],
+        [-127, 74],
+    ];
+    MathUtils.Cycle9Points = [
+        [0, 0],
+        [-200, 0],
+        [-127, -74],
+        [0, -100],
+        [127, -74],
+        [200, 0],
+        [127, 74],
+        [0, 100],
+        [-127, 74],
+    ];
     airkit.MathUtils = MathUtils;
 })(airkit || (airkit = {}));
 // import { StringUtils } from "./StringUtils";
@@ -7714,74 +7120,71 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-8
      */
-    var NumberUtils = /** @class */ (function () {
-        function NumberUtils() {
-        }
+    class NumberUtils {
         /**
          * 保留小数点后几位
          */
-        NumberUtils.toFixed = function (value, p) {
+        static toFixed(value, p) {
             return airkit.StringUtils.toNumber(value.toFixed(p));
-        };
-        NumberUtils.toInt = function (value) {
+        }
+        static toInt(value) {
             return Math.floor(value);
-        };
-        NumberUtils.isInt = function (value) {
+        }
+        static isInt(value) {
             return Math.ceil(value) != value ? false : true;
-        };
+        }
         /**
          * 保留有效数值
          */
-        NumberUtils.reserveNumber = function (num, size) {
-            var str = String(num);
-            var l = str.length;
-            var p_index = str.indexOf(".");
+        static reserveNumber(num, size) {
+            let str = String(num);
+            let l = str.length;
+            let p_index = str.indexOf(".");
             if (p_index < 0) {
                 return num;
             }
-            var ret = str.slice(0, p_index + 1);
-            var lastNum = l - p_index;
+            let ret = str.slice(0, p_index + 1);
+            let lastNum = l - p_index;
             if (lastNum > size) {
                 lastNum = size;
             }
-            var lastStr = str.slice(p_index + 1, p_index + 1 + lastNum);
+            let lastStr = str.slice(p_index + 1, p_index + 1 + lastNum);
             return airkit.StringUtils.toNumber(ret + lastStr);
-        };
+        }
         /**
          * 保留有效数值，不够补0；注意返回的是字符串
          */
-        NumberUtils.reserveNumberWithZero = function (num, size) {
-            var str = String(num);
-            var l = str.length;
-            var p_index = str.indexOf(".");
+        static reserveNumberWithZero(num, size) {
+            let str = String(num);
+            let l = str.length;
+            let p_index = str.indexOf(".");
             if (p_index < 0) {
                 //是整数
                 str += ".";
-                for (var i = 0; i < size; ++i)
+                for (let i = 0; i < size; ++i)
                     str += "0";
                 return str;
             }
-            var ret = str.slice(0, p_index + 1);
-            var lastNum = l - p_index - 1;
+            let ret = str.slice(0, p_index + 1);
+            let lastNum = l - p_index - 1;
             if (lastNum > size) {
                 //超过
                 lastNum = size;
-                var lastStr = str.slice(p_index + 1, p_index + 1 + lastNum);
+                let lastStr = str.slice(p_index + 1, p_index + 1 + lastNum);
                 return ret + lastStr;
             }
             else if (lastNum < size) {
                 //不足补0
-                var diff = size - lastNum;
-                for (var i = 0; i < diff; ++i)
+                let diff = size - lastNum;
+                for (let i = 0; i < diff; ++i)
                     str += "0";
                 return str;
             }
             else {
                 return str;
             }
-        };
-        return NumberUtils;
-    }());
+        }
+    }
     airkit.NumberUtils = NumberUtils;
 })(airkit || (airkit = {}));
 /**
@@ -7791,47 +7194,40 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
  */
 
 (function (airkit) {
-    var StringUtils = /** @class */ (function () {
-        function StringUtils() {
+    class StringUtils {
+        static get empty() {
+            return "";
         }
-        Object.defineProperty(StringUtils, "empty", {
-            get: function () {
-                return "";
-            },
-            enumerable: false,
-            configurable: true
-        });
         /**
          * 字符串是否有值
          */
-        StringUtils.isNullOrEmpty = function (s) {
+        static isNullOrEmpty(s) {
             return s != null && s.length > 0 ? false : true;
-        };
-        StringUtils.toInt = function (str) {
+        }
+        static toInt(str) {
             if (!str || str.length == 0)
                 return 0;
             return parseInt(str);
-        };
-        StringUtils.toNumber = function (str) {
+        }
+        static toNumber(str) {
             if (!str || str.length == 0)
                 return 0;
             return parseFloat(str);
-        };
-        StringUtils.stringCut = function (str, len, fill) {
-            if (fill === void 0) { fill = "..."; }
+        }
+        static stringCut(str, len, fill = "...") {
             var result = str;
             if (str.length > len) {
                 result = str.substr(0, len) + fill;
             }
             return result;
-        };
+        }
         /**
          * 获取字符串真实长度,注：
          * 1.普通数组，字符占1字节；汉子占两个字节
          * 2.如果变成编码，可能计算接口不对
          */
-        StringUtils.getNumBytes = function (str) {
-            var realLength = 0, len = str.length, charCode = -1;
+        static getNumBytes(str) {
+            let realLength = 0, len = str.length, charCode = -1;
             for (var i = 0; i < len; i++) {
                 charCode = str.charCodeAt(i);
                 if (charCode >= 0 && charCode <= 128)
@@ -7840,7 +7236,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     realLength += 2;
             }
             return realLength;
-        };
+        }
         /**
          * 补零
          * @param str
@@ -7848,18 +7244,17 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param dir 0-后；1-前
          * @return
          */
-        StringUtils.addZero = function (str, len, dir) {
-            if (dir === void 0) { dir = 0; }
-            var _str = "";
-            var _len = str.length;
-            var str_pre_zero = "";
-            var str_end_zero = "";
+        static addZero(str, len, dir = 0) {
+            let _str = "";
+            let _len = str.length;
+            let str_pre_zero = "";
+            let str_end_zero = "";
             if (dir == 0)
                 str_end_zero = "0";
             else
                 str_pre_zero = "0";
             if (_len < len) {
-                var i = 0;
+                let i = 0;
                 while (i < len - _len) {
                     _str = str_pre_zero + _str + str_end_zero;
                     ++i;
@@ -7867,125 +7262,117 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 return _str + str;
             }
             return str;
-        };
+        }
         /**
          * Checks if the given argument is a string.
          * @function
          */
-        StringUtils.isString = function (obj) {
+        static isString(obj) {
             return Object.prototype.toString.call(obj) === "[object String]";
-        };
+        }
         /**
          * 去除左右空格
          * @param input
          * @return
          */
-        StringUtils.trim = function (input) {
+        static trim(input) {
             if (input == null) {
                 return "";
             }
             return input.replace(/^\s+|\s+$""^\s+|\s+$/g, "");
-        };
+        }
         /**
          * 去除左侧空格
          * @param input
          * @return
          */
-        StringUtils.trimLeft = function (input) {
+        static trimLeft(input) {
             if (input == null) {
                 return "";
             }
             return input.replace(/^\s+""^\s+/, "");
-        };
+        }
         /**
          * 去除右侧空格
          * @param input
          * @return
          */
-        StringUtils.trimRight = function (input) {
+        static trimRight(input) {
             if (input == null) {
                 return "";
             }
             return input.replace(/\s+$""\s+$/, "");
-        };
+        }
         /**
          * 分钟与秒格式(如-> 40:15)
          * @param seconds 秒数
          * @return
          */
-        StringUtils.minuteFormat = function (seconds) {
-            var min = Math.floor(seconds / 60);
-            var sec = Math.floor(seconds % 60);
-            var min_str = min < 10 ? "0" + min.toString() : min.toString();
-            var sec_str = sec < 10 ? "0" + sec.toString() : sec.toString();
+        static minuteFormat(seconds) {
+            let min = Math.floor(seconds / 60);
+            let sec = Math.floor(seconds % 60);
+            let min_str = min < 10 ? "0" + min.toString() : min.toString();
+            let sec_str = sec < 10 ? "0" + sec.toString() : sec.toString();
             return min_str + ":" + sec_str;
-        };
+        }
         /**
          * 时分秒格式(如-> 05:32:20)
          * @param seconds(秒)
          * @return
          */
-        StringUtils.hourFormat = function (seconds) {
-            var hour = Math.floor(seconds / 3600);
-            var hour_str = hour < 10 ? "0" + hour.toString() : hour.toString();
+        static hourFormat(seconds) {
+            let hour = Math.floor(seconds / 3600);
+            let hour_str = hour < 10 ? "0" + hour.toString() : hour.toString();
             return hour_str + ":" + StringUtils.minuteFormat(seconds % 3600);
-        };
+        }
         /**
          * 格式化字符串
          * @param str 需要格式化的字符串，【"杰卫，这里有{0}个苹果，和{1}个香蕉！", 5,10】
          * @param args 参数列表
          */
-        StringUtils.format = function (str) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
-            for (var i = 0; i < args.length; i++) {
+        static format(str, ...args) {
+            for (let i = 0; i < args.length; i++) {
                 str = str.replace(new RegExp("\\{" + i + "\\}", "gm"), args[i]);
             }
             return str;
-        };
-        StringUtils.formatWithDic = function (str, dic) {
-            for (var key in dic) {
+        }
+        static formatWithDic(str, dic) {
+            for (let key in dic) {
                 str = str.replace(new RegExp("\\{" + key + "\\}", "gm"), dic[key]);
             }
             return str;
-        };
+        }
         /**
          * 以指定字符开始
          */
-        StringUtils.beginsWith = function (input, prefix) {
+        static beginsWith(input, prefix) {
             return prefix == input.substring(0, prefix.length);
-        };
+        }
         /**
          * 以指定字符结束
          */
-        StringUtils.endsWith = function (input, suffix) {
+        static endsWith(input, suffix) {
             return suffix == input.substring(input.length - suffix.length);
-        };
+        }
         /**guid*/
-        StringUtils.getGUIDString = function () {
-            var d = Date.now();
+        static getGUIDString() {
+            let d = Date.now();
             if (window.performance && typeof window.performance.now === "function") {
                 d += performance.now(); //use high-precision timer if available
             }
-            return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-                var r = (d + Math.random() * 16) % 16 | 0;
+            return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+                let r = (d + Math.random() * 16) % 16 | 0;
                 d = Math.floor(d / 16);
                 return (c == "x" ? r : (r & 0x3) | 0x8).toString(16);
             });
-        };
-        return StringUtils;
-    }());
+        }
+    }
     airkit.StringUtils = StringUtils;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    var TouchUtils = /** @class */ (function () {
-        function TouchUtils() {
-        }
-        return TouchUtils;
-    }());
+    class TouchUtils {
+    }
     airkit.TouchUtils = TouchUtils;
 })(airkit || (airkit = {}));
 
@@ -7994,29 +7381,25 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * 连续动画
      */
-    var TweenUtils = /** @class */ (function () {
-        function TweenUtils(target) {
+    class TweenUtils {
+        constructor(target) {
             this._target = target;
             this.clear();
         }
-        TweenUtils.get = function (target) {
+        static get(target) {
             return new TweenUtils(target);
-        };
-        Object.defineProperty(TweenUtils.prototype, "target", {
-            get: function () {
-                return this._target;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        TweenUtils.prototype.setOnUpdate = function (callback) {
+        }
+        get target() {
+            return this._target;
+        }
+        setOnUpdate(callback) {
             this._updateFunc = callback;
-        };
-        TweenUtils.prototype.onUpdate = function (gt) {
+        }
+        onUpdate(gt) {
             if (this._updateFunc) {
                 this._updateFunc(gt);
             }
-        };
+        }
         /**
          * 缓动对象的props属性到目标值。
          * @param	target 目标对象(即将更改属性值的对象)。
@@ -8026,20 +7409,16 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	complete 结束回调函数。
          * @param	delay 延迟执行时间。
          */
-        TweenUtils.prototype.to = function (props, duration, ease, complete, delay) {
-            if (ease === void 0) { ease = fgui.EaseType.QuadOut; }
-            if (complete === void 0) { complete = null; }
-            if (delay === void 0) { delay = 0; }
-            this._steps.push({ props: props, duration: duration, ease: ease, complete: complete, delay: delay });
+        to(props, duration, ease = fgui.EaseType.QuadOut, complete = null, delay = 0) {
+            this._steps.push({ props, duration, ease, complete, delay });
             this.trigger();
             return this;
-        };
-        TweenUtils.prototype.delay = function (delay) {
-            this._steps.push({ delay: delay });
+        }
+        delay(delay) {
+            this._steps.push({ delay });
             return this;
-        };
-        TweenUtils.prototype.trigger = function () {
-            var _this = this;
+        }
+        trigger() {
             if (!this._isPlaying) {
                 if (this._steps && this._steps.length) {
                     var step = this._steps.shift();
@@ -8047,21 +7426,21 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         this._isPlaying = true;
                         // Laya.Tween.to(this._target, step.props, step.duration, step.ease, step.complete, step.delay, step.coverBefore, step.autoRecover)
                         if (step.props["x"] != null || step.props["y"] != null) {
-                            var x = step.props["x"] != null ? step.props.x : this._target.x;
-                            var y = step.props["y"] != null ? step.props.y : this._target.y;
+                            let x = step.props["x"] != null ? step.props.x : this._target.x;
+                            let y = step.props["y"] != null ? step.props.y : this._target.y;
                             fgui.GTween.to2(this._target.x, this._target.y, x, y, step.duration)
                                 .setTarget(this._target, this._target.setPosition)
                                 .setEase(step.ease);
                         }
                         if (step.props["scaleX"] != null || step.props["scaleY"] != null) {
-                            var x = step.props["scaleX"] != null ? step.props.scaleX : this._target.scaleX;
-                            var y = step.props["scaleY"] != null ? step.props.scaleY : this._target.scaleY;
+                            let x = step.props["scaleX"] != null ? step.props.scaleX : this._target.scaleX;
+                            let y = step.props["scaleY"] != null ? step.props.scaleY : this._target.scaleY;
                             fgui.GTween.to2(this._target.scaleX, this._target.scaleY, x, y, step.duration)
                                 .setTarget(this._target, this._target.setScale)
                                 .setEase(step.ease);
                         }
                         if (step.props["rotation"] != null) {
-                            var rotation = step.props["rotation"] != null ? step.props.rotation : this._target.rotation;
+                            let rotation = step.props["rotation"] != null ? step.props.rotation : this._target.rotation;
                             fgui.GTween.to(this._target.rotation, rotation, step.duration).setTarget(this._target, "rotation").setEase(step.ease);
                         }
                         if (step.props["alpha"] != null) {
@@ -8069,18 +7448,18 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                                 fgui.GTween.to(this._target.alpha, step.props.alpha, step.duration)
                                     .setTarget(this._target, "alpha")
                                     .setEase(step.ease)
-                                    .onUpdate(function (gt) {
-                                    var point = airkit.MathUtils.getPos(step.props.pts, gt.normalizedTime, airkit.OrbitType.Curve);
-                                    _this._target.setPosition(point.x, point.y);
-                                    _this.onUpdate(gt);
+                                    .onUpdate((gt) => {
+                                    let point = airkit.MathUtils.getPos(step.props.pts, gt.normalizedTime, airkit.OrbitType.Curve);
+                                    this._target.setPosition(point.x, point.y);
+                                    this.onUpdate(gt);
                                 }, null);
                             }
                             else {
                                 fgui.GTween.to(this._target.alpha, step.props.alpha, step.duration)
                                     .setTarget(this._target, "alpha")
                                     .setEase(step.ease)
-                                    .onUpdate(function (gt) {
-                                    _this.onUpdate(gt);
+                                    .onUpdate((gt) => {
+                                    this.onUpdate(gt);
                                 }, null);
                             }
                         }
@@ -8092,29 +7471,28 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     }
                 }
             }
-        };
-        TweenUtils.prototype.onStepComplete = function (onFunc) {
+        }
+        onStepComplete(onFunc) {
             if (onFunc) {
                 onFunc.runWith();
             }
             this._isPlaying = false;
             this.trigger();
-        };
-        TweenUtils.prototype.clear = function () {
+        }
+        clear() {
             this._steps = [];
             this._isPlaying = false;
             fgui.GTween.kill(this._target);
-        };
-        TweenUtils.scale = function (view) {
+        }
+        static scale(view) {
             this.get(view).to({ scaleX: 0.8, scaleY: 0.8 }, 0.05, fgui.EaseType.QuadIn).to({ scaleX: 1.0, scaleY: 1.0 }, 0.05, fgui.EaseType.QuadIn);
-        };
-        TweenUtils.appear = function (view) {
+        }
+        static appear(view) {
             view.setScale(0, 0);
             this.get(view).to({ scaleX: 1.2, scaleY: 1.2 }, 0.4, fgui.EaseType.QuadOut).to({ scaleX: 1.0, scaleY: 1.0 }, 0.2, fgui.EaseType.QuadOut);
-        };
-        TweenUtils.EaseBezier = 9999;
-        return TweenUtils;
-    }());
+        }
+    }
+    TweenUtils.EaseBezier = 9999;
     airkit.TweenUtils = TweenUtils;
 })(airkit || (airkit = {}));
 // import { StringUtils } from "./StringUtils";
@@ -8125,31 +7503,28 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-16
      */
-    var UrlUtils = /** @class */ (function () {
-        function UrlUtils() {
-        }
+    class UrlUtils {
         /**获取文件扩展名*/
-        UrlUtils.getFileExte = function (url) {
+        static getFileExte(url) {
             if (airkit.StringUtils.isNullOrEmpty(url))
                 return airkit.StringUtils.empty;
-            var idx = url.lastIndexOf(".");
+            let idx = url.lastIndexOf(".");
             if (idx >= 0) {
                 return url.substr(idx + 1);
             }
             return airkit.StringUtils.empty;
-        };
+        }
         /**获取不含扩展名的路径*/
-        UrlUtils.getPathWithNoExtend = function (url) {
+        static getPathWithNoExtend(url) {
             if (airkit.StringUtils.isNullOrEmpty(url))
                 return airkit.StringUtils.empty;
-            var idx = url.lastIndexOf(".");
+            let idx = url.lastIndexOf(".");
             if (idx >= 0) {
                 return url.substr(0, idx);
             }
             return airkit.StringUtils.empty;
-        };
-        return UrlUtils;
-    }());
+        }
+    }
     airkit.UrlUtils = UrlUtils;
 })(airkit || (airkit = {}));
 // import { SDictionary } from "../collection/Dictionary";
@@ -8162,24 +7537,22 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-11
      */
-    var Utils = /** @class */ (function () {
-        function Utils() {
-        }
+    class Utils {
         /**打开外部链接，如https://ask.laya.ui.Box.com/xxx*/
-        Utils.openURL = function (url) {
+        static openURL(url) {
             window.location.href = url;
-        };
+        }
         /**获取当前地址栏参数*/
-        Utils.getLocationParams = function () {
-            var url = window.location.href;
-            var dic = new airkit.SDictionary();
-            var num = url.indexOf("?");
+        static getLocationParams() {
+            let url = window.location.href;
+            let dic = new airkit.SDictionary();
+            let num = url.indexOf("?");
             if (num >= 0) {
                 url = url.substr(num + 1);
-                var key = void 0, value = void 0;
-                var arr = url.split("&");
-                for (var i in arr) {
-                    var str = arr[i];
+                let key, value;
+                let arr = url.split("&");
+                for (let i in arr) {
+                    let str = arr[i];
                     num = str.indexOf("=");
                     key = str.substr(0, num);
                     value = str.substr(num + 1);
@@ -8187,13 +7560,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
             return dic;
-        };
+        }
         /**
          * object转成查询字符串
          * @param obj
          * @returns {string}
          */
-        Utils.obj2query = function (obj) {
+        static obj2query(obj) {
             if (!obj) {
                 return "";
             }
@@ -8202,19 +7575,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 arr.push(key + "=" + obj[key]);
             }
             return arr.join("&");
-        };
-        Utils.injectProp = function (target, data, callback, ignoreMethod, ignoreNull, keyBefore) {
-            if (data === void 0) { data = null; }
-            if (callback === void 0) { callback = null; }
-            if (ignoreMethod === void 0) { ignoreMethod = true; }
-            if (ignoreNull === void 0) { ignoreNull = true; }
-            if (keyBefore === void 0) { keyBefore = ""; }
+        }
+        static injectProp(target, data = null, callback = null, ignoreMethod = true, ignoreNull = true, keyBefore = "") {
             if (!data) {
                 return false;
             }
-            var result = true;
-            for (var key in data) {
-                var value = data[key];
+            let result = true;
+            for (let key in data) {
+                let value = data[key];
                 if ((!ignoreMethod || typeof value != "function") && (!ignoreNull || value != null)) {
                     if (callback) {
                         callback(target, key, value);
@@ -8225,49 +7593,45 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
             return result;
-        };
-        /**
-         * 将字符串解析成 XML 对象。
-         * @param value 需要解析的字符串。
-         * @return js原生的XML对象。
-         */
-        Utils.parseXMLFromString = function (value) {
-            var rst;
-            value = value.replace(/>\s+</g, "><");
-            rst = new DOMParser().parseFromString(value, "text/xml");
-            if (rst.firstChild.textContent.indexOf("This page contains the following errors") > -1) {
-                throw new Error(rst.firstChild.firstChild.textContent);
-            }
-            return rst;
-        };
-        return Utils;
-    }());
+        }
+    }
+    /**
+     * 将字符串解析成 XML 对象。
+     * @param value 需要解析的字符串。
+     * @return js原生的XML对象。
+     */
+    Utils.parseXMLFromString = function (value) {
+        var rst;
+        value = value.replace(/>\s+</g, "><");
+        rst = new DOMParser().parseFromString(value, "text/xml");
+        if (rst.firstChild.textContent.indexOf("This page contains the following errors") > -1) {
+            throw new Error(rst.firstChild.firstChild.textContent);
+        }
+        return rst;
+    };
     airkit.Utils = Utils;
     /**
      * 位操作
      */
-    var FlagUtils = /** @class */ (function () {
-        function FlagUtils() {
-        }
-        FlagUtils.hasFlag = function (a, b) {
+    class FlagUtils {
+        static hasFlag(a, b) {
             a = airkit.NumberUtils.toInt(a);
             b = airkit.NumberUtils.toInt(b);
             return (a & b) == 0 ? false : true;
-        };
-        FlagUtils.insertFlag = function (a, b) {
+        }
+        static insertFlag(a, b) {
             a = airkit.NumberUtils.toInt(a);
             b = airkit.NumberUtils.toInt(b);
             a |= b;
             return a;
-        };
-        FlagUtils.removeFlag = function (a, b) {
+        }
+        static removeFlag(a, b) {
             a = airkit.NumberUtils.toInt(a);
             b = airkit.NumberUtils.toInt(b);
             a ^= b;
             return a;
-        };
-        return FlagUtils;
-    }());
+        }
+    }
     airkit.FlagUtils = FlagUtils;
     /**
      * 断言
@@ -8316,9 +7680,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      * @author ankye
      * @time 2018-7-11
      */
-    var ZipUtils = /** @class */ (function () {
-        function ZipUtils() {
-        }
+    class ZipUtils {
         // public static async unzip(ab: ArrayBuffer): Promise<any> {
         //   let resultDic = {};
         //   let zip = await ZipUtils.parseZip(ab);
@@ -8335,49 +7697,46 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         //   filelist = null;
         //   return resultDic;
         // }
-        ZipUtils.unzip = function (ab) {
-            return new Promise(function (resolve, reject) {
-                var resultDic = {};
+        static unzip(ab) {
+            return new Promise((resolve, reject) => {
+                let resultDic = {};
                 ZipUtils.parseZip(ab)
-                    .then(function (zip) {
-                    var jszip = zip.jszip;
-                    var filelist = zip.filelist;
+                    .then((zip) => {
+                    let jszip = zip.jszip;
+                    let filelist = zip.filelist;
                     if (jszip && filelist) {
-                        var count_1 = 0;
-                        var _loop_1 = function (i) {
+                        let count = 0;
+                        for (let i = 0; i < filelist.length; i++) {
                             ZipUtils.parseZipFile(jszip, filelist[i])
-                                .then(function (content) {
-                                count_1++;
+                                .then((content) => {
+                                count++;
                                 resultDic[filelist[i]] = content;
-                                if (count_1 == filelist.length) {
+                                if (count == filelist.length) {
                                     zip = null;
                                     jszip = null;
                                     filelist = null;
                                     resolve(resultDic);
                                 }
                             })
-                                .catch(function (e) {
+                                .catch((e) => {
                                 airkit.Log.error(e);
                                 reject(e);
                             });
-                        };
-                        for (var i = 0; i < filelist.length; i++) {
-                            _loop_1(i);
                         }
                     }
                 })
-                    .catch(function (e) {
+                    .catch((e) => {
                     airkit.Log.error(e);
                     reject(e);
                 });
             });
-        };
-        ZipUtils.parseZip = function (ab) {
-            return new Promise(function (resolve, reject) {
-                var dic = new airkit.SDictionary();
-                var fileNameArr = new Array();
+        }
+        static parseZip(ab) {
+            return new Promise((resolve, reject) => {
+                let dic = new airkit.SDictionary();
+                let fileNameArr = new Array();
                 window.JSZip.loadAsync(ab)
-                    .then(function (jszip) {
+                    .then((jszip) => {
                     for (var fileName in jszip.files) {
                         fileNameArr.push(fileName);
                     }
@@ -8386,27 +7745,26 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         filelist: fileNameArr,
                     });
                 })
-                    .catch(function (e) {
+                    .catch((e) => {
                     airkit.Log.error(e);
                 });
             });
-        };
-        ZipUtils.parseZipFile = function (jszip, filename) {
-            return new Promise(function (resolve, reject) {
+        }
+        static parseZipFile(jszip, filename) {
+            return new Promise((resolve, reject) => {
                 jszip
                     .file(filename)
                     .async("text")
-                    .then(function (content) {
+                    .then((content) => {
                     resolve(content);
                 })
-                    .catch(function (e) {
+                    .catch((e) => {
                     reject(e);
                     airkit.Log.error(e);
                 });
             });
-        };
-        return ZipUtils;
-    }());
+        }
+    }
     airkit.ZipUtils = ZipUtils;
 })(airkit || (airkit = {}));
 

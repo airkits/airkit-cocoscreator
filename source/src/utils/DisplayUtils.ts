@@ -168,24 +168,24 @@ namespace airkit {
       }
     }
     public static hide(panel: IUIPanel, handler?: Handler): void {
-      let time = 0.2;
-      let view = panel.panel();
-      let bg = panel.bg();
-      if (view == null) {
-        if (handler) {
-          handler.run();
-        }
-      } else {
-        TweenUtils.get(view).to(
-          { scaleX: 0.5, scaleY: 0.5 },
-          time,
-          fgui.EaseType.BackIn,
-          handler
-        );
-        if (bg) {
-          TweenUtils.get(bg).to({ alpha: 0 }, 0.2, fgui.EaseType.QuadOut);
-        }
-      }
+      // let time = 0.2;
+      // let view = panel.panel();
+      // let bg = panel.bg();
+      // if (view == null) {
+      //   if (handler) {
+      //     handler.run();
+      //   }
+      // } else {
+      //   TweenUtils.get(view).to(
+      //     { scaleX: 0.5, scaleY: 0.5 },
+      //     time,
+      //     fgui.EaseType.BackIn,
+      //     handler
+      //   );
+      //   if (bg) {
+      //     TweenUtils.get(bg).to({ alpha: 0 }, 0.2, fgui.EaseType.QuadOut);
+      //   }
+      // }
     }
 
     // static createAsyncAnimation(ani: string, atlas: string): Promise<any> {

@@ -14,7 +14,13 @@ namespace airkit {
             this.registerEvent();
         }
 
-        public start(): void {}
+        public enter(): void {
+            this.emit(EventID.ENTER_MODULE, this.name);
+        }
+
+        public exit(): void {
+            this.emit(EventID.EXIT_MODULE, this.name);
+        }
 
         public update(dt: number): void {}
 

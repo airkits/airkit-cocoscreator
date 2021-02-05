@@ -36,7 +36,6 @@ namespace airkit {
     }
 
     public destroy(): boolean {
-      super.destroy();
       this.unRegisterEvent();
       if (this._dicLoadView) {
         let view: any = null;

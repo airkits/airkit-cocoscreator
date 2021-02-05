@@ -21,6 +21,8 @@ namespace airkit {
         //模块管理事件
         public static BEGIN_MODULE: string = "BEGIN_MODULE";
         public static END_MODULE: string = "END_MODULE";
+        public static ENTER_MODULE: string = "ENTER_MODULE";
+        public static EXIT_MODULE: string = "EXIT_MODULE";
 
         public static UI_OPEN: string = "UI_OPEN"; //界面打开
         public static UI_CLOSE: string = "UI_CLOSE"; //界面关闭

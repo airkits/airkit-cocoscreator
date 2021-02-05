@@ -1,3 +1,4 @@
+import UILoginScene from '../../gen/ui/Loader/UILoginScene';
 
 
 
@@ -8,10 +9,7 @@
  * @author ankye
  * @time 2017-7-14
  */
-export default class LoginScene extends airkit.BaseView {
-
-    public pkgName: string = "Loader"
-    public resName: string = "Login"
+export default class LoginScene extends UILoginScene {
 
     constructor() {
         super()
@@ -19,32 +17,18 @@ export default class LoginScene extends airkit.BaseView {
 
     onEnter(): void {
         airkit.Log.info("login scene onEnter")
-        this.createPanel(this.pkgName, this.resName)
-        this.resize()
-
     }
 
-    public res(): Array<[string, string]> {
-        let list = [
-            // [ResourceConfig.APP_BG, Laya.Loader.IMAGE]
-            // ["res/bg/gamebg.jpg", Laya.Loader.IMAGE],
-            // ["res/ui/Game_atlas0.png", Laya.Loader.IMAGE],
-            // ["res/ui/Game.bin", Laya.Loader.BUFFER],
-            // ["res/anim/Hero1_atlas0.png", Laya.Loader.IMAGE],
-            // ["res/anim/Hero1.bin", Laya.Loader.BUFFER],
-            // ["res/anim/Hero2_atlas0.png", Laya.Loader.IMAGE],
-            // ["res/anim/Hero2.bin", Laya.Loader.BUFFER],
-            // ["res/anim/Hero3_atlas0.png", Laya.Loader.IMAGE],
-            // ["res/anim/Hero3.bin", Laya.Loader.BUFFER],
-            // ["res/anim/Monster_atlas0.png", Laya.Loader.IMAGE],
-            // ["res/anim/Monster.bin", Laya.Loader.BUFFER],
-            // ["res/anim/Building1_atlas0.png", Laya.Loader.IMAGE],
-            // ["res/anim/Building1.bin", Laya.Loader.BUFFER],
-            // ["res/anim/Bullet1_atlas0.png", Laya.Loader.IMAGE],
-            // ["res/anim/Bullet1.bin", Laya.Loader.BUFFER]
-        ]
-
-        return list
+    public res(): Array<{ url: string; type: typeof cc.Asset }> {
+        let res = [];
+        let resMap = LoginScene.ResMap;
+        for (let k in resMap) {
+            res.push({ url: "ui/" + k, type: airkit.FguiAsset });
+            for (let k2 in resMap[k]) {
+                res.push({ url: "ui/" + k2, type: cc.BufferAsset });
+            }
+        }
+        return res
     }
     //public loaderType(): number {
         

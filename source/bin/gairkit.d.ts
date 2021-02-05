@@ -4,7 +4,7 @@ declare namespace airkit {
      * @author ankye
      * @time 2018-7-6
      */
-    class Singleton extends cc.Node {
+    class Singleton {
         private static classKeys;
         private static classValues;
         constructor();
@@ -32,9 +32,9 @@ declare namespace airkit {
          * 游戏主循环
          */
         update(dt: number): void;
-        private preTick;
+        preTick(dt: number): void;
         tick(dt: number): void;
-        private endTick;
+        endTick(dt: number): void;
         /**暂停游戏*/
         pauseGame(): void;
         /**结束暂停*/
@@ -538,6 +538,8 @@ declare namespace airkit {
         static RESIZE: string;
         static BEGIN_MODULE: string;
         static END_MODULE: string;
+        static ENTER_MODULE: string;
+        static EXIT_MODULE: string;
         static UI_OPEN: string;
         static UI_CLOSE: string;
         static UI_LANG: string;
@@ -852,7 +854,8 @@ declare namespace airkit {
         name: string;
         constructor();
         setup(args: number): void;
-        start(): void;
+        enter(): void;
+        exit(): void;
         update(dt: number): void;
         protected registerEvent(): void;
         protected unRegisterEvent(): void;
@@ -1121,15 +1124,12 @@ declare namespace airkit {
         private _viewID;
         private static __ViewIDSeq;
         constructor();
-        createPanel(pkgName: string, resName: string): void;
         debug(): void;
         /**打开*/
         setup(args: any): void;
         /**关闭*/
         dispose(): void;
         isDestory(): boolean;
-        panel(): fgui.GComponent;
-        bg(): fgui.GComponent;
         /**是否可见*/
         setVisible(bVisible: boolean): void;
         /**设置界面唯一id，只在UIManager设置，其他地方不要再次设置*/
@@ -1142,7 +1142,6 @@ declare namespace airkit {
         onDestroy(): void;
         /**每帧循环：如果覆盖，必须调用super.update()*/
         update(dt: number): boolean;
-        getGObject(name: string): fgui.GObject;
         /**资源加载结束*/
         onEnter(): void;
         /**多语言初始化，或语音设定改变时触发*/
@@ -1155,7 +1154,10 @@ declare namespace airkit {
             ["res/image/3.png", Laya.Loader.IMAGE],
         ]
     */
-        static res(): Array<[string, cc.Asset]>;
+        static res(): Array<{
+            url: string;
+            type: typeof cc.Asset;
+        }>;
         static unres(): void;
         static loaderTips(): string;
         static loaderType(): number;
@@ -1217,8 +1219,6 @@ declare namespace airkit {
         update(dt: number): boolean;
         loadResource(group: string, clas: any): Promise<any>;
         removeFromParent(): void;
-        panel(): fgui.GComponent;
-        bg(): fgui.GComponent;
     }
 }
 /**
@@ -1241,11 +1241,7 @@ declare namespace airkit {
         static BG_WIDTH: number;
         static BG_HEIGHT: number;
         private static _root;
-        private static _topLayer;
         private static _loadingLayer;
-        private static _systemLayer;
-        private static _tooltipLayer;
-        private static _popupLayer;
         private static _uiLayer;
         private static _mainLayer;
         private static _bgLayer;
@@ -1266,11 +1262,7 @@ declare namespace airkit {
         static addBg(url: string): fgui.GLoader;
         static get mainLayer(): fgui.GComponent;
         static get uiLayer(): fgui.GComponent;
-        static get popupLayer(): fgui.GComponent;
-        static get tooltipLayer(): fgui.GComponent;
-        static get systemLayer(): fgui.GComponent;
         static get loadingLayer(): fgui.GComponent;
-        static get topLayer(): fgui.GComponent;
     }
 }
 declare namespace airkit {
@@ -1304,14 +1296,12 @@ declare namespace airkit {
      * @time 2017-7-13
      */
     class SceneManager {
-        static scenes: NDictionary<string>;
         /**
          * 注册场景类，存放场景id和name的对应关系
-         * @param scene_type
          * @param name
          * @param cls
          */
-        static registerScene(scene_type: number, name: string, cls: any): any;
+        static register(name: string, cls: any): any;
         private _curScene;
         private static instance;
         static get Instance(): SceneManager;
@@ -1324,7 +1314,7 @@ declare namespace airkit {
         private onChangeScene;
         private onComplete;
         /**进入场景*/
-        gotoScene(scene_type: number, args?: any): void;
+        gotoScene(sceneName: string, args?: any): void;
         private exitScene;
     }
 }

@@ -33,13 +33,13 @@ namespace airkit {
         public static BG_WIDTH: number = 750;
         public static BG_HEIGHT: number = 1650;
 
-        private static _root: fgui.GComponent; //根容器
+         private static _root: fgui.GComponent; //根容器
 
-        private static _topLayer: Layer; //最高层 固化应用信息
+        // private static _topLayer: Layer; //最高层 固化应用信息
         private static _loadingLayer: Layer; //loading层
-        private static _systemLayer: Layer; //system层
-        private static _tooltipLayer: Layer; //提示层
-        private static _popupLayer: Layer; //弹出层
+        // private static _systemLayer: Layer; //system层
+        // private static _tooltipLayer: Layer; //提示层
+        // private static _popupLayer: Layer; //弹出层
         private static _uiLayer: Layer; //ui层		角色信息、快捷菜单、聊天等工具视图
         private static _mainLayer: Layer; //游戏层		游戏主内容
         private static _bgLayer: Layer; //背景层
@@ -65,21 +65,21 @@ namespace airkit {
                 case eUILayer.GUI:
                     layer = this.uiLayer;
                     break;
-                case eUILayer.POPUP:
-                    layer = this.popupLayer;
-                    break;
-                case eUILayer.TOOLTIP:
-                    layer = this.tooltipLayer;
-                    break;
-                case eUILayer.SYSTEM:
-                    layer = this.systemLayer;
-                    break;
+                // case eUILayer.POPUP:
+                //     layer = this.popupLayer;
+                //     break;
+                // case eUILayer.TOOLTIP:
+                //     layer = this.tooltipLayer;
+                //     break;
+                // case eUILayer.SYSTEM:
+                //     layer = this.systemLayer;
+                //     break;
                 case eUILayer.LOADING:
                     layer = this.loadingLayer;
                     break;
-                case eUILayer.TOP:
-                    layer = this.topLayer;
-                    break;
+                // case eUILayer.TOP:
+                //     layer = this.topLayer;
+                //     break;
             }
 
             if (
@@ -106,11 +106,11 @@ namespace airkit {
             this._root.addChild(this._mainLayer);
             this._mainLayer.sortingOrder = 2;
 
-            this._tooltipLayer = new Layer();
-            this._tooltipLayer.node.name = "tooltipLayer";
-            this._tooltipLayer.touchable = false;
-            this._root.addChild(this._tooltipLayer);
-            this._tooltipLayer.sortingOrder = 3;
+            // this._tooltipLayer = new Layer();
+            // this._tooltipLayer.node.name = "tooltipLayer";
+            // this._tooltipLayer.touchable = false;
+            // this._root.addChild(this._tooltipLayer);
+            // this._tooltipLayer.sortingOrder = 3;
 
             this._uiLayer = new Layer();
             this._uiLayer.node.name = "uiLayer";
@@ -118,17 +118,17 @@ namespace airkit {
             this._root.addChild(this._uiLayer);
             this._uiLayer.sortingOrder = 4;
 
-            this._popupLayer = new Layer();
-            this._popupLayer.node.name = "popupLayer";
-            this._popupLayer.touchable = true;
-            this._root.addChild(this._popupLayer);
-            this._popupLayer.sortingOrder = 5;
+            // this._popupLayer = new Layer();
+            // this._popupLayer.node.name = "popupLayer";
+            // this._popupLayer.touchable = true;
+            // this._root.addChild(this._popupLayer);
+            // this._popupLayer.sortingOrder = 5;
 
-            this._systemLayer = new Layer();
-            this._systemLayer.node.name = "systemLayer";
-            this._systemLayer.touchable = true;
-            this._root.addChild(this._systemLayer);
-            this._systemLayer.sortingOrder = 6;
+            // this._systemLayer = new Layer();
+            // this._systemLayer.node.name = "systemLayer";
+            // this._systemLayer.touchable = true;
+            // this._root.addChild(this._systemLayer);
+            // this._systemLayer.sortingOrder = 6;
 
             this._loadingLayer = new Layer();
             this._loadingLayer.node.name = "loadingLayer";
@@ -136,21 +136,21 @@ namespace airkit {
             this._root.addChild(this._loadingLayer);
             this._loadingLayer.sortingOrder = 1001;
 
-            this._topLayer = new Layer();
-            this._topLayer.node.name = "topLayer";
-            this._topLayer.touchable = true;
-            this._root.addChild(this._topLayer);
-            this._topLayer.sortingOrder = 1002;
+            // this._topLayer = new Layer();
+            // this._topLayer.node.name = "topLayer";
+            // this._topLayer.touchable = true;
+            // this._root.addChild(this._topLayer);
+            // this._topLayer.sortingOrder = 1002;
 
             this.layers = [
                 this._bgLayer,
                 this._mainLayer,
                 this._uiLayer,
-                this._popupLayer,
-                this._tooltipLayer,
-                this._systemLayer,
+                // this._popupLayer,
+                // this._tooltipLayer,
+                // this._systemLayer,
                 this._loadingLayer,
-                this._topLayer,
+                // this._topLayer,
             ];
 
             this.registerEvent();
@@ -175,7 +175,7 @@ namespace airkit {
             var l: number;
             let w = cc.winSize.width;
             let h = cc.winSize.height;
-            fgui.GRoot.inst.setSize(w, h);
+            this._root.setSize(w, h);
             for (i = 0, l = this.layers.length; i < l; i++) {
                 this.layers[i].setSize(w, h);
                 // this.layers[i].touchable = true
@@ -192,9 +192,9 @@ namespace airkit {
 
             let needUpChilds = [
                 this._uiLayer,
-                this._popupLayer,
-                this._systemLayer,
-                this._topLayer,
+                // this._popupLayer,
+                // this._systemLayer,
+                // this._topLayer,
                 this._loadingLayer,
             ];
             for (let i = 0; i < needUpChilds.length; i++) {
@@ -214,14 +214,14 @@ namespace airkit {
 
         public static destroy(): void {
             LayerManager.removeAll();
-            DisplayUtils.removeAllChild(this._topLayer);
+         //   DisplayUtils.removeAllChild(this._topLayer);
             DisplayUtils.removeAllChild(this._root);
 
-            this._topLayer = null; //最高层
+         //   this._topLayer = null; //最高层
             this._loadingLayer = null; //loading层
-            this._systemLayer = null; //system层
-            this._tooltipLayer = null; //提示层
-            this._popupLayer = null; //弹出层
+        //    this._systemLayer = null; //system层
+       //     this._tooltipLayer = null; //提示层
+       //     this._popupLayer = null; //弹出层
             this._uiLayer = null; //ui层		角色信息、快捷菜单、聊天等工具视图
             this._mainLayer = null; //游戏层		游戏主内容
             this._bgLayer = null;
@@ -230,9 +230,9 @@ namespace airkit {
             DisplayUtils.removeAllChild(this._bgLayer);
             DisplayUtils.removeAllChild(this._mainLayer);
             DisplayUtils.removeAllChild(this._uiLayer);
-            DisplayUtils.removeAllChild(this._popupLayer);
-            DisplayUtils.removeAllChild(this._tooltipLayer);
-            DisplayUtils.removeAllChild(this._systemLayer);
+            // DisplayUtils.removeAllChild(this._popupLayer);
+            // DisplayUtils.removeAllChild(this._tooltipLayer);
+            // DisplayUtils.removeAllChild(this._systemLayer);
             DisplayUtils.removeAllChild(this._loadingLayer);
         }
         public static get root(): fgui.GComponent {
@@ -269,24 +269,24 @@ namespace airkit {
             return this._uiLayer;
         }
 
-        public static get popupLayer(): fgui.GComponent {
-            return this._popupLayer;
-        }
+        // public static get popupLayer(): fgui.GComponent {
+        //     return this._popupLayer;
+        // }
 
-        public static get tooltipLayer(): fgui.GComponent {
-            return this._tooltipLayer;
-        }
+        // public static get tooltipLayer(): fgui.GComponent {
+        //     return this._tooltipLayer;
+        // }
 
-        public static get systemLayer(): fgui.GComponent {
-            return this._systemLayer;
-        }
+        // public static get systemLayer(): fgui.GComponent {
+        //     return this._systemLayer;
+        // }
 
         public static get loadingLayer(): fgui.GComponent {
             return this._loadingLayer;
         }
 
-        public static get topLayer(): fgui.GComponent {
-            return this._topLayer;
-        }
+        // public static get topLayer(): fgui.GComponent {
+        //     return this._topLayer;
+        // }
     }
 }

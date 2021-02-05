@@ -10,7 +10,7 @@
   "codeGeneration": {
     "allowGenCode": true,
     "codePath": "../demo/assets/Script/app/gen/ui",
-    "classNamePrefix": "",
+    "classNamePrefix": "UI",
     "memberNamePrefix": "m_",
     "packageName": "app",
     "ignoreNoname": true,

@@ -1,13 +1,13 @@
 /** This is an automatically generated class by FairyGUI. Please do not modify it. **/
 
-import HomeDlg from "./HomeDlg";
-import HomeScene from "./HomeScene";
-import OrderItem from "./OrderItem";
+import UIHomeDlg from "./UIHomeDlg";
+import UIHomeScene from "./UIHomeScene";
+import UIOrderItem from "./UIOrderItem";
 
 export default class HomeBinder {
 	public static bindAll():void {
-		fgui.UIObjectFactory.setExtension(HomeDlg.URL, HomeDlg);
-		fgui.UIObjectFactory.setExtension(HomeScene.URL, HomeScene);
-		fgui.UIObjectFactory.setExtension(OrderItem.URL, OrderItem);
+		fgui.UIObjectFactory.setExtension(UIHomeDlg.URL, UIHomeDlg);
+		fgui.UIObjectFactory.setExtension(UIHomeScene.URL, UIHomeScene);
+		fgui.UIObjectFactory.setExtension(UIOrderItem.URL, UIOrderItem);
 	}
 }

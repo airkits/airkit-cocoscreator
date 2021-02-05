@@ -28,36 +28,36 @@ namespace airkit {
         public onEnter(): void {
             super.onEnter();
 
-            this.createPanel(this.pkgName, this.resName);
+          //  this.createPanel(this.pkgName, this.resName);
 
-            let panel = this.panel();
-            if (panel) {
-                DisplayUtils.popup(panel, Handler.create(this, this.onOpen));
-                //  this.panel().displayObject.cacheAs = "bitmap";
-                this.closeBtn = this.closeButton();
-                if (this.closeBtn) {
-                    this.closeBtn.visible = false;
-                }
-            }
+           // let panel = this.panel();
+            // if (panel) {
+            //     DisplayUtils.popup(panel, Handler.create(this, this.onOpen));
+            //     //  this.panel().displayObject.cacheAs = "bitmap";
+            //     this.closeBtn = this.closeButton();
+            //     if (this.closeBtn) {
+            //         this.closeBtn.visible = false;
+            //     }
+            // }
 
             TimerManager.Instance.addOnce(250, this, this.setupTouchClose);
         }
         public onOpen(): void {}
         public closeButton(): fgui.GButton {
-            let btn = this.panel().getChild("closeBtn");
-            if (btn != null) return btn.asButton;
+            // let btn = this.panel().getChild("closeBtn");
+            // if (btn != null) return btn.asButton;
             return null;
         }
         public setupTouchClose() {
-            let bg = this.bg();
-            if (bg && this.bgTouch) {
-                bg.touchable = true;
-                bg.onClick(this.onClose, this);
-            }
-            if (this.closeBtn) {
-                this.closeBtn.visible = true;
-                this.closeBtn.onClick(this.pressClose, this);
-            }
+            // let bg = this.bg();
+            // if (bg && this.bgTouch) {
+            //     bg.touchable = true;
+            //     bg.onClick(this.onClose, this);
+            // }
+            // if (this.closeBtn) {
+            //     this.closeBtn.visible = true;
+            //     this.closeBtn.onClick(this.pressClose, this);
+            // }
         }
 
         public pressClose() {

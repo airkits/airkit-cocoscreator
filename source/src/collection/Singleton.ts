@@ -5,12 +5,12 @@ namespace airkit {
    * @author ankye
    * @time 2018-7-6
    */
-  export class Singleton extends cc.Node {
+  export class Singleton {
     private static classKeys: Function[] = [];
     private static classValues: any[] = [];
 
     constructor() {
-      super();
+  
       let clazz: any = this["constructor"];
       //为空时，表示浏览器不支持这样读取构造函数
       if (!clazz) {

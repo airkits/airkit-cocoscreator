@@ -10,7 +10,6 @@ namespace airkit {
    * @author ankye
    * @time 2018-7-11
    */
-
   export class TimerManager extends Singleton {
     private _idCounter: number = 0;
     private _removalPending: Array<number> = [];
@@ -27,7 +26,6 @@ namespace airkit {
     }
 
     public destroy(): boolean {
-      super.destroy();
       ArrayUtils.clear(this._removalPending);
       ArrayUtils.clear(this._timers);
       return true;
@@ -35,7 +33,7 @@ namespace airkit {
 
     public update(dt: number): void {
       this.remove();
-
+     
       for (let i = 0; i < this._timers.length; i++) {
         this._timers[i].update(dt);
         if (this._timers[i].isActive == false) {
@@ -156,7 +154,7 @@ namespace airkit {
     }
 
     public update(dt: number): void {
-      if (this.isActive && this.mTime.update(Timer.deltaTimeMS)) {
+      if (this.isActive && this.mTime.update(dt)) {
         if (this.handle != null) this.handle.run();
 
         this.mTicksElapsed++;

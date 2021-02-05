@@ -8,7 +8,7 @@ namespace airkit {
 
         //两帧之间的时间间隔,单位毫秒
         public static get deltaTimeMS(): number {
-            return cc.director.getDeltaTime();
+            return cc.director.getDeltaTime()*1000;
         }
         /**游戏启动后，经过的帧数*/
         public static get frameCount(): number {

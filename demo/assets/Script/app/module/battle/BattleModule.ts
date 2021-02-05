@@ -10,10 +10,11 @@ export default class BattleModule extends airkit.BaseModule {
         super.setup(args)
     }
 
-    public start(): void {
-        super.start()
-        airkit.Log.info("Module battle start")
+    public enter(): void {
+        super.enter()
+        airkit.Log.info("Module battle enter")
     }
+
 
     public enterScene(): void {
        // airkit.SceneManager.Instance.gotoScene(SceneID.LOGIN_SCENE)
@@ -25,7 +26,7 @@ export default class BattleModule extends airkit.BaseModule {
     }
 
 
-    public res(): Array<[string, string]> {
+    public res(): Array<{ url: string; type: typeof cc.Asset }> {
         let assets = [
 
         ]
