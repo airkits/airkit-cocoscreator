@@ -6,7 +6,7 @@
         "skipLibCheck": true,
         "outFile": "./gairkit.js",
         "declaration": true,
-        "sourceMap": true,
+        "sourceMap": false,
         "removeComments": false,
         "experimentalDecorators": true
     },

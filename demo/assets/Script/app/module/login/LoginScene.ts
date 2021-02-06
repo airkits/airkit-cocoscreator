@@ -9,19 +9,35 @@ import UILoginScene from '../../gen/ui/Loader/UILoginScene';
  * @author ankye
  * @time 2017-7-14
  */
-export default class LoginScene extends UILoginScene {
+export default class LoginScene extends airkit.BaseView{
 
+    _scene: UILoginScene;
+
+   
     constructor() {
         super()
+       
+    }
+
+    public setName(name:string):void {
+        this.name = name;
+    }
+    public get sceneView() : UILoginScene {
+        if(!this._scene){
+             this._scene = UILoginScene.createInstance();
+             this.addChild(this._scene)
+        }
+        return this._scene;
     }
 
     onEnter(): void {
-        airkit.Log.info("login scene onEnter")
+        airkit.Log.info("login scene onEnter");
+        
     }
 
-    public res(): Array<{ url: string; type: typeof cc.Asset }> {
+    public static res(): Array<{ url: string; type: typeof cc.Asset }> {
         let res = [];
-        let resMap = LoginScene.ResMap;
+        let resMap = UILoginScene.ResMap;
         for (let k in resMap) {
             res.push({ url: "ui/" + k, type: airkit.FguiAsset });
             for (let k2 in resMap[k]) {

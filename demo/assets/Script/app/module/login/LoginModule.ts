@@ -1,3 +1,4 @@
+import { eSceneType } from "../../common/SceneType"
 
 
 export default class LoginModule extends airkit.BaseModule {
@@ -16,7 +17,7 @@ export default class LoginModule extends airkit.BaseModule {
     }
 
     public enterScene(): void {
-       // airkit.SceneManager.Instance.gotoScene(SceneID.LOGIN_SCENE)
+       airkit.SceneManager.Instance.gotoScene(eSceneType.LOGIN)
     }
 
 

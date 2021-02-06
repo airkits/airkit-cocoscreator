@@ -29,6 +29,7 @@ export default class Main extends cc.Component {
         airkit.TimerManager.Instance.addLoop(1000,20,this,()=>{ console.log("timer loop fire")});
         M.register();
         airkit.SceneManager.register(eSceneType.LOGIN,LoginScene)
+
         let res = [
             // { url: "ui/Loader", type: airkit.FguiAsset }, //描述文件
             // { url: "ui/Loader_atlas0", type: cc.BufferAsset }, //纹理集
@@ -42,18 +43,18 @@ export default class Main extends cc.Component {
         //         res.push({ url: "ui/" + k2, type: cc.BufferAsset });
         //     }
         // }
-        airkit.ResourceManager.Instance.loadArrayRes(res).then((v) => {
+       // airkit.ResourceManager.Instance.loadArrayRes(res).then((v) => {
             //     //都加载完毕后再调用addPackage
-            console.log(v);
+          
           //  let view: fgui.GComponent = LoginScene.createInstance(); //fgui.UIPackage.createObject("Loader", "LoginDlg").asCom;
 
             // fgui.GRoot.inst.addChild(view);
             // view.makeFullScreen();
-            airkit.ResourceManager.Instance.dump();
+         //   airkit.ResourceManager.Instance.dump();
             M.login().then(v=>{
                 v.enterScene();
             })
-        });
+      //  });
         // if (isWX()) {
         //     Platform.init(ePlatform.WX, "wxec644f0c4e2cb275", "wx");
         //     GetPlatform().createAuthButton(

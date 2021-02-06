@@ -16,7 +16,7 @@ namespace airkit {
      * @time 2017-7-13
      */
     export class SceneManager {
-      //  public static scenes: NDictionary<string> = new NDictionary<string>();
+        public static scenes: SDictionary<any> = new SDictionary<any>();
         /**
          * 注册场景类，存放场景id和name的对应关系
          * @param name
@@ -26,8 +26,8 @@ namespace airkit {
             name: string,
             cls: any
         ): any {
-          //  SceneManager.scenes.add(scene_type, name);
-            ClassUtils.regClass(name, cls);
+           SceneManager.scenes.add(name, cls);
+           ClassUtils.regClass(name, cls);
         }
 
         private _curScene: BaseView;
@@ -93,24 +93,25 @@ namespace airkit {
         /**进入场景*/
         public gotoScene(sceneName: string, args?: any): void {
             this.exitScene();
-          //  let sceneName = SceneManager.scenes.getValue(scene_type);
+           // let clas = SceneManager.scenes.getValue(sceneName);
             //切换
+
             let clas = ClassUtils.getClass(sceneName);
 
             let scene = new clas();
-            scene["__scene_type__"] = sceneName;
-            scene.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
+         //   scene["__scene_type__"] = sceneName;
+            scene.setName(sceneName);
             scene.setup(args);
-            scene
-                .loadResource(ResourceManager.DefaultGroup, clas)
+            scene.loadResource(ResourceManager.DefaultGroup, clas)
                 .then((v) => {
                     this.onComplete(v);
+                    LayerManager.mainLayer.addChild(scene);
                 })
                 .catch((e) => {
                     Log.error(e);
                 });
 
-            LayerManager.mainLayer.addChild(scene);
+            
         }
 
         private exitScene(): void {

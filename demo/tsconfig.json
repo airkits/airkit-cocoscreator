@@ -4,7 +4,7 @@
     "lib": [ "es2015", "es2017", "dom" ],
     "target": "es6",
     "experimentalDecorators": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "skipLibCheck": true,
     "outDir": "temp/vscode-dist",
     "forceConsistentCasingInFileNames": true

@@ -1296,6 +1296,7 @@ declare namespace airkit {
      * @time 2017-7-13
      */
     class SceneManager {
+        static scenes: SDictionary<any>;
         /**
          * 注册场景类，存放场景id和name的对应关系
          * @param name

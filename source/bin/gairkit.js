@@ -4436,14 +4436,13 @@ window.ak = window.airkit;
      * @time 2017-7-13
      */
     class SceneManager {
-        //  public static scenes: NDictionary<string> = new NDictionary<string>();
         /**
          * 注册场景类，存放场景id和name的对应关系
          * @param name
          * @param cls
          */
         static register(name, cls) {
-            //  SceneManager.scenes.add(scene_type, name);
+            SceneManager.scenes.add(name, cls);
             airkit.ClassUtils.regClass(name, cls);
         }
         static get Instance() {
@@ -4493,22 +4492,21 @@ window.ak = window.airkit;
         /**进入场景*/
         gotoScene(sceneName, args) {
             this.exitScene();
-            //  let sceneName = SceneManager.scenes.getValue(scene_type);
+            // let clas = SceneManager.scenes.getValue(sceneName);
             //切换
             let clas = airkit.ClassUtils.getClass(sceneName);
             let scene = new clas();
-            scene["__scene_type__"] = sceneName;
-            scene.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
+            //   scene["__scene_type__"] = sceneName;
+            scene.setName(sceneName);
             scene.setup(args);
-            scene
-                .loadResource(airkit.ResourceManager.DefaultGroup, clas)
+            scene.loadResource(airkit.ResourceManager.DefaultGroup, clas)
                 .then((v) => {
                 this.onComplete(v);
+                airkit.LayerManager.mainLayer.addChild(scene);
             })
                 .catch((e) => {
                 airkit.Log.error(e);
             });
-            airkit.LayerManager.mainLayer.addChild(scene);
         }
         exitScene() {
             if (this._curScene) {
@@ -4526,6 +4524,7 @@ window.ak = window.airkit;
             }
         }
     }
+    SceneManager.scenes = new airkit.SDictionary();
     SceneManager.instance = null;
     airkit.SceneManager = SceneManager;
 })(airkit || (airkit = {}));
@@ -7767,5 +7766,3 @@ window.ak = window.airkit;
     }
     airkit.ZipUtils = ZipUtils;
 })(airkit || (airkit = {}));
-
-//# sourceMappingURL=gairkit.js.map
