@@ -31,7 +31,14 @@ namespace airkit {
             this._destory = false;
             this._viewID = BaseView.__ViewIDSeq++;
         }
+        
+        public setName(name:string):void {
+            this.name = name;
+        }
 
+        public getName():string {
+            return this.name;
+        }
  
 
         public debug(): void {
@@ -105,19 +112,20 @@ namespace airkit {
        
         /**资源加载结束*/
         public onEnter(): void {}
-
+        //资源卸载前
+        public onExit():void {}
         /**多语言初始化，或语音设定改变时触发*/
         public onLangChange(): void {}
 
         /**需要提前加载的资源
      * 例:
      *  return [
-            ["res/image/1.png", Laya.Loader.IMAGE],
-            ["res/image/2.png", Laya.Loader.IMAGE],
-            ["res/image/3.png", Laya.Loader.IMAGE],
+            [url:"res/image/1.png", Laya.Loader.IMAGE],
+            [url:"res/image/2.png", Laya.Loader.IMAGE],
+            [url:"res/image/3.png", Laya.Loader.IMAGE],
         ]
     */
-        public static res():  Array<{ url: string; type: typeof cc.Asset }> {
+        public static res():  Array<Res> {
             return null;
         }
 
@@ -125,7 +133,7 @@ namespace airkit {
             let arr = this.res();
             if (arr && arr.length > 0) {
                 for (let i = 0; i < arr.length; i++) {
-                    ResourceManager.Instance.clearRes(arr[i].url);
+                    ResourceManager.Instance.clearRes(arr[i].url,arr[i].refCount);
                 }
             }
         }
@@ -170,13 +178,13 @@ namespace airkit {
         protected staticCacheUI(): any[] {
             return null;
         }
-
+        
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～内部方法～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**处理需要提前加载的资源,手动创建的view需要手动调用*/
-        public loadResource(group: string, clas: any): Promise<any> {
-            return new Promise((resolve, reject) => {
+        public static loadResource(group: string,onAssetLoaded:(v:boolean)=>void): void {
+
                 let assets = [];
-                let res_map = clas.res();
+                let res_map = this.res();
                 if (res_map && res_map.length > 0) {
                     for (let i = 0; i < res_map.length; ++i) {
                         let res = res_map[i];
@@ -186,9 +194,9 @@ namespace airkit {
                     }
                 }
                 if (assets.length > 0) {
-                    let tips = clas.loaderTips();
-                    let loaderType = clas.loaderType();
-                    ResourceManager.Instance.loadArrayRes(
+                    let tips = this.loaderTips();
+                    let loaderType = this.loaderType();
+                ResourceManager.Instance.loadArrayRes(
                         assets,
                         loaderType,
                         tips,
@@ -197,25 +205,19 @@ namespace airkit {
                         group
                     )
                         .then((v) => {
-                            this.onAssetLoaded();
-                            resolve(this);
-
-                            this.onEnter();
+                            onAssetLoaded(true);
+                          
                         })
                         .catch((e) => {
                             Log.error(e);
-                            reject(e);
+                           onAssetLoaded(false);
                         });
                 } else {
-                    this.onAssetLoaded();
-                    resolve(this);
-                    this.onEnter();
+                    onAssetLoaded(true);
                 }
-            });
+       
         }
-        public onAssetLoaded(): void {
-            if (!this._isOpen) return;
-        }
+   
         private registerSignalEvent(): void {
             let event_list: Array<any> = this.signalMap();
             if (!event_list) return;
@@ -251,6 +253,16 @@ namespace airkit {
                 let gui_control = <cc.Node>item[0];
                 gui_control.off(item[1], item[2], this);
             }
+        }
+        protected static buildRes(resMap:{ [index: string]: {} }):Array<Res> {
+            let res = [];
+            for (let k in resMap) {
+                res.push({ url: "ui/" + k, type: airkit.FguiAsset,refCount:1 });
+                for (let k2 in resMap[k]) {
+                    res.push({ url: "ui/" + k2, type: airkit.FguiAtlas,refCount:resMap[k][k2] });
+                }
+            }
+            return res;
         }
         public doClose(): boolean {
             if (this._isOpen === false) {

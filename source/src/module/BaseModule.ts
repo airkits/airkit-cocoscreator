@@ -32,15 +32,8 @@ namespace airkit {
             this.unregisterSignalEvent();
         }
 
-        /**需要提前加载的资源
-     * 例:
-     *  return [
-            ["res/image/1.png", Laya.Loader.IMAGE],
-            ["res/image/2.png", Laya.Loader.IMAGE],
-            ["res/image/3.png", Laya.Loader.IMAGE],
-        ]
-    */
-        public static res(): Array<any> {
+        //需要提前加载的资源
+        public static res(): Array<Res> {
             return null;
         }
 

@@ -73,8 +73,8 @@ namespace airkit {
             super.dispose();
             if (this.callback != null) this.callback();
         }
-        public loadResource(group: string, clas: any): Promise<any> {
-            return super.loadResource(group, clas);
+        public static loadResource(group: string,onAssetLoaded:(v:boolean)=>void): void {
+            return super.loadResource(group, onAssetLoaded);
         }
     }
 }

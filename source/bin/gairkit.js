@@ -1301,7 +1301,7 @@ window.ak = window.airkit;
             if (this._zip) {
             }
             else {
-                airkit.ResourceManager.Instance.clearRes(url);
+                airkit.ResourceManager.Instance.clearRes(url, 1);
             }
             this._dicTemplate.remove(url);
         }
@@ -2582,6 +2582,9 @@ window.ak = window.airkit;
     class FguiAsset extends cc.BufferAsset {
     }
     airkit.FguiAsset = FguiAsset;
+    class FguiAtlas extends cc.BufferAsset {
+    }
+    airkit.FguiAtlas = FguiAtlas;
     class ResourceManager extends airkit.Singleton {
         constructor() {
             super(...arguments);
@@ -2609,7 +2612,7 @@ window.ak = window.airkit;
         destroy() {
             if (this._dicResInfo) {
                 this._dicResInfo.foreach((k, v) => {
-                    ResourceManager.Instance.clearRes(k);
+                    ResourceManager.Instance.clearRes(k, v.ref);
                     return true;
                 });
                 this._dicResInfo.clear();
@@ -2641,7 +2644,7 @@ window.ak = window.airkit;
          * @param	ignoreCache 是否忽略缓存，强制重新加载
          * @return 	结束回调(参数：string 加载的资源url)
          */
-        loadRes(url, type, viewType = airkit.LOADVIEW_TYPE_NONE, priority = 1, cache = true, group = "default", ignoreCache = false) {
+        loadRes(url, type, refCount = 1, viewType = airkit.LOADVIEW_TYPE_NONE, priority = 1, cache = true, group = "default", ignoreCache = false) {
             //添加到加载目录
             if (viewType == null)
                 viewType = airkit.LOADVIEW_TYPE_NONE;
@@ -2656,23 +2659,25 @@ window.ak = window.airkit;
             }
             let resInfo = this._dicResInfo.getValue(url);
             if (!resInfo) {
-                resInfo = new ResInfo(url, type, group);
+                resInfo = new ResInfo(url, type, refCount, group);
                 this._dicResInfo.set(url, resInfo);
+                resInfo.updateStatus(eLoaderStatus.LOADING);
             }
-            resInfo.incRef();
-            resInfo.updateStatus(eLoaderStatus.LOADING);
+            else {
+                resInfo.incRef(refCount);
+            }
             return new Promise((resolve, reject) => {
                 cc.resources.load(url, type, (completedCount, totalCount, item) => {
                     this.onLoadProgress(viewType, totalCount, "", completedCount / totalCount);
                 }, (error, resource) => {
                     if (error) {
                         resInfo.updateStatus(eLoaderStatus.READY);
-                        resInfo.decRef();
+                        resInfo.decRef(refCount);
                         reject(url);
                         return;
                     }
                     resInfo.updateStatus(eLoaderStatus.LOADED);
-                    this.onLoadComplete(viewType, [url], [type], "");
+                    this.onLoadComplete(viewType, [url], [{ url: url, type: type, refCount: 1 }], "");
                     resolve(url);
                 });
             });
@@ -2691,20 +2696,27 @@ window.ak = window.airkit;
         loadArrayRes(arr_res, viewType = airkit.LOADVIEW_TYPE_NONE, tips = null, priority = 1, cache = true, group = "default", ignoreCache = false) {
             let has_unload = false;
             let urls = [];
-            let types = new Array();
             if (viewType == null)
                 viewType = airkit.LOADVIEW_TYPE_NONE;
             if (priority == null)
                 priority = 1;
             if (cache == null)
                 cache = true;
-            for (let res of arr_res) {
-                urls.push(res.url);
-                types.push(res.type);
-                //判断是否有未加载资源
-                if (!has_unload && !cc.resources.get(res.url))
+            for (let i = 0; i < arr_res.length; i++) {
+                let res = arr_res[i];
+                if (!this.getRes(res.url)) {
+                    urls.push(res.url);
                     has_unload = true;
-                //添加到加载目录
+                }
+                let resInfo = this._dicResInfo.getValue(res.url);
+                if (!resInfo) {
+                    resInfo = new ResInfo(res.url, res.type, res.refCount, group);
+                    this._dicResInfo.set(res.url, resInfo);
+                }
+                else {
+                    resInfo.incRef(res.refCount);
+                    resInfo.updateStatus(eLoaderStatus.LOADING);
+                }
             }
             //判断是否需要显示加载界面
             if (!has_unload && viewType != airkit.LOADVIEW_TYPE_NONE) {
@@ -2714,15 +2726,6 @@ window.ak = window.airkit;
             if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                 airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, urls.length, tips);
             }
-            for (let i = 0; i < urls.length; i++) {
-                let resInfo = this._dicResInfo.getValue(urls[i]);
-                if (!resInfo) {
-                    resInfo = new ResInfo(urls[i], types[i], group);
-                    this._dicResInfo.set(urls[i], resInfo);
-                }
-                resInfo.incRef();
-                resInfo.updateStatus(eLoaderStatus.LOADING);
-            }
             return new Promise((resolve, reject) => {
                 cc.resources.load(urls, (completedCount, totalCount, item) => {
                     this.onLoadProgress(viewType, totalCount, tips, completedCount / totalCount);
@@ -2731,7 +2734,7 @@ window.ak = window.airkit;
                         for (let i = 0; i < urls.length; i++) {
                             let resInfo = this._dicResInfo.getValue(urls[i]);
                             if (resInfo) {
-                                resInfo.decRef();
+                                resInfo.decRef(arr_res[i].refCount);
                                 resInfo.updateStatus(eLoaderStatus.READY);
                             }
                         }
@@ -2746,12 +2749,12 @@ window.ak = window.airkit;
                     }
                     if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                         airkit.TimerManager.Instance.addOnce(this._minLoaderTime, null, (v) => {
-                            this.onLoadComplete(viewType, urls, types, tips);
+                            this.onLoadComplete(viewType, urls, arr_res, tips);
                             resolve(urls);
                         });
                     }
                     else {
-                        this.onLoadComplete(viewType, urls, types, tips);
+                        this.onLoadComplete(viewType, urls, arr_res, tips);
                         resolve(urls);
                     }
                 });
@@ -2763,12 +2766,12 @@ window.ak = window.airkit;
          * @param 	handle 		加载时，传入的回调函数
          * @param 	args		第一个参数为加载的资源url列表；第二个参数为是否加载成功
          */
-        onLoadComplete(viewType, urls, types, tips) {
+        onLoadComplete(viewType, urls, arr_res, tips) {
             //显示加载日志
             if (urls) {
                 let arr = urls;
                 for (let i = 0; i < urls.length; i++) {
-                    if (types[i] == airkit.FguiAsset) {
+                    if (arr_res[i].type == airkit.FguiAsset) {
                         fgui.UIPackage.addPackage(urls[i]);
                     }
                 }
@@ -2795,40 +2798,16 @@ window.ak = window.airkit;
          * 释放指定资源
          * @param	url	资源路径
          */
-        clearRes(url) {
+        clearRes(url, refCount) {
             let res = this._dicResInfo.getValue(url);
             if (res) {
-                res.decRef();
+                res.decRef(refCount);
             }
         }
         releaseRes(url) {
             this._dicResInfo.remove(url);
             cc.resources.release(url);
             airkit.Log.info("[res]释放资源:" + url);
-        }
-        createFuiAnim(pkgName, resName, path, group = "default") {
-            return new Promise((resolve, reject) => {
-                let atlas = path + "_atlas0";
-                let bin = path;
-                let res = ResourceManager.Instance.getRes(atlas);
-                if (res == null) {
-                    ResourceManager.Instance.loadArrayRes([
-                        { url: atlas, type: cc.BufferAsset },
-                        { url: bin, type: FguiAsset },
-                    ], null, null, 0, true, group)
-                        .then((v) => {
-                        let obj = fgui.UIPackage.createObject(pkgName, resName);
-                        resolve(obj.asCom);
-                    })
-                        .catch((e) => {
-                        reject(e);
-                    });
-                }
-                else {
-                    let obj = fgui.UIPackage.createObject(pkgName, resName);
-                    resolve(obj.asCom);
-                }
-            });
         }
         /**
          * 图片代理，可以远程加载图片显示
@@ -2882,21 +2861,22 @@ window.ak = window.airkit;
      * 保存加载过的url
      */
     class ResInfo extends airkit.EventDispatcher {
-        constructor(url, type, group) {
+        constructor(url, type, refCount, group) {
             super();
             this.url = url;
-            this.ref = 0;
+            this.ref = refCount;
+            this.type = type;
             this.group = group;
             this.status = eLoaderStatus.READY;
         }
         updateStatus(status) {
             this.status = status;
         }
-        incRef() {
-            this.ref++;
+        incRef(v = 1) {
+            this.ref += v;
         }
-        decRef() {
-            this.ref--;
+        decRef(v = 1) {
+            this.ref -= v;
             if (this.ref <= 0) {
                 if (this.type == FguiAsset) {
                     fgui.UIPackage.removePackage(this.url);
@@ -3021,14 +3001,7 @@ window.ak = window.airkit;
         unRegisterEvent() {
             this.unregisterSignalEvent();
         }
-        /**需要提前加载的资源
-     * 例:
-     *  return [
-            ["res/image/1.png", Laya.Loader.IMAGE],
-            ["res/image/2.png", Laya.Loader.IMAGE],
-            ["res/image/3.png", Laya.Loader.IMAGE],
-        ]
-    */
+        //需要提前加载的资源
         static res() {
             return null;
         }
@@ -3162,7 +3135,7 @@ window.ak = window.airkit;
                 for (let i = 0; i < res_map.length; ++i) {
                     let res = res_map[i];
                     if (!airkit.ResourceManager.Instance.getRes(res[0])) {
-                        assets.push({ url: res[0], type: res[1] });
+                        assets.push({ url: res[0], type: res[1], refCount: res[2] });
                     }
                 }
             }
@@ -3899,6 +3872,12 @@ window.ak = window.airkit;
             this._destory = false;
             this._viewID = BaseView.__ViewIDSeq++;
         }
+        setName(name) {
+            this.name = name;
+        }
+        getName() {
+            return this.name;
+        }
         debug() {
             let bgColor = "#4aa7a688";
             // this.graphics.clear()
@@ -3965,14 +3944,16 @@ window.ak = window.airkit;
         }
         /**资源加载结束*/
         onEnter() { }
+        //资源卸载前
+        onExit() { }
         /**多语言初始化，或语音设定改变时触发*/
         onLangChange() { }
         /**需要提前加载的资源
      * 例:
      *  return [
-            ["res/image/1.png", Laya.Loader.IMAGE],
-            ["res/image/2.png", Laya.Loader.IMAGE],
-            ["res/image/3.png", Laya.Loader.IMAGE],
+            [url:"res/image/1.png", Laya.Loader.IMAGE],
+            [url:"res/image/2.png", Laya.Loader.IMAGE],
+            [url:"res/image/3.png", Laya.Loader.IMAGE],
         ]
     */
         static res() {
@@ -3982,7 +3963,7 @@ window.ak = window.airkit;
             let arr = this.res();
             if (arr && arr.length > 0) {
                 for (let i = 0; i < arr.length; i++) {
-                    airkit.ResourceManager.Instance.clearRes(arr[i].url);
+                    airkit.ResourceManager.Instance.clearRes(arr[i].url, arr[i].refCount);
                 }
             }
         }
@@ -4026,42 +4007,32 @@ window.ak = window.airkit;
         }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～内部方法～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**处理需要提前加载的资源,手动创建的view需要手动调用*/
-        loadResource(group, clas) {
-            return new Promise((resolve, reject) => {
-                let assets = [];
-                let res_map = clas.res();
-                if (res_map && res_map.length > 0) {
-                    for (let i = 0; i < res_map.length; ++i) {
-                        let res = res_map[i];
-                        if (!airkit.ResourceManager.Instance.getRes(res.url)) {
-                            assets.push({ url: res.url, type: res.type });
-                        }
+        static loadResource(group, onAssetLoaded) {
+            let assets = [];
+            let res_map = this.res();
+            if (res_map && res_map.length > 0) {
+                for (let i = 0; i < res_map.length; ++i) {
+                    let res = res_map[i];
+                    if (!airkit.ResourceManager.Instance.getRes(res.url)) {
+                        assets.push({ url: res.url, type: res.type });
                     }
                 }
-                if (assets.length > 0) {
-                    let tips = clas.loaderTips();
-                    let loaderType = clas.loaderType();
-                    airkit.ResourceManager.Instance.loadArrayRes(assets, loaderType, tips, 1, true, group)
-                        .then((v) => {
-                        this.onAssetLoaded();
-                        resolve(this);
-                        this.onEnter();
-                    })
-                        .catch((e) => {
-                        airkit.Log.error(e);
-                        reject(e);
-                    });
-                }
-                else {
-                    this.onAssetLoaded();
-                    resolve(this);
-                    this.onEnter();
-                }
-            });
-        }
-        onAssetLoaded() {
-            if (!this._isOpen)
-                return;
+            }
+            if (assets.length > 0) {
+                let tips = this.loaderTips();
+                let loaderType = this.loaderType();
+                airkit.ResourceManager.Instance.loadArrayRes(assets, loaderType, tips, 1, true, group)
+                    .then((v) => {
+                    onAssetLoaded(true);
+                })
+                    .catch((e) => {
+                    airkit.Log.error(e);
+                    onAssetLoaded(false);
+                });
+            }
+            else {
+                onAssetLoaded(true);
+            }
         }
         registerSignalEvent() {
             let event_list = this.signalMap();
@@ -4099,6 +4070,16 @@ window.ak = window.airkit;
                 let gui_control = item[0];
                 gui_control.off(item[1], item[2], this);
             }
+        }
+        static buildRes(resMap) {
+            let res = [];
+            for (let k in resMap) {
+                res.push({ url: "ui/" + k, type: airkit.FguiAsset, refCount: 1 });
+                for (let k2 in resMap[k]) {
+                    res.push({ url: "ui/" + k2, type: airkit.FguiAtlas, refCount: resMap[k][k2] });
+                }
+            }
+            return res;
         }
         doClose() {
             if (this._isOpen === false) {
@@ -4260,21 +4241,6 @@ window.ak = window.airkit;
                 let y = h - LayerManager.BG_HEIGHT;
                 bg.setPosition(x, y);
             }
-            fgui.GRoot.inst.setSize(w, h);
-            let needUpChilds = [
-                this._uiLayer,
-                // this._popupLayer,
-                // this._systemLayer,
-                // this._topLayer,
-                this._loadingLayer,
-            ];
-            for (let i = 0; i < needUpChilds.length; i++) {
-                let layer = needUpChilds[i];
-                for (let j = 0, l = layer.numChildren; j < l; j++) {
-                    var child = layer.getChildAt(j);
-                    child.setSize(w, h);
-                }
-            }
             // let obj = this._uiLayer
             // obj.node.graphics.clear()
             // obj.node.graphics.drawRect(0, 0, obj.width, obj.height, "#33333333")
@@ -4411,8 +4377,8 @@ window.ak = window.airkit;
             if (this.callback != null)
                 this.callback();
         }
-        loadResource(group, clas) {
-            return super.loadResource(group, clas);
+        static loadResource(group, onAssetLoaded) {
+            return super.loadResource(group, onAssetLoaded);
         }
     }
     airkit.PopupView = PopupView;
@@ -4442,7 +4408,7 @@ window.ak = window.airkit;
          * @param cls
          */
         static register(name, cls) {
-            SceneManager.scenes.add(name, cls);
+            fgui.UIObjectFactory.setExtension(cls.URL, cls);
             airkit.ClassUtils.regClass(name, cls);
         }
         static get Instance() {
@@ -4492,39 +4458,33 @@ window.ak = window.airkit;
         /**进入场景*/
         gotoScene(sceneName, args) {
             this.exitScene();
-            // let clas = SceneManager.scenes.getValue(sceneName);
             //切换
             let clas = airkit.ClassUtils.getClass(sceneName);
-            let scene = new clas();
-            //   scene["__scene_type__"] = sceneName;
-            scene.setName(sceneName);
-            scene.setup(args);
-            scene.loadResource(airkit.ResourceManager.DefaultGroup, clas)
-                .then((v) => {
-                this.onComplete(v);
-                airkit.LayerManager.mainLayer.addChild(scene);
-            })
-                .catch((e) => {
-                airkit.Log.error(e);
+            clas.loadResource(airkit.ResourceManager.DefaultGroup, (v) => {
+                if (v) {
+                    let scene = clas.createInstance();
+                    scene.setName(sceneName);
+                    scene.setup(args);
+                    airkit.LayerManager.mainLayer.addChild(scene);
+                    this.onComplete(scene);
+                    scene.onEnter();
+                    airkit.ResourceManager.Instance.dump();
+                }
             });
         }
         exitScene() {
             if (this._curScene) {
                 //切换
-                let sceneName = //SceneManager.scenes.getValue(
-                 this._curScene["__scene_type__"];
-                // );
+                let sceneName = this._curScene.getName();
+                this._curScene.onExit();
                 let clas = airkit.ClassUtils.getClass(sceneName);
                 clas.unres();
                 this._curScene.removeFromParent();
                 this._curScene.dispose();
                 this._curScene = null;
-                airkit.UIManager.Instance.closeAll();
-                airkit.ObjectPools.clearAll();
             }
         }
     }
-    SceneManager.scenes = new airkit.SDictionary();
     SceneManager.instance = null;
     airkit.SceneManager = SceneManager;
 })(airkit || (airkit = {}));

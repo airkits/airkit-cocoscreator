@@ -36,7 +36,7 @@
     <image id="mdb81x" name="dlg_frame.png" path="/images/" scale="9grid" scale9grid="50,50,24,31"/>
     <image id="mdb81y" name="button_cancel.png" path="/images/"/>
     <image id="mdb81z" name="button_ok.png" path="/images/"/>
-    <component id="mdb820" name="ButtonOk.xml" path="/"/>
+    <component id="mdb820" name="ButtonOk.xml" path="/" exported="true"/>
     <component id="mdb821" name="ButtonCancel.xml" path="/"/>
     <image id="mdb823" name="dlg_close.png" path="/images/"/>
     <image id="mdb824" name="toast.png" path="/images/" scale="9grid" scale9grid="20,20,38,26"/>

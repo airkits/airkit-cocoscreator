@@ -19,9 +19,9 @@
       <item url="ui://21mnfg0cn70mi"/>
       <item url="ui://21mnfg0cn70mi"/>
     </list>
-    <component id="n2_n70m" name="btnBack" src="y3shl" fileName="ButtonBack.xml" xy="24,23">
+    <image id="n2_n70m" name="btnBack" src="n70m3" fileName="images/btn_newBack.png" xy="20,19">
       <relation target="" sidePair="left-left,top-top"/>
-    </component>
+    </image>
     <text id="n3_n70m" name="title" xy="82,30" size="239,36" fontSize="36" color="#874803" autoSize="none" text="我的订单&#xA;">
       <relation target="" sidePair="top-top,left-left"/>
     </text>

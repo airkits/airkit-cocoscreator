@@ -15,7 +15,6 @@ namespace airkit {
     setUIID(id: number): void;
     update(dt: number): boolean;
 
-    loadResource(group: string, clas: any): Promise<any>;
     removeFromParent(): void;
   }
 }

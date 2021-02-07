@@ -21,6 +21,8 @@
     <component id="n70mh" name="HomeScene.xml" path="/" exported="true"/>
     <component id="n70mi" name="OrderItem.xml" path="/" exported="true"/>
     <component id="fqe2j" name="HomeDlg.xml" path="/" exported="true"/>
+    <component id="y3shk" name="BattleScene.xml" path="/" exported="true"/>
+    <component id="y3shl" name="ButtonBack.xml" path="/"/>
   </resources>
   <publish name="Home" path="../demo/assets/resources/ui" packageCount="2" genCode="true"/>
 </packageDescription>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="63,63" pivot="0.5,0.5" extention="Button">
+  <displayList>
+    <image id="n2_n70m" name="btnBack" src="n70m3" fileName="images/btn_newBack.png" xy="0,0">
+      <relation target="" sidePair="left-left,top-top"/>
+    </image>
+  </displayList>
+  <Button downEffect="scale" downEffectValue=".9"/>
+</component>

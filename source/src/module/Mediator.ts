@@ -96,7 +96,7 @@ namespace airkit {
                 for (let i = 0; i < res_map.length; ++i) {
                     let res = res_map[i];
                     if (!ResourceManager.Instance.getRes(res[0])) {
-                        assets.push({ url: res[0], type: res[1] });
+                        assets.push({ url: res[0], type: res[1] ,refCount:res[2]});
                     }
                 }
             }

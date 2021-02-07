@@ -736,6 +736,11 @@ declare namespace airkit {
     }
 }
 declare namespace airkit {
+    interface Res {
+        url: string;
+        type: typeof cc.Asset;
+        refCount: number;
+    }
     /**
      * 资源管理
      * @author ankye
@@ -746,6 +751,8 @@ declare namespace airkit {
     const FONT_SIZE_6 = 25;
     const FONT_SIZE_7 = 29;
     class FguiAsset extends cc.BufferAsset {
+    }
+    class FguiAtlas extends cc.BufferAsset {
     }
     class ResourceManager extends Singleton {
         static FONT_Yuanti: string;
@@ -785,7 +792,7 @@ declare namespace airkit {
          * @param	ignoreCache 是否忽略缓存，强制重新加载
          * @return 	结束回调(参数：string 加载的资源url)
          */
-        loadRes(url: string, type?: typeof cc.Asset, viewType?: number, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<string>;
+        loadRes(url: string, type?: typeof cc.Asset, refCount?: number, viewType?: number, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<string>;
         /**
          * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
          * @param	arr_res 	需要加载的资源数组
@@ -797,17 +804,14 @@ declare namespace airkit {
          * @param	ignoreCache 是否忽略缓存，强制重新加载
          * @return 	结束回调(参数：Array<string>，加载的url数组)
          */
-        loadArrayRes(arr_res: Array<{
-            url: string;
-            type: typeof cc.Asset;
-        }>, viewType?: number, tips?: string, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<string[]>;
+        loadArrayRes(arr_res: Array<Res>, viewType?: number, tips?: string, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<string[]>;
         /**
          * 加载完成
          * @param	viewType	显示的加载界面类型
          * @param 	handle 		加载时，传入的回调函数
          * @param 	args		第一个参数为加载的资源url列表；第二个参数为是否加载成功
          */
-        onLoadComplete(viewType: number, urls: string[], types: Array<typeof cc.Asset>, tips: string): void;
+        onLoadComplete(viewType: number, urls: string[], arr_res: Array<Res>, tips: string): void;
         /**
          * 加载进度
          * @param	viewType	显示的加载界面类型
@@ -819,9 +823,8 @@ declare namespace airkit {
          * 释放指定资源
          * @param	url	资源路径
          */
-        clearRes(url: string): void;
+        clearRes(url: string, refCount: number): void;
         releaseRes(url: string): void;
-        createFuiAnim(pkgName: string, resName: string, path: string, group?: string): Promise<any>;
         /**
          * 图片代理，可以远程加载图片显示
          * @param image
@@ -859,15 +862,7 @@ declare namespace airkit {
         update(dt: number): void;
         protected registerEvent(): void;
         protected unRegisterEvent(): void;
-        /**需要提前加载的资源
-     * 例:
-     *  return [
-            ["res/image/1.png", Laya.Loader.IMAGE],
-            ["res/image/2.png", Laya.Loader.IMAGE],
-            ["res/image/3.png", Laya.Loader.IMAGE],
-        ]
-    */
-        static res(): Array<any>;
+        static res(): Array<Res>;
         static loaderTips(): string;
         /**是否显示加载界面*/
         static loaderType(): number;
@@ -1124,6 +1119,8 @@ declare namespace airkit {
         private _viewID;
         private static __ViewIDSeq;
         constructor();
+        setName(name: string): void;
+        getName(): string;
         debug(): void;
         /**打开*/
         setup(args: any): void;
@@ -1144,20 +1141,18 @@ declare namespace airkit {
         update(dt: number): boolean;
         /**资源加载结束*/
         onEnter(): void;
+        onExit(): void;
         /**多语言初始化，或语音设定改变时触发*/
         onLangChange(): void;
         /**需要提前加载的资源
      * 例:
      *  return [
-            ["res/image/1.png", Laya.Loader.IMAGE],
-            ["res/image/2.png", Laya.Loader.IMAGE],
-            ["res/image/3.png", Laya.Loader.IMAGE],
+            [url:"res/image/1.png", Laya.Loader.IMAGE],
+            [url:"res/image/2.png", Laya.Loader.IMAGE],
+            [url:"res/image/3.png", Laya.Loader.IMAGE],
         ]
     */
-        static res(): Array<{
-            url: string;
-            type: typeof cc.Asset;
-        }>;
+        static res(): Array<Res>;
         static unres(): void;
         static loaderTips(): string;
         static loaderType(): number;
@@ -1182,13 +1177,15 @@ declare namespace airkit {
          */
         protected staticCacheUI(): any[];
         /**处理需要提前加载的资源,手动创建的view需要手动调用*/
-        loadResource(group: string, clas: any): Promise<any>;
-        onAssetLoaded(): void;
+        static loadResource(group: string, onAssetLoaded: (v: boolean) => void): void;
         private registerSignalEvent;
         private unregisterSignalEvent;
         /**注册界面事件*/
         private registeGUIEvent;
         private unregisteGUIEvent;
+        protected static buildRes(resMap: {
+            [index: string]: {};
+        }): Array<Res>;
         doClose(): boolean;
     }
 }
@@ -1217,7 +1214,6 @@ declare namespace airkit {
         /**设置界面唯一id*/
         setUIID(id: number): void;
         update(dt: number): boolean;
-        loadResource(group: string, clas: any): Promise<any>;
         removeFromParent(): void;
     }
 }
@@ -1286,7 +1282,7 @@ declare namespace airkit {
         pressClose(): void;
         onClose(): void;
         dispose(): void;
-        loadResource(group: string, clas: any): Promise<any>;
+        static loadResource(group: string, onAssetLoaded: (v: boolean) => void): void;
     }
 }
 declare namespace airkit {
@@ -1296,7 +1292,6 @@ declare namespace airkit {
      * @time 2017-7-13
      */
     class SceneManager {
-        static scenes: SDictionary<any>;
         /**
          * 注册场景类，存放场景id和name的对应关系
          * @param name

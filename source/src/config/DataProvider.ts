@@ -130,7 +130,7 @@ namespace airkit {
       }
       if (this._zip) {
       } else {
-        ResourceManager.Instance.clearRes(url);
+        ResourceManager.Instance.clearRes(url,1);
       }
 
       this._dicTemplate.remove(url);

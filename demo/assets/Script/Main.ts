@@ -1,8 +1,12 @@
-import { Platform, isWX, GetPlatform } from "./app/platform/Platform";
-import { ePlatform } from "./app/platform/PlatfromType";
-import M from './app/gen/M';
-import LoginScene from "./app/module/login/LoginScene";
-import { eSceneType } from './app/common/SceneType';
+import { Platform, isWX, GetPlatform } from "./game/platform/Platform";
+import { ePlatform } from "./game/platform/PlatfromType";
+import M from './game/gen/M';
+import LoginScene from "./game/module/login/LoginScene";
+import { eSceneType } from './game/common/SceneType';
+import LoaderBinder from './game/gen/ui/Loader/LoaderBinder';
+import HomeBinder from './game/gen/ui/Home/HomeBinder';
+import BattleScene from './game/module/battle/BattleScene';
+import HomeScene from './game/module/home/HomeScene';
 const { ccclass, property } = cc._decorator;
 
 @ccclass
@@ -11,50 +15,18 @@ export default class Main extends cc.Component {
     private _currentDemo: cc.Component;
 
     onLoad() {
+        LoaderBinder.bindAll();
+        HomeBinder.bindAll();
         fgui.GRoot.create();
-
-        // this.node.on("start_demo", this.onDemoStart, this);
-        //  this.addComponent(GameLayer);
-        airkit.Framework.Instance.setup(fgui.GRoot.inst, airkit.LogLevel.DEBUG, cc.winSize.width, cc.winSize.height);
-        // cc.resources.load(
-        //     ["ui/Loader.bin", "ui/Loader_atlas0.png"],
-        //     (err, assets) => {
-        //         fgui.UIPackage.addPackage("ui/Loader");
-        //         let node = fgui.UIPackage.createObject("Loader", "Main");
-        //         fgui.GRoot.inst.addChild(node);
-        //     }
-        // );
-        //这里填写的是相对于resources里的路径
-        airkit.TimerManager.Instance.addOnce(1000,this,()=>{ console.log("timer fire")});
-        airkit.TimerManager.Instance.addLoop(1000,20,this,()=>{ console.log("timer loop fire")});
+        ak.Framework.Instance.setup(fgui.GRoot.inst, ak.LogLevel.DEBUG, cc.winSize.width, cc.winSize.height);
         M.register();
-        airkit.SceneManager.register(eSceneType.LOGIN,LoginScene)
-
-        let res = [
-            // { url: "ui/Loader", type: airkit.FguiAsset }, //描述文件
-            // { url: "ui/Loader_atlas0", type: cc.BufferAsset }, //纹理集
-            // { url: "ui/Home", type: airkit.FguiAsset }, //描述文件
-            // { url: "ui/Home_atlas0", type: cc.BufferAsset }, //纹理集
-        ];
-        // let resMap = LoginScene.ResMap;
-        // for (let k in resMap) {
-        //     res.push({ url: "ui/" + k, type: airkit.FguiAsset });
-        //     for (let k2 in resMap[k]) {
-        //         res.push({ url: "ui/" + k2, type: cc.BufferAsset });
-        //     }
-        // }
-       // airkit.ResourceManager.Instance.loadArrayRes(res).then((v) => {
-            //     //都加载完毕后再调用addPackage
-          
-          //  let view: fgui.GComponent = LoginScene.createInstance(); //fgui.UIPackage.createObject("Loader", "LoginDlg").asCom;
-
-            // fgui.GRoot.inst.addChild(view);
-            // view.makeFullScreen();
-         //   airkit.ResourceManager.Instance.dump();
-            M.login().then(v=>{
-                v.enterScene();
-            })
-      //  });
+        ak.SceneManager.register(eSceneType.LOGIN,LoginScene);
+        ak.SceneManager.register(eSceneType.BATTLE, BattleScene);
+        ak.SceneManager.register(eSceneType.HOME, HomeScene)
+        M.login().then(v=>{     
+            v.enterScene();
+        })
+      
         // if (isWX()) {
         //     Platform.init(ePlatform.WX, "wxec644f0c4e2cb275", "wx");
         //     GetPlatform().createAuthButton(
@@ -70,7 +42,7 @@ export default class Main extends cc.Component {
         // }
     }
     update(dt:number):void {
-        airkit.Framework.Instance.update(dt);
+        ak.Framework.Instance.update(dt);
     }
     // onDemoStart(demo) {
     //     this._currentDemo = demo;

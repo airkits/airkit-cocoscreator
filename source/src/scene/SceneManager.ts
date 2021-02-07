@@ -16,7 +16,6 @@ namespace airkit {
      * @time 2017-7-13
      */
     export class SceneManager {
-        public static scenes: SDictionary<any> = new SDictionary<any>();
         /**
          * 注册场景类，存放场景id和name的对应关系
          * @param name
@@ -26,7 +25,7 @@ namespace airkit {
             name: string,
             cls: any
         ): any {
-           SceneManager.scenes.add(name, cls);
+            fgui.UIObjectFactory.setExtension(cls.URL, cls);
            ClassUtils.regClass(name, cls);
         }
 
@@ -87,46 +86,38 @@ namespace airkit {
         }
         //～～～～～～～～～～～～～～～～～～～～～～～场景切换~～～～～～～～～～～～～～～～～～～～～～～～//
 
-        private onComplete(v: any): void {
+        private onComplete(v: BaseView): void {
             this._curScene = v;
         }
         /**进入场景*/
         public gotoScene(sceneName: string, args?: any): void {
             this.exitScene();
-           // let clas = SceneManager.scenes.getValue(sceneName);
             //切换
-
             let clas = ClassUtils.getClass(sceneName);
-
-            let scene = new clas();
-         //   scene["__scene_type__"] = sceneName;
-            scene.setName(sceneName);
-            scene.setup(args);
-            scene.loadResource(ResourceManager.DefaultGroup, clas)
-                .then((v) => {
-                    this.onComplete(v);
+            clas.loadResource(ResourceManager.DefaultGroup,(v)=>{
+                if(v){
+                    let scene = clas.createInstance();
+                    scene.setName(sceneName);
+                    scene.setup(args);
                     LayerManager.mainLayer.addChild(scene);
-                })
-                .catch((e) => {
-                    Log.error(e);
-                });
-
-            
+                    this.onComplete(scene);
+                    scene.onEnter();
+                    ResourceManager.Instance.dump();
+                }
+            });
         }
 
+        
         private exitScene(): void {
             if (this._curScene) {
                 //切换
-                let sceneName = //SceneManager.scenes.getValue(
-                    this._curScene["__scene_type__"]
-               // );
+                let sceneName = this._curScene.getName();
+                this._curScene.onExit();
                 let clas = ClassUtils.getClass(sceneName);
                 clas.unres();
                 this._curScene.removeFromParent();
                 this._curScene.dispose();
                 this._curScene = null;
-                UIManager.Instance.closeAll();
-                ObjectPools.clearAll();
             }
         }
     }

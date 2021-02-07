@@ -187,26 +187,7 @@ namespace airkit {
                 let y = h - LayerManager.BG_HEIGHT;
                 bg.setPosition(x, y);
             }
-
-            fgui.GRoot.inst.setSize(w, h);
-
-            let needUpChilds = [
-                this._uiLayer,
-                // this._popupLayer,
-                // this._systemLayer,
-                // this._topLayer,
-                this._loadingLayer,
-            ];
-            for (let i = 0; i < needUpChilds.length; i++) {
-                let layer = needUpChilds[i];
-                for (let j = 0, l = layer.numChildren; j < l; j++) {
-                    var child: fgui.GComponent = layer.getChildAt(
-                        j
-                    ) as fgui.GComponent;
-
-                    child.setSize(w, h);
-                }
-            }
+            
             // let obj = this._uiLayer
             // obj.node.graphics.clear()
             // obj.node.graphics.drawRect(0, 0, obj.width, obj.height, "#33333333")

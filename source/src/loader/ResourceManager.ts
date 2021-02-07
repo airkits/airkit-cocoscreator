@@ -1,4 +1,9 @@
 namespace airkit {
+    export interface Res {
+        url:string; //资源地址
+        type:typeof cc.Asset; //资源类型
+        refCount:number; //引用数
+    }
     /**
      * 资源管理
      * @author ankye
@@ -10,8 +15,7 @@ namespace airkit {
     export const FONT_SIZE_7 = 29;
 
     export class FguiAsset extends cc.BufferAsset { }
-
-    
+    export class FguiAtlas extends cc.BufferAsset { }
     export class ResourceManager extends Singleton {
         public static FONT_Yuanti = "Yuanti SC Regular";
         public static Font_Helvetica = "Helvetica";
@@ -48,7 +52,7 @@ namespace airkit {
         public destroy(): boolean {
             if (this._dicResInfo) {
                 this._dicResInfo.foreach((k, v) => {
-                    ResourceManager.Instance.clearRes(k);
+                    ResourceManager.Instance.clearRes(k,v.ref);
                     return true;
                 });
                 this._dicResInfo.clear();
@@ -85,6 +89,7 @@ namespace airkit {
         public loadRes(
             url: string,
             type?: typeof cc.Asset,
+            refCount:number = 1,
             viewType: number = LOADVIEW_TYPE_NONE,
             priority: number = 1,
             cache: boolean = true,
@@ -108,11 +113,13 @@ namespace airkit {
             }
             let resInfo = this._dicResInfo.getValue(url);
             if (!resInfo) {
-                resInfo = new ResInfo(url, type, group);
+                resInfo = new ResInfo(url, type,refCount, group);
                 this._dicResInfo.set(url, resInfo);
+                resInfo.updateStatus(eLoaderStatus.LOADING);
+            }else{
+                resInfo.incRef(refCount);
             }
-            resInfo.incRef();
-            resInfo.updateStatus(eLoaderStatus.LOADING);
+            
 
             return new Promise((resolve, reject) => {
                 cc.resources.load(
@@ -129,12 +136,12 @@ namespace airkit {
                     (error: Error, resource: any) => {
                         if (error) {
                             resInfo.updateStatus(eLoaderStatus.READY);
-                            resInfo.decRef();
+                            resInfo.decRef(refCount);
                             reject(url);
                             return;
                         }
                         resInfo.updateStatus(eLoaderStatus.LOADED);
-                        this.onLoadComplete(viewType, [url], [type], "");
+                        this.onLoadComplete(viewType, [url], [{url:url,type:type,refCount:1}], "");
                         resolve(url);
                     }
                 );
@@ -152,7 +159,7 @@ namespace airkit {
          * @return 	结束回调(参数：Array<string>，加载的url数组)
          */
         public loadArrayRes(
-            arr_res: Array<{ url: string; type: typeof cc.Asset }>,
+            arr_res: Array<Res>,
             viewType: number = LOADVIEW_TYPE_NONE,
             tips: string = null,
             priority: number = 1,
@@ -162,17 +169,24 @@ namespace airkit {
         ): Promise<string[]> {
             let has_unload: boolean = false;
             let urls = [];
-            let types = new Array<typeof cc.Asset>();
+      
             if (viewType == null) viewType = LOADVIEW_TYPE_NONE;
             if (priority == null) priority = 1;
             if (cache == null) cache = true;
-            for (let res of arr_res) {
-                urls.push(res.url);
-                types.push(res.type);
-                //判断是否有未加载资源
-                if (!has_unload && !cc.resources.get(res.url))
+            for (let i=0; i<arr_res.length;i++) {
+                let res = arr_res[i];
+                if(!this.getRes(res.url)){
+                    urls.push(res.url);
                     has_unload = true;
-                //添加到加载目录
+                }
+                let resInfo = this._dicResInfo.getValue(res.url);
+                if (!resInfo) {
+                    resInfo = new ResInfo(res.url,res.type,res.refCount, group);
+                    this._dicResInfo.set(res.url, resInfo);
+                }else{
+                    resInfo.incRef(res.refCount);
+                    resInfo.updateStatus(eLoaderStatus.LOADING);
+                }
             }
             //判断是否需要显示加载界面
             if (!has_unload && viewType != LOADVIEW_TYPE_NONE) {
@@ -187,15 +201,7 @@ namespace airkit {
                     tips
                 );
             }
-            for (let i = 0; i < urls.length; i++) {
-                let resInfo = this._dicResInfo.getValue(urls[i]);
-                if (!resInfo) {
-                    resInfo = new ResInfo(urls[i], types[i], group);
-                    this._dicResInfo.set(urls[i], resInfo);
-                }
-                resInfo.incRef();
-                resInfo.updateStatus(eLoaderStatus.LOADING);
-            }
+ 
             return new Promise((resolve, reject) => {
                 cc.resources.load(
                     urls,
@@ -214,7 +220,7 @@ namespace airkit {
                                     urls[i]
                                 );
                                 if (resInfo) {
-                                    resInfo.decRef();
+                                    resInfo.decRef(arr_res[i].refCount);
                                     resInfo.updateStatus(eLoaderStatus.READY);
                                 }
                             }
@@ -228,7 +234,7 @@ namespace airkit {
                                 resInfo.updateStatus(eLoaderStatus.READY);
                             }
                         }
-
+ 
                         if (viewType != LOADVIEW_TYPE_NONE) {
                             TimerManager.Instance.addOnce(
                                 this._minLoaderTime,
@@ -237,14 +243,14 @@ namespace airkit {
                                     this.onLoadComplete(
                                         viewType,
                                         urls,
-                                        types,
+                                        arr_res,
                                         tips
                                     );
                                     resolve(urls);
                                 }
                             );
                         } else {
-                            this.onLoadComplete(viewType, urls, types, tips);
+                            this.onLoadComplete(viewType, urls, arr_res, tips);
                             resolve(urls);
                         }
                     }
@@ -260,14 +266,14 @@ namespace airkit {
         public onLoadComplete(
             viewType: number,
             urls: string[],
-            types: Array<typeof cc.Asset>,
+            arr_res: Array<Res>,
             tips: string
         ): void {
             //显示加载日志
             if (urls) {
                 let arr: Array<string> = urls;
                 for (let i = 0; i < urls.length; i++) {
-                    if (types[i] == airkit.FguiAsset) {
+                    if (arr_res[i].type == airkit.FguiAsset) {
                         fgui.UIPackage.addPackage(urls[i]);
                     }
                 }
@@ -316,10 +322,10 @@ namespace airkit {
          * 释放指定资源
          * @param	url	资源路径
          */
-        public clearRes(url: string): void {
+        public clearRes(url: string,refCount:number): void {
             let res = this._dicResInfo.getValue(url);
             if (res) {
-                res.decRef();
+                res.decRef(refCount);
             }
         }
 
@@ -329,44 +335,6 @@ namespace airkit {
             Log.info("[res]释放资源:" + url);
         }
 
-        public createFuiAnim(
-            pkgName: string,
-            resName: string,
-            path: string,
-            group: string = "default"
-        ): Promise<any> {
-            return new Promise((resolve, reject) => {
-                let atlas = path + "_atlas0";
-                let bin = path;
-                let res = ResourceManager.Instance.getRes(atlas);
-                if (res == null) {
-                    ResourceManager.Instance.loadArrayRes(
-                        [
-                            { url: atlas, type: cc.BufferAsset },
-                            { url: bin, type: FguiAsset },
-                        ],
-                        null,
-                        null,
-                        0,
-                        true,
-                        group
-                    )
-                        .then((v) => {
-                            let obj = fgui.UIPackage.createObject(
-                                pkgName,
-                                resName
-                            );
-                            resolve(obj.asCom);
-                        })
-                        .catch((e) => {
-                            reject(e);
-                        });
-                } else {
-                    let obj = fgui.UIPackage.createObject(pkgName, resName);
-                    resolve(obj.asCom);
-                }
-            });
-        }
 
         /**
          * 图片代理，可以远程加载图片显示
@@ -424,10 +392,11 @@ namespace airkit {
         public status: eLoaderStatus;
         public ref: number;
 
-        constructor(url: string, type: typeof cc.Asset, group: string) {
+        constructor(url:string,type: typeof cc.Asset,refCount:number, group: string) {
             super();
             this.url = url;
-            this.ref = 0;
+            this.ref = refCount;
+            this.type = type;
             this.group = group;
             this.status = eLoaderStatus.READY;
         }
@@ -436,11 +405,11 @@ namespace airkit {
             this.status = status;
         }
 
-        public incRef(): void {
-            this.ref++;
+        public incRef(v:number = 1): void {
+            this.ref += v;
         }
-        public decRef(): void {
-            this.ref--;
+        public decRef(v:number = 1): void {
+            this.ref -= v;
             if (this.ref <= 0) {
                 if (this.type == FguiAsset) {
                     fgui.UIPackage.removePackage(this.url);

@@ -9,9 +9,9 @@
   "compressPNG": false,
   "codeGeneration": {
     "allowGenCode": true,
-    "codePath": "../demo/assets/Script/app/gen/ui",
+    "codePath": "../demo/assets/Script/game/gen/ui",
     "classNamePrefix": "UI",
-    "memberNamePrefix": "m_",
+    "memberNamePrefix": "",
     "packageName": "app",
     "ignoreNoname": true,
     "getMemberByName": false,
