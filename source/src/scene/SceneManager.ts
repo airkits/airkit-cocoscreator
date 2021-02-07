@@ -91,11 +91,12 @@ namespace airkit {
         }
         /**进入场景*/
         public gotoScene(sceneName: string, args?: any): void {
-            this.exitScene();
+            
             //切换
             let clas = ClassUtils.getClass(sceneName);
             clas.loadResource(ResourceManager.DefaultGroup,(v)=>{
                 if(v){
+                    this.exitScene();
                     let scene = clas.createInstance();
                     scene.setName(sceneName);
                     scene.setup(args);
@@ -119,6 +120,7 @@ namespace airkit {
                 this._curScene.dispose();
                 this._curScene = null;
             }
+            ResourceManager.Instance.dump();
         }
     }
 }

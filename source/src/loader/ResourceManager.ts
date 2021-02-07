@@ -169,7 +169,7 @@ namespace airkit {
         ): Promise<string[]> {
             let has_unload: boolean = false;
             let urls = [];
-      
+            let resArr = [];
             if (viewType == null) viewType = LOADVIEW_TYPE_NONE;
             if (priority == null) priority = 1;
             if (cache == null) cache = true;
@@ -177,6 +177,7 @@ namespace airkit {
                 let res = arr_res[i];
                 if(!this.getRes(res.url)){
                     urls.push(res.url);
+                    resArr.push(res);
                     has_unload = true;
                 }
                 let resInfo = this._dicResInfo.getValue(res.url);
@@ -250,7 +251,7 @@ namespace airkit {
                                 }
                             );
                         } else {
-                            this.onLoadComplete(viewType, urls, arr_res, tips);
+                            this.onLoadComplete(viewType, urls, resArr, tips);
                             resolve(urls);
                         }
                     }
@@ -413,6 +414,7 @@ namespace airkit {
             if (this.ref <= 0) {
                 if (this.type == FguiAsset) {
                     fgui.UIPackage.removePackage(this.url);
+                    console.log("remove package"+this.url);
                 }
                 ResourceManager.Instance.releaseRes(this.url);
             }

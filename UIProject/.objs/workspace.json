@@ -26,13 +26,15 @@
   "test.device": "iPhone 8 Plus",
   "canvasColor": 10066329,
   "auxline2": true,
-  "doc.activeDoc": "ui://v9v1pqglsi0tb",
+  "doc.activeDoc": "ui://21mnfg0cn70mh",
   "libview.twoColumn": false,
   "libview.expandedNodes": [
     "21mnfg0c",
     "/",
     "v9v1pqgl",
-    "/"
+    "/",
+    "v9v1pqgl",
+    "/images/"
   ],
   "auxline1": true,
   "snapToGrid": true,

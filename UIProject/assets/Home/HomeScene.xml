@@ -25,5 +25,8 @@
     <text id="n3_n70m" name="title" xy="82,30" size="239,36" fontSize="36" color="#874803" autoSize="none" text="我的订单&#xA;">
       <relation target="" sidePair="top-top,left-left"/>
     </text>
+    <component id="n5_kig3" name="btnBattle" src="mdb820" fileName="ButtonOk.xml" pkg="v9v1pqgl" xy="223,443">
+      <Button title="battle"/>
+    </component>
   </displayList>
 </component>

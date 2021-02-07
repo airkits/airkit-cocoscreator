@@ -64,7 +64,7 @@ namespace airkit {
         public dispose(): void {
             if (this._destory) return;
             this._destory = true;
-            this.onDestroy();
+           
             this.unRegisterEvent();
             this.unregisteGUIEvent();
             this.unregisterSignalEvent();
@@ -102,9 +102,13 @@ namespace airkit {
         }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～可重写的方法，注意逻辑层不要再次调用～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**初始化，和onDestroy是一对*/
-        public onCreate(args: any): void {}
+        public onCreate(args: any): void {
+            
+        }
         /**销毁*/
-        public onDestroy(): void {}
+        public onDestroy(): void {
+            super.onDestroy();
+        }
         /**每帧循环：如果覆盖，必须调用super.update()*/
         public update(dt: number): boolean {
             return true;
@@ -183,21 +187,11 @@ namespace airkit {
         /**处理需要提前加载的资源,手动创建的view需要手动调用*/
         public static loadResource(group: string,onAssetLoaded:(v:boolean)=>void): void {
 
-                let assets = [];
-                let res_map = this.res();
-                if (res_map && res_map.length > 0) {
-                    for (let i = 0; i < res_map.length; ++i) {
-                        let res = res_map[i];
-                        if (!ResourceManager.Instance.getRes(res.url)) {
-                            assets.push({ url: res.url, type: res.type });
-                        }
-                    }
-                }
-                if (assets.length > 0) {
-                    let tips = this.loaderTips();
-                    let loaderType = this.loaderType();
-                ResourceManager.Instance.loadArrayRes(
-                        assets,
+               
+            let tips = this.loaderTips();
+            let loaderType = this.loaderType();
+            ResourceManager.Instance.loadArrayRes(
+                    this.res(),
                         loaderType,
                         tips,
                         1,
@@ -212,10 +206,7 @@ namespace airkit {
                             Log.error(e);
                            onAssetLoaded(false);
                         });
-                } else {
-                    onAssetLoaded(true);
-                }
-       
+                
         }
    
         private registerSignalEvent(): void {

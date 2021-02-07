@@ -10,10 +10,11 @@ export default class UIHomeScene extends airkit.BaseView {
 	public list:fgui.GList;
 	public btnBack:UIButtonBack;
 	public title:fgui.GTextField;
+	public btnBattle:fgui.GButton;
 	public static URL:string = "ui://21mnfg0cn70mh";
 	public static PkgName:string = "Home";
 	public static ResName:string = "HomeScene";
-	public static ResMap:{ [index: string]: {} } = {"Home":{"Home_atlas0":4}};
+	public static ResMap:{ [index: string]: {} } = {"Home":{"Home_atlas0":4},"Loader":{"Loader_atlas0":1}};
 
 	public static createInstance():UIHomeScene {
 		return <UIHomeScene>(fgui.UIPackage.createObject("Home", "HomeScene"));
@@ -26,5 +27,6 @@ export default class UIHomeScene extends airkit.BaseView {
 		this.list = <fgui.GList>(this.getChildAt(2));
 		this.btnBack = <UIButtonBack>(this.getChildAt(3));
 		this.title = <fgui.GTextField>(this.getChildAt(4));
+		this.btnBattle = <fgui.GButton>(this.getChildAt(5));
 	}
 }

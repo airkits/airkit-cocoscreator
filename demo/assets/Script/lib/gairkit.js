@@ -2696,6 +2696,7 @@ window.ak = window.airkit;
         loadArrayRes(arr_res, viewType = airkit.LOADVIEW_TYPE_NONE, tips = null, priority = 1, cache = true, group = "default", ignoreCache = false) {
             let has_unload = false;
             let urls = [];
+            let resArr = [];
             if (viewType == null)
                 viewType = airkit.LOADVIEW_TYPE_NONE;
             if (priority == null)
@@ -2706,6 +2707,7 @@ window.ak = window.airkit;
                 let res = arr_res[i];
                 if (!this.getRes(res.url)) {
                     urls.push(res.url);
+                    resArr.push(res);
                     has_unload = true;
                 }
                 let resInfo = this._dicResInfo.getValue(res.url);
@@ -2754,7 +2756,7 @@ window.ak = window.airkit;
                         });
                     }
                     else {
-                        this.onLoadComplete(viewType, urls, arr_res, tips);
+                        this.onLoadComplete(viewType, urls, resArr, tips);
                         resolve(urls);
                     }
                 });
@@ -2880,6 +2882,7 @@ window.ak = window.airkit;
             if (this.ref <= 0) {
                 if (this.type == FguiAsset) {
                     fgui.UIPackage.removePackage(this.url);
+                    console.log("remove package" + this.url);
                 }
                 ResourceManager.Instance.releaseRes(this.url);
             }
@@ -3900,7 +3903,6 @@ window.ak = window.airkit;
             if (this._destory)
                 return;
             this._destory = true;
-            this.onDestroy();
             this.unRegisterEvent();
             this.unregisteGUIEvent();
             this.unregisterSignalEvent();
@@ -3935,9 +3937,12 @@ window.ak = window.airkit;
         }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～可重写的方法，注意逻辑层不要再次调用～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**初始化，和onDestroy是一对*/
-        onCreate(args) { }
+        onCreate(args) {
+        }
         /**销毁*/
-        onDestroy() { }
+        onDestroy() {
+            super.onDestroy();
+        }
         /**每帧循环：如果覆盖，必须调用super.update()*/
         update(dt) {
             return true;
@@ -4008,31 +4013,16 @@ window.ak = window.airkit;
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～内部方法～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**处理需要提前加载的资源,手动创建的view需要手动调用*/
         static loadResource(group, onAssetLoaded) {
-            let assets = [];
-            let res_map = this.res();
-            if (res_map && res_map.length > 0) {
-                for (let i = 0; i < res_map.length; ++i) {
-                    let res = res_map[i];
-                    if (!airkit.ResourceManager.Instance.getRes(res.url)) {
-                        assets.push({ url: res.url, type: res.type });
-                    }
-                }
-            }
-            if (assets.length > 0) {
-                let tips = this.loaderTips();
-                let loaderType = this.loaderType();
-                airkit.ResourceManager.Instance.loadArrayRes(assets, loaderType, tips, 1, true, group)
-                    .then((v) => {
-                    onAssetLoaded(true);
-                })
-                    .catch((e) => {
-                    airkit.Log.error(e);
-                    onAssetLoaded(false);
-                });
-            }
-            else {
+            let tips = this.loaderTips();
+            let loaderType = this.loaderType();
+            airkit.ResourceManager.Instance.loadArrayRes(this.res(), loaderType, tips, 1, true, group)
+                .then((v) => {
                 onAssetLoaded(true);
-            }
+            })
+                .catch((e) => {
+                airkit.Log.error(e);
+                onAssetLoaded(false);
+            });
         }
         registerSignalEvent() {
             let event_list = this.signalMap();
@@ -4457,11 +4447,11 @@ window.ak = window.airkit;
         }
         /**进入场景*/
         gotoScene(sceneName, args) {
-            this.exitScene();
             //切换
             let clas = airkit.ClassUtils.getClass(sceneName);
             clas.loadResource(airkit.ResourceManager.DefaultGroup, (v) => {
                 if (v) {
+                    this.exitScene();
                     let scene = clas.createInstance();
                     scene.setName(sceneName);
                     scene.setup(args);
@@ -4483,6 +4473,7 @@ window.ak = window.airkit;
                 this._curScene.dispose();
                 this._curScene = null;
             }
+            airkit.ResourceManager.Instance.dump();
         }
     }
     SceneManager.instance = null;
