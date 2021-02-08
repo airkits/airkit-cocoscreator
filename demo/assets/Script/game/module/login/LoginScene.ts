@@ -22,6 +22,7 @@ export default class LoginScene extends UILoginScene{
 	}
     
     onEnable(): void {
+        super.onEnable();
         airkit.Log.info("login scene onEnable");
         
 
@@ -57,12 +58,13 @@ export default class LoginScene extends UILoginScene{
     }
     public onDestroy(): void {
         super.onDestroy()
-
+        console.log("on destory");
     }
 
 
 
     onDisable(): void {
+        super.onDisable();
         ak.Log.info("login scene onDisable")
 
     }

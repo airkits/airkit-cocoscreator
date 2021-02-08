@@ -2,7 +2,7 @@
 <component size="750,1334">
   <controller name="ctrl" exported="true" pages="0,empty,1,list" selected="0"/>
   <displayList>
-    <image id="n0_n70m" name="bg" src="si0tg" fileName="images/mask_bg.png" pkg="v9v1pqgl" xy="0,1" size="750,1334">
+    <image id="n0_n70m" name="bg" src="n70m9" fileName="images/img_gray_bg.png" xy="0,1" size="750,1334">
       <relation target="" sidePair="width-width,height-height"/>
     </image>
     <image id="n4_opvz" name="emptyIcon" src="n70md" fileName="images/img_kong.png" xy="196,457">

@@ -799,8 +799,6 @@ declare namespace airkit {
          * @param   tips		提示文字
          * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
          * @param	cache 		是否缓存加载结果。
-         * @param	group 		分组，方便对资源进行管理。
-         * @param	ignoreCache 是否忽略缓存，强制重新加载
          * @return 	结束回调(参数：Array<string>，加载的url数组)
          */
         loadArrayRes(arr_res: Array<Res>, viewType?: number, tips?: string, priority?: number, cache?: boolean): Promise<string[]>;
@@ -1305,7 +1303,6 @@ declare namespace airkit {
         private unRegisterEvent;
         private resize;
         private onChangeScene;
-        private onComplete;
         /**进入场景*/
         gotoScene(sceneName: string, args?: any): void;
         private exitScene;

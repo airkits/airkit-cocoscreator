@@ -2689,8 +2689,6 @@ window.ak = window.airkit;
          * @param   tips		提示文字
          * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
          * @param	cache 		是否缓存加载结果。
-         * @param	group 		分组，方便对资源进行管理。
-         * @param	ignoreCache 是否忽略缓存，强制重新加载
          * @return 	结束回调(参数：Array<string>，加载的url数组)
          */
         loadArrayRes(arr_res, viewType = airkit.LOADVIEW_TYPE_NONE, tips = null, priority = 1, cache = true) {
@@ -3099,25 +3097,28 @@ window.ak = window.airkit;
                     }
                     this.modules.add(name, m);
                     m.name = name;
-                    this.loadResource(m, clas)
-                        .then((v) => {
-                        var onInitModuleOver = () => {
-                            m.enter();
-                            if (funcName == null) {
-                                resolve(m);
-                            }
-                            else {
-                                let result = this.callFunc(m, funcName, args);
-                                resolve(result);
-                            }
-                        };
-                        m.once(airkit.EventID.BEGIN_MODULE, onInitModuleOver, null);
+                    var onInitModuleOver = () => {
+                        m.enter();
+                        if (funcName == null) {
+                            resolve(m);
+                        }
+                        else {
+                            let result = this.callFunc(m, funcName, args);
+                            resolve(result);
+                        }
+                    };
+                    m.once(airkit.EventID.BEGIN_MODULE, onInitModuleOver, null);
+                    if (clas.res() && clas.res().length > 0) {
+                        this.loadResource(m, clas).then(v => {
+                            m.setup(null);
+                        }).catch(e => {
+                            airkit.Log.warning("Load module Resource Failed {0}", name);
+                            reject("Load module Resource Failed " + name);
+                        });
+                    }
+                    else {
                         m.setup(null);
-                    })
-                        .catch((e) => {
-                        airkit.Log.warning("Load module Resource Failed {0}", name);
-                        reject("Load module Resource Failed " + name);
-                    });
+                    }
                 }
                 else {
                     if (funcName == null) {
@@ -3151,32 +3152,10 @@ window.ak = window.airkit;
         }
         /**处理需要提前加载的资源*/
         static loadResource(m, clas) {
-            let assets = [];
             let res_map = clas.res();
-            if (res_map && res_map.length > 0) {
-                for (let i = 0; i < res_map.length; ++i) {
-                    let res = res_map[i];
-                    if (!airkit.ResourceManager.Instance.getRes(res[0])) {
-                        assets.push({ url: res[0], type: res[1], refCount: res[2] });
-                    }
-                }
-            }
-            return new Promise((resolve, reject) => {
-                if (assets.length > 0) {
-                    let load_view = clas.loaderType();
-                    let tips = clas.loaderTips();
-                    airkit.ResourceManager.Instance.loadArrayRes(assets, load_view, tips, 1, true)
-                        .then((v) => {
-                        resolve(v);
-                    })
-                        .catch((e) => {
-                        reject(e);
-                    });
-                }
-                else {
-                    resolve([]);
-                }
-            });
+            let load_view = clas.loaderType();
+            let tips = clas.loaderTips();
+            return airkit.ResourceManager.Instance.loadArrayRes(res_map, load_view, tips, 1, true);
         }
         destroy() {
             this.unRegisterEvent();
@@ -3930,6 +3909,7 @@ window.ak = window.airkit;
             airkit.EventCenter.dispatchEvent(airkit.EventID.UI_CLOSE, this._UIID);
             airkit.EventCenter.off(airkit.EventID.UI_LANG, this, this.onLangChange);
             super.dispose();
+            console.log(this.name + " dispose");
         }
         isDestory() {
             return this._destory;
@@ -4422,7 +4402,7 @@ window.ak = window.airkit;
          */
         static register(name, cls) {
             fgui.UIObjectFactory.setExtension(cls.URL, cls);
-            // ClassUtils.regClass(name, cls);
+            airkit.ClassUtils.regClass(name, cls);
         }
         static get Instance() {
             if (!this.instance)
@@ -4465,23 +4445,19 @@ window.ak = window.airkit;
             this.gotoScene(info);
         }
         //～～～～～～～～～～～～～～～～～～～～～～～场景切换~～～～～～～～～～～～～～～～～～～～～～～～//
-        onComplete(v) {
-            this._curScene = v;
-        }
         /**进入场景*/
         gotoScene(sceneName, args) {
             //切换
-            let clas = SceneManager.getClass(sceneName); // ClassUtils.getClass(sceneName);
+            let clas = airkit.ClassUtils.getClass(sceneName);
             clas.loadResource((v) => {
                 if (v) {
                     this.exitScene();
-                    let scene = clas["createInstance"]();
+                    let scene = clas.createInstance();
                     scene.setName(sceneName);
-                    this.onComplete(scene);
+                    this._curScene = scene;
                     airkit.LayerManager.mainLayer.addChild(scene);
                     scene.setup(args);
-                    scene.onEnable();
-                    airkit.ResourceManager.Instance.dump();
+                    //  ResourceManager.Instance.dump();
                 }
             });
         }
@@ -4489,8 +4465,7 @@ window.ak = window.airkit;
             if (this._curScene) {
                 //切换
                 let sceneName = this._curScene.getName();
-                this._curScene.onDisable();
-                let clas = SceneManager.getClass(sceneName); // ClassUtils.getClass(sceneName);
+                let clas = airkit.ClassUtils.getClass(sceneName);
                 clas.unres();
                 this._curScene.removeFromParent();
                 this._curScene.dispose();

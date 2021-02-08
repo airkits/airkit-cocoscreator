@@ -13,7 +13,7 @@ export default class UIBattleScene extends airkit.BaseView {
 	public static URL:string = "ui://21mnfg0cy3shk";
 	public static PkgName:string = "Home";
 	public static ResName:string = "BattleScene";
-	public static ResMap:{ [index: string]: {} } = {"Loader":{"Loader_atlas0":1},"Home":{"Home_atlas0":4}};
+	public static ResMap:{ [index: string]: {} } = {"Home":{"Home_atlas0":5}};
 
 	public static createInstance():UIBattleScene {
 		return <UIBattleScene>(fgui.UIPackage.createObject("Home", "BattleScene"));

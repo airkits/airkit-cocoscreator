@@ -23,6 +23,7 @@ export default class HomeScene extends UIHomeScene{
     
 
     onEnable(): void {
+        super.onEnable();
         ak.Log.info("home scene onEnable");
         
 
@@ -64,12 +65,13 @@ export default class HomeScene extends UIHomeScene{
 
     public onDestroy(): void {
         super.onDestroy()
-
+        console.log("on destory");
     }
 
 
 
     onDisable(): void {
+        super.onDisable();
         airkit.Log.info("login scene onDisable")
 
     }

@@ -59,6 +59,7 @@ namespace airkit {
         }
         /**关闭*/
         public dispose(): void {
+            
             if (this._destory) return;
             this._destory = true;
            
@@ -70,6 +71,7 @@ namespace airkit {
             EventCenter.dispatchEvent(EventID.UI_CLOSE, this._UIID);
             EventCenter.off(EventID.UI_LANG, this, this.onLangChange);
             super.dispose();
+            console.log(this.name +" dispose");
         }
 
         public isDestory(): boolean {

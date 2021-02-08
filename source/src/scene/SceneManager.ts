@@ -26,7 +26,7 @@ namespace airkit {
             cls: any
         ): any {
             fgui.UIObjectFactory.setExtension(cls.URL, cls);
-          // ClassUtils.regClass(name, cls);
+           ClassUtils.regClass(name, cls);
         }
 
         public static getClass: (name:string)=>typeof BaseView;
@@ -87,24 +87,22 @@ namespace airkit {
         }
         //～～～～～～～～～～～～～～～～～～～～～～～场景切换~～～～～～～～～～～～～～～～～～～～～～～～//
 
-        private onComplete(v: BaseView): void {
-            this._curScene = v;
-        }
+   
         /**进入场景*/
         public gotoScene(sceneName: string, args?: any): void {
-           
+            
             //切换
-            let clas =  SceneManager.getClass(sceneName) // ClassUtils.getClass(sceneName);
+            let clas = ClassUtils.getClass(sceneName);
             clas.loadResource((v)=>{
                 if(v){
                     this.exitScene();
-                    let scene = clas["createInstance"]();
+                    let scene = clas.createInstance();
                     scene.setName(sceneName);
-                    this.onComplete(scene);
+                    this._curScene = scene;
                     LayerManager.mainLayer.addChild(scene);
                     scene.setup(args);
-                    scene.onEnable();
-                    ResourceManager.Instance.dump();
+                    
+                  //  ResourceManager.Instance.dump();
                 }
             });
         }
@@ -114,8 +112,8 @@ namespace airkit {
             if (this._curScene) {
                 //切换
                 let sceneName = this._curScene.getName();
-                this._curScene.onDisable();
-                let clas = SceneManager.getClass(sceneName); // ClassUtils.getClass(sceneName);
+                
+                let clas = ClassUtils.getClass(sceneName);
                 clas.unres();
                 this._curScene.removeFromParent();
                 this._curScene.dispose();

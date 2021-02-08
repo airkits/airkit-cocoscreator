@@ -22,6 +22,7 @@ export default class BattleScene extends UIBattleScene{
 	}
     
     onEnable(): void {
+        super.onEnable();
         ak.Log.info("Battle scene onEnable");
         
 
@@ -57,12 +58,13 @@ export default class BattleScene extends UIBattleScene{
 
     public onDestroy(): void {
         super.onDestroy()
-
+        console.log("on destory");
     }
 
 
 
     onDisable(): void {
+        super.onDisable();
         ak.Log.info("login scene onDisable")
 
     }

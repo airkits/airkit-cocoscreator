@@ -41,24 +41,27 @@ namespace airkit {
 
                     this.modules.add(name, m);
                     m.name = name;
-                    this.loadResource(m, clas)
-                        .then((v) => {
-                            var onInitModuleOver: Function = () => {
-                                m.enter();
-                                if (funcName == null) {
-                                    resolve(m);
-                                } else {
-                                    let result = this.callFunc(m, funcName, args);
-                                    resolve(result);
-                                }
-                            };
-                            m.once(EventID.BEGIN_MODULE, onInitModuleOver, null);
+                    var onInitModuleOver: Function = () => {
+                        m.enter();
+                        if (funcName == null) {
+                            resolve(m);
+                        } else {
+                            let result = this.callFunc(m, funcName, args);
+                            resolve(result);
+                        }
+                    };
+
+                    m.once(EventID.BEGIN_MODULE, onInitModuleOver, null);
+                    if(clas.res() && clas.res().length > 0){
+                        this.loadResource(m, clas).then(v=>{
                             m.setup(null);
-                        })
-                        .catch((e) => {
+                        }).catch(e=>{
                             Log.warning("Load module Resource Failed {0}", name);
                             reject("Load module Resource Failed " + name);
-                        });
+                        })
+                    }else{
+                        m.setup(null);
+                    }
                 } else {
                     if (funcName == null) {
                         resolve(m);
@@ -90,31 +93,10 @@ namespace airkit {
 
         /**处理需要提前加载的资源*/
         protected static loadResource(m: BaseModule, clas: any): Promise<any> {
-            let assets = [];
             let res_map = clas.res();
-            if (res_map && res_map.length > 0) {
-                for (let i = 0; i < res_map.length; ++i) {
-                    let res = res_map[i];
-                    if (!ResourceManager.Instance.getRes(res[0])) {
-                        assets.push({ url: res[0], type: res[1] ,refCount:res[2]});
-                    }
-                }
-            }
-            return new Promise((resolve, reject) => {
-                if (assets.length > 0) {
-                    let load_view = clas.loaderType();
-                    let tips = clas.loaderTips();
-                    ResourceManager.Instance.loadArrayRes(assets, load_view, tips, 1, true)
-                        .then((v) => {
-                            resolve(v);
-                        })
-                        .catch((e) => {
-                            reject(e);
-                        });
-                } else {
-                    resolve([]);
-                }
-            });
+            let load_view = clas.loaderType();
+            let tips = clas.loaderTips();
+            return  ResourceManager.Instance.loadArrayRes(res_map, load_view, tips, 1, true);
         }
 
         public destroy(): void {
