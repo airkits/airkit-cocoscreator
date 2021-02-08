@@ -3,6 +3,7 @@ namespace airkit {
         url:string; //资源地址
         type:typeof cc.Asset; //资源类型
         refCount:number; //引用数
+        pkg:string; //fgui包名
     }
     /**
      * 资源管理
@@ -24,8 +25,7 @@ namespace airkit {
 
         private _dicResInfo: SDictionary<ResInfo> = null; //加载过的信息，方便资源释放
         private _minLoaderTime: number; //最小加载时间，调整图片一闪而过的体验 单位毫秒
-        public static DefaultGroup: string = "airkit";
-        public static SystemGroup: string = "system";
+  
 
         private static instance: ResourceManager = null;
         public static get Instance(): ResourceManager {
@@ -93,7 +93,7 @@ namespace airkit {
             viewType: number = LOADVIEW_TYPE_NONE,
             priority: number = 1,
             cache: boolean = true,
-            group: string = "default",
+            pkg: string = "",
             ignoreCache: boolean = false
         ): Promise<string> {
             //添加到加载目录
@@ -113,7 +113,7 @@ namespace airkit {
             }
             let resInfo = this._dicResInfo.getValue(url);
             if (!resInfo) {
-                resInfo = new ResInfo(url, type,refCount, group);
+                resInfo = new ResInfo(url, type,refCount, pkg);
                 this._dicResInfo.set(url, resInfo);
                 resInfo.updateStatus(eLoaderStatus.LOADING);
             }else{
@@ -141,7 +141,7 @@ namespace airkit {
                             return;
                         }
                         resInfo.updateStatus(eLoaderStatus.LOADED);
-                        this.onLoadComplete(viewType, [url], [{url:url,type:type,refCount:1}], "");
+                        this.onLoadComplete(viewType, [url], [{url:url,type:type,refCount:1,pkg:pkg}], "");
                         resolve(url);
                     }
                 );
@@ -163,9 +163,7 @@ namespace airkit {
             viewType: number = LOADVIEW_TYPE_NONE,
             tips: string = null,
             priority: number = 1,
-            cache: boolean = true,
-            group: string = "default",
-            ignoreCache: boolean = false
+            cache: boolean = true
         ): Promise<string[]> {
             let has_unload: boolean = false;
             let urls = [];
@@ -182,7 +180,7 @@ namespace airkit {
                 }
                 let resInfo = this._dicResInfo.getValue(res.url);
                 if (!resInfo) {
-                    resInfo = new ResInfo(res.url,res.type,res.refCount, group);
+                    resInfo = new ResInfo(res.url,res.type,res.refCount, res.pkg);
                     this._dicResInfo.set(res.url, resInfo);
                 }else{
                     resInfo.incRef(res.refCount);
@@ -244,7 +242,7 @@ namespace airkit {
                                     this.onLoadComplete(
                                         viewType,
                                         urls,
-                                        arr_res,
+                                        resArr,
                                         tips
                                     );
                                     resolve(urls);
@@ -276,6 +274,23 @@ namespace airkit {
                 for (let i = 0; i < urls.length; i++) {
                     if (arr_res[i].type == airkit.FguiAsset) {
                         fgui.UIPackage.addPackage(urls[i]);
+                    // }else if(arr_res[i].type == airkit.FguiAtlas){
+                    //     console.log(arr_res[i].url);
+                    //     let arr = arr_res[i].url.split("_");
+                    //     if( Array.isArray(arr) && arr.length > 0){
+                    //         let pkg = fgui.UIPackage.getByName(arr_res[i].pkg);
+                    //         for (var j = 0; j < pkg["_items"].length; j++) {
+                    //             var pi = pkg["_items"][j];
+                    //             if(pi.file == arr_res[i].url){
+                    //                 if(pi["asset"] &&  pi["asset"]["nativeUrl"] == ""){
+                    //                     pi.decoded = false;
+                    //                     pkg.getItemAsset(pi);
+                    //                 }
+                                   
+                    //             }
+                                
+                    //         }
+                    //     }
                     }
                 }
             }
@@ -387,18 +402,18 @@ namespace airkit {
      * 保存加载过的url
      */
     class ResInfo extends EventDispatcher {
-        public group: string;
+        public pkg: string;
         public url: string;
         public type: typeof cc.Asset;
         public status: eLoaderStatus;
         public ref: number;
 
-        constructor(url:string,type: typeof cc.Asset,refCount:number, group: string) {
+        constructor(url:string,type: typeof cc.Asset,refCount:number, pkg: string) {
             super();
             this.url = url;
             this.ref = refCount;
             this.type = type;
-            this.group = group;
+            this.pkg = pkg;
             this.status = eLoaderStatus.READY;
         }
 
@@ -415,8 +430,14 @@ namespace airkit {
                 if (this.type == FguiAsset) {
                     fgui.UIPackage.removePackage(this.url);
                     console.log("remove package"+this.url);
+                    ResourceManager.Instance.releaseRes(this.url);    
+                }else if(this.type == FguiAtlas){
+                    //do nothing
+                }else{
+                    ResourceManager.Instance.releaseRes(this.url);  
                 }
-                ResourceManager.Instance.releaseRes(this.url);
+                
+                
             }
         }
     }

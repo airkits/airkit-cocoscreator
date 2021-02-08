@@ -26,9 +26,10 @@ namespace airkit {
             cls: any
         ): any {
             fgui.UIObjectFactory.setExtension(cls.URL, cls);
-           ClassUtils.regClass(name, cls);
+          // ClassUtils.regClass(name, cls);
         }
 
+        public static getClass: (name:string)=>typeof BaseView;
         private _curScene: BaseView;
 
         private static instance: SceneManager = null;
@@ -91,18 +92,18 @@ namespace airkit {
         }
         /**进入场景*/
         public gotoScene(sceneName: string, args?: any): void {
-            
+           
             //切换
-            let clas = ClassUtils.getClass(sceneName);
-            clas.loadResource(ResourceManager.DefaultGroup,(v)=>{
+            let clas =  SceneManager.getClass(sceneName) // ClassUtils.getClass(sceneName);
+            clas.loadResource((v)=>{
                 if(v){
                     this.exitScene();
-                    let scene = clas.createInstance();
+                    let scene = clas["createInstance"]();
                     scene.setName(sceneName);
-                    scene.setup(args);
-                    LayerManager.mainLayer.addChild(scene);
                     this.onComplete(scene);
-                    scene.onEnter();
+                    LayerManager.mainLayer.addChild(scene);
+                    scene.setup(args);
+                    scene.onEnable();
                     ResourceManager.Instance.dump();
                 }
             });
@@ -113,14 +114,14 @@ namespace airkit {
             if (this._curScene) {
                 //切换
                 let sceneName = this._curScene.getName();
-                this._curScene.onExit();
-                let clas = ClassUtils.getClass(sceneName);
+                this._curScene.onDisable();
+                let clas = SceneManager.getClass(sceneName); // ClassUtils.getClass(sceneName);
                 clas.unres();
                 this._curScene.removeFromParent();
                 this._curScene.dispose();
                 this._curScene = null;
             }
-            ResourceManager.Instance.dump();
+           
         }
     }
 }

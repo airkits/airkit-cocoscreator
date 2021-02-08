@@ -21,8 +21,8 @@ export default class LoginScene extends UILoginScene{
 		return <LoginScene>(fgui.UIPackage.createObject(this.PkgName, this.ResName));
 	}
     
-    onEnter(): void {
-        airkit.Log.info("login scene onEnter");
+    onEnable(): void {
+        airkit.Log.info("login scene onEnable");
         
 
     }
@@ -75,7 +75,7 @@ export default class LoginScene extends UILoginScene{
 
     public resize(): void {
 
-        this._view.setSize(this.width, this.height)
+        this.setSize(this.width, this.height)
     }
 
 }

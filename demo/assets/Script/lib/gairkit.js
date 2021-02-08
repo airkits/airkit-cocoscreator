@@ -1281,7 +1281,7 @@ window.ak = window.airkit;
                     resolve([]);
                     return;
                 }
-                airkit.ResourceManager.Instance.loadArrayRes(assets, null, null, null, null, airkit.ResourceManager.SystemGroup)
+                airkit.ResourceManager.Instance.loadArrayRes(assets)
                     .then((v) => {
                     for (let i = 0; i < v.length; i++) {
                         this.onLoadComplete(v[i]);
@@ -2521,7 +2521,7 @@ window.ak = window.airkit;
                         return;
                     view.setup([]);
                     let clas = airkit.ClassUtils.getClass(className);
-                    view.loadResource(airkit.ResourceManager.SystemGroup, clas).then(() => {
+                    view.loadResource(() => {
                         airkit.LayerManager.loadingLayer.addChild(view);
                         this._dicLoadView.add(type, view);
                         this.updateView(view, total, tips);
@@ -2644,7 +2644,7 @@ window.ak = window.airkit;
          * @param	ignoreCache 是否忽略缓存，强制重新加载
          * @return 	结束回调(参数：string 加载的资源url)
          */
-        loadRes(url, type, refCount = 1, viewType = airkit.LOADVIEW_TYPE_NONE, priority = 1, cache = true, group = "default", ignoreCache = false) {
+        loadRes(url, type, refCount = 1, viewType = airkit.LOADVIEW_TYPE_NONE, priority = 1, cache = true, pkg = "", ignoreCache = false) {
             //添加到加载目录
             if (viewType == null)
                 viewType = airkit.LOADVIEW_TYPE_NONE;
@@ -2659,7 +2659,7 @@ window.ak = window.airkit;
             }
             let resInfo = this._dicResInfo.getValue(url);
             if (!resInfo) {
-                resInfo = new ResInfo(url, type, refCount, group);
+                resInfo = new ResInfo(url, type, refCount, pkg);
                 this._dicResInfo.set(url, resInfo);
                 resInfo.updateStatus(eLoaderStatus.LOADING);
             }
@@ -2677,7 +2677,7 @@ window.ak = window.airkit;
                         return;
                     }
                     resInfo.updateStatus(eLoaderStatus.LOADED);
-                    this.onLoadComplete(viewType, [url], [{ url: url, type: type, refCount: 1 }], "");
+                    this.onLoadComplete(viewType, [url], [{ url: url, type: type, refCount: 1, pkg: pkg }], "");
                     resolve(url);
                 });
             });
@@ -2693,7 +2693,7 @@ window.ak = window.airkit;
          * @param	ignoreCache 是否忽略缓存，强制重新加载
          * @return 	结束回调(参数：Array<string>，加载的url数组)
          */
-        loadArrayRes(arr_res, viewType = airkit.LOADVIEW_TYPE_NONE, tips = null, priority = 1, cache = true, group = "default", ignoreCache = false) {
+        loadArrayRes(arr_res, viewType = airkit.LOADVIEW_TYPE_NONE, tips = null, priority = 1, cache = true) {
             let has_unload = false;
             let urls = [];
             let resArr = [];
@@ -2712,7 +2712,7 @@ window.ak = window.airkit;
                 }
                 let resInfo = this._dicResInfo.getValue(res.url);
                 if (!resInfo) {
-                    resInfo = new ResInfo(res.url, res.type, res.refCount, group);
+                    resInfo = new ResInfo(res.url, res.type, res.refCount, res.pkg);
                     this._dicResInfo.set(res.url, resInfo);
                 }
                 else {
@@ -2751,7 +2751,7 @@ window.ak = window.airkit;
                     }
                     if (viewType != airkit.LOADVIEW_TYPE_NONE) {
                         airkit.TimerManager.Instance.addOnce(this._minLoaderTime, null, (v) => {
-                            this.onLoadComplete(viewType, urls, arr_res, tips);
+                            this.onLoadComplete(viewType, urls, resArr, tips);
                             resolve(urls);
                         });
                     }
@@ -2775,6 +2775,21 @@ window.ak = window.airkit;
                 for (let i = 0; i < urls.length; i++) {
                     if (arr_res[i].type == airkit.FguiAsset) {
                         fgui.UIPackage.addPackage(urls[i]);
+                        // }else if(arr_res[i].type == airkit.FguiAtlas){
+                        //     console.log(arr_res[i].url);
+                        //     let arr = arr_res[i].url.split("_");
+                        //     if( Array.isArray(arr) && arr.length > 0){
+                        //         let pkg = fgui.UIPackage.getByName(arr_res[i].pkg);
+                        //         for (var j = 0; j < pkg["_items"].length; j++) {
+                        //             var pi = pkg["_items"][j];
+                        //             if(pi.file == arr_res[i].url){
+                        //                 if(pi["asset"] &&  pi["asset"]["nativeUrl"] == ""){
+                        //                     pi.decoded = false;
+                        //                     pkg.getItemAsset(pi);
+                        //                 }
+                        //             }
+                        //         }
+                        //     }
                     }
                 }
             }
@@ -2849,8 +2864,6 @@ window.ak = window.airkit;
     ResourceManager.Font_Helvetica = "Helvetica";
     ResourceManager.FONT_DEFAULT = "";
     ResourceManager.FONT_DEFAULT_SIZE = airkit.FONT_SIZE_5;
-    ResourceManager.DefaultGroup = "airkit";
-    ResourceManager.SystemGroup = "system";
     ResourceManager.instance = null;
     airkit.ResourceManager = ResourceManager;
     let eLoaderStatus;
@@ -2863,12 +2876,12 @@ window.ak = window.airkit;
      * 保存加载过的url
      */
     class ResInfo extends airkit.EventDispatcher {
-        constructor(url, type, refCount, group) {
+        constructor(url, type, refCount, pkg) {
             super();
             this.url = url;
             this.ref = refCount;
             this.type = type;
-            this.group = group;
+            this.pkg = pkg;
             this.status = eLoaderStatus.READY;
         }
         updateStatus(status) {
@@ -2883,8 +2896,14 @@ window.ak = window.airkit;
                 if (this.type == FguiAsset) {
                     fgui.UIPackage.removePackage(this.url);
                     console.log("remove package" + this.url);
+                    ResourceManager.Instance.releaseRes(this.url);
                 }
-                ResourceManager.Instance.releaseRes(this.url);
+                else if (this.type == FguiAtlas) {
+                    //do nothing
+                }
+                else {
+                    ResourceManager.Instance.releaseRes(this.url);
+                }
             }
         }
     }
@@ -3146,7 +3165,7 @@ window.ak = window.airkit;
                 if (assets.length > 0) {
                     let load_view = clas.loaderType();
                     let tips = clas.loaderTips();
-                    airkit.ResourceManager.Instance.loadArrayRes(assets, load_view, tips, 1, true, airkit.ResourceManager.DefaultGroup)
+                    airkit.ResourceManager.Instance.loadArrayRes(assets, load_view, tips, 1, true)
                         .then((v) => {
                         resolve(v);
                     })
@@ -3948,9 +3967,13 @@ window.ak = window.airkit;
             return true;
         }
         /**资源加载结束*/
-        onEnter() { }
+        onEnable() {
+            super.onEnable();
+        }
         //资源卸载前
-        onExit() { }
+        onDisable() {
+            super.onDisable();
+        }
         /**多语言初始化，或语音设定改变时触发*/
         onLangChange() { }
         /**需要提前加载的资源
@@ -4012,10 +4035,10 @@ window.ak = window.airkit;
         }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～内部方法～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**处理需要提前加载的资源,手动创建的view需要手动调用*/
-        static loadResource(group, onAssetLoaded) {
+        static loadResource(onAssetLoaded) {
             let tips = this.loaderTips();
             let loaderType = this.loaderType();
-            airkit.ResourceManager.Instance.loadArrayRes(this.res(), loaderType, tips, 1, true, group)
+            airkit.ResourceManager.Instance.loadArrayRes(this.res(), loaderType, tips, 1, true)
                 .then((v) => {
                 onAssetLoaded(true);
             })
@@ -4064,9 +4087,9 @@ window.ak = window.airkit;
         static buildRes(resMap) {
             let res = [];
             for (let k in resMap) {
-                res.push({ url: "ui/" + k, type: airkit.FguiAsset, refCount: 1 });
+                res.push({ url: "ui/" + k, type: airkit.FguiAsset, refCount: 1, pkg: k });
                 for (let k2 in resMap[k]) {
-                    res.push({ url: "ui/" + k2, type: airkit.FguiAtlas, refCount: resMap[k][k2] });
+                    res.push({ url: "ui/" + k2, type: airkit.FguiAtlas, refCount: resMap[k][k2], pkg: k });
                 }
             }
             return res;
@@ -4323,8 +4346,8 @@ window.ak = window.airkit;
             super.setup(args);
             this.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
         }
-        onEnter() {
-            super.onEnter();
+        onEnable() {
+            super.onEnable();
             //  this.createPanel(this.pkgName, this.resName);
             // let panel = this.panel();
             // if (panel) {
@@ -4367,8 +4390,8 @@ window.ak = window.airkit;
             if (this.callback != null)
                 this.callback();
         }
-        static loadResource(group, onAssetLoaded) {
-            return super.loadResource(group, onAssetLoaded);
+        static loadResource(onAssetLoaded) {
+            return super.loadResource(onAssetLoaded);
         }
     }
     airkit.PopupView = PopupView;
@@ -4399,7 +4422,7 @@ window.ak = window.airkit;
          */
         static register(name, cls) {
             fgui.UIObjectFactory.setExtension(cls.URL, cls);
-            airkit.ClassUtils.regClass(name, cls);
+            // ClassUtils.regClass(name, cls);
         }
         static get Instance() {
             if (!this.instance)
@@ -4448,16 +4471,16 @@ window.ak = window.airkit;
         /**进入场景*/
         gotoScene(sceneName, args) {
             //切换
-            let clas = airkit.ClassUtils.getClass(sceneName);
-            clas.loadResource(airkit.ResourceManager.DefaultGroup, (v) => {
+            let clas = SceneManager.getClass(sceneName); // ClassUtils.getClass(sceneName);
+            clas.loadResource((v) => {
                 if (v) {
                     this.exitScene();
-                    let scene = clas.createInstance();
+                    let scene = clas["createInstance"]();
                     scene.setName(sceneName);
-                    scene.setup(args);
-                    airkit.LayerManager.mainLayer.addChild(scene);
                     this.onComplete(scene);
-                    scene.onEnter();
+                    airkit.LayerManager.mainLayer.addChild(scene);
+                    scene.setup(args);
+                    scene.onEnable();
                     airkit.ResourceManager.Instance.dump();
                 }
             });
@@ -4466,14 +4489,13 @@ window.ak = window.airkit;
             if (this._curScene) {
                 //切换
                 let sceneName = this._curScene.getName();
-                this._curScene.onExit();
-                let clas = airkit.ClassUtils.getClass(sceneName);
+                this._curScene.onDisable();
+                let clas = SceneManager.getClass(sceneName); // ClassUtils.getClass(sceneName);
                 clas.unres();
                 this._curScene.removeFromParent();
                 this._curScene.dispose();
                 this._curScene = null;
             }
-            airkit.ResourceManager.Instance.dump();
         }
     }
     SceneManager.instance = null;
@@ -4545,8 +4567,7 @@ window.ak = window.airkit;
                 airkit.assert(v != null, "UIManager::Show - cannot create ui:" + id);
                 v.setUIID(id);
                 v.setup(params);
-                v.loadResource(airkit.ResourceManager.DefaultGroup, clas)
-                    .then((p) => {
+                v.loadResource((p) => {
                     let layer = airkit.LayerManager.getLayer(conf.mLayer);
                     layer.addChild(p);
                     this._dicUIView.add(id, p);

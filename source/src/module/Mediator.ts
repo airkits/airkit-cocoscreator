@@ -104,7 +104,7 @@ namespace airkit {
                 if (assets.length > 0) {
                     let load_view = clas.loaderType();
                     let tips = clas.loaderTips();
-                    ResourceManager.Instance.loadArrayRes(assets, load_view, tips, 1, true, ResourceManager.DefaultGroup)
+                    ResourceManager.Instance.loadArrayRes(assets, load_view, tips, 1, true)
                         .then((v) => {
                             resolve(v);
                         })

@@ -5,6 +5,7 @@ import UIbg from "./UIbg";
 export default class UILoginScene extends airkit.BaseView {
 
 	public bg:UIbg;
+	public imgBg:fgui.GLoader;
 	public btnStart:fgui.GButton;
 	public click:fgui.Transition;
 	public t1:fgui.Transition;
@@ -19,6 +20,7 @@ export default class UILoginScene extends airkit.BaseView {
 
 	protected onConstruct():void {
 		this.bg = <UIbg>(this.getChildAt(0));
+		this.imgBg = <fgui.GLoader>(this.getChildAt(1));
 		this.btnStart = <fgui.GButton>(this.getChildAt(3));
 		this.click = this.getTransitionAt(0);
 		this.t1 = this.getTransitionAt(1);

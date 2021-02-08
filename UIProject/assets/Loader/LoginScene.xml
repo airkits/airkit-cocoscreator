@@ -4,9 +4,9 @@
     <component id="n3_ngrg" name="bg" src="p6l917" fileName="bg.xml" xy="0,-159" size="750,1650">
       <relation target="" sidePair="width-width,middle-middle"/>
     </component>
-    <image id="n5_hhom" name="n5" src="hhom25" fileName="images/img_bg1.jpg" xy="0,0" size="750,1280">
+    <loader id="n5_hhom" name="imgBg" xy="0,0" size="750,1280" url="ui://v9v1pqglhhom25" fill="scaleMatchWidth">
       <relation target="" sidePair="width-width"/>
-    </image>
+    </loader>
     <component id="n4_xmdz" name="n4" src="si0th" fileName="Logo.xml" xy="377,209" pivot="0.5,0" anchor="true" scale="1.5,1.5">
       <relation target="" sidePair="center-center,middle-middle"/>
     </component>

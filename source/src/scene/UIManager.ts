@@ -69,8 +69,7 @@ namespace airkit {
                 assert(v != null, "UIManager::Show - cannot create ui:" + id);
                 v.setUIID(id);
                 v.setup(params);
-                v.loadResource(ResourceManager.DefaultGroup, clas)
-                    .then((p) => {
+                v.loadResource((p) => {
                         let layer: fgui.GComponent = LayerManager.getLayer(
                             conf.mLayer
                         );

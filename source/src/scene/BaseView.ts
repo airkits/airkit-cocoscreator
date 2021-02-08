@@ -19,9 +19,6 @@ namespace airkit {
         protected _isOpen: boolean = false;
         protected _UIID: number = 0;
         public objectData: any = null;
-        public pkgName: string;
-        public resName: string;
-        public _view: fgui.GComponent;
         private _destory: boolean;
         private _viewID: number;
         private static __ViewIDSeq: number = 0;
@@ -115,9 +112,13 @@ namespace airkit {
         }
        
         /**资源加载结束*/
-        public onEnter(): void {}
+        public onEnable(): void {
+            super.onEnable();
+        }
         //资源卸载前
-        public onExit():void {}
+        public onDisable():void {
+            super.onDisable();
+        }
         /**多语言初始化，或语音设定改变时触发*/
         public onLangChange(): void {}
 
@@ -185,7 +186,7 @@ namespace airkit {
         
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～内部方法～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**处理需要提前加载的资源,手动创建的view需要手动调用*/
-        public static loadResource(group: string,onAssetLoaded:(v:boolean)=>void): void {
+        public static loadResource(onAssetLoaded:(v:boolean)=>void): void {
 
                
             let tips = this.loaderTips();
@@ -195,8 +196,7 @@ namespace airkit {
                         loaderType,
                         tips,
                         1,
-                        true,
-                        group
+                        true
                     )
                         .then((v) => {
                             onAssetLoaded(true);
@@ -248,9 +248,9 @@ namespace airkit {
         protected static buildRes(resMap:{ [index: string]: {} }):Array<Res> {
             let res = [];
             for (let k in resMap) {
-                res.push({ url: "ui/" + k, type: airkit.FguiAsset,refCount:1 });
+                res.push({ url: "ui/" + k, type: airkit.FguiAsset,refCount:1,pkg:k });
                 for (let k2 in resMap[k]) {
-                    res.push({ url: "ui/" + k2, type: airkit.FguiAtlas,refCount:resMap[k][k2] });
+                    res.push({ url: "ui/" + k2, type: airkit.FguiAtlas,refCount:resMap[k][k2],pkg:k });
                 }
             }
             return res;

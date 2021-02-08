@@ -40,7 +40,7 @@
     <component id="mdb821" name="ButtonCancel.xml" path="/"/>
     <image id="mdb823" name="dlg_close.png" path="/images/"/>
     <image id="mdb824" name="toast.png" path="/images/" scale="9grid" scale9grid="20,20,38,26"/>
-    <image id="hhom25" name="img_bg1.jpg" path="/images/" atlas="alone_npot"/>
+    <image id="hhom25" name="img_bg1.jpg" path="/images/" qualityOption="source" atlas="alone_npot"/>
   </resources>
   <publish name="Loader" path="../demo/assets/resources/ui" packageCount="2" genCode="true" maxAtlasSize="2048"/>
 </packageDescription>

@@ -112,7 +112,7 @@ namespace airkit {
 
           view.setup([]);
           let clas = ClassUtils.getClass(className);
-          view.loadResource(ResourceManager.SystemGroup, clas).then(() => {
+          view.loadResource(() => {
             LayerManager.loadingLayer.addChild(view);
             this._dicLoadView.add(type, view);
             this.updateView(view, total, tips);

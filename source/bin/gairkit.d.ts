@@ -740,6 +740,7 @@ declare namespace airkit {
         url: string;
         type: typeof cc.Asset;
         refCount: number;
+        pkg: string;
     }
     /**
      * 资源管理
@@ -761,8 +762,6 @@ declare namespace airkit {
         static FONT_DEFAULT_SIZE: number;
         private _dicResInfo;
         private _minLoaderTime;
-        static DefaultGroup: string;
-        static SystemGroup: string;
         private static instance;
         static get Instance(): ResourceManager;
         setup(): void;
@@ -792,7 +791,7 @@ declare namespace airkit {
          * @param	ignoreCache 是否忽略缓存，强制重新加载
          * @return 	结束回调(参数：string 加载的资源url)
          */
-        loadRes(url: string, type?: typeof cc.Asset, refCount?: number, viewType?: number, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<string>;
+        loadRes(url: string, type?: typeof cc.Asset, refCount?: number, viewType?: number, priority?: number, cache?: boolean, pkg?: string, ignoreCache?: boolean): Promise<string>;
         /**
          * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
          * @param	arr_res 	需要加载的资源数组
@@ -804,7 +803,7 @@ declare namespace airkit {
          * @param	ignoreCache 是否忽略缓存，强制重新加载
          * @return 	结束回调(参数：Array<string>，加载的url数组)
          */
-        loadArrayRes(arr_res: Array<Res>, viewType?: number, tips?: string, priority?: number, cache?: boolean, group?: string, ignoreCache?: boolean): Promise<string[]>;
+        loadArrayRes(arr_res: Array<Res>, viewType?: number, tips?: string, priority?: number, cache?: boolean): Promise<string[]>;
         /**
          * 加载完成
          * @param	viewType	显示的加载界面类型
@@ -1112,9 +1111,6 @@ declare namespace airkit {
         protected _isOpen: boolean;
         protected _UIID: number;
         objectData: any;
-        pkgName: string;
-        resName: string;
-        _view: fgui.GComponent;
         private _destory;
         private _viewID;
         private static __ViewIDSeq;
@@ -1140,8 +1136,8 @@ declare namespace airkit {
         /**每帧循环：如果覆盖，必须调用super.update()*/
         update(dt: number): boolean;
         /**资源加载结束*/
-        onEnter(): void;
-        onExit(): void;
+        onEnable(): void;
+        onDisable(): void;
         /**多语言初始化，或语音设定改变时触发*/
         onLangChange(): void;
         /**需要提前加载的资源
@@ -1177,7 +1173,7 @@ declare namespace airkit {
          */
         protected staticCacheUI(): any[];
         /**处理需要提前加载的资源,手动创建的view需要手动调用*/
-        static loadResource(group: string, onAssetLoaded: (v: boolean) => void): void;
+        static loadResource(onAssetLoaded: (v: boolean) => void): void;
         private registerSignalEvent;
         private unregisterSignalEvent;
         /**注册界面事件*/
@@ -1275,14 +1271,14 @@ declare namespace airkit {
         /**每帧循环*/
         update(dt: number): boolean;
         setup(args: any): void;
-        onEnter(): void;
+        onEnable(): void;
         onOpen(): void;
         closeButton(): fgui.GButton;
         setupTouchClose(): void;
         pressClose(): void;
         onClose(): void;
         dispose(): void;
-        static loadResource(group: string, onAssetLoaded: (v: boolean) => void): void;
+        static loadResource(onAssetLoaded: (v: boolean) => void): void;
     }
 }
 declare namespace airkit {
@@ -1298,6 +1294,7 @@ declare namespace airkit {
          * @param cls
          */
         static register(name: string, cls: any): any;
+        static getClass: (name: string) => typeof BaseView;
         private _curScene;
         private static instance;
         static get Instance(): SceneManager;

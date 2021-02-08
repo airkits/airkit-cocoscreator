@@ -1,3 +1,4 @@
+import M from '../../gen/M';
 import UIBattleScene from '../../gen/ui/Home/UIBattleScene';
 
 
@@ -20,8 +21,8 @@ export default class BattleScene extends UIBattleScene{
 		return <BattleScene>(fgui.UIPackage.createObject(this.PkgName, this.ResName));
 	}
     
-    onEnter(): void {
-        ak.Log.info("Battle scene onEnter");
+    onEnable(): void {
+        ak.Log.info("Battle scene onEnable");
         
 
     }
@@ -30,6 +31,11 @@ export default class BattleScene extends UIBattleScene{
         return this.buildRes(UIBattleScene.ResMap);
     }
    
+    public onBtnBackClick():void {
+        M.login().then(v=>{
+            v.enterScene();
+        })
+    }
     //public loaderType(): number {
         
        // return eLoaderType.FULLSCREEN
@@ -39,6 +45,7 @@ export default class BattleScene extends UIBattleScene{
     }
     protected eventMap(): Array<any> {
         return [
+            [this.btnBack,fgui.Event.CLICK,this.onBtnBackClick],
         ]
   
     }
@@ -68,7 +75,7 @@ export default class BattleScene extends UIBattleScene{
 
     public resize(): void {
 
-        this._view.setSize(this.width, this.height)
+        this.setSize(this.width, this.height)
     }
 
 }

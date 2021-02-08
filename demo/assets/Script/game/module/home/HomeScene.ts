@@ -22,8 +22,8 @@ export default class HomeScene extends UIHomeScene{
 	}
     
 
-    onEnter(): void {
-        ak.Log.info("home scene onEnter");
+    onEnable(): void {
+        ak.Log.info("home scene onEnable");
         
 
     }
@@ -41,9 +41,15 @@ export default class HomeScene extends UIHomeScene{
     }
     protected eventMap(): Array<any> {
         return [
-            [this.btnBack,fgui.Event.CLICK,this.onBtnBackClick]
+            [this.btnBack,fgui.Event.CLICK,this.onBtnBackClick],
+            [this.btnBattle,fgui.Event.CLICK,this.onBtnBattleClick],
         ]
   
+    }
+    public onBtnBattleClick():void {
+        M.battle().then(v=>{
+            v.enterScene();
+        })
     }
     public onBtnBackClick():void {
         M.login().then(v=>{
@@ -76,7 +82,7 @@ export default class HomeScene extends UIHomeScene{
 
     public resize(): void {
 
-        this._view.setSize(this.width, this.height)
+        this.setSize(this.width, this.height)
     }
 
 }

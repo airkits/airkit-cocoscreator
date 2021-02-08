@@ -25,8 +25,8 @@ namespace airkit {
             this.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
         }
 
-        public onEnter(): void {
-            super.onEnter();
+        public onEnable(): void {
+            super.onEnable();
 
           //  this.createPanel(this.pkgName, this.resName);
 
@@ -73,8 +73,8 @@ namespace airkit {
             super.dispose();
             if (this.callback != null) this.callback();
         }
-        public static loadResource(group: string,onAssetLoaded:(v:boolean)=>void): void {
-            return super.loadResource(group, onAssetLoaded);
+        public static loadResource(onAssetLoaded:(v:boolean)=>void): void {
+            return super.loadResource(onAssetLoaded);
         }
     }
 }

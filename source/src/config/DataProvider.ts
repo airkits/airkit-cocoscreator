@@ -103,14 +103,7 @@ namespace airkit {
           resolve([]);
           return;
         }
-        ResourceManager.Instance.loadArrayRes(
-          assets,
-          null,
-          null,
-          null,
-          null,
-          ResourceManager.SystemGroup
-        )
+        ResourceManager.Instance.loadArrayRes(assets)
           .then((v) => {
             for (let i = 0; i < v.length; i++) {
               this.onLoadComplete(v[i]);
