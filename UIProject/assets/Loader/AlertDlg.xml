@@ -1,11 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component size="750,1334">
+<component size="615,387">
   <displayList>
-    <component id="n0_nz2l" name="bg" src="si0td" fileName="MaskBg.xml" xy="0,0">
-      <relation target="" sidePair="width-width,height-height"/>
+    <component id="n8_o3ko" name="n8" src="o3ko26" fileName="WindowFrame.xml" xy="-1,-6"/>
+    <component id="n3_ymft" name="cancelBtn" src="mdb821" fileName="ButtonCancel.xml" xy="195,294" pivot="0.5,0.5" anchor="true" size="155,72">
+      <relation target="" sidePair="bottom-bottom%"/>
+      <Button title="取消" selectedTitle="取消"/>
     </component>
-    <component id="n1_nz2l" name="panel" src="nz2l10" fileName="Base/Alert.xml" xy="122,492" size="536,315">
-      <relation target="" sidePair="center-center,middle-middle"/>
+    <component id="n4_ymft" name="confirmBtn" src="mdb820" fileName="ButtonOk.xml" xy="423,293" pivot="0.5,0.5" anchor="true">
+      <relation target="" sidePair="bottom-bottom%"/>
+      <Button title="确认" selectedTitle="确认"/>
     </component>
+    <text id="n6_ymft" name="content" xy="103,84" size="416,110" fontSize="30" align="center" vAlign="middle" autoSize="none" text="确定要删除吗&#xA;">
+      <relation target="" sidePair="top-top,center-center"/>
+    </text>
+    <text id="n7_ymft" name="tips" xy="124,216" size="391,28" fontSize="18" color="#666666" autoSize="none" text="">
+      <relation target="" sidePair="center-center,bottom-bottom"/>
+    </text>
   </displayList>
 </component>

@@ -41,6 +41,17 @@
     <image id="mdb823" name="dlg_close.png" path="/images/"/>
     <image id="mdb824" name="toast.png" path="/images/" scale="9grid" scale9grid="20,20,38,26"/>
     <image id="hhom25" name="img_bg1.jpg" path="/images/" qualityOption="source" atlas="alone_npot"/>
+    <component id="o3ko26" name="WindowFrame.xml" path="/"/>
+    <movieclip id="o3ko27" name="quan.jta" path="/images/"/>
+    <image id="o3ko28" name="8.png" path="/images/"/>
+    <image id="o3ko29" name="4.png" path="/images/"/>
+    <image id="o3ko2a" name="btnimage.png" path="/images/"/>
+    <image id="o3ko2b" name="5.png" path="/images/"/>
+    <image id="o3ko2c" name="7.png" path="/images/"/>
+    <image id="o3ko2d" name="2.png" path="/images/"/>
+    <image id="o3ko2e" name="3.png" path="/images/"/>
+    <image id="o3ko2f" name="1.png" path="/images/"/>
+    <image id="o3ko2g" name="0.png" path="/images/"/>
   </resources>
   <publish name="Loader" path="../demo/assets/resources/ui" packageCount="2" genCode="true" maxAtlasSize="2048"/>
 </packageDescription>

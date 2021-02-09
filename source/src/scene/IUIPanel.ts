@@ -12,7 +12,7 @@ namespace airkit {
     /**是否可见*/
     setVisible(bVisible: boolean): void;
     /**设置界面唯一id*/
-    setUIID(id: number): void;
+    setUIID(id: string): void;
     update(dt: number): boolean;
 
     removeFromParent(): void;

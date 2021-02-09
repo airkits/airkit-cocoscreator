@@ -4,15 +4,19 @@
     <component id="n3_ngrg" name="bg" src="p6l917" fileName="bg.xml" xy="0,-159" size="750,1650">
       <relation target="" sidePair="width-width,middle-middle"/>
     </component>
-    <loader id="n5_hhom" name="imgBg" xy="0,0" size="750,1280" url="ui://v9v1pqglhhom25" fill="scaleMatchWidth">
+    <loader id="n5_hhom" name="imgBg" xy="-1,0" size="750,1280" url="ui://v9v1pqglhhom25" fill="scaleMatchWidth">
       <relation target="" sidePair="width-width"/>
     </loader>
     <component id="n4_xmdz" name="n4" src="si0th" fileName="Logo.xml" xy="377,209" pivot="0.5,0" anchor="true" scale="1.5,1.5">
       <relation target="" sidePair="center-center,middle-middle"/>
     </component>
-    <component id="n6_y3sh" name="btnStart" src="mdb820" fileName="ButtonOk.xml" xy="207,984" size="336,165">
+    <component id="n6_y3sh" name="btnStart" src="mdb820" fileName="ButtonOk.xml" xy="106,1016" size="244,105">
       <relation target="" sidePair="center-center"/>
       <Button title="Start" titleColor="#ffffff" titleFontSize="50"/>
+    </component>
+    <component id="n7_o3ko" name="btnShowDlg" src="mdb820" fileName="ButtonOk.xml" xy="425,1022" size="228,99">
+      <relation target="" sidePair="center-center"/>
+      <Button title="Dlg" titleColor="#ffffff" titleFontSize="50"/>
     </component>
   </displayList>
   <transition name="click"/>

@@ -1,25 +1,13 @@
-// import { IUIPanel } from "./IUIPanel";
-// import { EventCenter } from "../event/EventCenter";
-// import { EventID, LoaderEventID } from "../event/EventID";
+/// <reference path="./BaseView.ts" />
 
-// import { ResourceManager } from "../loader/ResourceManager";
-// import { Log } from "../log/Log";
-// import { ISignal } from "../event/ISignal";
-// import { TimerManager } from "../timer/TimerManager";
-// import { LOADVIEW_TYPE_NONE, eCloseAnim } from "../common/Constant";
-// import { UIManager } from "./UIManager";
 namespace airkit {
     /**
      * 非可拖动界面基类
      * @author ankye
      * @time 2018-7-19
      */
-    export var ViewIDSeq:number = 0;
-    export function genViewIDSeq():number {
-        return ViewIDSeq++
-    }
 
-    export class BaseView extends fgui.GComponent implements IUIPanel {
+    export class Dialog extends fgui.Window implements IUIPanel {
         protected _isOpen: boolean = false;
         protected _UIID: string = null;
         public objectData: any = null;
@@ -40,12 +28,6 @@ namespace airkit {
             return this.name;
         }
  
-
-        public debug(): void {
-            let bgColor: string = "#4aa7a688";
-            // this.graphics.clear()
-            // this.graphics.drawRect(0, 0, this.width, this.height, bgColor)
-        }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～公共方法～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**打开*/
         public setup(args: any): void {
@@ -86,7 +68,7 @@ namespace airkit {
         public setVisible(bVisible: boolean): void {
             let old: boolean = this.visible;
             this.visible = bVisible;
-         
+        
         }
         /**设置界面唯一id，只在UIManager设置，其他地方不要再次设置*/
         public setUIID(id: string): void {
@@ -123,7 +105,7 @@ namespace airkit {
         /**多语言初始化，或语音设定改变时触发*/
         public onLangChange(): void {}
 
-       //framework需要提前加载的资源
+        //framework需要提前加载的资源
         public static res():  Array<Res> {
             return null;
         }
@@ -258,5 +240,6 @@ namespace airkit {
             UIManager.Instance.close(this.UIID, eCloseAnim.CLOSE_CENTER);
             return true;
         }
+    
     }
 }

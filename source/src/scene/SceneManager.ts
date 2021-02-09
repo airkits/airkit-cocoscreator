@@ -16,23 +16,29 @@ namespace airkit {
      * @time 2017-7-13
      */
     export class SceneManager {
+       
+
+        public static cache: SDictionary<BaseView>; 
+        private static instance: SceneManager = null;
+        private _curScene: BaseView;
+
         /**
-         * 注册场景类，存放场景id和name的对应关系
+         * 注册场景类，存放场景name和class的对应关系
          * @param name
          * @param cls
          */
-        public static register(
-            name: string,
-            cls: any
-        ): any {
+        public static register(name: string,cls: any ): any {
+            if(!this.cache){
+                this.cache = new SDictionary<BaseView>();
+            }
+            if (this.cache.containsKey(name)) {
+                Log.error("SceneManager::register scene - same id is register:" + name);
+                return;
+            }
+            this.cache.add(name,cls);
             fgui.UIObjectFactory.setExtension(cls.URL, cls);
-           ClassUtils.regClass(name, cls);
+            ClassUtils.regClass(name, cls);
         }
-
-        public static getClass: (name:string)=>typeof BaseView;
-        private _curScene: BaseView;
-
-        private static instance: SceneManager = null;
         public static get Instance(): SceneManager {
             if (!this.instance) this.instance = new SceneManager();
             return this.instance;
@@ -103,6 +109,8 @@ namespace airkit {
                     scene.setup(args);
                     
                   //  ResourceManager.Instance.dump();
+                }else{
+                    Log.error("加载场景失败 {1}",sceneName);
                 }
             });
         }

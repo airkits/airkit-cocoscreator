@@ -21,12 +21,14 @@
     "ui://v9v1pqglnz2l13",
     "ui://v9v1pqglnz2lz",
     "ui://v9v1pqglnz2lw",
-    "ui://21mnfg0cn70mh"
+    "ui://21mnfg0cn70mh",
+    "ui://21mnfg0cy3shk",
+    "ui://v9v1pqglsi0ta"
   ],
   "test.device": "iPhone 8 Plus",
   "canvasColor": 10066329,
   "auxline2": true,
-  "doc.activeDoc": "ui://21mnfg0cn70mh",
+  "doc.activeDoc": "ui://v9v1pqglnz2li",
   "libview.twoColumn": false,
   "libview.expandedNodes": [
     "21mnfg0c",

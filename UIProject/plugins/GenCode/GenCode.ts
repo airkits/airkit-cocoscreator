@@ -51,7 +51,11 @@ function genCode(handler: FairyEditor.PublishHandler) {
         }
 
         if (classInfo.superClassName == "fgui.GComponent") {
-            writer.writeln('export default class %s extends %s', classInfo.className, "airkit.BaseView");
+           // if(classInfo.className.indexOf("Dlg") > 0){
+             //   writer.writeln('export default class %s extends %s', classInfo.className, "airkit.Dialog");
+            //}else{
+                writer.writeln('export default class %s extends %s', classInfo.className, "airkit.BaseView");
+           // }
         } else {
             writer.writeln('export default class %s extends %s', classInfo.className, classInfo.superClassName);
         }

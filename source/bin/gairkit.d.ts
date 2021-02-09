@@ -284,8 +284,8 @@ declare namespace airkit {
      */
     const LOADVIEW_TYPE_NONE: number;
     enum eUIQueueType {
-        POPUP = 1,
-        ALERT = 2
+        POPUP = 0,
+        ALERT = 1
     }
     enum ePopupAnim {
     }
@@ -1105,13 +1105,14 @@ declare namespace airkit {
      * @author ankye
      * @time 2018-7-19
      */
+    var ViewIDSeq: number;
+    function genViewIDSeq(): number;
     class BaseView extends fgui.GComponent implements IUIPanel {
         protected _isOpen: boolean;
-        protected _UIID: number;
+        protected _UIID: string;
         objectData: any;
         private _destory;
         private _viewID;
-        private static __ViewIDSeq;
         constructor();
         setName(name: string): void;
         getName(): string;
@@ -1124,8 +1125,8 @@ declare namespace airkit {
         /**是否可见*/
         setVisible(bVisible: boolean): void;
         /**设置界面唯一id，只在UIManager设置，其他地方不要再次设置*/
-        setUIID(id: number): void;
-        get UIID(): number;
+        setUIID(id: string): void;
+        get UIID(): string;
         get viewID(): number;
         /**初始化，和onDestroy是一对*/
         onCreate(args: any): void;
@@ -1138,14 +1139,80 @@ declare namespace airkit {
         onDisable(): void;
         /**多语言初始化，或语音设定改变时触发*/
         onLangChange(): void;
-        /**需要提前加载的资源
-     * 例:
-     *  return [
-            [url:"res/image/1.png", Laya.Loader.IMAGE],
-            [url:"res/image/2.png", Laya.Loader.IMAGE],
-            [url:"res/image/3.png", Laya.Loader.IMAGE],
-        ]
-    */
+        static res(): Array<Res>;
+        static unres(): void;
+        static loaderTips(): string;
+        static loaderType(): number;
+        protected signalMap(): Array<any>;
+        /**
+     * UI按钮等注册事件列表，内部会在界面销毁时，自动反注册
+     * 例：
+            return [
+                [this._loginBtn, Laya.Event.CLICK, this.onPressLogin],
+            ]
+     */
+        protected eventMap(): Array<any>;
+        /**自定义事件注册，用于EventCenter派发的事件*/
+        protected registerEvent(): void;
+        protected unRegisterEvent(): void;
+        /**
+         * 是否优化界面显示,原则：
+         * 1.对于容器内有大量静态内容或者不经常变化的内容（比如按钮），可以对整个容器设置cacheAs属性，能大量减少Sprite的数量，显著提高性能。
+         * 2.如果有动态内容，最好和静态内容分开，以便只缓存静态内
+         * 3.容器内有经常变化的内容，比如容器内有一个动画或者倒计时，如果再对这个容器设置cacheAs=”bitmap”，会损失性能。
+         * 4.对象非常简单，比如一个字或者一个图片，设置cacheAs=”bitmap”不但不提高性能，反而会损失性能。
+         */
+        protected staticCacheUI(): any[];
+        /**处理需要提前加载的资源,手动创建的view需要手动调用*/
+        static loadResource(onAssetLoaded: (v: boolean) => void): void;
+        private registerSignalEvent;
+        private unregisterSignalEvent;
+        /**注册界面事件*/
+        private registeGUIEvent;
+        private unregisteGUIEvent;
+        protected static buildRes(resMap: {
+            [index: string]: {};
+        }): Array<Res>;
+        doClose(): boolean;
+    }
+}
+declare namespace airkit {
+    /**
+     * 非可拖动界面基类
+     * @author ankye
+     * @time 2018-7-19
+     */
+    class Dialog extends fgui.Window implements IUIPanel {
+        protected _isOpen: boolean;
+        protected _UIID: string;
+        objectData: any;
+        private _destory;
+        private _viewID;
+        constructor();
+        setName(name: string): void;
+        getName(): string;
+        /**打开*/
+        setup(args: any): void;
+        /**关闭*/
+        dispose(): void;
+        isDestory(): boolean;
+        /**是否可见*/
+        setVisible(bVisible: boolean): void;
+        /**设置界面唯一id，只在UIManager设置，其他地方不要再次设置*/
+        setUIID(id: string): void;
+        get UIID(): string;
+        get viewID(): number;
+        /**初始化，和onDestroy是一对*/
+        onCreate(args: any): void;
+        /**销毁*/
+        onDestroy(): void;
+        /**每帧循环：如果覆盖，必须调用super.update()*/
+        update(dt: number): boolean;
+        /**资源加载结束*/
+        onEnable(): void;
+        onDisable(): void;
+        /**多语言初始化，或语音设定改变时触发*/
+        onLangChange(): void;
         static res(): Array<Res>;
         static unres(): void;
         static loaderTips(): string;
@@ -1206,7 +1273,7 @@ declare namespace airkit {
         /**是否可见*/
         setVisible(bVisible: boolean): void;
         /**设置界面唯一id*/
-        setUIID(id: number): void;
+        setUIID(id: string): void;
         update(dt: number): boolean;
         removeFromParent(): void;
     }
@@ -1286,15 +1353,15 @@ declare namespace airkit {
      * @time 2017-7-13
      */
     class SceneManager {
+        static cache: SDictionary<BaseView>;
+        private static instance;
+        private _curScene;
         /**
-         * 注册场景类，存放场景id和name的对应关系
+         * 注册场景类，存放场景name和class的对应关系
          * @param name
          * @param cls
          */
         static register(name: string, cls: any): any;
-        static getClass: (name: string) => typeof BaseView;
-        private _curScene;
-        private static instance;
         static get Instance(): SceneManager;
         setup(): void;
         destroy(): void;
@@ -1314,26 +1381,33 @@ declare namespace airkit {
  * @time 2018-7-3
  */
 declare namespace airkit {
-    class UIManager extends Singleton {
-        private _dicConfig;
+    export class UIManager extends Singleton {
+        static cache: SDictionary<any>;
+        /**
+      * 注册ui类，存放uiname和class的对应关系
+      * @param name
+      * @param cls
+      */
+        static register(name: string, cls: any): any;
         private _dicUIView;
         private _UIQueues;
         private static instance;
         static get Instance(): UIManager;
         constructor();
+        getQueue(t: eUIQueueType): UIQueue;
         empty(): boolean;
         /**
          * 显示界面
-         * @param id        界面id
+         * @param uiName        界面uiName
          * @param args      参数
          */
-        show(id: number, ...args: any[]): Promise<any>;
+        show(uiName: string, ...args: any[]): Promise<any>;
         /**
          * 关闭界面
-         * @param id    界面id
+         * @param uiName    界面id
          */
-        close(id: number, animType?: number): Promise<any>;
-        clearPanel(id: number, panel: IUIPanel, resInfo: UIConfig): boolean;
+        close(uiName: string, animType?: number): Promise<any>;
+        clearPanel(uiName: string, panel: IUIPanel): boolean;
         /**
          * 关闭所有界面
          * @param   exclude_list    需要排除关闭的列表
@@ -1341,64 +1415,44 @@ declare namespace airkit {
         closeAll(exclude_list?: Array<number>): void;
         /**
          * 弹窗UI，默认用队列显示
-         * @param id
+         * @param uiName
          * @param args
          */
-        popup(id: number, ...args: any[]): void;
+        popup(uiName: string, ...args: any[]): void;
         /**
          * alert框，默认队列显示
          *
-         * @param {number} id
+         * @param {string} uiName
          * @param {...any[]} args
          * @memberof UIManager
          */
-        alert(id: number, ...args: any[]): void;
+        alert(uiName: string, ...args: any[]): void;
         /**查找界面*/
-        findPanel(id: number): IUIPanel;
+        findPanel(uiName: string): IUIPanel;
         /**界面是否打开*/
-        isPanelOpen(id: number): boolean;
-        tipsPopup(toastLayer: fgui.GComponent, target: fgui.GComponent, view: fgui.GComponent, duration?: number, fromProps?: any, toProps?: any, usePool?: boolean): Promise<any>;
-        singleToast(toastLayer: fgui.GComponent, target: fgui.GComponent, view: fgui.GComponent, duration: number, speedUp: boolean, usePool?: boolean, x?: number, y?: number): Promise<any>;
-        toast(toastLayer: fgui.GComponent, target: fgui.GComponent, view: fgui.GComponent, duration: number, speedUp: boolean, usePool?: boolean, x?: number, y?: number): Promise<any>;
-        setup(): void;
-        destroy(): boolean;
-        update(dt: number): void;
-        addUIConfig(info: UIConfig): void;
-        clearUIConfig(): void;
-        getUIConfig(id: number): UIConfig;
-        getUILayerID(id: number): number;
+        isPanelOpen(uiName: string): boolean;
     }
-    /**
-    显示弹出框信息
-    @param callback         回调函数
-    @param title            标题，默认是""
-    @param content          提示内容 RICHTEXT样式
-    @param tips             内容文本的一个底部tip文本,RICHTEXT样式,不需要可以传null
-    @param buttons          按钮的label,不需要显示按钮可以传null,确认按钮[{按钮属性k:v依据Label}]
-    @param param            调用方预设的参数，保存在alertView对象中，可以通过getParam方法获取
-    */
-    class AlertInfo {
-        callback: Function;
-        title: string;
-        content: string;
-        tips: string;
-        buttons: any;
-        param: any;
-        constructor(callback: Function, title: string, content: string, tips?: string, buttons?: any, param?: any);
+    class UIQueue {
+        private _currentUI;
+        private _listPanels;
+        constructor();
+        /**
+         * 直接显示界面,注：
+         * 1.通过这个接口打开的界面，初始化注册的ui类设定的UIConfig.mHideDestroy必须为true。原因是显示下一个界面是通过上个界面的CLOSE事件触发
+         * @param 	id		界面id
+         * @param 	args	创建参数，会在界面onCreate时传入
+         */
+        show(id: string, args: any[]): void;
+        empty(): boolean;
+        /**
+         * 判断是否弹出下一个界面
+         */
+        private checkAlertNext;
+        private registerEvent;
+        private unRegisterEvent;
+        private onUIEvent;
     }
-    class UIConfig {
-        mID: number;
-        /**ui类*/
-        name: string;
-        cls: any;
-        /**层级*/
-        mLayer: number;
-        /**隐藏销毁*/
-        mHideDestroy: boolean;
-        /**对齐*/
-        mAlige: eAligeType;
-        constructor(id: number, name: string, cls: any, layer: number, destroy: boolean, alige: eAligeType);
-    }
+    export {};
 }
 /**
  * 本地数据

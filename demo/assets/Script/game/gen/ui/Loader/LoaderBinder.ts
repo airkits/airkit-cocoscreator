@@ -8,6 +8,7 @@ import UILoading from "./UILoading";
 import UIAlertDlg from "./UIAlertDlg";
 import UIPanel from "./UIPanel";
 import UIPopup from "./UIPopup";
+import UIWindowFrame from "./UIWindowFrame";
 import UIbg from "./UIbg";
 import UIFullScreenLoadingDlg from "./UIFullScreenLoadingDlg";
 import UILoadingDlg from "./UILoadingDlg";
@@ -25,6 +26,7 @@ export default class LoaderBinder {
 		fgui.UIObjectFactory.setExtension(UIAlertDlg.URL, UIAlertDlg);
 		fgui.UIObjectFactory.setExtension(UIPanel.URL, UIPanel);
 		fgui.UIObjectFactory.setExtension(UIPopup.URL, UIPopup);
+		fgui.UIObjectFactory.setExtension(UIWindowFrame.URL, UIWindowFrame);
 		fgui.UIObjectFactory.setExtension(UIbg.URL, UIbg);
 		fgui.UIObjectFactory.setExtension(UIFullScreenLoadingDlg.URL, UIFullScreenLoadingDlg);
 		fgui.UIObjectFactory.setExtension(UILoadingDlg.URL, UILoadingDlg);

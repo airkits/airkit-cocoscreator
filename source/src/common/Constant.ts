@@ -5,8 +5,8 @@ namespace airkit {
   export const LOADVIEW_TYPE_NONE: number = 0;
 
   export enum eUIQueueType {
-    POPUP = 1,
-    ALERT = 2
+    POPUP = 0,
+    ALERT = 1
   }
 
   export enum ePopupAnim {}

@@ -7,6 +7,7 @@ export default class UILoginScene extends airkit.BaseView {
 	public bg:UIbg;
 	public imgBg:fgui.GLoader;
 	public btnStart:fgui.GButton;
+	public btnShowDlg:fgui.GButton;
 	public click:fgui.Transition;
 	public t1:fgui.Transition;
 	public static URL:string = "ui://v9v1pqglsi0tb";
@@ -22,6 +23,7 @@ export default class UILoginScene extends airkit.BaseView {
 		this.bg = <UIbg>(this.getChildAt(0));
 		this.imgBg = <fgui.GLoader>(this.getChildAt(1));
 		this.btnStart = <fgui.GButton>(this.getChildAt(3));
+		this.btnShowDlg = <fgui.GButton>(this.getChildAt(4));
 		this.click = this.getTransitionAt(0);
 		this.t1 = this.getTransitionAt(1);
 	}

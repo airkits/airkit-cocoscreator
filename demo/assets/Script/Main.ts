@@ -7,6 +7,8 @@ import LoaderBinder from './game/gen/ui/Loader/LoaderBinder';
 import HomeBinder from './game/gen/ui/Home/HomeBinder';
 import BattleScene from './game/module/battle/BattleScene';
 import HomeScene from './game/module/home/HomeScene';
+import { eDialogType } from './game/common/DialogType';
+import { AlertDlg } from './game/module/login/AlertDlg';
 const { ccclass, property } = cc._decorator;
 
 @ccclass
@@ -23,6 +25,7 @@ export default class Main extends cc.Component {
         ak.SceneManager.register(eSceneType.LOGIN,LoginScene);
         ak.SceneManager.register(eSceneType.BATTLE, BattleScene);
         ak.SceneManager.register(eSceneType.HOME, HomeScene)
+        ak.UIManager.register(eDialogType.ALERT,AlertDlg)
         M.login().then(v=>{     
             v.enterScene();
         })

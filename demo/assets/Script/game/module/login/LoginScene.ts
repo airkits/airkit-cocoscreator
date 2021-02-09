@@ -1,3 +1,4 @@
+import { eDialogType } from '../../common/DialogType';
 import M from '../../gen/M';
 import UILoginScene from '../../gen/ui/Loader/UILoginScene';
 
@@ -25,7 +26,6 @@ export default class LoginScene extends UILoginScene{
         super.onEnable();
         airkit.Log.info("login scene onEnable");
         
-
     }
     //先加载资源
     public static res(): Array<ak.Res> {
@@ -41,7 +41,8 @@ export default class LoginScene extends UILoginScene{
     }
     protected eventMap(): Array<any> {
         return [
-          [this.btnStart,fgui.Event.CLICK,this.onBtnStart]
+          [this.btnStart,fgui.Event.CLICK,this.onBtnStart],
+          [this.btnShowDlg,fgui.Event.CLICK,this.onBtnShowDlg],
         ]
   
     }
@@ -49,6 +50,9 @@ export default class LoginScene extends UILoginScene{
         return [
            
         ]
+    }
+    public onBtnShowDlg():void {
+        ak.UIManager.Instance.show(eDialogType.ALERT);
     }
     public onBtnStart():void {
         console.log("start btn");

@@ -1011,8 +1011,8 @@ window.ak = window.airkit;
     airkit.LOADVIEW_TYPE_NONE = 0;
     let eUIQueueType;
     (function (eUIQueueType) {
-        eUIQueueType[eUIQueueType["POPUP"] = 1] = "POPUP";
-        eUIQueueType[eUIQueueType["ALERT"] = 2] = "ALERT";
+        eUIQueueType[eUIQueueType["POPUP"] = 0] = "POPUP";
+        eUIQueueType[eUIQueueType["ALERT"] = 1] = "ALERT";
     })(eUIQueueType = airkit.eUIQueueType || (airkit.eUIQueueType = {}));
     let ePopupAnim;
     (function (ePopupAnim) {
@@ -3864,14 +3864,19 @@ window.ak = window.airkit;
      * @author ankye
      * @time 2018-7-19
      */
+    airkit.ViewIDSeq = 0;
+    function genViewIDSeq() {
+        return airkit.ViewIDSeq++;
+    }
+    airkit.genViewIDSeq = genViewIDSeq;
     class BaseView extends fgui.GComponent {
         constructor() {
             super();
             this._isOpen = false;
-            this._UIID = 0;
+            this._UIID = null;
             this.objectData = null;
             this._destory = false;
-            this._viewID = BaseView.__ViewIDSeq++;
+            this._viewID = genViewIDSeq();
         }
         setName(name) {
             this.name = name;
@@ -3918,11 +3923,6 @@ window.ak = window.airkit;
         setVisible(bVisible) {
             let old = this.visible;
             this.visible = bVisible;
-            // if (old != bVisible) {
-            //     if (bVisible)
-            //     else
-            //         this.onDisable()
-            // }
         }
         /**设置界面唯一id，只在UIManager设置，其他地方不要再次设置*/
         setUIID(id) {
@@ -3956,14 +3956,7 @@ window.ak = window.airkit;
         }
         /**多语言初始化，或语音设定改变时触发*/
         onLangChange() { }
-        /**需要提前加载的资源
-     * 例:
-     *  return [
-            [url:"res/image/1.png", Laya.Loader.IMAGE],
-            [url:"res/image/2.png", Laya.Loader.IMAGE],
-            [url:"res/image/3.png", Laya.Loader.IMAGE],
-        ]
-    */
+        //framework需要提前加载的资源
         static res() {
             return null;
         }
@@ -4084,8 +4077,220 @@ window.ak = window.airkit;
             return true;
         }
     }
-    BaseView.__ViewIDSeq = 0;
     airkit.BaseView = BaseView;
+})(airkit || (airkit = {}));
+/// <reference path="./BaseView.ts" />
+
+(function (airkit) {
+    /**
+     * 非可拖动界面基类
+     * @author ankye
+     * @time 2018-7-19
+     */
+    class Dialog extends fgui.Window {
+        constructor() {
+            super();
+            this._isOpen = false;
+            this._UIID = null;
+            this.objectData = null;
+            this._destory = false;
+            this._viewID = airkit.genViewIDSeq();
+        }
+        setName(name) {
+            this.name = name;
+        }
+        getName() {
+            return this.name;
+        }
+        /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～公共方法～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
+        /**打开*/
+        setup(args) {
+            this._isOpen = true;
+            this.onLangChange();
+            this.onCreate(args);
+            airkit.EventCenter.dispatchEvent(airkit.EventID.UI_OPEN, this._UIID);
+            airkit.EventCenter.on(airkit.EventID.UI_LANG, this, this.onLangChange);
+            this.registerEvent();
+            this.registeGUIEvent();
+            this.registerSignalEvent();
+        }
+        /**关闭*/
+        dispose() {
+            if (this._destory)
+                return;
+            this._destory = true;
+            this.unRegisterEvent();
+            this.unregisteGUIEvent();
+            this.unregisterSignalEvent();
+            this._isOpen = false;
+            this.objectData = null;
+            airkit.EventCenter.dispatchEvent(airkit.EventID.UI_CLOSE, this._UIID);
+            airkit.EventCenter.off(airkit.EventID.UI_LANG, this, this.onLangChange);
+            super.dispose();
+            console.log(this.name + " dispose");
+        }
+        isDestory() {
+            return this._destory;
+        }
+        /**是否可见*/
+        setVisible(bVisible) {
+            let old = this.visible;
+            this.visible = bVisible;
+        }
+        /**设置界面唯一id，只在UIManager设置，其他地方不要再次设置*/
+        setUIID(id) {
+            this._UIID = id;
+        }
+        get UIID() {
+            return this._UIID;
+        }
+        get viewID() {
+            return this._viewID;
+        }
+        /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～可重写的方法，注意逻辑层不要再次调用～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
+        /**初始化，和onDestroy是一对*/
+        onCreate(args) {
+        }
+        /**销毁*/
+        onDestroy() {
+            super.onDestroy();
+        }
+        /**每帧循环：如果覆盖，必须调用super.update()*/
+        update(dt) {
+            return true;
+        }
+        /**资源加载结束*/
+        onEnable() {
+            super.onEnable();
+        }
+        //资源卸载前
+        onDisable() {
+            super.onDisable();
+        }
+        /**多语言初始化，或语音设定改变时触发*/
+        onLangChange() { }
+        //framework需要提前加载的资源
+        static res() {
+            return null;
+        }
+        static unres() {
+            let arr = this.res();
+            if (arr && arr.length > 0) {
+                for (let i = 0; i < arr.length; i++) {
+                    airkit.ResourceManager.Instance.clearRes(arr[i].url, arr[i].refCount);
+                }
+            }
+        }
+        static loaderTips() {
+            return "资源加载中";
+        }
+        //显示加载界面 默认不显示
+        static loaderType() {
+            return airkit.LOADVIEW_TYPE_NONE;
+        }
+        //信号事件注册，适合单体物件事件传递
+        // return [
+        //     [me.updateSignal, this, this.refreshUser],
+        // ]
+        //   public refreshUser(val: any, result: [model.eUserAttr, number]): void
+        signalMap() {
+            return null;
+        }
+        /**
+     * UI按钮等注册事件列表，内部会在界面销毁时，自动反注册
+     * 例：
+            return [
+                [this._loginBtn, Laya.Event.CLICK, this.onPressLogin],
+            ]
+     */
+        eventMap() {
+            return null;
+        }
+        /**自定义事件注册，用于EventCenter派发的事件*/
+        registerEvent() { }
+        unRegisterEvent() { }
+        /**
+         * 是否优化界面显示,原则：
+         * 1.对于容器内有大量静态内容或者不经常变化的内容（比如按钮），可以对整个容器设置cacheAs属性，能大量减少Sprite的数量，显著提高性能。
+         * 2.如果有动态内容，最好和静态内容分开，以便只缓存静态内
+         * 3.容器内有经常变化的内容，比如容器内有一个动画或者倒计时，如果再对这个容器设置cacheAs=”bitmap”，会损失性能。
+         * 4.对象非常简单，比如一个字或者一个图片，设置cacheAs=”bitmap”不但不提高性能，反而会损失性能。
+         */
+        staticCacheUI() {
+            return null;
+        }
+        /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～内部方法～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
+        /**处理需要提前加载的资源,手动创建的view需要手动调用*/
+        static loadResource(onAssetLoaded) {
+            let tips = this.loaderTips();
+            let loaderType = this.loaderType();
+            airkit.ResourceManager.Instance.loadArrayRes(this.res(), loaderType, tips, 1, true)
+                .then((v) => {
+                onAssetLoaded(true);
+            })
+                .catch((e) => {
+                airkit.Log.error(e);
+                onAssetLoaded(false);
+            });
+        }
+        registerSignalEvent() {
+            let event_list = this.signalMap();
+            if (!event_list)
+                return;
+            for (let item of event_list) {
+                let signal = item[0];
+                signal.on(item[1], item[2], item.slice(3));
+            }
+        }
+        unregisterSignalEvent() {
+            let event_list = this.signalMap();
+            if (!event_list)
+                return;
+            for (let item of event_list) {
+                let signal = item[0];
+                signal.off(item[1], item[2]);
+            }
+        }
+        /**注册界面事件*/
+        registeGUIEvent() {
+            let event_list = this.eventMap();
+            if (!event_list)
+                return;
+            for (let item of event_list) {
+                let gui_control = item[0];
+                gui_control.on(item[1], item[2], this);
+            }
+        }
+        unregisteGUIEvent() {
+            let event_list = this.eventMap();
+            if (!event_list)
+                return;
+            for (let item of event_list) {
+                let gui_control = item[0];
+                gui_control.off(item[1], item[2], this);
+            }
+        }
+        static buildRes(resMap) {
+            let res = [];
+            for (let k in resMap) {
+                res.push({ url: "ui/" + k, type: airkit.FguiAsset, refCount: 1, pkg: k });
+                for (let k2 in resMap[k]) {
+                    res.push({ url: "ui/" + k2, type: airkit.FguiAtlas, refCount: resMap[k][k2], pkg: k });
+                }
+            }
+            return res;
+        }
+        doClose() {
+            if (this._isOpen === false) {
+                airkit.Log.error("连续点击");
+                return false; //避免连续点击关闭
+            }
+            this._isOpen = false;
+            airkit.UIManager.Instance.close(this.UIID, airkit.eCloseAnim.CLOSE_CENTER);
+            return true;
+        }
+    }
+    airkit.Dialog = Dialog;
 })(airkit || (airkit = {}));
 // import { Singleton } from "../collection/Singleton";
 // import { DisplayUtils, displayWidth } from '../utils/DisplayUtils';
@@ -4396,11 +4601,19 @@ window.ak = window.airkit;
      */
     class SceneManager {
         /**
-         * 注册场景类，存放场景id和name的对应关系
+         * 注册场景类，存放场景name和class的对应关系
          * @param name
          * @param cls
          */
         static register(name, cls) {
+            if (!this.cache) {
+                this.cache = new airkit.SDictionary();
+            }
+            if (this.cache.containsKey(name)) {
+                airkit.Log.error("SceneManager::register scene - same id is register:" + name);
+                return;
+            }
+            this.cache.add(name, cls);
             fgui.UIObjectFactory.setExtension(cls.URL, cls);
             airkit.ClassUtils.regClass(name, cls);
         }
@@ -4459,6 +4672,9 @@ window.ak = window.airkit;
                     scene.setup(args);
                     //  ResourceManager.Instance.dump();
                 }
+                else {
+                    airkit.Log.error("加载场景失败 {1}", sceneName);
+                }
             });
         }
         exitScene() {
@@ -4486,23 +4702,40 @@ window.ak = window.airkit;
     class UIManager extends airkit.Singleton {
         constructor() {
             super();
-            this._dicConfig = null;
             this._dicUIView = null;
             this._UIQueues = null;
-            this._dicConfig = new airkit.NDictionary();
-            this._dicUIView = new airkit.NDictionary();
-            this._UIQueues = new airkit.NDictionary();
+            this._dicUIView = new airkit.SDictionary();
+            this._UIQueues = new Array();
             //预创建2个队列,通常情况下都能满足需求了
-            this._UIQueues.add(airkit.eUIQueueType.POPUP, new UIQueue());
-            this._UIQueues.add(airkit.eUIQueueType.ALERT, new UIQueue());
+            this._UIQueues[airkit.eUIQueueType.POPUP] = new UIQueue();
+            this._UIQueues[airkit.eUIQueueType.ALERT] = new UIQueue();
+        }
+        /**
+      * 注册ui类，存放uiname和class的对应关系
+      * @param name
+      * @param cls
+      */
+        static register(name, cls) {
+            if (!this.cache) {
+                this.cache = new airkit.SDictionary();
+            }
+            if (this.cache.containsKey(name)) {
+                airkit.Log.error("UIManager::register ui - same id is register:" + name);
+                return;
+            }
+            this.cache.add(name, cls);
+            airkit.ClassUtils.regClass(name, cls);
         }
         static get Instance() {
             if (!this.instance)
                 this.instance = new UIManager();
             return this.instance;
         }
+        getQueue(t) {
+            return this._UIQueues[t];
+        }
         empty() {
-            let queue = this._UIQueues.getValue(airkit.eUIQueueType.POPUP);
+            let queue = this.getQueue(airkit.eUIQueueType.POPUP);
             if (!queue.empty())
                 return false;
             if (this._dicUIView.length > 0)
@@ -4512,88 +4745,81 @@ window.ak = window.airkit;
         //～～～～～～～～～～～～～～～～～～～～～～～显示~～～～～～～～～～～～～～～～～～～～～～～～//
         /**
          * 显示界面
-         * @param id        界面id
+         * @param uiName        界面uiName
          * @param args      参数
          */
-        show(id, ...args) {
+        show(uiName, ...args) {
             return new Promise((resolve, reject) => {
-                airkit.Log.info("show panel {0}", id);
+                airkit.Log.info("show panel {0}", uiName);
                 //从缓存中查找
-                let obj = this._dicUIView.getValue(id);
+                let obj = this._dicUIView.getValue(uiName);
                 if (obj != null) {
                     if (obj["displayObject"] == null) {
-                        this._dicUIView.remove(id);
+                        this._dicUIView.remove(uiName);
                         obj = null;
                     }
                     else {
                         obj.setVisible(true);
-                        // return obj
                         resolve(obj);
                         return;
                     }
                 }
                 //获取数据
-                let conf = this._dicConfig.getValue(id);
-                airkit.assert(conf != null, "UIManager::Show - not find id:" + conf.mID);
-                let params = args.slice(0);
-                //切换
-                let clas = airkit.ClassUtils.getClass(conf.name);
-                let v = new clas();
-                airkit.assert(v != null, "UIManager::Show - cannot create ui:" + id);
-                v.setUIID(id);
-                v.setup(params);
-                v.loadResource((p) => {
-                    let layer = airkit.LayerManager.getLayer(conf.mLayer);
-                    layer.addChild(p);
-                    this._dicUIView.add(id, p);
-                    resolve(p);
-                })
-                    .catch((e) => {
-                    airkit.Log.error(e);
+                let clas = UIManager.cache.getValue(uiName);
+                clas.loadResource((v) => {
+                    if (v) {
+                        let ui = new clas();
+                        airkit.assert(ui != null, "UIManager::Show - cannot create ui:" + uiName);
+                        ui.setUIID(uiName);
+                        ui.setup(null);
+                        ui.show();
+                        this._dicUIView.add(uiName, ui);
+                        resolve(ui);
+                    }
+                    else {
+                        reject("ui load resource failed");
+                    }
                 });
             });
         }
         /**
          * 关闭界面
-         * @param id    界面id
+         * @param uiName    界面id
          */
-        close(id, animType = 0) {
+        close(uiName, animType = 0) {
             return new Promise((resolve, reject) => {
-                airkit.Log.info("close panel {0}", id);
+                airkit.Log.info("close panel {0}", uiName);
                 //获取数据
-                let conf = this._dicConfig.getValue(id);
-                airkit.assert(conf != null, "UIManager::Close - not find id:" + conf.mID);
-                let panel = this._dicUIView.getValue(id);
+                // let conf: UIConfig = this._dicConfig.getValue(id);
+                // assert(
+                //     conf != null,
+                //     "UIManager::Close - not find id:" + conf.mID
+                // );
+                let panel = this._dicUIView.getValue(uiName);
                 if (!panel)
                     return;
                 //切换
-                let clas = airkit.ClassUtils.getClass(conf.name);
+                let clas = airkit.ClassUtils.getClass(uiName);
                 clas.unres();
                 if (animType == 0) {
-                    let result = this.clearPanel(id, panel, conf);
-                    resolve([id, result]);
+                    let result = this.clearPanel(uiName, panel);
+                    resolve([uiName, result]);
                 }
                 else {
                     airkit.DisplayUtils.hide(panel, airkit.Handler.create(null, (v) => {
-                        let result = this.clearPanel(id, panel, conf);
-                        resolve([id, result]);
+                        let result = this.clearPanel(uiName, panel);
+                        resolve([uiName, result]);
                     }));
                 }
             });
         }
-        clearPanel(id, panel, resInfo) {
+        clearPanel(uiName, panel) {
             //销毁或隐藏
-            if (resInfo.mHideDestroy) {
-                this._dicUIView.remove(id);
-                airkit.Log.info("clear panel {0}", id);
-                panel.removeFromParent();
-                panel.dispose();
-                return true;
-            }
-            else {
-                panel.setVisible(false);
-                return false;
-            }
+            this._dicUIView.remove(uiName);
+            airkit.Log.info("clear panel {0}", uiName);
+            panel.removeFromParent();
+            panel.dispose();
+            return true;
         }
         /**
          * 关闭所有界面
@@ -4609,282 +4835,362 @@ window.ak = window.airkit;
         }
         /**
          * 弹窗UI，默认用队列显示
-         * @param id
+         * @param uiName
          * @param args
          */
-        popup(id, ...args) {
-            this._UIQueues.getValue(airkit.eUIQueueType.POPUP).show(id, args);
+        popup(uiName, ...args) {
+            this.getQueue(airkit.eUIQueueType.POPUP).show(uiName, args);
         }
         /**
          * alert框，默认队列显示
          *
-         * @param {number} id
+         * @param {string} uiName
          * @param {...any[]} args
          * @memberof UIManager
          */
-        alert(id, ...args) {
-            this._UIQueues.getValue(airkit.eUIQueueType.ALERT).show(id, args);
+        alert(uiName, ...args) {
+            this.getQueue(airkit.eUIQueueType.ALERT).show(uiName, args);
         }
         /**查找界面*/
-        findPanel(id) {
-            let panel = this._dicUIView.getValue(id);
+        findPanel(uiName) {
+            let panel = this._dicUIView.getValue(uiName);
             return panel;
         }
         /**界面是否打开*/
-        isPanelOpen(id) {
-            let panel = this._dicUIView.getValue(id);
+        isPanelOpen(uiName) {
+            let panel = this._dicUIView.getValue(uiName);
             if (panel)
                 return true;
             else
                 return false;
         }
-        //toast
-        tipsPopup(toastLayer, target, view, duration = 0.5, fromProps = null, toProps = null, usePool = true) {
-            return new Promise((resolve, reject) => {
-                //  target.addChild(view)
-                toastLayer.addChild(view);
-                view.setScale(0.1, 0.1);
-                //fgui坐标转化有问题，临时处理一下
-                let point = target.localToGlobal(target.width / 2.0 - target.pivotX * target.width, target.height * 0.382 - target.pivotY * target.height);
-                let localPoint = toastLayer.globalToLocal(point.x, point.y);
-                // view.setXY(target.width / 2.0, target.height * 0.382)
-                let start = 0;
-                let offset = 600;
-                let type = fgui.EaseType.BounceOut;
-                if (duration > 1.5) {
-                    start = toastLayer.height + 600;
-                    offset = -600;
-                    type = fgui.EaseType.QuadOut;
-                    view.setPosition(localPoint.x, start);
-                }
-                else {
-                    view.setPosition(localPoint.x, start - 200);
-                }
-                airkit.TweenUtils.get(view)
-                    .delay(1.5)
-                    .to({
-                    scaleX: 1.0,
-                    scaleY: 1.0,
-                    alpha: 1.0,
-                    x: localPoint.x,
-                    y: localPoint.y,
-                }, duration, type)
-                    .delay(0.5)
-                    .to({ x: localPoint.x, y: start - offset }, duration, fgui.EaseType.ExpoOut, airkit.Handler.create(null, () => {
-                    view.removeFromParent();
-                    resolve();
-                }));
-            });
-        }
-        //tips 单toast，具有排他性
-        singleToast(toastLayer, target, view, duration = 0.5, speedUp, usePool = true, x = null, y = null) {
-            return new Promise((resolve, reject) => {
-                let key = "_single_toast";
-                if (target[key] == null) {
-                    target[key] = [];
-                }
-                let inEase = fgui.EaseType.QuadOut;
-                let outEase = fgui.EaseType.QuadIn;
-                //  target.addChild(view)
-                toastLayer.addChild(view);
-                let k = airkit.ClassUtils.classKey(view);
-                for (var i in target[key]) {
-                    let o = target[key][i];
-                    if (o) {
-                        o["toY"] -= o.height + 5;
-                        if (airkit.ClassUtils.classKey(o) == k) {
-                            o.visible = false;
-                        }
-                    }
-                }
-                target[key].push(view);
-                view.visible = true;
-                view.setScale(0.1, 0.1);
-                //fgui坐标转化有问题，临时处理一下
-                if (x == null)
-                    x = target.width / 2.0 - target.pivotX * target.width;
-                if (y == null)
-                    y = target.height * 0.382 - target.pivotY * target.height;
-                let point = target.localToGlobal(x, y);
-                let localPoint = toastLayer.globalToLocal(point.x, point.y);
-                // view.setXY(target.width / 2.0, target.height * 0.382)
-                view.setPosition(localPoint.x, localPoint.y);
-                view["toY"] = view.y;
-                let tu = airkit.TweenUtils.get(view);
-                tu.setOnUpdate((gt) => {
-                    let toY = view["toY"];
-                    if (toY < view.y) {
-                        let offset = (toY - view.y) * 0.4;
-                        let limit = -5 - Math.ceil(view.height / 50);
-                        if (offset < limit)
-                            offset = limit;
-                        view.y += offset;
-                    }
-                });
-                let scale = 1.0;
-                tu.to({ scaleX: scale, scaleY: scale, alpha: 1.0 }, duration, inEase).to({ alpha: 0.4 }, duration * 0.7, outEase, airkit.Handler.create(this, () => {
-                    target[key].splice(target[key].indexOf(view), 1);
-                    if (target && view && view["parent"]) {
-                        view.removeFromParent();
-                        tu.clear();
-                    }
-                    if (usePool) {
-                        airkit.ObjectPools.recover(view);
-                    }
-                    else {
-                        view.dispose();
-                    }
-                    resolve();
-                }));
-            });
-        }
-        //toast
-        toast(toastLayer, target, view, duration = 0.5, speedUp, usePool = true, x = null, y = null) {
-            return new Promise((resolve, reject) => {
-                if (target["_toastList"] == null) {
-                    target["_toastList"] = [];
-                }
-                let inEase = fgui.EaseType.QuadOut;
-                let outEase = fgui.EaseType.QuadIn;
-                //  target.addChild(view)
-                toastLayer.addChild(view);
-                if (speedUp) {
-                    for (var i in target["_toastList"]) {
-                        if (target["_toastList"][i]) {
-                            target["_toastList"][i]["toY"] -=
-                                target["_toastList"][i].height + 8;
-                            target["_toastList"][i].visible = false;
-                        }
-                    }
-                    duration = duration;
-                    inEase = fgui.EaseType.BounceOut;
-                    outEase = fgui.EaseType.BounceIn;
-                }
-                else {
-                    for (var i in target["_toastList"]) {
-                        if (target["_toastList"][i]) {
-                            target["_toastList"][i]["toY"] -=
-                                target["_toastList"][i].height + 8;
-                        }
-                    }
-                }
-                target["_toastList"].push(view);
-                view.setScale(0.1, 0.1);
-                //fgui坐标转化有问题，临时处理一下
-                if (x == null)
-                    x = target.width / 2.0 - target.pivotX * target.width;
-                if (y == null)
-                    y = target.height * 0.382 - target.pivotY * target.height;
-                let point = target.localToGlobal(x, y);
-                let localPoint = toastLayer.globalToLocal(point.x, point.y);
-                // view.setXY(target.width / 2.0, target.height * 0.382)
-                view.setPosition(localPoint.x, localPoint.y);
-                view["toY"] = view.y;
-                let tu = airkit.TweenUtils.get(view);
-                tu.setOnUpdate((gt) => {
-                    let toY = view["toY"];
-                    if (toY < view.y) {
-                        let offset = (toY - view.y) * 0.4;
-                        let limit = -8 - Math.ceil(view.height / 50);
-                        if (offset < limit)
-                            offset = limit;
-                        view.y += offset;
-                    }
-                });
-                let scale = speedUp ? 1.0 : 1.0;
-                tu.to({ scaleX: scale, scaleY: scale, alpha: 1.0 }, duration, inEase).to({ alpha: 0.4 }, duration * 0.7, outEase, airkit.Handler.create(this, () => {
-                    target["_toastList"].splice(target["_toastList"].indexOf(view), 1);
-                    if (target && view && view["parent"]) {
-                        view.removeFromParent();
-                        tu.clear();
-                    }
-                    if (usePool) {
-                        airkit.ObjectPools.recover(view);
-                    }
-                    else {
-                        view.dispose();
-                    }
-                    resolve();
-                }));
-            });
-        }
-        setup() { }
-        destroy() {
-            this.closeAll();
-            this.clearUIConfig();
-            return true;
-        }
-        update(dt) {
-            this._dicUIView.foreach(function (key, value) {
-                value.update(dt);
-                return true;
-            });
-        }
-        //～～～～～～～～～～～～～～～～～～～～～～～加载~～～～～～～～～～～～～～～～～～～～～～～～//
-        addUIConfig(info) {
-            if (this._dicConfig.containsKey(info.mID)) {
-                airkit.Log.error("UIManager::Push UIConfig - same id is register:" + info.mID);
-                return;
-            }
-            this._dicConfig.add(info.mID, info);
-            airkit.ClassUtils.regClass(info.name, info.cls);
-        }
-        clearUIConfig() {
-            this._dicConfig.clear();
-        }
-        getUIConfig(id) {
-            return this._dicConfig.getValue(id);
-        }
-        getUILayerID(id) {
-            let info = this._dicConfig.getValue(id);
-            if (!info) {
-                return -1;
-            }
-            return info.mLayer;
-        }
     }
     UIManager.instance = null;
     airkit.UIManager = UIManager;
-    /**
-    显示弹出框信息
-    @param callback         回调函数
-    @param title            标题，默认是""
-    @param content          提示内容 RICHTEXT样式
-    @param tips             内容文本的一个底部tip文本,RICHTEXT样式,不需要可以传null
-    @param buttons          按钮的label,不需要显示按钮可以传null,确认按钮[{按钮属性k:v依据Label}]
-    @param param            调用方预设的参数，保存在alertView对象中，可以通过getParam方法获取
-    */
-    class AlertInfo {
-        constructor(callback, title = "", content, tips = "", buttons = {}, param = null) {
-            this.title = "";
-            this.tips = "";
-            this.buttons = [];
-            this.param = null;
-            this.callback = callback;
-            this.title = title;
-            this.content = content;
-            this.tips = tips;
-            this.buttons = buttons;
-            this.param = param;
-        }
-    }
-    airkit.AlertInfo = AlertInfo;
-    class UIConfig {
-        constructor(id, name, cls, layer, destroy, alige) {
-            this.mID = id;
-            this.name = name;
-            this.cls = cls;
-            this.mLayer = layer;
-            this.mHideDestroy = destroy;
-            this.mAlige = alige;
-        }
-    }
-    airkit.UIConfig = UIConfig;
+    //     //toast
+    //     public tipsPopup(
+    //         toastLayer: fgui.GComponent,
+    //         target: fgui.GComponent,
+    //         view: fgui.GComponent,
+    //         duration: number = 0.5,
+    //         fromProps = null,
+    //         toProps = null,
+    //         usePool: boolean = true
+    //     ): Promise<any> {
+    //         return new Promise<void>((resolve, reject) => {
+    //             //  target.addChild(view)
+    //             toastLayer.addChild(view);
+    //             view.setScale(0.1, 0.1);
+    //             //fgui坐标转化有问题，临时处理一下
+    //             let point = target.localToGlobal(
+    //                 target.width / 2.0 - target.pivotX * target.width,
+    //                 target.height * 0.382 - target.pivotY * target.height
+    //             );
+    //             let localPoint = toastLayer.globalToLocal(point.x, point.y);
+    //             // view.setXY(target.width / 2.0, target.height * 0.382)
+    //             let start = 0;
+    //             let offset = 600;
+    //             let type = fgui.EaseType.BounceOut;
+    //             if (duration > 1.5) {
+    //                 start = toastLayer.height + 600;
+    //                 offset = -600;
+    //                 type = fgui.EaseType.QuadOut;
+    //                 view.setPosition(localPoint.x, start);
+    //             } else {
+    //                 view.setPosition(localPoint.x, start - 200);
+    //             }
+    //             TweenUtils.get(view)
+    //                 .delay(1.5)
+    //                 .to(
+    //                     {
+    //                         scaleX: 1.0,
+    //                         scaleY: 1.0,
+    //                         alpha: 1.0,
+    //                         x: localPoint.x,
+    //                         y: localPoint.y,
+    //                     },
+    //                     duration,
+    //                     type
+    //                 )
+    //                 .delay(0.5)
+    //                 .to(
+    //                     { x: localPoint.x, y: start - offset },
+    //                     duration,
+    //                     fgui.EaseType.ExpoOut,
+    //                     Handler.create(null, () => {
+    //                         view.removeFromParent();
+    //                         resolve();
+    //                     })
+    //                 );
+    //         });
+    //     }
+    //     //tips 单toast，具有排他性
+    //     public singleToast(
+    //         toastLayer: fgui.GComponent,
+    //         target: fgui.GComponent,
+    //         view: fgui.GComponent,
+    //         duration: number = 0.5,
+    //         speedUp: boolean,
+    //         usePool: boolean = true,
+    //         x: number = null,
+    //         y: number = null
+    //     ): Promise<any> {
+    //         return new Promise<void>((resolve, reject) => {
+    //             let key = "_single_toast";
+    //             if (target[key] == null) {
+    //                 target[key] = [];
+    //             }
+    //             let inEase = fgui.EaseType.QuadOut;
+    //             let outEase = fgui.EaseType.QuadIn;
+    //             //  target.addChild(view)
+    //             toastLayer.addChild(view);
+    //             let k = ClassUtils.classKey(view);
+    //             for (var i in target[key]) {
+    //                 let o = target[key][i] as fgui.GComponent;
+    //                 if (o) {
+    //                     o["toY"] -= o.height + 5;
+    //                     if (ClassUtils.classKey(o) == k) {
+    //                         o.visible = false;
+    //                     }
+    //                 }
+    //             }
+    //             target[key].push(view);
+    //             view.visible = true;
+    //             view.setScale(0.1, 0.1);
+    //             //fgui坐标转化有问题，临时处理一下
+    //             if (x == null)
+    //                 x = target.width / 2.0 - target.pivotX * target.width;
+    //             if (y == null)
+    //                 y = target.height * 0.382 - target.pivotY * target.height;
+    //             let point = target.localToGlobal(x, y);
+    //             let localPoint = toastLayer.globalToLocal(point.x, point.y);
+    //             // view.setXY(target.width / 2.0, target.height * 0.382)
+    //             view.setPosition(localPoint.x, localPoint.y);
+    //             view["toY"] = view.y;
+    //             let tu = TweenUtils.get(view);
+    //             tu.setOnUpdate((gt: fgui.GTweener) => {
+    //                 let toY = view["toY"];
+    //                 if (toY < view.y) {
+    //                     let offset = (toY - view.y) * 0.4;
+    //                     let limit = -5 - Math.ceil(view.height / 50);
+    //                     if (offset < limit) offset = limit;
+    //                     view.y += offset;
+    //                 }
+    //             });
+    //             let scale = 1.0;
+    //             tu.to(
+    //                 { scaleX: scale, scaleY: scale, alpha: 1.0 },
+    //                 duration,
+    //                 inEase
+    //             ).to(
+    //                 { alpha: 0.4 },
+    //                 duration * 0.7,
+    //                 outEase,
+    //                 Handler.create(this, () => {
+    //                     target[key].splice(target[key].indexOf(view), 1);
+    //                     if (target && view && view["parent"]) {
+    //                         view.removeFromParent();
+    //                         tu.clear();
+    //                     }
+    //                     if (usePool) {
+    //                         ObjectPools.recover(view);
+    //                     } else {
+    //                         view.dispose();
+    //                     }
+    //                     resolve();
+    //                 })
+    //             );
+    //         });
+    //     }
+    //     //toast
+    //     public toast(
+    //         toastLayer: fgui.GComponent,
+    //         target: fgui.GComponent,
+    //         view: fgui.GComponent,
+    //         duration: number = 0.5,
+    //         speedUp: boolean,
+    //         usePool: boolean = true,
+    //         x: number = null,
+    //         y: number = null
+    //     ): Promise<any> {
+    //         return new Promise<void>((resolve, reject) => {
+    //             if (target["_toastList"] == null) {
+    //                 target["_toastList"] = [];
+    //             }
+    //             let inEase = fgui.EaseType.QuadOut;
+    //             let outEase = fgui.EaseType.QuadIn;
+    //             //  target.addChild(view)
+    //             toastLayer.addChild(view);
+    //             if (speedUp) {
+    //                 for (var i in target["_toastList"]) {
+    //                     if (target["_toastList"][i]) {
+    //                         target["_toastList"][i]["toY"] -=
+    //                             target["_toastList"][i].height + 8;
+    //                         target["_toastList"][i].visible = false;
+    //                     }
+    //                 }
+    //                 duration = duration;
+    //                 inEase = fgui.EaseType.BounceOut;
+    //                 outEase = fgui.EaseType.BounceIn;
+    //             } else {
+    //                 for (var i in target["_toastList"]) {
+    //                     if (target["_toastList"][i]) {
+    //                         target["_toastList"][i]["toY"] -=
+    //                             target["_toastList"][i].height + 8;
+    //                     }
+    //                 }
+    //             }
+    //             target["_toastList"].push(view);
+    //             view.setScale(0.1, 0.1);
+    //             //fgui坐标转化有问题，临时处理一下
+    //             if (x == null)
+    //                 x = target.width / 2.0 - target.pivotX * target.width;
+    //             if (y == null)
+    //                 y = target.height * 0.382 - target.pivotY * target.height;
+    //             let point = target.localToGlobal(x, y);
+    //             let localPoint = toastLayer.globalToLocal(point.x, point.y);
+    //             // view.setXY(target.width / 2.0, target.height * 0.382)
+    //             view.setPosition(localPoint.x, localPoint.y);
+    //             view["toY"] = view.y;
+    //             let tu = TweenUtils.get(view);
+    //             tu.setOnUpdate((gt: fgui.GTweener) => {
+    //                 let toY = view["toY"];
+    //                 if (toY < view.y) {
+    //                     let offset = (toY - view.y) * 0.4;
+    //                     let limit = -8 - Math.ceil(view.height / 50);
+    //                     if (offset < limit) offset = limit;
+    //                     view.y += offset;
+    //                 }
+    //             });
+    //             let scale = speedUp ? 1.0 : 1.0;
+    //             tu.to(
+    //                 { scaleX: scale, scaleY: scale, alpha: 1.0 },
+    //                 duration,
+    //                 inEase
+    //             ).to(
+    //                 { alpha: 0.4 },
+    //                 duration * 0.7,
+    //                 outEase,
+    //                 Handler.create(this, () => {
+    //                     target["_toastList"].splice(
+    //                         target["_toastList"].indexOf(view),
+    //                         1
+    //                     );
+    //                     if (target && view && view["parent"]) {
+    //                         view.removeFromParent();
+    //                         tu.clear();
+    //                     }
+    //                     if (usePool) {
+    //                         ObjectPools.recover(view);
+    //                     } else {
+    //                         view.dispose();
+    //                     }
+    //                     resolve();
+    //                 })
+    //             );
+    //         });
+    //     }
+    //     public setup(): void {}
+    //     public destroy(): boolean {
+    //         this.closeAll();
+    //         this.clearUIConfig();
+    //         return true;
+    //     }
+    //     public update(dt: number): void {
+    //         this._dicUIView.foreach(function (key, value) {
+    //             value.update(dt);
+    //             return true;
+    //         });
+    //     }
+    //     //～～～～～～～～～～～～～～～～～～～～～～～加载~～～～～～～～～～～～～～～～～～～～～～～～//
+    //     public register(info: UIConfig): void {
+    //         if (this._dicConfig.containsKey(info.mID)) {
+    //             Log.error(
+    //                 "UIManager::Push UIConfig - same id is register:" + info.mID
+    //             );
+    //             return;
+    //         }
+    //         this._dicConfig.add(info.mID, info);
+    //         ClassUtils.regClass(info.name, info.cls);
+    //     }
+    //     public clearUIConfig(): void {
+    //         this._dicConfig.clear();
+    //     }
+    //     public getUIConfig(id: number): UIConfig {
+    //         return this._dicConfig.getValue(id);
+    //     }
+    //     public getUILayerID(id: number) {
+    //         let info: UIConfig = this._dicConfig.getValue(id);
+    //         if (!info) {
+    //             return -1;
+    //         }
+    //         return info.mLayer;
+    //     }
+    // }
+    // /** 
+    // 显示弹出框信息
+    // @param callback         回调函数
+    // @param title            标题，默认是""
+    // @param content          提示内容 RICHTEXT样式
+    // @param tips             内容文本的一个底部tip文本,RICHTEXT样式,不需要可以传null
+    // @param buttons          按钮的label,不需要显示按钮可以传null,确认按钮[{按钮属性k:v依据Label}]
+    // @param param            调用方预设的参数，保存在alertView对象中，可以通过getParam方法获取
+    // */
+    // export class AlertInfo {
+    //     public callback: Function;
+    //     public title: string = "";
+    //     public content: string;
+    //     public tips: string = "";
+    //     public buttons: any = [];
+    //     public param: any = null;
+    //     constructor(
+    //         callback: Function,
+    //         title: string = "",
+    //         content: string,
+    //         tips: string = "",
+    //         buttons: any = {},
+    //         param: any = null
+    //     ) {
+    //         this.callback = callback;
+    //         this.title = title;
+    //         this.content = content;
+    //         this.tips = tips;
+    //         this.buttons = buttons;
+    //         this.param = param;
+    //     }
+    // }
+    // export class UIConfig {
+    //     public mID: number;
+    //     /**ui类*/
+    //     public name: string;
+    //     public cls: any;
+    //     /**层级*/
+    //     public mLayer: number;
+    //     /**隐藏销毁*/
+    //     public mHideDestroy: boolean;
+    //     /**对齐*/
+    //     public mAlige: eAligeType;
+    //     constructor(
+    //         id: number,
+    //         name: string,
+    //         cls: any,
+    //         layer: number,
+    //         destroy: boolean,
+    //         alige: eAligeType
+    //     ) {
+    //         this.mID = id;
+    //         this.name = name;
+    //         this.cls = cls;
+    //         this.mLayer = layer;
+    //         this.mHideDestroy = destroy;
+    //         this.mAlige = alige;
+    //     }
+    // }
     class UIQueue {
         constructor() {
             /*～～～～～～～～～～～～～～～～～～～～～队列方式显示界面，上一个界面关闭，才会显示下一个界面～～～～～～～～～～～～～～～～～～～～～*/
-            this._currentUI = 0;
-            this._currentUI = 0;
+            this._currentUI = null;
+            this._currentUI = null;
             this._listPanels = new airkit.Queue();
         }
         /**
@@ -4899,7 +5205,7 @@ window.ak = window.airkit;
             this.checkAlertNext();
         }
         empty() {
-            if (this._currentUI > 0 || this._listPanels.length > 0)
+            if (this._currentUI != null || this._listPanels.length > 0)
                 return false;
             return true;
         }
@@ -4907,7 +5213,7 @@ window.ak = window.airkit;
          * 判断是否弹出下一个界面
          */
         checkAlertNext() {
-            if (this._currentUI > 0 || this._listPanels.length <= 0)
+            if (this._currentUI != null || this._listPanels.length <= 0)
                 return;
             let info = this._listPanels.dequeue();
             this.registerEvent();
@@ -4924,8 +5230,8 @@ window.ak = window.airkit;
             switch (args.type) {
                 case airkit.EventID.UI_CLOSE:
                     let id = args.get(0);
-                    if (this._currentUI > 0 && this._currentUI == id) {
-                        this._currentUI = 0;
+                    if (this._currentUI != null && this._currentUI == id) {
+                        this._currentUI = null;
                         this.unRegisterEvent();
                         this.checkAlertNext();
                     }
