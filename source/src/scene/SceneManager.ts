@@ -99,22 +99,30 @@ namespace airkit {
             
             //切换
             let clas = ClassUtils.getClass(sceneName);
-            clas.loadResource((v)=>{
-                if(v){
-                    this.exitScene();
-                    let scene = clas.createInstance();
-                    scene.setName(sceneName);
-                    this._curScene = scene;
-                    LayerManager.mainLayer.addChild(scene);
-                    scene.setup(args);
-                    
-                  //  ResourceManager.Instance.dump();
-                }else{
-                    Log.error("加载场景失败 {1}",sceneName);
-                }
-            });
+            let res = clas.res();
+            if(res == null || (Array.isArray(res) && res.length == 0)){
+                this.exitScene();
+                this.enterScene(sceneName,clas,args);
+            }else{
+                clas.loadResource((v)=>{
+                    if(v){
+                        this.exitScene();
+                        this.enterScene(sceneName,clas,args);
+                      //  ResourceManager.Instance.dump();
+                    }else{
+                        Log.error("加载场景失败 {1}",sceneName);
+                    }
+                });
+            }
+            
         }
-
+        private enterScene(sceneName : string , clas : any , args? : any):void {
+             let scene = clas.createInstance();
+             scene.setName(sceneName);
+             this._curScene = scene;
+            LayerManager.mainLayer.addChild(scene);
+             scene.setup(args);
+        }
         
         private exitScene(): void {
             if (this._curScene) {

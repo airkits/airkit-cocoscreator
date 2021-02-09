@@ -76,20 +76,30 @@ namespace airkit {
 
                 //获取数据
                 let clas = UIManager.cache.getValue(uiName);
-                clas.loadResource((v)=>{
-                    if(v){
-                        let ui = new clas();
-                        assert(ui != null, "UIManager::Show - cannot create ui:" + uiName);
-                        ui.setUIID(uiName);
-                        ui.setup(null);
-                        ui.show();
-                        this._dicUIView.add(uiName, ui);
-                        resolve(ui);
-                    }else{
-                        reject("ui load resource failed");
-                    }
-                })
+                let res = clas.res();
+                if(res == null || (Array.isArray(res) && res.length == 0)){
+                    let ui = this.createView(uiName,clas,args)
+                    resolve(ui);
+                }else{
+                    clas.loadResource((v)=>{
+                        if(v){
+                            let ui = this.createView(uiName,clas,args)
+                            resolve(ui);
+                        }else{
+                            reject("ui load resource failed");
+                        }
+                    });
+                }
             });
+        }
+        public createView(uiName:string,clas:any,args?:any): any {
+            let ui = new clas();
+            assert(ui != null, "UIManager::Show - cannot create ui:" + uiName);
+            ui.setUIID(uiName);
+            ui.setup(null);
+            ui.show();
+            this._dicUIView.add(uiName, ui);
+            return ui;
         }
         /**
          * 关闭界面

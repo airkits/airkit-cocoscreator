@@ -1,7 +1,10 @@
 /** This is an automatically generated class by FairyGUI. Please do not modify it. **/
 
+import UIWindowFrame from "./UIWindowFrame";
+
 export default class UIAlertDlg extends airkit.BaseView {
 
+	public frame:UIWindowFrame;
 	public cancelBtn:fgui.GButton;
 	public confirmBtn:fgui.GButton;
 	public content:fgui.GTextField;
@@ -16,6 +19,7 @@ export default class UIAlertDlg extends airkit.BaseView {
 	}
 
 	protected onConstruct():void {
+		this.frame = <UIWindowFrame>(this.getChildAt(0));
 		this.cancelBtn = <fgui.GButton>(this.getChildAt(1));
 		this.confirmBtn = <fgui.GButton>(this.getChildAt(2));
 		this.content = <fgui.GTextField>(this.getChildAt(3));

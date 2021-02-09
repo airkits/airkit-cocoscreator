@@ -9,6 +9,8 @@ import BattleScene from './game/module/battle/BattleScene';
 import HomeScene from './game/module/home/HomeScene';
 import { eDialogType } from './game/common/DialogType';
 import { AlertDlg } from './game/module/login/AlertDlg';
+import UIAlert from "./game/gen/ui/Loader/UIAlert";
+import UIAlertDlg from "./game/gen/ui/Loader/UIAlertDlg";
 const { ccclass, property } = cc._decorator;
 
 @ccclass
@@ -19,6 +21,8 @@ export default class Main extends cc.Component {
     onLoad() {
         LoaderBinder.bindAll();
         HomeBinder.bindAll();
+        fgui.UIConfig.modalLayerColor = new cc.Color(0x0, 0x0, 0x0, 196);
+
         fgui.GRoot.create();
         ak.Framework.Instance.setup(fgui.GRoot.inst, ak.LogLevel.DEBUG, cc.winSize.width, cc.winSize.height);
         M.register();
@@ -29,7 +33,9 @@ export default class Main extends cc.Component {
         M.login().then(v=>{     
             v.enterScene();
         })
+        
       
+       
         // if (isWX()) {
         //     Platform.init(ePlatform.WX, "wxec644f0c4e2cb275", "wx");
         //     GetPlatform().createAuthButton(

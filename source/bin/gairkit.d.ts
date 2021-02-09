@@ -1372,6 +1372,7 @@ declare namespace airkit {
         private onChangeScene;
         /**进入场景*/
         gotoScene(sceneName: string, args?: any): void;
+        private enterScene;
         private exitScene;
     }
 }
@@ -1402,6 +1403,7 @@ declare namespace airkit {
          * @param args      参数
          */
         show(uiName: string, ...args: any[]): Promise<any>;
+        createView(uiName: string, clas: any, args?: any): any;
         /**
          * 关闭界面
          * @param uiName    界面id

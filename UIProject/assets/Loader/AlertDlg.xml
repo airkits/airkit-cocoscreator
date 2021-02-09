@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component size="615,387">
   <displayList>
-    <component id="n8_o3ko" name="n8" src="o3ko26" fileName="WindowFrame.xml" xy="-1,-6"/>
+    <component id="n8_o3ko" name="frame" src="o3ko26" fileName="WindowFrame.xml" xy="-1,-6"/>
     <component id="n3_ymft" name="cancelBtn" src="mdb821" fileName="ButtonCancel.xml" xy="195,294" pivot="0.5,0.5" anchor="true" size="155,72">
       <relation target="" sidePair="bottom-bottom%"/>
       <Button title="取消" selectedTitle="取消"/>

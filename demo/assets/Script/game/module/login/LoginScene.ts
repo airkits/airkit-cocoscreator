@@ -1,6 +1,8 @@
 import { eDialogType } from '../../common/DialogType';
 import M from '../../gen/M';
+import UIAlertDlg from '../../gen/ui/Loader/UIAlertDlg';
 import UILoginScene from '../../gen/ui/Loader/UILoginScene';
+import { AlertDlg } from './AlertDlg';
 
 
 
@@ -52,7 +54,9 @@ export default class LoginScene extends UILoginScene{
         ]
     }
     public onBtnShowDlg():void {
-        ak.UIManager.Instance.show(eDialogType.ALERT);
+       ak.UIManager.Instance.show(eDialogType.ALERT);
+      
+   
     }
     public onBtnStart():void {
         console.log("start btn");

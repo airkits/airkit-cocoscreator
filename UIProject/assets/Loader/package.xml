@@ -41,7 +41,7 @@
     <image id="mdb823" name="dlg_close.png" path="/images/"/>
     <image id="mdb824" name="toast.png" path="/images/" scale="9grid" scale9grid="20,20,38,26"/>
     <image id="hhom25" name="img_bg1.jpg" path="/images/" qualityOption="source" atlas="alone_npot"/>
-    <component id="o3ko26" name="WindowFrame.xml" path="/"/>
+    <component id="o3ko26" name="WindowFrame.xml" path="/" exported="true"/>
     <movieclip id="o3ko27" name="quan.jta" path="/images/"/>
     <image id="o3ko28" name="8.png" path="/images/"/>
     <image id="o3ko29" name="4.png" path="/images/"/>

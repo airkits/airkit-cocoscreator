@@ -4362,7 +4362,8 @@ window.ak = window.airkit;
             return layer;
         }
         static setup(root) {
-            this._root = root;
+            this._root = new Layer();
+            root.addChild(this._root);
             this._bgLayer = new Layer();
             this._bgLayer.node.name = "bgLayer";
             this._bgLayer.touchable = true;
@@ -4372,7 +4373,7 @@ window.ak = window.airkit;
             this._mainLayer.node.name = "mainLayer";
             this._mainLayer.touchable = true;
             this._root.addChild(this._mainLayer);
-            this._mainLayer.sortingOrder = 2;
+            this._mainLayer.sortingOrder = 1;
             // this._tooltipLayer = new Layer();
             // this._tooltipLayer.node.name = "tooltipLayer";
             // this._tooltipLayer.touchable = false;
@@ -4382,7 +4383,7 @@ window.ak = window.airkit;
             this._uiLayer.node.name = "uiLayer";
             this._uiLayer.touchable = true;
             this._root.addChild(this._uiLayer);
-            this._uiLayer.sortingOrder = 4;
+            this._uiLayer.sortingOrder = 2;
             // this._popupLayer = new Layer();
             // this._popupLayer.node.name = "popupLayer";
             // this._popupLayer.touchable = true;
@@ -4446,7 +4447,6 @@ window.ak = window.airkit;
         static destroy() {
             LayerManager.removeAll();
             //   DisplayUtils.removeAllChild(this._topLayer);
-            airkit.DisplayUtils.removeAllChild(this._root);
             //   this._topLayer = null; //最高层
             this._loadingLayer = null; //loading层
             //    this._systemLayer = null; //system层
@@ -4662,20 +4662,30 @@ window.ak = window.airkit;
         gotoScene(sceneName, args) {
             //切换
             let clas = airkit.ClassUtils.getClass(sceneName);
-            clas.loadResource((v) => {
-                if (v) {
-                    this.exitScene();
-                    let scene = clas.createInstance();
-                    scene.setName(sceneName);
-                    this._curScene = scene;
-                    airkit.LayerManager.mainLayer.addChild(scene);
-                    scene.setup(args);
-                    //  ResourceManager.Instance.dump();
-                }
-                else {
-                    airkit.Log.error("加载场景失败 {1}", sceneName);
-                }
-            });
+            let res = clas.res();
+            if (res == null || (Array.isArray(res) && res.length == 0)) {
+                this.exitScene();
+                this.enterScene(sceneName, clas, args);
+            }
+            else {
+                clas.loadResource((v) => {
+                    if (v) {
+                        this.exitScene();
+                        this.enterScene(sceneName, clas, args);
+                        //  ResourceManager.Instance.dump();
+                    }
+                    else {
+                        airkit.Log.error("加载场景失败 {1}", sceneName);
+                    }
+                });
+            }
+        }
+        enterScene(sceneName, clas, args) {
+            let scene = clas.createInstance();
+            scene.setName(sceneName);
+            this._curScene = scene;
+            airkit.LayerManager.mainLayer.addChild(scene);
+            scene.setup(args);
         }
         exitScene() {
             if (this._curScene) {
@@ -4766,21 +4776,32 @@ window.ak = window.airkit;
                 }
                 //获取数据
                 let clas = UIManager.cache.getValue(uiName);
-                clas.loadResource((v) => {
-                    if (v) {
-                        let ui = new clas();
-                        airkit.assert(ui != null, "UIManager::Show - cannot create ui:" + uiName);
-                        ui.setUIID(uiName);
-                        ui.setup(null);
-                        ui.show();
-                        this._dicUIView.add(uiName, ui);
-                        resolve(ui);
-                    }
-                    else {
-                        reject("ui load resource failed");
-                    }
-                });
+                let res = clas.res();
+                if (res == null || (Array.isArray(res) && res.length == 0)) {
+                    let ui = this.createView(uiName, clas, args);
+                    resolve(ui);
+                }
+                else {
+                    clas.loadResource((v) => {
+                        if (v) {
+                            let ui = this.createView(uiName, clas, args);
+                            resolve(ui);
+                        }
+                        else {
+                            reject("ui load resource failed");
+                        }
+                    });
+                }
             });
+        }
+        createView(uiName, clas, args) {
+            let ui = new clas();
+            airkit.assert(ui != null, "UIManager::Show - cannot create ui:" + uiName);
+            ui.setUIID(uiName);
+            ui.setup(null);
+            ui.show();
+            this._dicUIView.add(uiName, ui);
+            return ui;
         }
         /**
          * 关闭界面

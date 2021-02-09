@@ -93,7 +93,9 @@ namespace airkit {
             return layer;
         }
         public static setup(root: fgui.GComponent): void {
-            this._root = root;
+            this._root = new Layer();
+            root.addChild(this._root);
+            
             this._bgLayer = new Layer();
             this._bgLayer.node.name = "bgLayer";
             this._bgLayer.touchable = true;
@@ -104,7 +106,7 @@ namespace airkit {
             this._mainLayer.node.name = "mainLayer";
             this._mainLayer.touchable = true;
             this._root.addChild(this._mainLayer);
-            this._mainLayer.sortingOrder = 2;
+            this._mainLayer.sortingOrder = 1;
 
             // this._tooltipLayer = new Layer();
             // this._tooltipLayer.node.name = "tooltipLayer";
@@ -116,7 +118,7 @@ namespace airkit {
             this._uiLayer.node.name = "uiLayer";
             this._uiLayer.touchable = true;
             this._root.addChild(this._uiLayer);
-            this._uiLayer.sortingOrder = 4;
+            this._uiLayer.sortingOrder = 2;
 
             // this._popupLayer = new Layer();
             // this._popupLayer.node.name = "popupLayer";
@@ -196,8 +198,6 @@ namespace airkit {
         public static destroy(): void {
             LayerManager.removeAll();
          //   DisplayUtils.removeAllChild(this._topLayer);
-            DisplayUtils.removeAllChild(this._root);
-
          //   this._topLayer = null; //最高层
             this._loadingLayer = null; //loading层
         //    this._systemLayer = null; //system层
