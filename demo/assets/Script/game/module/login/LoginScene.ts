@@ -54,9 +54,11 @@ export default class LoginScene extends UILoginScene{
         ]
     }
     public onBtnShowDlg():void {
-       ak.UIManager.Instance.show(eDialogType.ALERT);
-      
-   
+    //   ak.UIManager.popup(eDialogType.ALERT);
+    //   ak.UIManager.popup(eDialogType.ALERT);
+      ak.UIManager.show(eDialogType.ALERT);
+      ak.UIManager.show(eDialogType.ALERT);
+
     }
     public onBtnStart():void {
         console.log("start btn");

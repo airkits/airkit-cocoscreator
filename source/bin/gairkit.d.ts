@@ -287,11 +287,6 @@ declare namespace airkit {
         POPUP = 0,
         ALERT = 1
     }
-    enum ePopupAnim {
-    }
-    enum eCloseAnim {
-        CLOSE_CENTER = 1
-    }
     enum eAligeType {
         NONE = 0,
         RIGHT = 1,
@@ -1128,6 +1123,7 @@ declare namespace airkit {
         setUIID(id: string): void;
         get UIID(): string;
         get viewID(): number;
+        set viewID(v: number);
         /**初始化，和onDestroy是一对*/
         onCreate(args: any): void;
         /**销毁*/
@@ -1173,7 +1169,6 @@ declare namespace airkit {
         protected static buildRes(resMap: {
             [index: string]: {};
         }): Array<Res>;
-        doClose(): boolean;
     }
 }
 declare namespace airkit {
@@ -1193,6 +1188,10 @@ declare namespace airkit {
         getName(): string;
         /**打开*/
         setup(args: any): void;
+        protected onShown(): void;
+        protected onHide(): void;
+        protected doShowAnimation(): void;
+        protected doHideAnimation(): void;
         /**关闭*/
         dispose(): void;
         isDestory(): boolean;
@@ -1202,6 +1201,7 @@ declare namespace airkit {
         setUIID(id: string): void;
         get UIID(): string;
         get viewID(): number;
+        set viewID(v: number);
         /**初始化，和onDestroy是一对*/
         onCreate(args: any): void;
         /**销毁*/
@@ -1275,6 +1275,7 @@ declare namespace airkit {
         /**设置界面唯一id*/
         setUIID(id: string): void;
         update(dt: number): boolean;
+        viewID: number;
         removeFromParent(): void;
     }
 }
@@ -1320,30 +1321,6 @@ declare namespace airkit {
         static get mainLayer(): fgui.GComponent;
         static get uiLayer(): fgui.GComponent;
         static get loadingLayer(): fgui.GComponent;
-    }
-}
-declare namespace airkit {
-    /**
-     * 非可拖动界面基类
-     * @author ankye
-     * @time 2018-7-19
-     */
-    class PopupView extends BaseView implements IUIPanel {
-        callback: Function;
-        closeBtn: fgui.GButton;
-        bgTouch: boolean;
-        constructor();
-        /**每帧循环*/
-        update(dt: number): boolean;
-        setup(args: any): void;
-        onEnable(): void;
-        onOpen(): void;
-        closeButton(): fgui.GButton;
-        setupTouchClose(): void;
-        pressClose(): void;
-        onClose(): void;
-        dispose(): void;
-        static loadResource(onAssetLoaded: (v: boolean) => void): void;
     }
 }
 declare namespace airkit {
@@ -1394,6 +1371,8 @@ declare namespace airkit {
         private _UIQueues;
         private static instance;
         static get Instance(): UIManager;
+        static show(uiName: string, ...args: any[]): Promise<IUIPanel>;
+        static popup(uiName: string, ...args: any[]): void;
         constructor();
         getQueue(t: eUIQueueType): UIQueue;
         empty(): boolean;
@@ -1402,13 +1381,13 @@ declare namespace airkit {
          * @param uiName        界面uiName
          * @param args      参数
          */
-        show(uiName: string, ...args: any[]): Promise<any>;
+        show(uiName: string, ...args: any[]): Promise<IUIPanel>;
         createView(uiName: string, clas: any, args?: any): any;
         /**
          * 关闭界面
          * @param uiName    界面id
          */
-        close(uiName: string, animType?: number): Promise<any>;
+        close(uiName: string): Promise<any>;
         clearPanel(uiName: string, panel: IUIPanel): boolean;
         /**
          * 关闭所有界面
@@ -1435,8 +1414,8 @@ declare namespace airkit {
         isPanelOpen(uiName: string): boolean;
     }
     class UIQueue {
-        private _currentUI;
-        private _listPanels;
+        private _currentUIs;
+        private _readyUIs;
         constructor();
         /**
          * 直接显示界面,注：

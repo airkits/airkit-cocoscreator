@@ -9,10 +9,6 @@ namespace airkit {
     ALERT = 1
   }
 
-  export enum ePopupAnim {}
-  export enum eCloseAnim {
-    CLOSE_CENTER = 1
-  }
 
   export enum eAligeType {
     NONE = 0,

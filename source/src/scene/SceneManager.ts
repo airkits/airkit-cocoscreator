@@ -118,7 +118,7 @@ namespace airkit {
         }
         private enterScene(sceneName : string , clas : any , args? : any):void {
              let scene = clas.createInstance();
-             scene.setName(sceneName);
+             scene.UIID(sceneName);
              this._curScene = scene;
             LayerManager.mainLayer.addChild(scene);
              scene.setup(args);
@@ -127,7 +127,7 @@ namespace airkit {
         private exitScene(): void {
             if (this._curScene) {
                 //切换
-                let sceneName = this._curScene.getName();
+                let sceneName = this._curScene.UIID;
                 
                 let clas = ClassUtils.getClass(sceneName);
                 clas.unres();

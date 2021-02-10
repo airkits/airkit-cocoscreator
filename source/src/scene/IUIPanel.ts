@@ -11,10 +11,10 @@ namespace airkit {
     dispose(): void;
     /**是否可见*/
     setVisible(bVisible: boolean): void;
-    /**设置界面唯一id*/
-    setUIID(id: string): void;
+    /**设置界面唯一id，在UIManager设置dialogName,ScemeManager设置scenename，其他地方不要再次设置*/
+    UIID:string;
+    viewID:number;
     update(dt: number): boolean;
-
     removeFromParent(): void;
   }
 }

@@ -24,7 +24,7 @@ namespace airkit {
             ClassUtils.regClass(name, cls);
         }
 
-        private _dicUIView: SDictionary<IUIPanel> = null;
+        private _cacheViews: Array<IUIPanel> = null;
         private _UIQueues: Array<UIQueue> = null;
 
         private static instance: UIManager = null;
@@ -32,11 +32,17 @@ namespace airkit {
             if (!this.instance) this.instance = new UIManager();
             return this.instance;
         }
-     
-
+        //弹窗框显示，点击空白非自动关闭
+        public static show(uiName: string, ...args: any[]): Promise<IUIPanel> {
+            return this.Instance.show(uiName,args);
+        }
+        //弹窗框显示，点击空白自动关闭
+        public static popup(uiName:string, ...args:any[]):void {
+            return this.Instance.popup(uiName,args);
+        }
         constructor() {
             super();
-            this._dicUIView = new SDictionary<IUIPanel>();
+            this._cacheViews = new Array<IUIPanel>();
             this._UIQueues = new Array<UIQueue>();
             //预创建2个队列,通常情况下都能满足需求了
             this._UIQueues[eUIQueueType.POPUP]=new UIQueue();
@@ -48,7 +54,7 @@ namespace airkit {
         public empty(): boolean {
             let queue = this.getQueue(eUIQueueType.POPUP);
             if (!queue.empty()) return false;
-            if (this._dicUIView.length > 0) return false;
+            if (this._cacheViews.length > 0) return false;
             return true;
         }
         //～～～～～～～～～～～～～～～～～～～～～～～显示~～～～～～～～～～～～～～～～～～～～～～～～//
@@ -57,23 +63,24 @@ namespace airkit {
          * @param uiName        界面uiName
          * @param args      参数
          */
-        public show(uiName: string, ...args: any[]): Promise<any> {
-            return new Promise((resolve, reject) => {
+        public show(uiName: string, ...args: any[]): Promise<IUIPanel> {
+            return new Promise<IUIPanel>((resolve, reject) => {
                 Log.info("show panel {0}", uiName);
                 //从缓存中查找
-                let obj: IUIPanel = this._dicUIView.getValue(uiName);
-
-                if (obj != null) {
-                    if (obj["displayObject"] == null) {
-                        this._dicUIView.remove(uiName);
-                        obj = null;
-                    } else {
-                        obj.setVisible(true);
-                        resolve(obj);
-                        return;
+                let findObj = null;
+                for(let i=this._cacheViews.length-1; i>=0; i--){
+                    let obj = this._cacheViews[i];
+                    if(obj && obj.UIID == uiName){
+                        findObj = obj;
+                        break;
                     }
                 }
-
+                if(findObj){
+                     findObj.setVisible(true);
+                     resolve(findObj);
+                     return;
+                }
+                
                 //获取数据
                 let clas = UIManager.cache.getValue(uiName);
                 let res = clas.res();
@@ -90,6 +97,9 @@ namespace airkit {
                         }
                     });
                 }
+            }).catch(e=>{
+                Log.error(e);
+                return null;
             });
         }
         public createView(uiName:string,clas:any,args?:any): any {
@@ -98,67 +108,44 @@ namespace airkit {
             ui.setUIID(uiName);
             ui.setup(null);
             ui.show();
-            this._dicUIView.add(uiName, ui);
+            this._cacheViews.push(ui);
             return ui;
         }
         /**
          * 关闭界面
-         * @param uiName    界面id
+         * @param uiid    界面id
          */
-        public close(uiName: string, animType: number = 0): Promise<any> {
+        public close(uiid:string,vid:number): Promise<any> {
             return new Promise((resolve, reject) => {
-                Log.info("close panel {0}", uiName);
-                //获取数据
-                // let conf: UIConfig = this._dicConfig.getValue(id);
-                // assert(
-                //     conf != null,
-                //     "UIManager::Close - not find id:" + conf.mID
-                // );
-
-                let panel: IUIPanel = this._dicUIView.getValue(uiName);
-                if (!panel) return;
-
-                //切换
-                let clas = ClassUtils.getClass(uiName);
-                clas.unres();
-                if (animType == 0) {
-                    let result = this.clearPanel(uiName, panel);
-                    resolve([uiName, result]);
-                } else {
-                    DisplayUtils.hide(
-                        panel,
-                        Handler.create(null, (v) => {
-                            let result = this.clearPanel(uiName, panel);
-                            resolve([uiName, result]);
-                        })
-                    );
+                Log.info("close panel {0}", uiid);
+                for(let i=this._cacheViews.length-1;i>=0 ; i--){
+                    let obj = this._cacheViews[i];
+                    if(obj.UIID == uiid && obj.viewID == vid){
+                        //切换
+                        let clas = ClassUtils.getClass(uiid);
+                        clas.unres();
+                        obj.removeFromParent();
+                        obj.dispose();
+                        this._cacheViews.splice(i,1);
+                        resolve(uiid);
+                        return;
+                    }
                 }
             });
         }
-        public clearPanel(
-            uiName: string,
-            panel: IUIPanel
-        ): boolean {
-            //销毁或隐藏
-                this._dicUIView.remove(uiName);
-                Log.info("clear panel {0}", uiName);
-                panel.removeFromParent();
-                panel.dispose();
-
-                return true;
-            
-        }
+       
         /**
          * 关闭所有界面
          * @param   exclude_list    需要排除关闭的列表
          */
         public closeAll(exclude_list: Array<number> = null): void {
-            this._dicUIView.foreach(function (key, value) {
-                if (exclude_list && ArrayUtils.containsValue(exclude_list, key))
-                    return true;
-                UIManager.Instance.close(key);
-                return true;
-            });
+            for(let i=this._cacheViews.length-1;i>=0 ; i--){
+                let obj = this._cacheViews[i];
+                if (exclude_list && ArrayUtils.containsValue(exclude_list, obj.UIID)){
+                    continue;
+                }
+                UIManager.Instance.close(obj.UIID,obj.viewID);
+            }
         }
 
         /**
@@ -181,15 +168,20 @@ namespace airkit {
         }
 
         /**查找界面*/
-        public findPanel(uiName: string): IUIPanel {
-            let panel: IUIPanel = this._dicUIView.getValue(uiName);
-            return panel;
+        public findPanel(uiid: string): IUIPanel {
+            for(let i=this._cacheViews.length-1;i>=0 ; i--){
+                let obj = this._cacheViews[i];
+                if(obj.UIID == uiid){
+                    return obj;
+                }
+            }
+            return null;
+       
         }
         /**界面是否打开*/
-        public isPanelOpen(uiName: string): boolean {
-            let panel: IUIPanel = this._dicUIView.getValue(uiName);
-            if (panel) return true;
-            else return false;
+        public isPanelOpen(uiid: string): boolean {
+            return this.findPanel(uiid) != null;
+          
         }
     }
     //     //toast
@@ -532,12 +524,12 @@ namespace airkit {
 
     class UIQueue {
         /*～～～～～～～～～～～～～～～～～～～～～队列方式显示界面，上一个界面关闭，才会显示下一个界面～～～～～～～～～～～～～～～～～～～～～*/
-        private _currentUI: string = null;
-        private _listPanels: Queue<[string, any]>;
+        private _currentUIs: Array<[string,number]> = null;
+        private _readyUIs: Queue<[string, any]>;
 
         constructor() {
-            this._currentUI = null;
-            this._listPanels = new Queue<[string, any]>();
+            this._currentUIs = [];
+            this._readyUIs = new Queue<[string, any]>();
         }
         /**
          * 直接显示界面,注：
@@ -547,12 +539,12 @@ namespace airkit {
          */
         public show(id: string, args: any[]): void {
             let info: [string, any] = [id, args];
-            this._listPanels.enqueue(info);
+            this._readyUIs.enqueue(info);
             this.checkAlertNext();
         }
 
         public empty(): boolean {
-            if (this._currentUI !=null || this._listPanels.length > 0)
+            if (this._currentUIs.length > 0 || this._readyUIs.length > 0)
                 return false;
             return true;
         }
@@ -560,13 +552,22 @@ namespace airkit {
          * 判断是否弹出下一个界面
          */
         private checkAlertNext(): void {
-            if (this._currentUI !=null || this._listPanels.length <= 0) return;
+            if (this._currentUIs.length > 0 || this._readyUIs.length <= 0) return;
 
-            let info: [string, any] = this._listPanels.dequeue();
-
-            this.registerEvent();
-            this._currentUI = info[0];
-            UIManager.Instance.show(info[0], ...info[1]);
+            let info: [string, any] = this._readyUIs.dequeue();            
+            let viewID = genViewIDSeq();
+            this._currentUIs.push([info[0],viewID]);
+            Log.info("popup dialog "+info[0]);
+            UIManager.Instance.show(info[0], ...info[1]).then(v=>{
+                if(v){
+                   v.viewID = viewID;
+                    if(this._currentUIs.length == 1){
+                        this.registerEvent();
+                    }
+                }else{
+                    this._currentUIs.splice(this._currentUIs.length-1,1);
+                }
+            })
         }
 
         private registerEvent(): void {
@@ -580,10 +581,17 @@ namespace airkit {
             switch (args.type) {
                 case EventID.UI_CLOSE:
                     let id: string = args.get(0);
-                    if (this._currentUI !=null && this._currentUI == id) {
-                        this._currentUI = null;
-                        this.unRegisterEvent();
-                        this.checkAlertNext();
+                    let viewID:number = args.get(1);
+                    console.log("close dialog:"+id+" and id:"+viewID);
+                    for(let i=0 ; i< this._currentUIs.length;i++){
+                        if(this._currentUIs[i][0] == id && this._currentUIs[i][1] == viewID){
+                            this._currentUIs.splice(i, 1);
+                            if(this._currentUIs.length == 0){
+                                this.unRegisterEvent();
+                            }
+                            this.checkAlertNext();
+                            break;
+                        }
                     }
                     break;
             }

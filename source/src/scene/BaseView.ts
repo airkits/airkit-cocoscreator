@@ -32,14 +32,20 @@ namespace airkit {
             this._viewID = genViewIDSeq();
         }
         
-        public setName(name:string):void {
-            this.name = name;
+       
+        /**设置界面唯一id，在UIManager设置dialogName,ScemeManager设置scenename，其他地方不要再次设置*/
+        public set UIID(id: string) {
+            this._UIID = id;
         }
-
-        public getName():string {
-            return this.name;
+        public get UIID(): string {
+            return this._UIID;
         }
- 
+        public get viewID(): number {
+            return this._viewID;
+        }
+        public set viewID(v:number) {
+            this._viewID = v;
+        }
 
         public debug(): void {
             let bgColor: string = "#4aa7a688";
@@ -71,10 +77,10 @@ namespace airkit {
             this.unregisterSignalEvent();
             this._isOpen = false;
             this.objectData = null;
-            EventCenter.dispatchEvent(EventID.UI_CLOSE, this._UIID);
+            if(this._UIID)
+                EventCenter.dispatchEvent(EventID.UI_CLOSE, this._UIID,this._viewID);
             EventCenter.off(EventID.UI_LANG, this, this.onLangChange);
             super.dispose();
-            console.log(this.name +" dispose");
         }
 
         public isDestory(): boolean {
@@ -88,16 +94,7 @@ namespace airkit {
             this.visible = bVisible;
          
         }
-        /**设置界面唯一id，只在UIManager设置，其他地方不要再次设置*/
-        public setUIID(id: string): void {
-            this._UIID = id;
-        }
-        public get UIID(): string {
-            return this._UIID;
-        }
-        public get viewID(): number {
-            return this._viewID;
-        }
+       
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～可重写的方法，注意逻辑层不要再次调用～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**初始化，和onDestroy是一对*/
         public onCreate(args: any): void {
@@ -249,14 +246,6 @@ namespace airkit {
             }
             return res;
         }
-        public doClose(): boolean {
-            if (this._isOpen === false) {
-                Log.error("连续点击");
-                return false; //避免连续点击关闭
-            }
-            this._isOpen = false;
-            UIManager.Instance.close(this.UIID, eCloseAnim.CLOSE_CENTER);
-            return true;
-        }
+      
     }
 }
