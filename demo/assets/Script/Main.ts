@@ -7,7 +7,7 @@ import LoaderBinder from './game/gen/ui/Loader/LoaderBinder';
 import HomeBinder from './game/gen/ui/Home/HomeBinder';
 import BattleScene from './game/module/battle/BattleScene';
 import HomeScene from './game/module/home/HomeScene';
-import { eDialogType } from './game/common/DialogType';
+import { eDialogUIID } from './game/common/DialogType';
 import { AlertDlg } from './game/module/login/AlertDlg';
 import UIAlert from "./game/gen/ui/Loader/UIAlert";
 import UIAlertDlg from "./game/gen/ui/Loader/UIAlertDlg";
@@ -29,7 +29,7 @@ export default class Main extends cc.Component {
         ak.SceneManager.register(eSceneType.LOGIN,LoginScene);
         ak.SceneManager.register(eSceneType.BATTLE, BattleScene);
         ak.SceneManager.register(eSceneType.HOME, HomeScene)
-        ak.UIManager.register(eDialogType.ALERT,AlertDlg)
+        ak.UIManager.register(eDialogUIID.ALERT,AlertDlg)
         M.login().then(v=>{     
             v.enterScene();
         })

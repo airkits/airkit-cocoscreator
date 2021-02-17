@@ -279,25 +279,17 @@ declare namespace airkit {
     }
 }
 declare namespace airkit {
+    type Dict<T> = {
+        [key: string]: T;
+    };
+    type Point = cc.Vec2;
     /**
      * 预留id=0，不显示加载界面
      */
     const LOADVIEW_TYPE_NONE: number;
-    enum eUIQueueType {
-        POPUP = 0,
-        ALERT = 1
-    }
-    enum eAligeType {
-        NONE = 0,
-        RIGHT = 1,
-        RIGHT_BOTTOM = 2,
-        BOTTOM = 3,
-        LEFT_BOTTOM = 4,
-        LEFT = 5,
-        LEFT_TOP = 6,
-        TOP = 7,
-        RIGHT_TOP = 8,
-        MID = 9
+    enum eUIType {
+        SHOW = 0,
+        POPUP = 1
     }
     /**
      * UI层级
@@ -306,12 +298,8 @@ declare namespace airkit {
         BG = 0,
         MAIN = 1,
         GUI = 2,
-        POPUP = 3,
-        TOOLTIP = 4,
-        SYSTEM = 5,
-        LOADING = 6,
-        TOP = 7,
-        MAX = 8
+        LOADING = 3,
+        TOP = 4
     }
     enum LogLevel {
         DEBUG = 7,
@@ -320,10 +308,9 @@ declare namespace airkit {
         ERROR = 4,
         EXCEPTION = 3
     }
-    enum ePopupButton {
-        Close = 0,
-        Cancel = 1,
-        Ok = 2
+    enum eDlgResult {
+        YES = 1,
+        NO = 2
     }
 }
 declare namespace airkit {
@@ -1109,8 +1096,11 @@ declare namespace airkit {
         private _destory;
         private _viewID;
         constructor();
-        setName(name: string): void;
-        getName(): string;
+        /**设置界面唯一id，在UIManager设置dialogName,ScemeManager设置scenename，其他地方不要再次设置*/
+        set UIID(id: string);
+        get UIID(): string;
+        get viewID(): number;
+        set viewID(v: number);
         debug(): void;
         /**打开*/
         setup(args: any): void;
@@ -1119,11 +1109,6 @@ declare namespace airkit {
         isDestory(): boolean;
         /**是否可见*/
         setVisible(bVisible: boolean): void;
-        /**设置界面唯一id，只在UIManager设置，其他地方不要再次设置*/
-        setUIID(id: string): void;
-        get UIID(): string;
-        get viewID(): number;
-        set viewID(v: number);
         /**初始化，和onDestroy是一对*/
         onCreate(args: any): void;
         /**销毁*/
@@ -1177,19 +1162,35 @@ declare namespace airkit {
      * @author ankye
      * @time 2018-7-19
      */
+    interface DialogResultData {
+        result: eDlgResult;
+        data: any;
+    }
     class Dialog extends fgui.Window implements IUIPanel {
         protected _isOpen: boolean;
         protected _UIID: string;
         objectData: any;
         private _destory;
         private _viewID;
+        private _resultData;
         constructor();
-        setName(name: string): void;
-        getName(): string;
+        wait(): Promise<DialogResultData>;
+        /**设置界面唯一id，在UIManager设置dialogName,ScemeManager设置scenename，其他地方不要再次设置*/
+        set UIID(id: string);
+        get UIID(): string;
+        get viewID(): number;
+        set viewID(v: number);
+        createDlgView(): fgui.GComponent;
         /**打开*/
         setup(args: any): void;
         protected onShown(): void;
         protected onHide(): void;
+        close(data?: {
+            result: eDlgResult;
+            data: any;
+        }): void;
+        modalShowAnimation(dt?: number): void;
+        modalHideAnimation(dt?: number): void;
         protected doShowAnimation(): void;
         protected doHideAnimation(): void;
         /**关闭*/
@@ -1197,11 +1198,6 @@ declare namespace airkit {
         isDestory(): boolean;
         /**是否可见*/
         setVisible(bVisible: boolean): void;
-        /**设置界面唯一id，只在UIManager设置，其他地方不要再次设置*/
-        setUIID(id: string): void;
-        get UIID(): string;
-        get viewID(): number;
-        set viewID(v: number);
         /**初始化，和onDestroy是一对*/
         onCreate(args: any): void;
         /**销毁*/
@@ -1247,16 +1243,7 @@ declare namespace airkit {
         protected static buildRes(resMap: {
             [index: string]: {};
         }): Array<Res>;
-        doClose(): boolean;
-    }
-}
-declare namespace airkit {
-    interface IPopupDelegate {
-        /**
-            所有按钮点击回调
-            点击的按钮类型请参考枚举类型 AlertViewButtonIndex
-        */
-        onPopupClick(tag: string, btnType: ePopupButton): void;
+        onClose(): boolean;
     }
 }
 /**
@@ -1265,6 +1252,14 @@ declare namespace airkit {
  * @time 2018-7-19
  */
 declare namespace airkit {
+    interface ShowParams {
+        pos?: Point;
+        target?: fgui.GComponent;
+        data?: any[];
+        single?: boolean;
+        clothOther?: boolean;
+        resolve?: any;
+    }
     interface IUIPanel {
         /**打开*/
         setup(...args: any[]): void;
@@ -1272,11 +1267,13 @@ declare namespace airkit {
         dispose(): void;
         /**是否可见*/
         setVisible(bVisible: boolean): void;
-        /**设置界面唯一id*/
-        setUIID(id: string): void;
-        update(dt: number): boolean;
+        /**设置界面唯一id，在UIManager设置dialogName,ScemeManager设置scenename，其他地方不要再次设置*/
+        UIID: string;
         viewID: number;
+        update(dt: number): boolean;
         removeFromParent(): void;
+        hideImmediately?(): void;
+        wait?(): Promise<DialogResultData>;
     }
 }
 /**
@@ -1367,68 +1364,80 @@ declare namespace airkit {
       * @param cls
       */
         static register(name: string, cls: any): any;
-        private _dicUIView;
+        private _cacheViews;
         private _UIQueues;
         private static instance;
         static get Instance(): UIManager;
-        static show(uiName: string, ...args: any[]): Promise<IUIPanel>;
-        static popup(uiName: string, ...args: any[]): void;
+        static show(uiid: string, params?: ShowParams): Promise<IUIPanel>;
+        static showQ(uiid: string, params?: ShowParams): Promise<IUIPanel>;
+        static popup(uiid: string, params?: ShowParams): Promise<IUIPanel>;
+        static popupQ(uiid: string, params?: ShowParams): Promise<IUIPanel>;
+        static closeAll(): void;
+        static getTopDlg(): Dialog;
         constructor();
-        getQueue(t: eUIQueueType): UIQueue;
+        getQueue(t: eUIType): UIQueue;
         empty(): boolean;
         /**
          * 显示界面
-         * @param uiName        界面uiName
+         * @param uiid        界面uiid
          * @param args      参数
          */
-        show(uiName: string, ...args: any[]): Promise<IUIPanel>;
-        createView(uiName: string, clas: any, args?: any): any;
+        show(uiid: string, params?: ShowParams): Promise<IUIPanel>;
+        /**
+        * 显示界面
+        * @param uiid        界面uiName
+        * @param args      参数
+        */
+        popup(uiid: string, params?: ShowParams): Promise<IUIPanel>;
+        protected showUI(type: eUIType, uiid: string, clas: any, params: ShowParams): any;
         /**
          * 关闭界面
-         * @param uiName    界面id
+         * @param uiid    界面id
          */
-        close(uiName: string): Promise<any>;
-        clearPanel(uiName: string, panel: IUIPanel): boolean;
+        close(uiid: string, vid: number): Promise<any>;
         /**
          * 关闭所有界面
          * @param   exclude_list    需要排除关闭的列表
          */
-        closeAll(exclude_list?: Array<number>): void;
+        closeAll(exclude_list?: Array<string>): void;
         /**
          * 弹窗UI，默认用队列显示
-         * @param uiName
-         * @param args
+         * @param uiid
+         * @param params
          */
-        popup(uiName: string, ...args: any[]): void;
+        showQ(uiid: string, params?: ShowParams): Promise<IUIPanel>;
         /**
-         * alert框，默认队列显示
+         * popup队列显示
          *
-         * @param {string} uiName
-         * @param {...any[]} args
+         * @param {string} uiid
+         * @param {ShowParams} params
          * @memberof UIManager
          */
-        alert(uiName: string, ...args: any[]): void;
+        popupQ(uiid: string, params?: ShowParams): Promise<IUIPanel>;
         /**查找界面*/
-        findPanel(uiName: string): IUIPanel;
+        findPanel(uiid: string): IUIPanel;
         /**界面是否打开*/
-        isPanelOpen(uiName: string): boolean;
+        isDlgOpen(uiid: string): boolean;
     }
     class UIQueue {
         private _currentUIs;
         private _readyUIs;
-        constructor();
+        private _type;
+        constructor(type: eUIType);
         /**
          * 直接显示界面,注：
          * 1.通过这个接口打开的界面，初始化注册的ui类设定的UIConfig.mHideDestroy必须为true。原因是显示下一个界面是通过上个界面的CLOSE事件触发
-         * @param 	id		界面id
-         * @param 	args	创建参数，会在界面onCreate时传入
+         * @param 	uiid		界面uiid
+         * @param 	params	创建参数，会在界面onCreate时传入
          */
-        show(id: string, args: any[]): void;
+        show(uiid: string, params?: ShowParams): void;
+        popup(uiid: string, params?: ShowParams): void;
         empty(): boolean;
+        clear(): void;
         /**
          * 判断是否弹出下一个界面
          */
-        private checkAlertNext;
+        private checkNextUI;
         private registerEvent;
         private unRegisterEvent;
         private onUIEvent;

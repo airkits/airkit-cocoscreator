@@ -4,6 +4,16 @@
  * @time 2018-7-19
  */
 namespace airkit {
+
+  export interface ShowParams {
+    pos?: Point; //显示位置，默认center
+    target?: fgui.GComponent; //挂载点，默认GRoot,popup有效
+    data?: any[]; //传递参数
+    single?:boolean; //是否唯一实例，默认true
+    clothOther?:boolean; //是否关闭其他弹窗，默认false
+    resolve?: any; //promise回调,队列显示
+}
+
   export interface IUIPanel {
     /**打开*/
     setup(...args: any[]): void;
@@ -16,5 +26,7 @@ namespace airkit {
     viewID:number;
     update(dt: number): boolean;
     removeFromParent(): void;
+    hideImmediately?():void ;
+    wait?(): Promise<DialogResultData> ;
   }
 }

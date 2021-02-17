@@ -1,4 +1,4 @@
-import { eDialogType } from '../../common/DialogType';
+import { eDialogUIID } from '../../common/DialogType';
 import M from '../../gen/M';
 import UIAlertDlg from '../../gen/ui/Loader/UIAlertDlg';
 import UILoginScene from '../../gen/ui/Loader/UILoginScene';
@@ -54,10 +54,29 @@ export default class LoginScene extends UILoginScene{
         ]
     }
     public onBtnShowDlg():void {
-    //   ak.UIManager.popup(eDialogType.ALERT);
-    //   ak.UIManager.popup(eDialogType.ALERT);
-      ak.UIManager.show(eDialogType.ALERT);
-      ak.UIManager.show(eDialogType.ALERT);
+     
+      // ak.UIManager.show(eDialogUIID.ALERT);
+     //  ak.UIManager.show(eDialogUIID.ALERT);
+      ak.UIManager.popupQ(eDialogUIID.ALERT).then(v=>{
+        if(v){  
+            console.log("showQ dlg ="+v.viewID);
+            v.wait().then(result=>{
+                console.log("result wait ");
+                console.log(result);
+            });
+        }
+      });
+       ak.UIManager.popupQ(eDialogUIID.ALERT).then(v=>{
+        if(v){  
+            console.log("showQ dlg ="+v.viewID);
+            v.wait().then(result=>{
+                console.log("result wait ");
+                console.log(result);
+            });
+        }
+    });
+      //  ak.UIManager.popup(eDialogUIID.ALERT);
+      //  ak.UIManager.popup(eDialogUIID.ALERT);
 
     }
     public onBtnStart():void {

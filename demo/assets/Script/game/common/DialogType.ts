@@ -1,3 +1,3 @@
-export enum eDialogType {
+export enum eDialogUIID {
     ALERT = "AlertDlg",
 }

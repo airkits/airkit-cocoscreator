@@ -4,6 +4,7 @@
  * @time 2018-7-3
  */
 namespace airkit {
+    
     export class UIManager extends Singleton {
         public static cache: SDictionary<any>; 
 
@@ -33,26 +34,47 @@ namespace airkit {
             return this.instance;
         }
         //弹窗框显示，点击空白非自动关闭
-        public static show(uiName: string, ...args: any[]): Promise<IUIPanel> {
-            return this.Instance.show(uiName,args);
+        public static show(uiid: string, params?: ShowParams): Promise<IUIPanel> {
+            return this.Instance.show(uiid,params);
         }
         //弹窗框显示，点击空白自动关闭
-        public static popup(uiName:string, ...args:any[]):void {
-            return this.Instance.popup(uiName,args);
+        public static showQ(uiid:string, params?: ShowParams):Promise<IUIPanel> {
+            return this.Instance.showQ(uiid,params);
         }
+         //弹窗框显示，点击空白非自动关闭
+         public static popup(uiid: string, params?: ShowParams): Promise<IUIPanel> {
+            return this.Instance.popup(uiid,params);
+        }
+        //弹窗框显示，点击空白自动关闭
+        public static popupQ(uiid:string, params?: ShowParams):Promise<IUIPanel> {
+            return this.Instance.popupQ(uiid,params);
+        }
+        //关闭所有弹窗
+        public static closeAll():void {
+            UIManager.Instance.getQueue(eUIType.POPUP).clear();
+            UIManager.Instance.getQueue(eUIType.SHOW).clear();
+            UIManager.Instance.closeAll();
+        }
+        //返回最上面的dialog
+        public static getTopDlg():Dialog {
+            let dlg = fgui.GRoot.inst.getTopWindow();
+            if(dlg) return (dlg as Dialog);
+            return null;
+        }
+
         constructor() {
             super();
             this._cacheViews = new Array<IUIPanel>();
             this._UIQueues = new Array<UIQueue>();
             //预创建2个队列,通常情况下都能满足需求了
-            this._UIQueues[eUIQueueType.POPUP]=new UIQueue();
-            this._UIQueues[eUIQueueType.ALERT] =new UIQueue();
+            this._UIQueues[eUIType.SHOW]=new UIQueue(eUIType.SHOW);
+            this._UIQueues[eUIType.POPUP] =new UIQueue(eUIType.POPUP);
         }
-        public getQueue(t:eUIQueueType):UIQueue {
+        public getQueue(t:eUIType):UIQueue {
             return this._UIQueues[t];
         }
         public empty(): boolean {
-            let queue = this.getQueue(eUIQueueType.POPUP);
+            let queue = this.getQueue(eUIType.SHOW);
             if (!queue.empty()) return false;
             if (this._cacheViews.length > 0) return false;
             return true;
@@ -60,37 +82,42 @@ namespace airkit {
         //～～～～～～～～～～～～～～～～～～～～～～～显示~～～～～～～～～～～～～～～～～～～～～～～～//
         /**
          * 显示界面
-         * @param uiName        界面uiName
+         * @param uiid        界面uiid
          * @param args      参数
          */
-        public show(uiName: string, ...args: any[]): Promise<IUIPanel> {
+        public show(uiid: string,params?: ShowParams): Promise<IUIPanel> {
             return new Promise<IUIPanel>((resolve, reject) => {
-                Log.info("show panel {0}", uiName);
-                //从缓存中查找
-                let findObj = null;
-                for(let i=this._cacheViews.length-1; i>=0; i--){
-                    let obj = this._cacheViews[i];
-                    if(obj && obj.UIID == uiName){
-                        findObj = obj;
-                        break;
+                params = params || {};
+                if(params.single !== false){
+                    //从缓存中查找
+                    let findObj = null;
+                    for(let i=this._cacheViews.length-1; i>=0; i--){
+                        let obj = this._cacheViews[i];
+                        if(obj && obj.UIID == uiid){
+                            findObj = obj;
+                            break;
+                        }
+                    }
+                    if(findObj){
+                        findObj.setVisible(true);
+                        Log.info("添加重复uiid {0}",uiid);
+                        resolve(findObj);
+                        return;
                     }
                 }
-                if(findObj){
-                     findObj.setVisible(true);
-                     resolve(findObj);
-                     return;
+                if(params.clothOther){
+                    this.closeAll([uiid]);
                 }
-                
                 //获取数据
-                let clas = UIManager.cache.getValue(uiName);
+                let clas = UIManager.cache.getValue(uiid);
                 let res = clas.res();
                 if(res == null || (Array.isArray(res) && res.length == 0)){
-                    let ui = this.createView(uiName,clas,args)
+                    let ui = this.showUI(eUIType.SHOW,uiid,clas,params);
                     resolve(ui);
                 }else{
                     clas.loadResource((v)=>{
                         if(v){
-                            let ui = this.createView(uiName,clas,args)
+                            let ui = this.showUI(eUIType.SHOW,uiid,clas,params);
                             resolve(ui);
                         }else{
                             reject("ui load resource failed");
@@ -102,31 +129,96 @@ namespace airkit {
                 return null;
             });
         }
-        public createView(uiName:string,clas:any,args?:any): any {
+         /**
+         * 显示界面
+         * @param uiid        界面uiName
+         * @param args      参数
+         */
+        public popup(uiid: string, params?: ShowParams): Promise<IUIPanel> {
+            return new Promise<IUIPanel>((resolve, reject) => {
+                params = params || {};
+                if(params.single !== false ){
+                    //从缓存中查找
+                    let findObj = null;
+                    for(let i=this._cacheViews.length-1; i>=0; i--){
+                        let obj = this._cacheViews[i];
+                        if(obj && obj.UIID == uiid){
+                            findObj = obj;
+                            break;
+                        }
+                    }
+                    if( findObj){
+                        findObj.setVisible(true);
+                        Log.info("添加重复uiid {0}",uiid);
+                        resolve(findObj);
+                        return;
+                    }
+                }
+                if(params.clothOther){
+                    this.closeAll([uiid]);
+                }
+                //获取数据
+                let clas = UIManager.cache.getValue(uiid);
+                let res = clas.res();
+                if(res == null || (Array.isArray(res) && res.length == 0)){
+                    let ui = this.showUI(eUIType.POPUP,uiid,clas,params);
+                    resolve(ui);
+                }else{
+                    clas.loadResource((v)=>{
+                        if(v){
+                            let ui = this.showUI(eUIType.POPUP,uiid,clas,params);
+                            resolve(ui);
+                        }else{
+                            reject("ui load resource failed");
+                        }
+                    });
+                }
+            }).catch(e=>{
+                Log.error(e);
+                return null;
+            });
+        }
+        protected showUI(type:eUIType,uiid:string,clas:any,params: ShowParams): any {
             let ui = new clas();
-            assert(ui != null, "UIManager::Show - cannot create ui:" + uiName);
-            ui.setUIID(uiName);
-            ui.setup(null);
-            ui.show();
+            assert(ui != null, "UIManager::Show - cannot create ui:" + uiid);
+            ui.UIID = uiid;
+            ui.setup(params.data);
+            if(type == eUIType.POPUP){
+                if(params.target){
+                    fgui.GRoot.inst.showPopup(ui,params.target);
+                }else{
+                    fgui.GRoot.inst.showPopup(ui);
+                }
+            }else{
+                ui.show();
+            }
+            
+            if(params.pos){
+                ui.setPosition(params.pos.x,params.pos.y);
+            }else{
+                ui.center();
+            }
+            
             this._cacheViews.push(ui);
             return ui;
         }
+
+      
         /**
          * 关闭界面
          * @param uiid    界面id
          */
         public close(uiid:string,vid:number): Promise<any> {
             return new Promise((resolve, reject) => {
-                Log.info("close panel {0}", uiid);
+                Log.info("close panel {0} {1}", uiid,vid);
                 for(let i=this._cacheViews.length-1;i>=0 ; i--){
                     let obj = this._cacheViews[i];
                     if(obj.UIID == uiid && obj.viewID == vid){
                         //切换
                         let clas = ClassUtils.getClass(uiid);
                         clas.unres();
-                        obj.removeFromParent();
-                        obj.dispose();
                         this._cacheViews.splice(i,1);
+                        obj.dispose();
                         resolve(uiid);
                         return;
                     }
@@ -138,7 +230,7 @@ namespace airkit {
          * 关闭所有界面
          * @param   exclude_list    需要排除关闭的列表
          */
-        public closeAll(exclude_list: Array<number> = null): void {
+        public closeAll(exclude_list: Array<string> = null): void {
             for(let i=this._cacheViews.length-1;i>=0 ; i--){
                 let obj = this._cacheViews[i];
                 if (exclude_list && ArrayUtils.containsValue(exclude_list, obj.UIID)){
@@ -150,21 +242,31 @@ namespace airkit {
 
         /**
          * 弹窗UI，默认用队列显示
-         * @param uiName
-         * @param args
+         * @param uiid
+         * @param params
          */
-        public popup(uiName: string, ...args: any[]): void {
-            this.getQueue(eUIQueueType.POPUP).show(uiName, args);
+        public showQ(uiid: string, params?: ShowParams): Promise<IUIPanel> {
+
+            return new Promise<IUIPanel>((resolve,reject)=>{
+                if(!params) params = {};
+                params.resolve = resolve;
+                this.getQueue(eUIType.SHOW).show(uiid, params);
+            });
         }
         /**
-         * alert框，默认队列显示
+         * popup队列显示
          *
-         * @param {string} uiName
-         * @param {...any[]} args
+         * @param {string} uiid
+         * @param {ShowParams} params
          * @memberof UIManager
          */
-        public alert(uiName: string, ...args: any[]): void {
-            this.getQueue(eUIQueueType.ALERT).show(uiName, args);
+        public popupQ(uiid: string, params?: ShowParams): Promise<IUIPanel> {
+            return new Promise<IUIPanel>((resolve,reject)=>{
+                if(!params) params = {};
+                params.resolve = resolve;
+                this.getQueue(eUIType.POPUP).popup(uiid, params);
+            });
+            
         }
 
         /**查找界面*/
@@ -179,9 +281,8 @@ namespace airkit {
        
         }
         /**界面是否打开*/
-        public isPanelOpen(uiid: string): boolean {
+        public isDlgOpen(uiid: string): boolean {
             return this.findPanel(uiid) != null;
-          
         }
     }
     //     //toast
@@ -526,49 +627,87 @@ namespace airkit {
         /*～～～～～～～～～～～～～～～～～～～～～队列方式显示界面，上一个界面关闭，才会显示下一个界面～～～～～～～～～～～～～～～～～～～～～*/
         private _currentUIs: Array<[string,number]> = null;
         private _readyUIs: Queue<[string, any]>;
+        private _type: eUIType;
 
-        constructor() {
+        constructor(type:eUIType) {
             this._currentUIs = [];
+            this._type = type;
             this._readyUIs = new Queue<[string, any]>();
         }
         /**
          * 直接显示界面,注：
          * 1.通过这个接口打开的界面，初始化注册的ui类设定的UIConfig.mHideDestroy必须为true。原因是显示下一个界面是通过上个界面的CLOSE事件触发
-         * @param 	id		界面id
-         * @param 	args	创建参数，会在界面onCreate时传入
+         * @param 	uiid		界面uiid
+         * @param 	params	创建参数，会在界面onCreate时传入
          */
-        public show(id: string, args: any[]): void {
-            let info: [string, any] = [id, args];
+        public show(uiid: string, params?: ShowParams): void {
+            let info: [string, ShowParams] = [uiid, params];
             this._readyUIs.enqueue(info);
-            this.checkAlertNext();
+            this.checkNextUI();
         }
-
+        public popup(uiid:string,params?: ShowParams):void  {
+            let info:[string,ShowParams] = [uiid,params];
+            this._readyUIs.enqueue(info);
+            this.checkNextUI();
+        }
         public empty(): boolean {
             if (this._currentUIs.length > 0 || this._readyUIs.length > 0)
                 return false;
             return true;
         }
+        public clear():void {
+            this._currentUIs = [];
+            for(let i=0; i<this._readyUIs.length;i++){
+                let info: [string, ShowParams] = this._readyUIs.dequeue();            
+                info[1].resolve && info[1].resolve(null);
+            }
+
+        }
         /**
          * 判断是否弹出下一个界面
          */
-        private checkAlertNext(): void {
+        private checkNextUI(): void {
             if (this._currentUIs.length > 0 || this._readyUIs.length <= 0) return;
 
-            let info: [string, any] = this._readyUIs.dequeue();            
+            let info: [string, ShowParams] = this._readyUIs.dequeue();            
             let viewID = genViewIDSeq();
             this._currentUIs.push([info[0],viewID]);
-            Log.info("popup dialog "+info[0]);
-            UIManager.Instance.show(info[0], ...info[1]).then(v=>{
-                if(v){
-                   v.viewID = viewID;
-                    if(this._currentUIs.length == 1){
-                        this.registerEvent();
+            Log.info("dialog queue {0} {1}",info[0],viewID);
+            if(this._type == eUIType.POPUP){
+                UIManager.Instance.popup(info[0], info[1]).then(v=>{
+                    if(v){
+                       v.viewID = viewID;
+                        if(this._currentUIs.length == 1){
+                            this.registerEvent();
+                        }
+                    }else{
+                        this._currentUIs.splice(this._currentUIs.length-1,1);
                     }
-                }else{
-                    this._currentUIs.splice(this._currentUIs.length-1,1);
-                }
-            })
+                    if(info[1] && info[1].resolve){
+                        info[1].resolve(v);
+                        info[1].resolve = null;
+                    }
+                })
+            }else{
+                UIManager.Instance.show(info[0], info[1]).then(v=>{
+                    if(v){
+                       v.viewID = viewID;
+                        if(this._currentUIs.length == 1){
+                            this.registerEvent();
+                        }
+                    }else{
+                        this._currentUIs.splice(this._currentUIs.length-1,1);
+                    }
+                    if(info[1] && info[1].resolve){
+                        info[1].resolve(v);
+                        info[1].resolve = null;
+                    }
+                })
+            }
+           
         }
+
+       
 
         private registerEvent(): void {
             EventCenter.on(EventID.UI_CLOSE, this, this.onUIEvent);
@@ -582,14 +721,16 @@ namespace airkit {
                 case EventID.UI_CLOSE:
                     let id: string = args.get(0);
                     let viewID:number = args.get(1);
-                    console.log("close dialog:"+id+" and id:"+viewID);
+                    
                     for(let i=0 ; i< this._currentUIs.length;i++){
                         if(this._currentUIs[i][0] == id && this._currentUIs[i][1] == viewID){
+                            console.log("close dialog:"+id+" and id:"+viewID);
                             this._currentUIs.splice(i, 1);
                             if(this._currentUIs.length == 0){
                                 this.unRegisterEvent();
                             }
-                            this.checkAlertNext();
+                            this.checkNextUI();
+                            
                             break;
                         }
                     }

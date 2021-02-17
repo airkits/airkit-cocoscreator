@@ -1762,7 +1762,7 @@ window.fairygui = window.fgui;
                     this._partner.callLater(this.buildNativeDisplayList);
                 if (dispose)
                     child.dispose();
-                else
+                else if (child.node)
                     child.node.parent = null;
                 this.setBoundsChangedFlag();
                 return child;

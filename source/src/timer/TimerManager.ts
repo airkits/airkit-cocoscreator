@@ -60,7 +60,7 @@ namespace airkit {
       let timer: TimerObject = ObjectPools.get(TimerObject);
 
       ++this._idCounter;
-      if (args != null) ArrayUtils.insert(args, this._idCounter, 0);
+     // if (args != null) ArrayUtils.insert(args, this._idCounter, 0);
       let handler = Handler.create(caller, method, args, false);
       timer.set(this._idCounter, rate, ticks, handler);
       this._timers.push(timer);
@@ -79,7 +79,7 @@ namespace airkit {
       let timer: TimerObject = ObjectPools.get(TimerObject);
 
       ++this._idCounter;
-      if (args != null) ArrayUtils.insert(args, this._idCounter, 0);
+     // if (args != null) ArrayUtils.insert(args, this._idCounter, 0);
       let handler = Handler.create(caller, method, args, false);
       timer.set(this._idCounter, rate, 1, handler);
       this._timers.push(timer);

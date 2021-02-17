@@ -118,7 +118,7 @@ namespace airkit {
         }
         private enterScene(sceneName : string , clas : any , args? : any):void {
              let scene = clas.createInstance();
-             scene.UIID(sceneName);
+             scene.UIID = sceneName;
              this._curScene = scene;
             LayerManager.mainLayer.addChild(scene);
              scene.setup(args);

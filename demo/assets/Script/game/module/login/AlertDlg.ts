@@ -4,14 +4,25 @@ export class AlertDlg extends ak.Dialog {
         super();
     }
 
+    public createDlgView():fgui.GComponent {
+        return UIAlertDlg.createInstance();
+    }
+
     public setup(args?:any): void {
         super.setup(args);
-        this.contentPane = UIAlertDlg.createInstance();
         this.center();
         this.modal = true;
         
     }
 
+    protected eventMap(): Array<any>{
+        return [
+            [(<UIAlertDlg>this.contentPane).confirmBtn, fgui.Event.CLICK, this.onConfirmBtnClick],
+        ]
+    }
+    public onConfirmBtnClick():void {
+        this.close({result:ak.eDlgResult.YES,data:["ok"]});
+    }
      //先加载资源
      public static res(): Array<ak.Res> {
         return this.buildRes(UIAlertDlg.ResMap);
@@ -20,6 +31,7 @@ export class AlertDlg extends ak.Dialog {
     protected doShowAnimation(): void {
         this.setScale(0, 0);
         this.setPivot(0.5,0.5);
+       
         fgui.GTween.to2(0.1, 0.1, 1, 1, 0.3)
             .setTarget(this, this.setScale)
             .setEase(fgui.EaseType.SineIn)
@@ -31,6 +43,6 @@ export class AlertDlg extends ak.Dialog {
         fgui.GTween.to2(1, 1, 0, 0, 0.3)
             .setTarget(this, this.setScale)
             .setEase(fgui.EaseType.SineOut)
-            .onComplete(super.doHideAnimation, this);
+            .onComplete(this.hideImmediately, this);
     }
 }

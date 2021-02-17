@@ -1009,24 +1009,23 @@ window.ak = window.airkit;
      * 预留id=0，不显示加载界面
      */
     airkit.LOADVIEW_TYPE_NONE = 0;
-    let eUIQueueType;
-    (function (eUIQueueType) {
-        eUIQueueType[eUIQueueType["POPUP"] = 0] = "POPUP";
-        eUIQueueType[eUIQueueType["ALERT"] = 1] = "ALERT";
-    })(eUIQueueType = airkit.eUIQueueType || (airkit.eUIQueueType = {}));
-    let eAligeType;
-    (function (eAligeType) {
-        eAligeType[eAligeType["NONE"] = 0] = "NONE";
-        eAligeType[eAligeType["RIGHT"] = 1] = "RIGHT";
-        eAligeType[eAligeType["RIGHT_BOTTOM"] = 2] = "RIGHT_BOTTOM";
-        eAligeType[eAligeType["BOTTOM"] = 3] = "BOTTOM";
-        eAligeType[eAligeType["LEFT_BOTTOM"] = 4] = "LEFT_BOTTOM";
-        eAligeType[eAligeType["LEFT"] = 5] = "LEFT";
-        eAligeType[eAligeType["LEFT_TOP"] = 6] = "LEFT_TOP";
-        eAligeType[eAligeType["TOP"] = 7] = "TOP";
-        eAligeType[eAligeType["RIGHT_TOP"] = 8] = "RIGHT_TOP";
-        eAligeType[eAligeType["MID"] = 9] = "MID";
-    })(eAligeType = airkit.eAligeType || (airkit.eAligeType = {}));
+    let eUIType;
+    (function (eUIType) {
+        eUIType[eUIType["SHOW"] = 0] = "SHOW";
+        eUIType[eUIType["POPUP"] = 1] = "POPUP";
+    })(eUIType = airkit.eUIType || (airkit.eUIType = {}));
+    // export enum eAligeType {
+    //   NONE = 0,
+    //   RIGHT,
+    //   RIGHT_BOTTOM,
+    //   BOTTOM,
+    //   LEFT_BOTTOM,
+    //   LEFT,
+    //   LEFT_TOP,
+    //   TOP,
+    //   RIGHT_TOP,
+    //   MID
+    // }
     /**
      * UI层级
      */
@@ -1035,12 +1034,12 @@ window.ak = window.airkit;
         eUILayer[eUILayer["BG"] = 0] = "BG";
         eUILayer[eUILayer["MAIN"] = 1] = "MAIN";
         eUILayer[eUILayer["GUI"] = 2] = "GUI";
-        eUILayer[eUILayer["POPUP"] = 3] = "POPUP";
-        eUILayer[eUILayer["TOOLTIP"] = 4] = "TOOLTIP";
-        eUILayer[eUILayer["SYSTEM"] = 5] = "SYSTEM";
-        eUILayer[eUILayer["LOADING"] = 6] = "LOADING";
-        eUILayer[eUILayer["TOP"] = 7] = "TOP";
-        eUILayer[eUILayer["MAX"] = 8] = "MAX";
+        //POPUP, //弹出层
+        // TOOLTIP, //提示层
+        // SYSTEM, //system层
+        eUILayer[eUILayer["LOADING"] = 3] = "LOADING";
+        eUILayer[eUILayer["TOP"] = 4] = "TOP";
+        //  MAX
     })(eUILayer = airkit.eUILayer || (airkit.eUILayer = {}));
     let LogLevel;
     (function (LogLevel) {
@@ -1050,12 +1049,16 @@ window.ak = window.airkit;
         LogLevel[LogLevel["ERROR"] = 4] = "ERROR";
         LogLevel[LogLevel["EXCEPTION"] = 3] = "EXCEPTION";
     })(LogLevel = airkit.LogLevel || (airkit.LogLevel = {}));
-    let ePopupButton;
-    (function (ePopupButton) {
-        ePopupButton[ePopupButton["Close"] = 0] = "Close";
-        ePopupButton[ePopupButton["Cancel"] = 1] = "Cancel";
-        ePopupButton[ePopupButton["Ok"] = 2] = "Ok"; //确定按钮
-    })(ePopupButton = airkit.ePopupButton || (airkit.ePopupButton = {}));
+    let eDlgResult;
+    (function (eDlgResult) {
+        eDlgResult[eDlgResult["YES"] = 1] = "YES";
+        eDlgResult[eDlgResult["NO"] = 2] = "NO";
+    })(eDlgResult = airkit.eDlgResult || (airkit.eDlgResult = {}));
+    // export enum ePopupButton {
+    //   Close = 0, //关闭按钮
+    //   Cancel = 1, //取消按钮
+    //   Ok = 2 //确定按钮
+    // }
 })(airkit || (airkit = {}));
 
 (function (airkit) {
@@ -3871,11 +3874,18 @@ window.ak = window.airkit;
             this._destory = false;
             this._viewID = genViewIDSeq();
         }
-        setName(name) {
-            this.name = name;
+        /**设置界面唯一id，在UIManager设置dialogName,ScemeManager设置scenename，其他地方不要再次设置*/
+        set UIID(id) {
+            this._UIID = id;
         }
-        getName() {
-            return this.name;
+        get UIID() {
+            return this._UIID;
+        }
+        get viewID() {
+            return this._viewID;
+        }
+        set viewID(v) {
+            this._viewID = v;
         }
         debug() {
             let bgColor = "#4aa7a688";
@@ -3916,19 +3926,6 @@ window.ak = window.airkit;
         setVisible(bVisible) {
             let old = this.visible;
             this.visible = bVisible;
-        }
-        /**设置界面唯一id，只在UIManager设置，其他地方不要再次设置*/
-        setUIID(id) {
-            this._UIID = id;
-        }
-        get UIID() {
-            return this._UIID;
-        }
-        get viewID() {
-            return this._viewID;
-        }
-        set viewID(v) {
-            this._viewID = v;
         }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～可重写的方法，注意逻辑层不要再次调用～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**初始化，和onDestroy是一对*/
@@ -4069,11 +4066,6 @@ window.ak = window.airkit;
 /// <reference path="./BaseView.ts" />
 
 (function (airkit) {
-    /**
-     * 非可拖动界面基类
-     * @author ankye
-     * @time 2018-7-19
-     */
     class Dialog extends fgui.Window {
         constructor() {
             super();
@@ -4082,12 +4074,30 @@ window.ak = window.airkit;
             this.objectData = null;
             this._destory = false;
             this._viewID = airkit.genViewIDSeq();
+            this._resultData = { result: airkit.eDlgResult.NO, data: null };
         }
-        setName(name) {
-            this.name = name;
+        wait() {
+            return new Promise((resolve, reject) => {
+                this.on(fgui.Event.UNDISPLAY, () => {
+                    resolve({ result: this._resultData.result, data: this._resultData.data });
+                }, this);
+            });
         }
-        getName() {
-            return this.name;
+        /**设置界面唯一id，在UIManager设置dialogName,ScemeManager设置scenename，其他地方不要再次设置*/
+        set UIID(id) {
+            this._UIID = id;
+        }
+        get UIID() {
+            return this._UIID;
+        }
+        get viewID() {
+            return this._viewID;
+        }
+        set viewID(v) {
+            this._viewID = v;
+        }
+        createDlgView() {
+            return null;
         }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～公共方法～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**打开*/
@@ -4095,6 +4105,7 @@ window.ak = window.airkit;
             this._isOpen = true;
             this.onLangChange();
             this.onCreate(args);
+            this.contentPane = this.createDlgView();
             airkit.EventCenter.dispatchEvent(airkit.EventID.UI_OPEN, this._UIID);
             airkit.EventCenter.on(airkit.EventID.UI_LANG, this, this.onLangChange);
             this.registerEvent();
@@ -4102,11 +4113,22 @@ window.ak = window.airkit;
             this.registerSignalEvent();
         }
         onShown() {
-            super.onShown();
         }
         onHide() {
-            super.onHide();
-            this.doClose();
+            this.onClose();
+        }
+        close(data = { result: airkit.eDlgResult.NO, data: null }) {
+            this._resultData = data;
+            this.doHideAnimation();
+        }
+        modalShowAnimation(dt = 0.3) {
+            let layer = fgui.GRoot.inst.modalLayer;
+            layer.alpha = 0;
+            airkit.TweenUtils.get(layer).to({ alpha: 1.0 }, dt, fgui.EaseType.SineIn);
+        }
+        modalHideAnimation(dt = 0.3) {
+            let layer = fgui.GRoot.inst.modalLayer;
+            airkit.TweenUtils.get(layer).to({ alpha: 0.0 }, dt, fgui.EaseType.SineOut);
         }
         doShowAnimation() {
             this.onShown();
@@ -4116,7 +4138,6 @@ window.ak = window.airkit;
         }
         /**关闭*/
         dispose() {
-            this.hideImmediately();
             if (this._destory)
                 return;
             this._destory = true;
@@ -4129,6 +4150,7 @@ window.ak = window.airkit;
                 airkit.EventCenter.dispatchEvent(airkit.EventID.UI_CLOSE, this._UIID, this._viewID);
             airkit.EventCenter.off(airkit.EventID.UI_LANG, this, this.onLangChange);
             super.dispose();
+            console.log("dialog dispose");
         }
         isDestory() {
             return this._destory;
@@ -4137,19 +4159,6 @@ window.ak = window.airkit;
         setVisible(bVisible) {
             let old = this.visible;
             this.visible = bVisible;
-        }
-        /**设置界面唯一id，只在UIManager设置，其他地方不要再次设置*/
-        setUIID(id) {
-            this._UIID = id;
-        }
-        get UIID() {
-            return this._UIID;
-        }
-        get viewID() {
-            return this._viewID;
-        }
-        set viewID(v) {
-            this._viewID = v;
         }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～可重写的方法，注意逻辑层不要再次调用～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**初始化，和onDestroy是一对*/
@@ -4284,13 +4293,13 @@ window.ak = window.airkit;
             }
             return res;
         }
-        doClose() {
+        onClose() {
             if (this._isOpen === false) {
                 airkit.Log.error("连续点击");
                 return false; //避免连续点击关闭
             }
             this._isOpen = false;
-            airkit.UIManager.Instance.close(this.UIID);
+            airkit.UIManager.Instance.close(this.UIID, this.viewID);
             return true;
         }
     }
@@ -4615,7 +4624,7 @@ window.ak = window.airkit;
         }
         enterScene(sceneName, clas, args) {
             let scene = clas.createInstance();
-            scene.setName(sceneName);
+            scene.UIID = sceneName;
             this._curScene = scene;
             airkit.LayerManager.mainLayer.addChild(scene);
             scene.setup(args);
@@ -4623,7 +4632,7 @@ window.ak = window.airkit;
         exitScene() {
             if (this._curScene) {
                 //切换
-                let sceneName = this._curScene.getName();
+                let sceneName = this._curScene.UIID;
                 let clas = airkit.ClassUtils.getClass(sceneName);
                 clas.unres();
                 this._curScene.removeFromParent();
@@ -4645,13 +4654,13 @@ window.ak = window.airkit;
     class UIManager extends airkit.Singleton {
         constructor() {
             super();
-            this._dicUIView = null;
+            this._cacheViews = null;
             this._UIQueues = null;
-            this._dicUIView = new airkit.SDictionary();
+            this._cacheViews = new Array();
             this._UIQueues = new Array();
             //预创建2个队列,通常情况下都能满足需求了
-            this._UIQueues[airkit.eUIQueueType.POPUP] = new UIQueue();
-            this._UIQueues[airkit.eUIQueueType.ALERT] = new UIQueue();
+            this._UIQueues[airkit.eUIType.SHOW] = new UIQueue(airkit.eUIType.SHOW);
+            this._UIQueues[airkit.eUIType.POPUP] = new UIQueue(airkit.eUIType.POPUP);
         }
         /**
       * 注册ui类，存放uiname和class的对应关系
@@ -4675,57 +4684,85 @@ window.ak = window.airkit;
             return this.instance;
         }
         //弹窗框显示，点击空白非自动关闭
-        static show(uiName, ...args) {
-            return this.Instance.show(uiName, args);
+        static show(uiid, params) {
+            return this.Instance.show(uiid, params);
         }
         //弹窗框显示，点击空白自动关闭
-        static popup(uiName, ...args) {
-            return this.Instance.popup(uiName, args);
+        static showQ(uiid, params) {
+            return this.Instance.showQ(uiid, params);
+        }
+        //弹窗框显示，点击空白非自动关闭
+        static popup(uiid, params) {
+            return this.Instance.popup(uiid, params);
+        }
+        //弹窗框显示，点击空白自动关闭
+        static popupQ(uiid, params) {
+            return this.Instance.popupQ(uiid, params);
+        }
+        //关闭所有弹窗
+        static closeAll() {
+            UIManager.Instance.getQueue(airkit.eUIType.POPUP).clear();
+            UIManager.Instance.getQueue(airkit.eUIType.SHOW).clear();
+            UIManager.Instance.closeAll();
+        }
+        //返回最上面的dialog
+        static getTopDlg() {
+            let dlg = fgui.GRoot.inst.getTopWindow();
+            if (dlg)
+                return dlg;
+            return null;
         }
         getQueue(t) {
             return this._UIQueues[t];
         }
         empty() {
-            let queue = this.getQueue(airkit.eUIQueueType.POPUP);
+            let queue = this.getQueue(airkit.eUIType.SHOW);
             if (!queue.empty())
                 return false;
-            if (this._dicUIView.length > 0)
+            if (this._cacheViews.length > 0)
                 return false;
             return true;
         }
         //～～～～～～～～～～～～～～～～～～～～～～～显示~～～～～～～～～～～～～～～～～～～～～～～～//
         /**
          * 显示界面
-         * @param uiName        界面uiName
+         * @param uiid        界面uiid
          * @param args      参数
          */
-        show(uiName, ...args) {
+        show(uiid, params) {
             return new Promise((resolve, reject) => {
-                airkit.Log.info("show panel {0}", uiName);
-                //从缓存中查找
-                let obj = this._dicUIView.getValue(uiName);
-                if (obj != null) {
-                    if (obj["displayObject"] == null) {
-                        this._dicUIView.remove(uiName);
-                        obj = null;
+                params = params || {};
+                if (params.single !== false) {
+                    //从缓存中查找
+                    let findObj = null;
+                    for (let i = this._cacheViews.length - 1; i >= 0; i--) {
+                        let obj = this._cacheViews[i];
+                        if (obj && obj.UIID == uiid) {
+                            findObj = obj;
+                            break;
+                        }
                     }
-                    else {
-                        obj.setVisible(true);
-                        resolve(obj);
+                    if (findObj) {
+                        findObj.setVisible(true);
+                        airkit.Log.info("添加重复uiid {0}", uiid);
+                        resolve(findObj);
                         return;
                     }
                 }
+                if (params.clothOther) {
+                    this.closeAll([uiid]);
+                }
                 //获取数据
-                let clas = UIManager.cache.getValue(uiName);
+                let clas = UIManager.cache.getValue(uiid);
                 let res = clas.res();
                 if (res == null || (Array.isArray(res) && res.length == 0)) {
-                    let ui = this.createView(uiName, clas, args);
+                    let ui = this.showUI(airkit.eUIType.SHOW, uiid, clas, params);
                     resolve(ui);
                 }
                 else {
                     clas.loadResource((v) => {
                         if (v) {
-                            let ui = this.createView(uiName, clas, args);
+                            let ui = this.showUI(airkit.eUIType.SHOW, uiid, clas, params);
                             resolve(ui);
                         }
                         else {
@@ -4738,88 +4775,157 @@ window.ak = window.airkit;
                 return null;
             });
         }
-        createView(uiName, clas, args) {
+        /**
+        * 显示界面
+        * @param uiid        界面uiName
+        * @param args      参数
+        */
+        popup(uiid, params) {
+            return new Promise((resolve, reject) => {
+                params = params || {};
+                if (params.single !== false) {
+                    //从缓存中查找
+                    let findObj = null;
+                    for (let i = this._cacheViews.length - 1; i >= 0; i--) {
+                        let obj = this._cacheViews[i];
+                        if (obj && obj.UIID == uiid) {
+                            findObj = obj;
+                            break;
+                        }
+                    }
+                    if (findObj) {
+                        findObj.setVisible(true);
+                        airkit.Log.info("添加重复uiid {0}", uiid);
+                        resolve(findObj);
+                        return;
+                    }
+                }
+                if (params.clothOther) {
+                    this.closeAll([uiid]);
+                }
+                //获取数据
+                let clas = UIManager.cache.getValue(uiid);
+                let res = clas.res();
+                if (res == null || (Array.isArray(res) && res.length == 0)) {
+                    let ui = this.showUI(airkit.eUIType.POPUP, uiid, clas, params);
+                    resolve(ui);
+                }
+                else {
+                    clas.loadResource((v) => {
+                        if (v) {
+                            let ui = this.showUI(airkit.eUIType.POPUP, uiid, clas, params);
+                            resolve(ui);
+                        }
+                        else {
+                            reject("ui load resource failed");
+                        }
+                    });
+                }
+            }).catch(e => {
+                airkit.Log.error(e);
+                return null;
+            });
+        }
+        showUI(type, uiid, clas, params) {
             let ui = new clas();
-            airkit.assert(ui != null, "UIManager::Show - cannot create ui:" + uiName);
-            ui.setUIID(uiName);
-            ui.setup(null);
-            ui.show();
-            this._dicUIView.add(uiName, ui);
+            airkit.assert(ui != null, "UIManager::Show - cannot create ui:" + uiid);
+            ui.UIID = uiid;
+            ui.setup(params.data);
+            if (type == airkit.eUIType.POPUP) {
+                if (params.target) {
+                    fgui.GRoot.inst.showPopup(ui, params.target);
+                }
+                else {
+                    fgui.GRoot.inst.showPopup(ui);
+                }
+            }
+            else {
+                ui.show();
+            }
+            if (params.pos) {
+                ui.setPosition(params.pos.x, params.pos.y);
+            }
+            else {
+                ui.center();
+            }
+            this._cacheViews.push(ui);
             return ui;
         }
         /**
          * 关闭界面
-         * @param uiName    界面id
+         * @param uiid    界面id
          */
-        close(uiName) {
+        close(uiid, vid) {
             return new Promise((resolve, reject) => {
-                airkit.Log.info("close panel {0}", uiName);
-                //获取数据
-                // let conf: UIConfig = this._dicConfig.getValue(id);
-                // assert(
-                //     conf != null,
-                //     "UIManager::Close - not find id:" + conf.mID
-                // );
-                let panel = this._dicUIView.getValue(uiName);
-                if (!panel)
-                    return;
-                //切换
-                let clas = airkit.ClassUtils.getClass(uiName);
-                clas.unres();
-                let result = this.clearPanel(uiName, panel);
-                resolve([uiName, result]);
+                airkit.Log.info("close panel {0} {1}", uiid, vid);
+                for (let i = this._cacheViews.length - 1; i >= 0; i--) {
+                    let obj = this._cacheViews[i];
+                    if (obj.UIID == uiid && obj.viewID == vid) {
+                        //切换
+                        let clas = airkit.ClassUtils.getClass(uiid);
+                        clas.unres();
+                        this._cacheViews.splice(i, 1);
+                        obj.dispose();
+                        resolve(uiid);
+                        return;
+                    }
+                }
             });
-        }
-        clearPanel(uiName, panel) {
-            //销毁或隐藏
-            this._dicUIView.remove(uiName);
-            airkit.Log.info("clear panel {0}", uiName);
-            panel.removeFromParent();
-            panel.dispose();
-            return true;
         }
         /**
          * 关闭所有界面
          * @param   exclude_list    需要排除关闭的列表
          */
         closeAll(exclude_list = null) {
-            this._dicUIView.foreach(function (key, value) {
-                if (exclude_list && airkit.ArrayUtils.containsValue(exclude_list, key))
-                    return true;
-                UIManager.Instance.close(key);
-                return true;
-            });
+            for (let i = this._cacheViews.length - 1; i >= 0; i--) {
+                let obj = this._cacheViews[i];
+                if (exclude_list && airkit.ArrayUtils.containsValue(exclude_list, obj.UIID)) {
+                    continue;
+                }
+                UIManager.Instance.close(obj.UIID, obj.viewID);
+            }
         }
         /**
          * 弹窗UI，默认用队列显示
-         * @param uiName
-         * @param args
+         * @param uiid
+         * @param params
          */
-        popup(uiName, ...args) {
-            this.getQueue(airkit.eUIQueueType.POPUP).show(uiName, args);
+        showQ(uiid, params) {
+            return new Promise((resolve, reject) => {
+                if (!params)
+                    params = {};
+                params.resolve = resolve;
+                this.getQueue(airkit.eUIType.SHOW).show(uiid, params);
+            });
         }
         /**
-         * alert框，默认队列显示
+         * popup队列显示
          *
-         * @param {string} uiName
-         * @param {...any[]} args
+         * @param {string} uiid
+         * @param {ShowParams} params
          * @memberof UIManager
          */
-        alert(uiName, ...args) {
-            this.getQueue(airkit.eUIQueueType.ALERT).show(uiName, args);
+        popupQ(uiid, params) {
+            return new Promise((resolve, reject) => {
+                if (!params)
+                    params = {};
+                params.resolve = resolve;
+                this.getQueue(airkit.eUIType.POPUP).popup(uiid, params);
+            });
         }
         /**查找界面*/
-        findPanel(uiName) {
-            let panel = this._dicUIView.getValue(uiName);
-            return panel;
+        findPanel(uiid) {
+            for (let i = this._cacheViews.length - 1; i >= 0; i--) {
+                let obj = this._cacheViews[i];
+                if (obj.UIID == uiid) {
+                    return obj;
+                }
+            }
+            return null;
         }
         /**界面是否打开*/
-        isPanelOpen(uiName) {
-            let panel = this._dicUIView.getValue(uiName);
-            if (panel)
-                return true;
-            else
-                return false;
+        isDlgOpen(uiid) {
+            return this.findPanel(uiid) != null;
         }
     }
     UIManager.instance = null;
@@ -5144,49 +5250,85 @@ window.ak = window.airkit;
     //     }
     // }
     class UIQueue {
-        constructor() {
+        constructor(type) {
             /*～～～～～～～～～～～～～～～～～～～～～队列方式显示界面，上一个界面关闭，才会显示下一个界面～～～～～～～～～～～～～～～～～～～～～*/
             this._currentUIs = null;
             this._currentUIs = [];
+            this._type = type;
             this._readyUIs = new airkit.Queue();
         }
         /**
          * 直接显示界面,注：
          * 1.通过这个接口打开的界面，初始化注册的ui类设定的UIConfig.mHideDestroy必须为true。原因是显示下一个界面是通过上个界面的CLOSE事件触发
-         * @param 	id		界面id
-         * @param 	args	创建参数，会在界面onCreate时传入
+         * @param 	uiid		界面uiid
+         * @param 	params	创建参数，会在界面onCreate时传入
          */
-        show(id, args) {
-            let info = [id, args];
+        show(uiid, params) {
+            let info = [uiid, params];
             this._readyUIs.enqueue(info);
-            this.checkAlertNext();
+            this.checkNextUI();
+        }
+        popup(uiid, params) {
+            let info = [uiid, params];
+            this._readyUIs.enqueue(info);
+            this.checkNextUI();
         }
         empty() {
             if (this._currentUIs.length > 0 || this._readyUIs.length > 0)
                 return false;
             return true;
         }
+        clear() {
+            this._currentUIs = [];
+            for (let i = 0; i < this._readyUIs.length; i++) {
+                let info = this._readyUIs.dequeue();
+                info[1].resolve && info[1].resolve(null);
+            }
+        }
         /**
          * 判断是否弹出下一个界面
          */
-        checkAlertNext() {
+        checkNextUI() {
             if (this._currentUIs.length > 0 || this._readyUIs.length <= 0)
                 return;
             let info = this._readyUIs.dequeue();
             let viewID = airkit.genViewIDSeq();
             this._currentUIs.push([info[0], viewID]);
-            airkit.Log.info("popup dialog " + info[0]);
-            UIManager.Instance.show(info[0], ...info[1]).then(v => {
-                if (v) {
-                    v.viewID = viewID;
-                    if (this._currentUIs.length == 1) {
-                        this.registerEvent();
+            airkit.Log.info("dialog queue {0} {1}", info[0], viewID);
+            if (this._type == airkit.eUIType.POPUP) {
+                UIManager.Instance.popup(info[0], info[1]).then(v => {
+                    if (v) {
+                        v.viewID = viewID;
+                        if (this._currentUIs.length == 1) {
+                            this.registerEvent();
+                        }
                     }
-                }
-                else {
-                    this._currentUIs.splice(this._currentUIs.length - 1, 1);
-                }
-            });
+                    else {
+                        this._currentUIs.splice(this._currentUIs.length - 1, 1);
+                    }
+                    if (info[1] && info[1].resolve) {
+                        info[1].resolve(v);
+                        info[1].resolve = null;
+                    }
+                });
+            }
+            else {
+                UIManager.Instance.show(info[0], info[1]).then(v => {
+                    if (v) {
+                        v.viewID = viewID;
+                        if (this._currentUIs.length == 1) {
+                            this.registerEvent();
+                        }
+                    }
+                    else {
+                        this._currentUIs.splice(this._currentUIs.length - 1, 1);
+                    }
+                    if (info[1] && info[1].resolve) {
+                        info[1].resolve(v);
+                        info[1].resolve = null;
+                    }
+                });
+            }
         }
         registerEvent() {
             airkit.EventCenter.on(airkit.EventID.UI_CLOSE, this, this.onUIEvent);
@@ -5199,14 +5341,14 @@ window.ak = window.airkit;
                 case airkit.EventID.UI_CLOSE:
                     let id = args.get(0);
                     let viewID = args.get(1);
-                    console.log("close dialog:" + id + " and id:" + viewID);
                     for (let i = 0; i < this._currentUIs.length; i++) {
                         if (this._currentUIs[i][0] == id && this._currentUIs[i][1] == viewID) {
+                            console.log("close dialog:" + id + " and id:" + viewID);
                             this._currentUIs.splice(i, 1);
                             if (this._currentUIs.length == 0) {
                                 this.unRegisterEvent();
                             }
-                            this.checkAlertNext();
+                            this.checkNextUI();
                             break;
                         }
                     }
@@ -5379,8 +5521,7 @@ window.ak = window.airkit;
                 ticks = 0;
             let timer = airkit.ObjectPools.get(TimerObject);
             ++this._idCounter;
-            if (args != null)
-                airkit.ArrayUtils.insert(args, this._idCounter, 0);
+            // if (args != null) ArrayUtils.insert(args, this._idCounter, 0);
             let handler = airkit.Handler.create(caller, method, args, false);
             timer.set(this._idCounter, rate, ticks, handler);
             this._timers.push(timer);
@@ -5393,8 +5534,7 @@ window.ak = window.airkit;
         addOnce(rate, caller, method, args = null) {
             let timer = airkit.ObjectPools.get(TimerObject);
             ++this._idCounter;
-            if (args != null)
-                airkit.ArrayUtils.insert(args, this._idCounter, 0);
+            // if (args != null) ArrayUtils.insert(args, this._idCounter, 0);
             let handler = airkit.Handler.create(caller, method, args, false);
             timer.set(this._idCounter, rate, 1, handler);
             this._timers.push(timer);

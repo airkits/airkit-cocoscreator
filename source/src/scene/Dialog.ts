@@ -6,21 +6,32 @@ namespace airkit {
      * @author ankye
      * @time 2018-7-19
      */
-
+    export interface DialogResultData {
+        result: eDlgResult;
+        data: any;
+    }
     export class Dialog extends fgui.Window implements IUIPanel {
         protected _isOpen: boolean = false;
         protected _UIID: string = null;
         public objectData: any = null;
         private _destory: boolean;
         private _viewID: number;
+        private _resultData: DialogResultData;
 
         constructor() {
             super();
             this._destory = false;
             this._viewID = genViewIDSeq();
+            this._resultData = {result:eDlgResult.NO,data:null};
         }
         
-     
+        wait(): Promise<DialogResultData> {
+            return new Promise((resolve: any, reject: any) => {
+                this.on(fgui.Event.UNDISPLAY,  () => {
+                    resolve({ result: this._resultData.result, data: this._resultData.data });
+                },this)
+            })
+        }
         /**设置界面唯一id，在UIManager设置dialogName,ScemeManager设置scenename，其他地方不要再次设置*/
         public set UIID(id: string) {
             this._UIID = id;
@@ -34,6 +45,9 @@ namespace airkit {
         public set viewID(v:number) {
             this._viewID = v;
         }
+        public createDlgView():fgui.GComponent {
+            return null;
+        }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～公共方法～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**打开*/
         public setup(args: any): void {
@@ -41,7 +55,7 @@ namespace airkit {
 
             this.onLangChange();
             this.onCreate(args);
-
+            this.contentPane = this.createDlgView();
             EventCenter.dispatchEvent(EventID.UI_OPEN, this._UIID);
             EventCenter.on(EventID.UI_LANG, this, this.onLangChange);
             this.registerEvent();
@@ -49,24 +63,42 @@ namespace airkit {
             this.registerSignalEvent();
         }
         protected onShown(): void{
-            super.onShown();
+           
         }
         protected onHide(): void{
-            super.onHide();
-            this.doClose();
+           
+            this.onClose();
+        }
+
+        public close(data : {result:eDlgResult,data:any} = {result:eDlgResult.NO,data:null}):void {
+            this._resultData = data;
+            this.doHideAnimation();
+
+        }
+        public modalShowAnimation(dt:number = 0.3):void {
+            let layer = fgui.GRoot.inst.modalLayer;
+            layer.alpha = 0;
+            TweenUtils.get(layer).to({alpha:1.0},dt,fgui.EaseType.SineIn)
+           
+        }
+        public modalHideAnimation(dt:number = 0.3):void {
+            let layer = fgui.GRoot.inst.modalLayer;
+            TweenUtils.get(layer).to({alpha:0.0},dt,fgui.EaseType.SineOut)
+
         }
         protected doShowAnimation(): void{
             this.onShown();
+           
+
         }
         protected doHideAnimation(): void{
             super.doHideAnimation();
         }
         /**关闭*/
         public dispose(): void {
-            this.hideImmediately();
+            
             if (this._destory) return;
             this._destory = true;
-           
             this.unRegisterEvent();
             this.unregisteGUIEvent();
             this.unregisterSignalEvent();
@@ -75,7 +107,10 @@ namespace airkit {
             if(this._UIID)
                 EventCenter.dispatchEvent(EventID.UI_CLOSE, this._UIID,this._viewID);
             EventCenter.off(EventID.UI_LANG, this, this.onLangChange);
+            
             super.dispose();
+            console.log("dialog dispose");
+            
         }
 
         public isDestory(): boolean {
@@ -93,11 +128,12 @@ namespace airkit {
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～可重写的方法，注意逻辑层不要再次调用～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**初始化，和onDestroy是一对*/
         public onCreate(args: any): void {
-            
+
         }
         /**销毁*/
         public onDestroy(): void {
             super.onDestroy();
+
         }
         /**每帧循环：如果覆盖，必须调用super.update()*/
         public update(dt: number): boolean {
@@ -107,10 +143,12 @@ namespace airkit {
         /**资源加载结束*/
         public onEnable(): void {
             super.onEnable();
+
         }
         //资源卸载前
         public onDisable():void {
             super.onDisable();
+
         }
         /**多语言初始化，或语音设定改变时触发*/
         public onLangChange(): void {}
@@ -241,13 +279,14 @@ namespace airkit {
             }
             return res;
         }
-        public doClose(): boolean {
+        public onClose(): boolean {
+
             if (this._isOpen === false) {
                 Log.error("连续点击");
                 return false; //避免连续点击关闭
             }
             this._isOpen = false;
-            UIManager.Instance.close(this.UIID);
+            UIManager.Instance.close(this.UIID,this.viewID);
             return true;
         }
     
