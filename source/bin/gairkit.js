@@ -64,26 +64,23 @@ window.ak = window.airkit;
             airkit.LayerManager.setup(root);
             airkit.Mediator.Instance.setup();
             airkit.TimerManager.Instance.setup();
-            // UIManager.Instance.setup();
             airkit.ResourceManager.Instance.setup();
+            airkit.LoaderManager.Instance.setup();
             // DataProvider.Instance.setup();
             // LangManager.Instance.init();
             // SceneManager.Instance.setup();
             // 
-            // LoaderManager.Instance.setup();
             // cc.director.getScheduler().scheduleUpdate(this, 0, false);
         }
         destroy() {
-            //  Laya.timer.clearAll(this);
-            //
-            // LoaderManager.Instance.destroy();
+            airkit.LoaderManager.Instance.destroy();
             airkit.ResourceManager.Instance.destroy();
             airkit.TimerManager.Instance.destroy();
             airkit.Mediator.Instance.destroy();
+            airkit.LayerManager.destroy();
             // UIManager.Instance.destroy();
             // SceneManager.Instance.destroy();
             // DataProvider.Instance.destroy();
-            airkit.LayerManager.destroy();
             // LangManager.Instance.destory();
             return true;
         }
@@ -100,10 +97,10 @@ window.ak = window.airkit;
         }
         preTick(dt) {
             airkit.TimerManager.Instance.update(dt);
-            // UIManager.Instance.update(dt);
+            //UIManager.Instance.update(dt);
             airkit.ResourceManager.Instance.update(dt);
             airkit.Mediator.Instance.update(dt);
-            // SceneManager.Instance.update(dt);
+            airkit.SceneManager.Instance.update(dt);
         }
         tick(dt) {
             if (this._mainloopHandle) {
@@ -1005,27 +1002,20 @@ window.ak = window.airkit;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    /**
-     * 预留id=0，不显示加载界面
-     */
-    airkit.LOADVIEW_TYPE_NONE = 0;
+    let eLoaderType;
+    (function (eLoaderType) {
+        eLoaderType[eLoaderType["NONE"] = 0] = "NONE";
+        eLoaderType[eLoaderType["VIEW"] = 1] = "VIEW";
+        eLoaderType[eLoaderType["FULL_SCREEN"] = 2] = "FULL_SCREEN";
+        eLoaderType[eLoaderType["CUSTOM_1"] = 3] = "CUSTOM_1";
+        eLoaderType[eLoaderType["CUSTOM_2"] = 4] = "CUSTOM_2";
+        eLoaderType[eLoaderType["CUSTOM_3"] = 5] = "CUSTOM_3";
+    })(eLoaderType = airkit.eLoaderType || (airkit.eLoaderType = {}));
     let eUIType;
     (function (eUIType) {
         eUIType[eUIType["SHOW"] = 0] = "SHOW";
         eUIType[eUIType["POPUP"] = 1] = "POPUP";
     })(eUIType = airkit.eUIType || (airkit.eUIType = {}));
-    // export enum eAligeType {
-    //   NONE = 0,
-    //   RIGHT,
-    //   RIGHT_BOTTOM,
-    //   BOTTOM,
-    //   LEFT_BOTTOM,
-    //   LEFT,
-    //   LEFT_TOP,
-    //   TOP,
-    //   RIGHT_TOP,
-    //   MID
-    // }
     /**
      * UI层级
      */
@@ -1054,11 +1044,6 @@ window.ak = window.airkit;
         eDlgResult[eDlgResult["YES"] = 1] = "YES";
         eDlgResult[eDlgResult["NO"] = 2] = "NO";
     })(eDlgResult = airkit.eDlgResult || (airkit.eDlgResult = {}));
-    // export enum ePopupButton {
-    //   Close = 0, //关闭按钮
-    //   Cancel = 1, //取消按钮
-    //   Ok = 2 //确定按钮
-    // }
 })(airkit || (airkit = {}));
 
 (function (airkit) {
@@ -2425,483 +2410,6 @@ window.ak = window.airkit;
     //     }
     // }
 })(airkit || (airkit = {}));
-
-(function (airkit) {
-    /**
-     * 加载界面管理器
-     * @author ankye
-     * @time 2017-7-25
-     */
-    class LoaderManager extends airkit.Singleton {
-        /**
-         * 注册加载类，存放场景id和url的对应关系
-         * @param view_type
-         * @param className
-         */
-        static registerLoadingView(view_type, className, cls) {
-            this.loaders.add(view_type, className);
-            airkit.ClassUtils.regClass(className, cls);
-        }
-        static get Instance() {
-            if (!this.instance)
-                this.instance = new LoaderManager();
-            return this.instance;
-        }
-        setup() {
-            this.registerEvent();
-            this._dicLoadView = new airkit.NDictionary();
-        }
-        destroy() {
-            this.unRegisterEvent();
-            if (this._dicLoadView) {
-                let view = null;
-                this._dicLoadView.foreach(function (key, value) {
-                    view = value;
-                    view.close();
-                    return true;
-                });
-                this._dicLoadView.clear();
-                this._dicLoadView = null;
-            }
-            return true;
-        }
-        registerEvent() {
-            airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
-            airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
-            airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
-        }
-        unRegisterEvent() {
-            airkit.EventCenter.off(airkit.LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
-            airkit.EventCenter.off(airkit.LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
-            airkit.EventCenter.off(airkit.LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
-        }
-        /**加载进度事件*/
-        onLoadViewEvt(args) {
-            let type = args.type;
-            let viewType = args.get(0);
-            switch (type) {
-                case airkit.LoaderEventID.LOADVIEW_OPEN:
-                    {
-                        airkit.Log.debug("显示加载界面");
-                        let total = args.get(1);
-                        let tips = args.get(2);
-                        this.show(viewType, total, tips);
-                    }
-                    break;
-                case airkit.LoaderEventID.LOADVIEW_PROGRESS:
-                    {
-                        //Log.debug("加载界面进度")
-                        let cur = args.get(1);
-                        let total = args.get(2);
-                        this.setProgress(viewType, cur, total);
-                    }
-                    break;
-                case airkit.LoaderEventID.LOADVIEW_COMPLATE:
-                    {
-                        airkit.Log.debug("加载界面关闭");
-                        this.close(viewType);
-                    }
-                    break;
-            }
-        }
-        show(type, total, tips) {
-            if (type == null || type == airkit.LOADVIEW_TYPE_NONE)
-                return;
-            let view = this._dicLoadView.getValue(type);
-            if (!view) {
-                let className = LoaderManager.loaders.getValue(type);
-                //切换
-                if (className.length > 0) {
-                    view = airkit.ClassUtils.getInstance(className);
-                    if (view == null)
-                        return;
-                    view.setup([]);
-                    let clas = airkit.ClassUtils.getClass(className);
-                    view.loadResource(() => {
-                        airkit.LayerManager.loadingLayer.addChild(view);
-                        this._dicLoadView.add(type, view);
-                        this.updateView(view, total, tips);
-                    });
-                }
-                else {
-                    airkit.Log.error("Must set loadingview first type= {0}", type);
-                }
-            }
-            else {
-                this.updateView(view, total, tips);
-            }
-        }
-        updateView(view, total, tips) {
-            if (!view.parent) {
-                airkit.LayerManager.loadingLayer.addChild(view);
-            }
-            view.onOpen(total);
-            view.setTips(tips);
-            view.setVisible(true);
-        }
-        setProgress(type, cur, total) {
-            let view = this._dicLoadView.getValue(type);
-            if (!view) {
-                return;
-            }
-            view.setProgress(cur, total);
-        }
-        close(type) {
-            let view = this._dicLoadView.getValue(type);
-            if (!view) {
-                return;
-            }
-            view.setVisible(false);
-            view.onClose();
-            this._dicLoadView.remove(type);
-            view = null;
-            // TweenUtils.get(view).to({ alpha: 0 }, 500, Laya.Ease.bounceIn, LayaHandler.create(null, v => {
-            // 	view.setVisible(false)
-            // }))
-        }
-    }
-    LoaderManager.loaders = new airkit.NDictionary();
-    LoaderManager.instance = null;
-    airkit.LoaderManager = LoaderManager;
-})(airkit || (airkit = {}));
-
-(function (airkit) {
-    /**
-     * 资源管理
-     * @author ankye
-     * @time 2018-7-10
-     */
-    airkit.FONT_SIZE_4 = 18;
-    airkit.FONT_SIZE_5 = 22;
-    airkit.FONT_SIZE_6 = 25;
-    airkit.FONT_SIZE_7 = 29;
-    class FguiAsset extends cc.BufferAsset {
-    }
-    airkit.FguiAsset = FguiAsset;
-    class FguiAtlas extends cc.BufferAsset {
-    }
-    airkit.FguiAtlas = FguiAtlas;
-    class ResourceManager extends airkit.Singleton {
-        constructor() {
-            super(...arguments);
-            this._dicResInfo = null; //加载过的信息，方便资源释放
-        }
-        static get Instance() {
-            if (!this.instance)
-                this.instance = new ResourceManager();
-            return this.instance;
-        }
-        setup() {
-            this._dicResInfo = new airkit.SDictionary();
-            this._minLoaderTime = 1000;
-        }
-        /**
-         * 异步加载
-         * @param    url  要加载的单个资源地址或资源信息数组。比如：简单数组：["a.png","b.png"]；复杂数组[{url:"a.png",type:Loader.IMAGE,size:100,priority:1},{url:"b.json",type:Loader.JSON,size:50,priority:1}]。
-         * @param    progress  加载进度
-         * @param    type		数组的时候，类型为undefined 资源类型。比如：Loader.IMAGE。
-         * @param	priority	(default = 1)加载的优先级，优先级高的优先加载。有0-4共5个优先级，0最高，4最低。
-         * @param	cache		是否缓存加载结果。
-         * @param	group		分组，方便对资源进行管理。
-         * @param    ignoreCache	是否忽略缓存，强制重新加载。
-         */
-        destroy() {
-            if (this._dicResInfo) {
-                this._dicResInfo.foreach((k, v) => {
-                    ResourceManager.Instance.clearRes(k, v.ref);
-                    return true;
-                });
-                this._dicResInfo.clear();
-                this._dicResInfo = null;
-            }
-            return true;
-        }
-        update(dt) { }
-        /**获取资源*/
-        getRes(url) {
-            //修改访问时间
-            return cc.resources.get(url);
-        }
-        dump() {
-            this._dicResInfo.foreach((k, v) => {
-                console.log("url:" + k + " refCount=" + v.ref + "\n");
-                return true;
-            });
-        }
-        /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～加载～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
-        /**
-         * 加载资源，如果资源在此之前已经加载过，则当前帧会调用complete
-         * @param	url 		单个资源地址
-         * @param	type 		资源类型
-         * @param	viewType 	加载界面
-         * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
-         * @param	cache 		是否缓存加载结果。
-         * @param	group 		分组，方便对资源进行管理。
-         * @param	ignoreCache 是否忽略缓存，强制重新加载
-         * @return 	结束回调(参数：string 加载的资源url)
-         */
-        loadRes(url, type, refCount = 1, viewType = airkit.LOADVIEW_TYPE_NONE, priority = 1, cache = true, pkg = "", ignoreCache = false) {
-            //添加到加载目录
-            if (viewType == null)
-                viewType = airkit.LOADVIEW_TYPE_NONE;
-            //判断是否需要显示加载界面
-            if (viewType != airkit.LOADVIEW_TYPE_NONE) {
-                if (cc.resources.get(url))
-                    viewType = airkit.LOADVIEW_TYPE_NONE;
-            }
-            //显示加载界面
-            if (viewType != airkit.LOADVIEW_TYPE_NONE) {
-                airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, 1);
-            }
-            let resInfo = this._dicResInfo.getValue(url);
-            if (!resInfo) {
-                resInfo = new ResInfo(url, type, refCount, pkg);
-                this._dicResInfo.set(url, resInfo);
-                resInfo.updateStatus(eLoaderStatus.LOADING);
-            }
-            else {
-                resInfo.incRef(refCount);
-            }
-            return new Promise((resolve, reject) => {
-                cc.resources.load(url, type, (completedCount, totalCount, item) => {
-                    this.onLoadProgress(viewType, totalCount, "", completedCount / totalCount);
-                }, (error, resource) => {
-                    if (error) {
-                        resInfo.updateStatus(eLoaderStatus.READY);
-                        resInfo.decRef(refCount);
-                        reject(url);
-                        return;
-                    }
-                    resInfo.updateStatus(eLoaderStatus.LOADED);
-                    this.onLoadComplete(viewType, [url], [{ url: url, type: type, refCount: 1, pkg: pkg }], "");
-                    resolve(url);
-                });
-            });
-        }
-        /**
-         * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
-         * @param	arr_res 	需要加载的资源数组
-         * @param	viewType 	加载界面
-         * @param   tips		提示文字
-         * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
-         * @param	cache 		是否缓存加载结果。
-         * @return 	结束回调(参数：Array<string>，加载的url数组)
-         */
-        loadArrayRes(arr_res, viewType = airkit.LOADVIEW_TYPE_NONE, tips = null, priority = 1, cache = true) {
-            let has_unload = false;
-            let urls = [];
-            let resArr = [];
-            if (viewType == null)
-                viewType = airkit.LOADVIEW_TYPE_NONE;
-            if (priority == null)
-                priority = 1;
-            if (cache == null)
-                cache = true;
-            for (let i = 0; i < arr_res.length; i++) {
-                let res = arr_res[i];
-                if (!this.getRes(res.url)) {
-                    urls.push(res.url);
-                    resArr.push(res);
-                    has_unload = true;
-                }
-                let resInfo = this._dicResInfo.getValue(res.url);
-                if (!resInfo) {
-                    resInfo = new ResInfo(res.url, res.type, res.refCount, res.pkg);
-                    this._dicResInfo.set(res.url, resInfo);
-                }
-                else {
-                    resInfo.incRef(res.refCount);
-                    resInfo.updateStatus(eLoaderStatus.LOADING);
-                }
-            }
-            //判断是否需要显示加载界面
-            if (!has_unload && viewType != airkit.LOADVIEW_TYPE_NONE) {
-                viewType = airkit.LOADVIEW_TYPE_NONE;
-            }
-            //显示加载界面
-            if (viewType != airkit.LOADVIEW_TYPE_NONE) {
-                airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, urls.length, tips);
-            }
-            return new Promise((resolve, reject) => {
-                cc.resources.load(urls, (completedCount, totalCount, item) => {
-                    this.onLoadProgress(viewType, totalCount, tips, completedCount / totalCount);
-                }, (error, resource) => {
-                    if (error) {
-                        for (let i = 0; i < urls.length; i++) {
-                            let resInfo = this._dicResInfo.getValue(urls[i]);
-                            if (resInfo) {
-                                resInfo.decRef(arr_res[i].refCount);
-                                resInfo.updateStatus(eLoaderStatus.READY);
-                            }
-                        }
-                        reject(urls);
-                        return;
-                    }
-                    for (let i = 0; i < urls.length; i++) {
-                        let resInfo = this._dicResInfo.getValue(urls[i]);
-                        if (resInfo) {
-                            resInfo.updateStatus(eLoaderStatus.READY);
-                        }
-                    }
-                    if (viewType != airkit.LOADVIEW_TYPE_NONE) {
-                        airkit.TimerManager.Instance.addOnce(this._minLoaderTime, null, (v) => {
-                            this.onLoadComplete(viewType, urls, resArr, tips);
-                            resolve(urls);
-                        });
-                    }
-                    else {
-                        this.onLoadComplete(viewType, urls, resArr, tips);
-                        resolve(urls);
-                    }
-                });
-            });
-        }
-        /**
-         * 加载完成
-         * @param	viewType	显示的加载界面类型
-         * @param 	handle 		加载时，传入的回调函数
-         * @param 	args		第一个参数为加载的资源url列表；第二个参数为是否加载成功
-         */
-        onLoadComplete(viewType, urls, arr_res, tips) {
-            //显示加载日志
-            if (urls) {
-                let arr = urls;
-                for (let i = 0; i < urls.length; i++) {
-                    if (arr_res[i].type == airkit.FguiAsset) {
-                        fgui.UIPackage.addPackage(urls[i]);
-                        // }else if(arr_res[i].type == airkit.FguiAtlas){
-                        //     console.log(arr_res[i].url);
-                        //     let arr = arr_res[i].url.split("_");
-                        //     if( Array.isArray(arr) && arr.length > 0){
-                        //         let pkg = fgui.UIPackage.getByName(arr_res[i].pkg);
-                        //         for (var j = 0; j < pkg["_items"].length; j++) {
-                        //             var pi = pkg["_items"][j];
-                        //             if(pi.file == arr_res[i].url){
-                        //                 if(pi["asset"] &&  pi["asset"]["nativeUrl"] == ""){
-                        //                     pi.decoded = false;
-                        //                     pkg.getItemAsset(pi);
-                        //                 }
-                        //             }
-                        //         }
-                        //     }
-                    }
-                }
-            }
-            //关闭加载界面
-            if (viewType != airkit.LOADVIEW_TYPE_NONE) {
-                airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_COMPLATE, viewType);
-            }
-        }
-        /**
-         * 加载进度
-         * @param	viewType	显示的加载界面类型
-         * @param	total		总共需要加载的资源数量
-         * @param	progress	已经加载的数量，百分比；注意，有可能相同进度会下发多次
-         */
-        onLoadProgress(viewType, total, tips, progress) {
-            let cur = airkit.NumberUtils.toInt(Math.floor(progress * total));
-            airkit.Log.debug("[load]进度: current={0} total={1} precent = {2}", cur, total, progress);
-            if (viewType != airkit.LOADVIEW_TYPE_NONE) {
-                airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_PROGRESS, viewType, cur, total, tips);
-            }
-        }
-        /**
-         * 释放指定资源
-         * @param	url	资源路径
-         */
-        clearRes(url, refCount) {
-            let res = this._dicResInfo.getValue(url);
-            if (res) {
-                res.decRef(refCount);
-            }
-        }
-        releaseRes(url) {
-            this._dicResInfo.remove(url);
-            cc.resources.release(url);
-            airkit.Log.info("[res]释放资源:" + url);
-        }
-        /**
-         * 图片代理，可以远程加载图片显示
-         * @param image
-         * @param skin
-         * @param proxy
-         * @param atlas
-         */
-        static imageProxy(image, skin, proxy, atlas) {
-            return new Promise((resolve, reject) => {
-                let texture = ResourceManager.Instance.getRes(skin);
-                if (texture != null) {
-                    image.url = skin;
-                }
-                else {
-                    let res = skin;
-                    if (atlas != null) {
-                        res = atlas;
-                    }
-                    if (proxy) {
-                        image.url = proxy;
-                    }
-                    airkit.Log.info("imageProxy start load {0} ", res);
-                    ResourceManager.Instance.loadRes(res)
-                        .then((v) => {
-                        image.url = skin;
-                        image.alpha = 0.1;
-                        airkit.TweenUtils.get(image).to({ alpha: 1.0 }, 0.3);
-                        airkit.Log.info("imageProxy start load done {0} ", res);
-                    })
-                        .catch((e) => airkit.Log.error(e));
-                }
-            });
-        }
-    }
-    ResourceManager.FONT_Yuanti = "Yuanti SC Regular";
-    ResourceManager.Font_Helvetica = "Helvetica";
-    ResourceManager.FONT_DEFAULT = "";
-    ResourceManager.FONT_DEFAULT_SIZE = airkit.FONT_SIZE_5;
-    ResourceManager.instance = null;
-    airkit.ResourceManager = ResourceManager;
-    let eLoaderStatus;
-    (function (eLoaderStatus) {
-        eLoaderStatus[eLoaderStatus["READY"] = 0] = "READY";
-        eLoaderStatus[eLoaderStatus["LOADING"] = 1] = "LOADING";
-        eLoaderStatus[eLoaderStatus["LOADED"] = 2] = "LOADED";
-    })(eLoaderStatus || (eLoaderStatus = {}));
-    /**
-     * 保存加载过的url
-     */
-    class ResInfo extends airkit.EventDispatcher {
-        constructor(url, type, refCount, pkg) {
-            super();
-            this.url = url;
-            this.ref = refCount;
-            this.type = type;
-            this.pkg = pkg;
-            this.status = eLoaderStatus.READY;
-        }
-        updateStatus(status) {
-            this.status = status;
-        }
-        incRef(v = 1) {
-            this.ref += v;
-        }
-        decRef(v = 1) {
-            this.ref -= v;
-            if (this.ref <= 0) {
-                if (this.type == FguiAsset) {
-                    fgui.UIPackage.removePackage(this.url);
-                    console.log("remove package" + this.url);
-                    ResourceManager.Instance.releaseRes(this.url);
-                }
-                else if (this.type == FguiAtlas) {
-                    //do nothing
-                }
-                else {
-                    ResourceManager.Instance.releaseRes(this.url);
-                }
-            }
-        }
-    }
-})(airkit || (airkit = {}));
 // import { StringUtils } from "../utils/StringUtils";
 // import { DateUtils } from "../utils/DateUtils";
 // import { LogLevel } from "../common/Constant";
@@ -3026,7 +2534,7 @@ window.ak = window.airkit;
         }
         /**是否显示加载界面*/
         static loaderType() {
-            return airkit.LOADVIEW_TYPE_NONE;
+            return airkit.eLoaderType.NONE;
         }
         registerSignalEvent() {
             let event_list = this.signalMap();
@@ -3844,6 +3352,255 @@ window.ak = window.airkit;
 //         }
 //     }
 // }
+/**
+ * 本地数据
+ * @author ankye
+ * @time 2018-7-15
+ */
+
+(function (airkit) {
+    class LocalDB {
+        /**
+         * 设置全局id，用于区分同一个设备的不同玩家
+         * @param	key	唯一键，可以使用玩家id
+         */
+        static setGlobalKey(key) {
+            this._globalKey = key;
+        }
+        static has(key) {
+            return cc.sys.localStorage.getItem(this.getFullKey(key)) != null;
+        }
+        static getInt(key) {
+            return parseInt(cc.sys.localStorage.getItem(this.getFullKey(key)));
+        }
+        static setInt(key, value) {
+            cc.sys.localStorage.setItem(this.getFullKey(key), value.toString());
+        }
+        static getFloat(key) {
+            return parseInt(cc.sys.localStorage.getItem(this.getFullKey(key)));
+        }
+        static setFloat(key, value) {
+            cc.sys.localStorage.setItem(this.getFullKey(key), value.toString());
+        }
+        static getString(key) {
+            return cc.sys.localStorage.getItem(this.getFullKey(key));
+        }
+        static setString(key, value) {
+            cc.sys.localStorage.setItem(this.getFullKey(key), value);
+        }
+        static remove(key) {
+            cc.sys.localStorage.removeItem(this.getFullKey(key));
+        }
+        static clear() {
+            cc.sys.localStorage.clear();
+        }
+        static getFullKey(key) {
+            return this._globalKey + "_" + key;
+        }
+    }
+    LocalDB._globalKey = "";
+    airkit.LocalDB = LocalDB;
+})(airkit || (airkit = {}));
+/**
+ * 定时执行
+ * @author ankye
+ * @time 2018-7-11
+ */
+
+(function (airkit) {
+    class IntervalTimer {
+        constructor() {
+            this._nowTime = 0;
+        }
+        /**
+         * 初始化定时器
+         * @param	interval	触发间隔
+         * @param	firstFrame	是否第一帧开始执行
+         */
+        init(interval, firstFrame) {
+            this._intervalTime = interval;
+            if (firstFrame)
+                this._nowTime = this._intervalTime;
+        }
+        reset() {
+            this._nowTime = 0;
+        }
+        update(elapseTime) {
+            this._nowTime += elapseTime;
+            if (this._nowTime >= this._intervalTime) {
+                this._nowTime -= this._intervalTime;
+                return true;
+            }
+            return false;
+        }
+    }
+    airkit.IntervalTimer = IntervalTimer;
+})(airkit || (airkit = {}));
+/**
+ * 时间
+ * @author ankye
+ * @time 2018-7-3
+ */
+
+(function (airkit) {
+    class Timer {
+        //两帧之间的时间间隔,单位毫秒
+        static get deltaTimeMS() {
+            return cc.director.getDeltaTime() * 1000;
+        }
+        /**游戏启动后，经过的帧数*/
+        static get frameCount() {
+            return cc.director.getTotalFrames();
+        }
+        static get timeScale() {
+            return cc.director.getScheduler().getTimeScale();
+        }
+        static set timeScale(scale) {
+            cc.director.getScheduler().setTimeScale(scale);
+        }
+    }
+    airkit.Timer = Timer;
+})(airkit || (airkit = {}));
+// import { ArrayUtils } from "../utils/ArrayUtils";
+// import { ObjectPools } from "../collection/ObjectPools";
+// import { Singleton } from "../collection/Singleton";
+// import { IPoolsObject } from "../collection/IPoolsObject";
+// import { IntervalTimer } from "./IntervalTimer";
+// import { Timer } from "./Timer";
+
+(function (airkit) {
+    /**
+     * 定时器
+     * @author ankye
+     * @time 2018-7-11
+     */
+    class TimerManager extends airkit.Singleton {
+        constructor() {
+            super(...arguments);
+            this._idCounter = 0;
+            this._removalPending = [];
+            this._timers = [];
+        }
+        static get Instance() {
+            if (!this.instance)
+                this.instance = new TimerManager();
+            return this.instance;
+        }
+        setup() {
+            this._idCounter = 0;
+        }
+        destroy() {
+            airkit.ArrayUtils.clear(this._removalPending);
+            airkit.ArrayUtils.clear(this._timers);
+            return true;
+        }
+        update(dt) {
+            this.remove();
+            for (let i = 0; i < this._timers.length; i++) {
+                this._timers[i].update(dt);
+                if (this._timers[i].isActive == false) {
+                    TimerManager.Instance.removeTimer(this._timers[i].id);
+                }
+            }
+        }
+        /**
+         * 定时重复执行
+         * @param	rate	间隔时间(单位毫秒)。
+         * @param	ticks	执行次数
+         * @param	caller	执行域(this)。
+         * @param	method	定时器回调函数：注意，返回函数第一个参数为定时器id，后面参数依次时传入的参数。例OnTime(timer_id:number, args1:any, args2:any,...):void
+         * @param	args	回调参数。
+         */
+        addLoop(rate, ticks, caller, method, args = null) {
+            if (ticks <= 0)
+                ticks = 0;
+            let timer = airkit.ObjectPools.get(TimerObject);
+            ++this._idCounter;
+            // if (args != null) ArrayUtils.insert(args, this._idCounter, 0);
+            let handler = airkit.Handler.create(caller, method, args, false);
+            timer.set(this._idCounter, rate, ticks, handler);
+            this._timers.push(timer);
+            return timer.id;
+        }
+        /**
+         * 单次执行
+         * 间隔时间(单位毫秒)。
+         */
+        addOnce(rate, caller, method, args = null) {
+            let timer = airkit.ObjectPools.get(TimerObject);
+            ++this._idCounter;
+            // if (args != null) ArrayUtils.insert(args, this._idCounter, 0);
+            let handler = airkit.Handler.create(caller, method, args, false);
+            timer.set(this._idCounter, rate, 1, handler);
+            this._timers.push(timer);
+            return timer.id;
+        }
+        /**
+         * 移除定时器
+         * @param	timerId	定时器id
+         */
+        removeTimer(timerId) {
+            this._removalPending.push(timerId);
+        }
+        /**
+         * 移除过期定时器
+         */
+        remove() {
+            let t;
+            if (this._removalPending.length > 0) {
+                for (let id of this._removalPending) {
+                    for (let i = 0; i < this._timers.length; i++) {
+                        t = this._timers[i];
+                        if (t.id == id) {
+                            t.clear();
+                            // ObjectPools.recover(t)
+                            airkit.ObjectPools.recover(t);
+                            this._timers.splice(i, 1);
+                            break;
+                        }
+                    }
+                }
+                airkit.ArrayUtils.clear(this._removalPending);
+            }
+        }
+    }
+    TimerManager.TIMER_OBJECT = "timerObject";
+    TimerManager.instance = null;
+    airkit.TimerManager = TimerManager;
+    class TimerObject {
+        constructor() {
+            this.mTime = new airkit.IntervalTimer();
+        }
+        init() { }
+        clear() {
+            if (this.handle != null) {
+                this.handle.recover();
+                this.handle = null;
+            }
+        }
+        set(id, rate, ticks, handle) {
+            this.id = id;
+            this.mRate = rate < 0 ? 0 : rate;
+            this.mTicks = ticks < 0 ? 0 : ticks;
+            this.handle = handle;
+            this.mTicksElapsed = 0;
+            this.isActive = true;
+            this.mTime.init(this.mRate, false);
+        }
+        update(dt) {
+            if (this.isActive && this.mTime.update(dt)) {
+                if (this.handle != null)
+                    this.handle.run();
+                this.mTicksElapsed++;
+                if (this.mTicks > 0 && this.mTicks == this.mTicksElapsed) {
+                    this.isActive = false;
+                }
+            }
+        }
+    }
+    TimerObject.objectKey = "TimerObject";
+    airkit.TimerObject = TimerObject;
+})(airkit || (airkit = {}));
 // import { IUIPanel } from "./IUIPanel";
 // import { EventCenter } from "../event/EventCenter";
 // import { EventID, LoaderEventID } from "../event/EventID";
@@ -3966,7 +3723,7 @@ window.ak = window.airkit;
         }
         //显示加载界面 默认不显示
         static loaderType() {
-            return airkit.LOADVIEW_TYPE_NONE;
+            return airkit.eLoaderType.NONE;
         }
         //信号事件注册，适合单体物件事件传递
         // return [
@@ -4049,16 +3806,6 @@ window.ak = window.airkit;
                 let gui_control = item[0];
                 gui_control.off(item[1], item[2], this);
             }
-        }
-        static buildRes(resMap) {
-            let res = [];
-            for (let k in resMap) {
-                res.push({ url: "ui/" + k, type: airkit.FguiAsset, refCount: 1, pkg: k });
-                for (let k2 in resMap[k]) {
-                    res.push({ url: "ui/" + k2, type: airkit.FguiAtlas, refCount: resMap[k][k2], pkg: k });
-                }
-            }
-            return res;
         }
     }
     airkit.BaseView = BaseView;
@@ -4199,7 +3946,7 @@ window.ak = window.airkit;
         }
         //显示加载界面 默认不显示
         static loaderType() {
-            return airkit.LOADVIEW_TYPE_NONE;
+            return airkit.eLoaderType.NONE;
         }
         //信号事件注册，适合单体物件事件传递
         // return [
@@ -4522,6 +4269,527 @@ window.ak = window.airkit;
     LayerManager.BG_WIDTH = 750;
     LayerManager.BG_HEIGHT = 1650;
     airkit.LayerManager = LayerManager;
+})(airkit || (airkit = {}));
+
+(function (airkit) {
+    class LoaderDialog extends airkit.Dialog {
+        setup(args) {
+            super.setup(args);
+            this.center();
+            this.modal = true;
+            this.sortingOrder = 9999;
+        }
+        /**
+         * 打开
+         */
+        onOpen(total) {
+        }
+        /**
+         * 设置提示
+         */
+        setTips(s) {
+        }
+        /**
+         * 加载进度
+         * @param 	cur		当前加载数量
+         * @param	total	总共需要加载的数量
+         */
+        setProgress(cur, total) {
+        }
+        /**
+         * 关闭
+         */
+        onClose() {
+            return super.onClose();
+        }
+    }
+    airkit.LoaderDialog = LoaderDialog;
+})(airkit || (airkit = {}));
+
+(function (airkit) {
+    /**
+     * 加载界面管理器
+     * @author ankye
+     * @time 2017-7-25
+     */
+    class LoaderManager extends airkit.Singleton {
+        /**
+         * 注册加载类，存放场景id和url的对应关系
+         * @param view_type
+         * @param className
+         */
+        static register(view_type, className, cls) {
+            this.loaders.add(view_type, className);
+            airkit.ClassUtils.regClass(className, cls);
+        }
+        static get Instance() {
+            if (!this.instance)
+                this.instance = new LoaderManager();
+            return this.instance;
+        }
+        setup() {
+            this.registerEvent();
+            this._dicLoadView = new airkit.NDictionary();
+        }
+        destroy() {
+            this.unRegisterEvent();
+            if (this._dicLoadView) {
+                let view = null;
+                this._dicLoadView.foreach(function (key, value) {
+                    view = value;
+                    view.close();
+                    return true;
+                });
+                this._dicLoadView.clear();
+                this._dicLoadView = null;
+            }
+            return true;
+        }
+        registerEvent() {
+            airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
+            airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
+            airkit.EventCenter.on(airkit.LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
+        }
+        unRegisterEvent() {
+            airkit.EventCenter.off(airkit.LoaderEventID.LOADVIEW_OPEN, this, this.onLoadViewEvt);
+            airkit.EventCenter.off(airkit.LoaderEventID.LOADVIEW_COMPLATE, this, this.onLoadViewEvt);
+            airkit.EventCenter.off(airkit.LoaderEventID.LOADVIEW_PROGRESS, this, this.onLoadViewEvt);
+        }
+        /**加载进度事件*/
+        onLoadViewEvt(args) {
+            let type = args.type;
+            let viewType = args.get(0);
+            switch (type) {
+                case airkit.LoaderEventID.LOADVIEW_OPEN:
+                    {
+                        airkit.Log.debug("显示加载界面");
+                        let total = args.get(1);
+                        let tips = args.get(2);
+                        this.show(viewType, total, tips);
+                    }
+                    break;
+                case airkit.LoaderEventID.LOADVIEW_PROGRESS:
+                    {
+                        //Log.debug("加载界面进度")
+                        let cur = args.get(1);
+                        let total = args.get(2);
+                        this.setProgress(viewType, cur, total);
+                    }
+                    break;
+                case airkit.LoaderEventID.LOADVIEW_COMPLATE:
+                    {
+                        airkit.Log.debug("加载界面关闭");
+                        this.close(viewType);
+                    }
+                    break;
+            }
+        }
+        show(type, total, tips) {
+            if (type == null || type == airkit.eLoaderType.NONE)
+                return;
+            let view = this._dicLoadView.getValue(type);
+            if (!view) {
+                let className = LoaderManager.loaders.getValue(type);
+                //切换
+                if (className.length > 0) {
+                    let clas = airkit.ClassUtils.getClass(className);
+                    let res = clas.res();
+                    if (res == null || (Array.isArray(res) && res.length == 0)) {
+                        view = airkit.ClassUtils.getInstance(className);
+                        view.setup(null);
+                        this._dicLoadView.add(type, view);
+                        this.updateView(view, total, tips);
+                    }
+                    else {
+                        clas.loadResource((v) => {
+                            if (v) {
+                                view = airkit.ClassUtils.getInstance(className);
+                                view.setup(null);
+                                this._dicLoadView.add(type, view);
+                                this.updateView(view, total, tips);
+                            }
+                            else {
+                                airkit.Log.error("创建加载类失败 {1}", className);
+                            }
+                        });
+                    }
+                }
+                else {
+                    airkit.Log.error("Must set loadingview first type= {0}", type);
+                }
+            }
+            else {
+                this.updateView(view, total, tips);
+            }
+        }
+        updateView(view, total, tips) {
+            view.sortingOrder = 9999;
+            view.show();
+            view.onOpen(total);
+            view.setTips(tips);
+            view.setVisible(true);
+        }
+        setProgress(type, cur, total) {
+            let view = this._dicLoadView.getValue(type);
+            if (!view) {
+                return;
+            }
+            view.setProgress(cur, total);
+        }
+        close(type) {
+            let view = this._dicLoadView.getValue(type);
+            if (!view) {
+                return;
+            }
+            view.close();
+            this._dicLoadView.remove(type);
+            view = null;
+            // TweenUtils.get(view).to({ alpha: 0 }, 500, Laya.Ease.bounceIn, LayaHandler.create(null, v => {
+            // 	view.setVisible(false)
+            // }))
+        }
+    }
+    LoaderManager.loaders = new airkit.NDictionary();
+    LoaderManager.instance = null;
+    airkit.LoaderManager = LoaderManager;
+})(airkit || (airkit = {}));
+
+(function (airkit) {
+    /**
+     * 资源管理
+     * @author ankye
+     * @time 2018-7-10
+     */
+    airkit.FONT_SIZE_4 = 18;
+    airkit.FONT_SIZE_5 = 22;
+    airkit.FONT_SIZE_6 = 25;
+    airkit.FONT_SIZE_7 = 29;
+    class FguiAsset extends cc.BufferAsset {
+    }
+    airkit.FguiAsset = FguiAsset;
+    class FguiAtlas extends cc.BufferAsset {
+    }
+    airkit.FguiAtlas = FguiAtlas;
+    class ResourceManager extends airkit.Singleton {
+        constructor() {
+            super(...arguments);
+            this._dicResInfo = null; //加载过的信息，方便资源释放
+        }
+        static get Instance() {
+            if (!this.instance)
+                this.instance = new ResourceManager();
+            return this.instance;
+        }
+        setup() {
+            this._dicResInfo = new airkit.SDictionary();
+            this._minLoaderTime = 400;
+        }
+        /**
+         * 异步加载
+         * @param    url  要加载的单个资源地址或资源信息数组。比如：简单数组：["a.png","b.png"]；复杂数组[{url:"a.png",type:Loader.IMAGE,size:100,priority:1},{url:"b.json",type:Loader.JSON,size:50,priority:1}]。
+         * @param    progress  加载进度
+         * @param    type		数组的时候，类型为undefined 资源类型。比如：Loader.IMAGE。
+         * @param	priority	(default = 1)加载的优先级，优先级高的优先加载。有0-4共5个优先级，0最高，4最低。
+         * @param	cache		是否缓存加载结果。
+         * @param	group		分组，方便对资源进行管理。
+         * @param    ignoreCache	是否忽略缓存，强制重新加载。
+         */
+        destroy() {
+            if (this._dicResInfo) {
+                this._dicResInfo.foreach((k, v) => {
+                    ResourceManager.Instance.clearRes(k, v.ref);
+                    return true;
+                });
+                this._dicResInfo.clear();
+                this._dicResInfo = null;
+            }
+            return true;
+        }
+        update(dt) { }
+        /**获取资源*/
+        getRes(url) {
+            //修改访问时间
+            return cc.resources.get(url);
+        }
+        dump() {
+            this._dicResInfo.foreach((k, v) => {
+                console.log("url:" + k + " refCount=" + v.ref + "\n");
+                return true;
+            });
+        }
+        /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～加载～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
+        /**
+         * 加载资源，如果资源在此之前已经加载过，则当前帧会调用complete
+         * @param	url 		单个资源地址
+         * @param	type 		资源类型
+         * @param	viewType 	加载界面
+         * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
+         * @param	cache 		是否缓存加载结果。
+         * @param	group 		分组，方便对资源进行管理。
+         * @param	ignoreCache 是否忽略缓存，强制重新加载
+         * @return 	结束回调(参数：string 加载的资源url)
+         */
+        loadRes(url, type, refCount = 1, viewType = airkit.eLoaderType.NONE, priority = 1, cache = true, pkg = "", ignoreCache = false) {
+            //添加到加载目录
+            if (viewType == null)
+                viewType = airkit.eLoaderType.NONE;
+            //判断是否需要显示加载界面
+            if (viewType != airkit.eLoaderType.NONE) {
+                if (cc.resources.get(url))
+                    viewType = airkit.eLoaderType.NONE;
+            }
+            //显示加载界面
+            if (viewType != airkit.eLoaderType.NONE) {
+                airkit.EventCenter.dispatchEvent(airkit.LoaderEventID.LOADVIEW_OPEN, viewType, 1);
+            }
+            let resInfo = this._dicResInfo.getValue(url);
+            if (!resInfo) {
+                resInfo = new ResInfo(url, type, refCount, pkg);
+                this._dicResInfo.set(url, resInfo);
+                resInfo.updateStatus(eLoaderStatus.LOADING);
+            }
+            else {
+                resInfo.incRef(refCount);
+            }
+            return new Promise((resolve, reject) => {
+                cc.resources.load(url, type, (completedCount, totalCount, item) => {
+                    this.onLoadProgress(viewType, totalCount, "", completedCount / totalCount);
+                }, (error, resource) => {
+                    if (error) {
+                        resInfo.updateStatus(eLoaderStatus.READY);
+                        resInfo.decRef(refCount);
+                        reject(url);
+                        return;
+                    }
+                    resInfo.updateStatus(eLoaderStatus.LOADED);
+                    this.onLoadComplete(viewType, [url], [{ url: url, type: type, refCount: 1, pkg: pkg }], "");
+                    resolve(url);
+                });
+            });
+        }
+        /**
+         * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
+         * @param	arr_res 	需要加载的资源数组
+         * @param	viewType 	加载界面
+         * @param   tips		提示文字
+         * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
+         * @param	cache 		是否缓存加载结果。
+         * @return 	结束回调(参数：Array<string>，加载的url数组)
+         */
+        loadArrayRes(arr_res, viewType = airkit.eLoaderType.NONE, tips = null, priority = 1, cache = true) {
+            let has_unload = false;
+            let urls = [];
+            let resArr = [];
+            if (viewType == null)
+                viewType = airkit.eLoaderType.NONE;
+            if (priority == null)
+                priority = 1;
+            if (cache == null)
+                cache = true;
+            for (let i = 0; i < arr_res.length; i++) {
+                let res = arr_res[i];
+                if (!this.getRes(res.url)) {
+                    urls.push(res.url);
+                    resArr.push(res);
+                    has_unload = true;
+                }
+                let resInfo = this._dicResInfo.getValue(res.url);
+                if (!resInfo) {
+                    resInfo = new ResInfo(res.url, res.type, res.refCount, res.pkg);
+                    this._dicResInfo.set(res.url, resInfo);
+                }
+                else {
+                    resInfo.incRef(res.refCount);
+                    resInfo.updateStatus(eLoaderStatus.LOADED);
+                }
+            }
+            //判断是否需要显示加载界面
+            if (!has_unload && viewType != airkit.eLoaderType.NONE) {
+                viewType = airkit.eLoaderType.NONE;
+            }
+            //显示加载界面
+            if (viewType != airkit.eLoaderType.NONE) {
+                airkit.LoaderManager.Instance.show(viewType, urls.length, tips);
+            }
+            return new Promise((resolve, reject) => {
+                cc.resources.load(urls, (completedCount, totalCount, item) => {
+                    this.onLoadProgress(viewType, totalCount, tips, completedCount / totalCount);
+                }, (error, resource) => {
+                    if (error) {
+                        for (let i = 0; i < urls.length; i++) {
+                            let resInfo = this._dicResInfo.getValue(urls[i]);
+                            if (resInfo) {
+                                resInfo.decRef(arr_res[i].refCount);
+                                resInfo.updateStatus(eLoaderStatus.READY);
+                            }
+                        }
+                        reject(urls);
+                        return;
+                    }
+                    for (let i = 0; i < urls.length; i++) {
+                        let resInfo = this._dicResInfo.getValue(urls[i]);
+                        if (resInfo) {
+                            resInfo.updateStatus(eLoaderStatus.READY);
+                        }
+                    }
+                    if (viewType != airkit.eLoaderType.NONE) {
+                        airkit.TimerManager.Instance.addOnce(this._minLoaderTime, null, (v) => {
+                            this.onLoadComplete(viewType, urls, resArr, tips);
+                            resolve(urls);
+                        });
+                    }
+                    else {
+                        this.onLoadComplete(viewType, urls, resArr, tips);
+                        resolve(urls);
+                    }
+                });
+            });
+        }
+        /**
+         * 加载完成
+         * @param	viewType	显示的加载界面类型
+         * @param 	handle 		加载时，传入的回调函数
+         * @param 	args		第一个参数为加载的资源url列表；第二个参数为是否加载成功
+         */
+        onLoadComplete(viewType, urls, arr_res, tips) {
+            //显示加载日志
+            if (urls) {
+                let arr = urls;
+                for (let i = 0; i < urls.length; i++) {
+                    if (arr_res[i].type == airkit.FguiAsset) {
+                        fgui.UIPackage.addPackage(urls[i]);
+                        // }else if(arr_res[i].type == airkit.FguiAtlas){
+                        //     console.log(arr_res[i].url);
+                        //     let arr = arr_res[i].url.split("_");
+                        //     if( Array.isArray(arr) && arr.length > 0){
+                        //         let pkg = fgui.UIPackage.getByName(arr_res[i].pkg);
+                        //         for (var j = 0; j < pkg["_items"].length; j++) {
+                        //             var pi = pkg["_items"][j];
+                        //             if(pi.file == arr_res[i].url){
+                        //                 if(pi["asset"] &&  pi["asset"]["nativeUrl"] == ""){
+                        //                     pi.decoded = false;
+                        //                     pkg.getItemAsset(pi);
+                        //                 }
+                        //             }
+                        //         }
+                        //     }
+                    }
+                }
+            }
+            //关闭加载界面
+            if (viewType != airkit.eLoaderType.NONE) {
+                airkit.LoaderManager.Instance.close(viewType);
+            }
+        }
+        /**
+         * 加载进度
+         * @param	viewType	显示的加载界面类型
+         * @param	total		总共需要加载的资源数量
+         * @param	progress	已经加载的数量，百分比；注意，有可能相同进度会下发多次
+         */
+        onLoadProgress(viewType, total, tips, progress) {
+            let cur = airkit.NumberUtils.toInt(Math.floor(progress * total));
+            airkit.Log.debug("[load]进度: current={0} total={1} precent = {2}", cur, total, progress);
+            if (viewType != airkit.eLoaderType.NONE) {
+                airkit.LoaderManager.Instance.setProgress(viewType, cur, total);
+            }
+        }
+        /**
+         * 释放指定资源
+         * @param	url	资源路径
+         */
+        clearRes(url, refCount) {
+            let res = this._dicResInfo.getValue(url);
+            if (res) {
+                res.decRef(refCount);
+            }
+        }
+        releaseRes(url) {
+            this._dicResInfo.remove(url);
+            cc.resources.release(url);
+            airkit.Log.info("[res]释放资源:" + url);
+        }
+        /**
+         * 图片代理，可以远程加载图片显示
+         * @param image
+         * @param skin
+         * @param proxy
+         * @param atlas
+         */
+        static imageProxy(image, skin, proxy, atlas) {
+            return new Promise((resolve, reject) => {
+                let texture = ResourceManager.Instance.getRes(skin);
+                if (texture != null) {
+                    image.url = skin;
+                }
+                else {
+                    let res = skin;
+                    if (atlas != null) {
+                        res = atlas;
+                    }
+                    if (proxy) {
+                        image.url = proxy;
+                    }
+                    airkit.Log.info("imageProxy start load {0} ", res);
+                    ResourceManager.Instance.loadRes(res)
+                        .then((v) => {
+                        image.url = skin;
+                        image.alpha = 0.1;
+                        airkit.TweenUtils.get(image).to({ alpha: 1.0 }, 0.3);
+                        airkit.Log.info("imageProxy start load done {0} ", res);
+                    })
+                        .catch((e) => airkit.Log.error(e));
+                }
+            });
+        }
+    }
+    ResourceManager.FONT_Yuanti = "Yuanti SC Regular";
+    ResourceManager.Font_Helvetica = "Helvetica";
+    ResourceManager.FONT_DEFAULT = "";
+    ResourceManager.FONT_DEFAULT_SIZE = airkit.FONT_SIZE_5;
+    ResourceManager.instance = null;
+    airkit.ResourceManager = ResourceManager;
+    let eLoaderStatus;
+    (function (eLoaderStatus) {
+        eLoaderStatus[eLoaderStatus["READY"] = 0] = "READY";
+        eLoaderStatus[eLoaderStatus["LOADING"] = 1] = "LOADING";
+        eLoaderStatus[eLoaderStatus["LOADED"] = 2] = "LOADED";
+    })(eLoaderStatus || (eLoaderStatus = {}));
+    /**
+     * 保存加载过的url
+     */
+    class ResInfo extends airkit.EventDispatcher {
+        constructor(url, type, refCount, pkg) {
+            super();
+            this.url = url;
+            this.ref = refCount;
+            this.type = type;
+            this.pkg = pkg;
+            this.status = eLoaderStatus.READY;
+        }
+        updateStatus(status) {
+            this.status = status;
+        }
+        incRef(v = 1) {
+            this.ref += v;
+        }
+        decRef(v = 1) {
+            this.ref -= v;
+            if (this.ref <= 0) {
+                if (this.type == FguiAsset) {
+                    fgui.UIPackage.removePackage(this.url);
+                    console.log("remove package" + this.url);
+                    ResourceManager.Instance.releaseRes(this.url);
+                }
+                else if (this.type == FguiAtlas) {
+                    //do nothing
+                }
+                else {
+                    ResourceManager.Instance.releaseRes(this.url);
+                }
+            }
+        }
+    }
 })(airkit || (airkit = {}));
 // import { EventCenter } from "../event/EventCenter";
 // import { EventID, LoaderEventID } from "../event/EventID";
@@ -4856,6 +5124,8 @@ window.ak = window.airkit;
          * @param uiid    界面id
          */
         close(uiid, vid) {
+            if (airkit.StringUtils.isNullOrEmpty(uiid))
+                return;
             return new Promise((resolve, reject) => {
                 airkit.Log.info("close panel {0} {1}", uiid, vid);
                 for (let i = this._cacheViews.length - 1; i >= 0; i--) {
@@ -5356,255 +5626,6 @@ window.ak = window.airkit;
             }
         }
     }
-})(airkit || (airkit = {}));
-/**
- * 本地数据
- * @author ankye
- * @time 2018-7-15
- */
-
-(function (airkit) {
-    class LocalDB {
-        /**
-         * 设置全局id，用于区分同一个设备的不同玩家
-         * @param	key	唯一键，可以使用玩家id
-         */
-        static setGlobalKey(key) {
-            this._globalKey = key;
-        }
-        static has(key) {
-            return cc.sys.localStorage.getItem(this.getFullKey(key)) != null;
-        }
-        static getInt(key) {
-            return parseInt(cc.sys.localStorage.getItem(this.getFullKey(key)));
-        }
-        static setInt(key, value) {
-            cc.sys.localStorage.setItem(this.getFullKey(key), value.toString());
-        }
-        static getFloat(key) {
-            return parseInt(cc.sys.localStorage.getItem(this.getFullKey(key)));
-        }
-        static setFloat(key, value) {
-            cc.sys.localStorage.setItem(this.getFullKey(key), value.toString());
-        }
-        static getString(key) {
-            return cc.sys.localStorage.getItem(this.getFullKey(key));
-        }
-        static setString(key, value) {
-            cc.sys.localStorage.setItem(this.getFullKey(key), value);
-        }
-        static remove(key) {
-            cc.sys.localStorage.removeItem(this.getFullKey(key));
-        }
-        static clear() {
-            cc.sys.localStorage.clear();
-        }
-        static getFullKey(key) {
-            return this._globalKey + "_" + key;
-        }
-    }
-    LocalDB._globalKey = "";
-    airkit.LocalDB = LocalDB;
-})(airkit || (airkit = {}));
-/**
- * 定时执行
- * @author ankye
- * @time 2018-7-11
- */
-
-(function (airkit) {
-    class IntervalTimer {
-        constructor() {
-            this._nowTime = 0;
-        }
-        /**
-         * 初始化定时器
-         * @param	interval	触发间隔
-         * @param	firstFrame	是否第一帧开始执行
-         */
-        init(interval, firstFrame) {
-            this._intervalTime = interval;
-            if (firstFrame)
-                this._nowTime = this._intervalTime;
-        }
-        reset() {
-            this._nowTime = 0;
-        }
-        update(elapseTime) {
-            this._nowTime += elapseTime;
-            if (this._nowTime >= this._intervalTime) {
-                this._nowTime -= this._intervalTime;
-                return true;
-            }
-            return false;
-        }
-    }
-    airkit.IntervalTimer = IntervalTimer;
-})(airkit || (airkit = {}));
-/**
- * 时间
- * @author ankye
- * @time 2018-7-3
- */
-
-(function (airkit) {
-    class Timer {
-        //两帧之间的时间间隔,单位毫秒
-        static get deltaTimeMS() {
-            return cc.director.getDeltaTime() * 1000;
-        }
-        /**游戏启动后，经过的帧数*/
-        static get frameCount() {
-            return cc.director.getTotalFrames();
-        }
-        static get timeScale() {
-            return cc.director.getScheduler().getTimeScale();
-        }
-        static set timeScale(scale) {
-            cc.director.getScheduler().setTimeScale(scale);
-        }
-    }
-    airkit.Timer = Timer;
-})(airkit || (airkit = {}));
-// import { ArrayUtils } from "../utils/ArrayUtils";
-// import { ObjectPools } from "../collection/ObjectPools";
-// import { Singleton } from "../collection/Singleton";
-// import { IPoolsObject } from "../collection/IPoolsObject";
-// import { IntervalTimer } from "./IntervalTimer";
-// import { Timer } from "./Timer";
-
-(function (airkit) {
-    /**
-     * 定时器
-     * @author ankye
-     * @time 2018-7-11
-     */
-    class TimerManager extends airkit.Singleton {
-        constructor() {
-            super(...arguments);
-            this._idCounter = 0;
-            this._removalPending = [];
-            this._timers = [];
-        }
-        static get Instance() {
-            if (!this.instance)
-                this.instance = new TimerManager();
-            return this.instance;
-        }
-        setup() {
-            this._idCounter = 0;
-        }
-        destroy() {
-            airkit.ArrayUtils.clear(this._removalPending);
-            airkit.ArrayUtils.clear(this._timers);
-            return true;
-        }
-        update(dt) {
-            this.remove();
-            for (let i = 0; i < this._timers.length; i++) {
-                this._timers[i].update(dt);
-                if (this._timers[i].isActive == false) {
-                    TimerManager.Instance.removeTimer(this._timers[i].id);
-                }
-            }
-        }
-        /**
-         * 定时重复执行
-         * @param	rate	间隔时间(单位毫秒)。
-         * @param	ticks	执行次数
-         * @param	caller	执行域(this)。
-         * @param	method	定时器回调函数：注意，返回函数第一个参数为定时器id，后面参数依次时传入的参数。例OnTime(timer_id:number, args1:any, args2:any,...):void
-         * @param	args	回调参数。
-         */
-        addLoop(rate, ticks, caller, method, args = null) {
-            if (ticks <= 0)
-                ticks = 0;
-            let timer = airkit.ObjectPools.get(TimerObject);
-            ++this._idCounter;
-            // if (args != null) ArrayUtils.insert(args, this._idCounter, 0);
-            let handler = airkit.Handler.create(caller, method, args, false);
-            timer.set(this._idCounter, rate, ticks, handler);
-            this._timers.push(timer);
-            return timer.id;
-        }
-        /**
-         * 单次执行
-         * 间隔时间(单位毫秒)。
-         */
-        addOnce(rate, caller, method, args = null) {
-            let timer = airkit.ObjectPools.get(TimerObject);
-            ++this._idCounter;
-            // if (args != null) ArrayUtils.insert(args, this._idCounter, 0);
-            let handler = airkit.Handler.create(caller, method, args, false);
-            timer.set(this._idCounter, rate, 1, handler);
-            this._timers.push(timer);
-            return timer.id;
-        }
-        /**
-         * 移除定时器
-         * @param	timerId	定时器id
-         */
-        removeTimer(timerId) {
-            this._removalPending.push(timerId);
-        }
-        /**
-         * 移除过期定时器
-         */
-        remove() {
-            let t;
-            if (this._removalPending.length > 0) {
-                for (let id of this._removalPending) {
-                    for (let i = 0; i < this._timers.length; i++) {
-                        t = this._timers[i];
-                        if (t.id == id) {
-                            t.clear();
-                            // ObjectPools.recover(t)
-                            airkit.ObjectPools.recover(t);
-                            this._timers.splice(i, 1);
-                            break;
-                        }
-                    }
-                }
-                airkit.ArrayUtils.clear(this._removalPending);
-            }
-        }
-    }
-    TimerManager.TIMER_OBJECT = "timerObject";
-    TimerManager.instance = null;
-    airkit.TimerManager = TimerManager;
-    class TimerObject {
-        constructor() {
-            this.mTime = new airkit.IntervalTimer();
-        }
-        init() { }
-        clear() {
-            if (this.handle != null) {
-                this.handle.recover();
-                this.handle = null;
-            }
-        }
-        set(id, rate, ticks, handle) {
-            this.id = id;
-            this.mRate = rate < 0 ? 0 : rate;
-            this.mTicks = ticks < 0 ? 0 : ticks;
-            this.handle = handle;
-            this.mTicksElapsed = 0;
-            this.isActive = true;
-            this.mTime.init(this.mRate, false);
-        }
-        update(dt) {
-            if (this.isActive && this.mTime.update(dt)) {
-                if (this.handle != null)
-                    this.handle.run();
-                this.mTicksElapsed++;
-                if (this.mTicks > 0 && this.mTicks == this.mTicksElapsed) {
-                    this.isActive = false;
-                }
-            }
-        }
-    }
-    TimerObject.objectKey = "TimerObject";
-    airkit.TimerObject = TimerObject;
 })(airkit || (airkit = {}));
 
 (function (airkit) {
@@ -7905,6 +7926,16 @@ window.ak = window.airkit;
      * @time 2018-7-11
      */
     class Utils {
+        static buildRes(resMap) {
+            let res = [];
+            for (let k in resMap) {
+                res.push({ url: "ui/" + k, type: airkit.FguiAsset, refCount: 1, pkg: k });
+                for (let k2 in resMap[k]) {
+                    res.push({ url: "ui/" + k2, type: airkit.FguiAtlas, refCount: resMap[k][k2], pkg: k });
+                }
+            }
+            return res;
+        }
         /**打开外部链接，如https://ask.laya.ui.Box.com/xxx*/
         static openURL(url) {
             window.location.href = url;

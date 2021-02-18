@@ -139,7 +139,7 @@ namespace airkit {
 
         //显示加载界面 默认不显示
         public static loaderType(): number {
-            return LOADVIEW_TYPE_NONE;
+            return eLoaderType.NONE;
         }
 
         //信号事件注册，适合单体物件事件传递
@@ -236,16 +236,7 @@ namespace airkit {
                 gui_control.off(item[1], item[2], this);
             }
         }
-        protected static buildRes(resMap:{ [index: string]: {} }):Array<Res> {
-            let res = [];
-            for (let k in resMap) {
-                res.push({ url: "ui/" + k, type: airkit.FguiAsset,refCount:1,pkg:k });
-                for (let k2 in resMap[k]) {
-                    res.push({ url: "ui/" + k2, type: airkit.FguiAtlas,refCount:resMap[k][k2],pkg:k });
-                }
-            }
-            return res;
-        }
+        
       
     }
 }

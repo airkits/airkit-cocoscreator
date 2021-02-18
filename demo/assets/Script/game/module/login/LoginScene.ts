@@ -31,14 +31,14 @@ export default class LoginScene extends UILoginScene{
     }
     //先加载资源
     public static res(): Array<ak.Res> {
-        return this.buildRes(UILoginScene.ResMap);
+        return ak.Utils.buildRes(UILoginScene.ResMap);
     }
    
-    //public loaderType(): number {
+    public static loaderType(): number {
         
-       // return eLoaderType.FULLSCREEN
-    // }
-    public loaderTips(): string {
+       return ak.eLoaderType.FULL_SCREEN
+    }
+    public static loaderTips(): string {
         return "动画资源加载"
     }
     protected eventMap(): Array<any> {

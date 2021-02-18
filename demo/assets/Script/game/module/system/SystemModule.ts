@@ -1,3 +1,4 @@
+import UIFullScreenLoadingDlg from "../../gen/ui/Loader/UIFullScreenLoadingDlg"
 
 
 export default class SystemModule extends airkit.BaseModule {
@@ -22,21 +23,15 @@ export default class SystemModule extends airkit.BaseModule {
     }
 
 
-    public res(): Array<ak.Res> {
-        let assets = [
-
-        ]
-        return assets
+    public static res(): Array<ak.Res> {
+        return ak.Utils.buildRes(UIFullScreenLoadingDlg.ResMap);
     }
 
-    public loaderTips(): string {
-        return "美术资源加载中"
-    }
 
     /**是否显示加载界面*/
-    //  public loaderType(): number {
-    //     return eLoaderType.FULLSCREEN
-    // }
+    public static loaderType(): number {
+        return ak.eLoaderType.NONE
+    }
 
     protected signalMap() {
         return null

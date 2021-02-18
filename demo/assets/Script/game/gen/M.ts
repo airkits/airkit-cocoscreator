@@ -27,12 +27,21 @@ export default class M {
         }
     }
   
-    public static preloadModule() {
+    public static preloadModule():Promise<boolean> {
         let list = [
+            this.SYSTEM
         ]
+        let calls = [];
         for (let i = 0; i < list.length; i++) {
-            airkit.Mediator.call(list[i])
+           calls.push(airkit.Mediator.call(list[i]));
         }
+        return Promise.all(calls).then((result) => {
+            console.log(result);
+            return true;
+        }).catch((error) => {
+            return false;
+        })
+        
     }
     constructor() {
 

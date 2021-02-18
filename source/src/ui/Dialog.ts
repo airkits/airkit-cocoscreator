@@ -172,7 +172,7 @@ namespace airkit {
 
         //显示加载界面 默认不显示
         public static loaderType(): number {
-            return LOADVIEW_TYPE_NONE;
+            return eLoaderType.NONE;
         }
 
         //信号事件注册，适合单体物件事件传递

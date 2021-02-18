@@ -35,7 +35,7 @@ namespace airkit {
 
         public setup(): void {
             this._dicResInfo = new SDictionary<ResInfo>();
-            this._minLoaderTime = 1000;
+            this._minLoaderTime = 400;
         }
 
         /**
@@ -90,7 +90,7 @@ namespace airkit {
             url: string,
             type?: typeof cc.Asset,
             refCount:number = 1,
-            viewType: number = LOADVIEW_TYPE_NONE,
+            viewType: number = eLoaderType.NONE,
             priority: number = 1,
             cache: boolean = true,
             pkg: string = "",
@@ -98,13 +98,13 @@ namespace airkit {
         ): Promise<string> {
             //添加到加载目录
 
-            if (viewType == null) viewType = LOADVIEW_TYPE_NONE;
+            if (viewType == null) viewType = eLoaderType.NONE;
             //判断是否需要显示加载界面
-            if (viewType != LOADVIEW_TYPE_NONE) {
-                if (cc.resources.get(url)) viewType = LOADVIEW_TYPE_NONE;
+            if (viewType !=  eLoaderType.NONE) {
+                if (cc.resources.get(url)) viewType =  eLoaderType.NONE;
             }
             //显示加载界面
-            if (viewType != LOADVIEW_TYPE_NONE) {
+            if (viewType !=  eLoaderType.NONE) {
                 EventCenter.dispatchEvent(
                     LoaderEventID.LOADVIEW_OPEN,
                     viewType,
@@ -158,7 +158,7 @@ namespace airkit {
          */
         public loadArrayRes(
             arr_res: Array<Res>,
-            viewType: number = LOADVIEW_TYPE_NONE,
+            viewType: number =  eLoaderType.NONE,
             tips: string = null,
             priority: number = 1,
             cache: boolean = true
@@ -166,7 +166,7 @@ namespace airkit {
             let has_unload: boolean = false;
             let urls = [];
             let resArr = [];
-            if (viewType == null) viewType = LOADVIEW_TYPE_NONE;
+            if (viewType == null) viewType =  eLoaderType.NONE;
             if (priority == null) priority = 1;
             if (cache == null) cache = true;
             for (let i=0; i<arr_res.length;i++) {
@@ -182,21 +182,17 @@ namespace airkit {
                     this._dicResInfo.set(res.url, resInfo);
                 }else{
                     resInfo.incRef(res.refCount);
-                    resInfo.updateStatus(eLoaderStatus.LOADING);
+                    resInfo.updateStatus(eLoaderStatus.LOADED);
                 }
             }
             //判断是否需要显示加载界面
-            if (!has_unload && viewType != LOADVIEW_TYPE_NONE) {
-                viewType = LOADVIEW_TYPE_NONE;
+            if (!has_unload && viewType !=  eLoaderType.NONE) {
+                viewType =  eLoaderType.NONE;
             }
             //显示加载界面
-            if (viewType != LOADVIEW_TYPE_NONE) {
-                EventCenter.dispatchEvent(
-                    LoaderEventID.LOADVIEW_OPEN,
-                    viewType,
-                    urls.length,
-                    tips
-                );
+            if (viewType !=  eLoaderType.NONE) {
+                LoaderManager.Instance.show(viewType,urls.length,tips);
+                
             }
  
             return new Promise((resolve, reject) => {
@@ -232,7 +228,7 @@ namespace airkit {
                             }
                         }
  
-                        if (viewType != LOADVIEW_TYPE_NONE) {
+                        if (viewType !=  eLoaderType.NONE) {
                             TimerManager.Instance.addOnce(
                                 this._minLoaderTime,
                                 null,
@@ -294,11 +290,8 @@ namespace airkit {
             }
 
             //关闭加载界面
-            if (viewType != LOADVIEW_TYPE_NONE) {
-                EventCenter.dispatchEvent(
-                    LoaderEventID.LOADVIEW_COMPLATE,
-                    viewType
-                );
+            if (viewType !=  eLoaderType.NONE) {
+                LoaderManager.Instance.close(viewType);
             }
         }
         /**
@@ -321,14 +314,8 @@ namespace airkit {
                 total,
                 progress
             );
-            if (viewType != LOADVIEW_TYPE_NONE) {
-                EventCenter.dispatchEvent(
-                    LoaderEventID.LOADVIEW_PROGRESS,
-                    viewType,
-                    cur,
-                    total,
-                    tips
-                );
+            if (viewType !=  eLoaderType.NONE) {
+                LoaderManager.Instance.setProgress(viewType,cur,total);
             }
         }
 

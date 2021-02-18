@@ -283,10 +283,14 @@ declare namespace airkit {
         [key: string]: T;
     };
     type Point = cc.Vec2;
-    /**
-     * 预留id=0，不显示加载界面
-     */
-    const LOADVIEW_TYPE_NONE: number;
+    enum eLoaderType {
+        NONE = 0,
+        VIEW = 1,
+        FULL_SCREEN = 2,
+        CUSTOM_1 = 3,
+        CUSTOM_2 = 4,
+        CUSTOM_3 = 5
+    }
     enum eUIType {
         SHOW = 0,
         POPUP = 1
@@ -663,159 +667,6 @@ declare namespace airkit {
 }
 declare namespace airkit {
     /**
-     * 加载进度界面接口类
-     * @author ankye
-     * @time 2018-7-25
-     */
-    interface ILoadingView {
-        /**
-         * 打开
-         */
-        onOpen(total: number): void;
-        /**
-         * 设置提示
-         */
-        setTips(s: string): void;
-        /**
-         * 加载进度
-         * @param 	cur		当前加载数量
-         * @param	total	总共需要加载的数量
-         */
-        setProgress(cur: number, total: number): void;
-        /**
-         * 关闭
-         */
-        onClose(): void;
-    }
-}
-declare namespace airkit {
-    /**
-     * 加载界面管理器
-     * @author ankye
-     * @time 2017-7-25
-     */
-    class LoaderManager extends Singleton {
-        _dicLoadView: NDictionary<ILoadingView>;
-        static loaders: NDictionary<string>;
-        /**
-         * 注册加载类，存放场景id和url的对应关系
-         * @param view_type
-         * @param className
-         */
-        static registerLoadingView(view_type: number, className: string, cls: any): void;
-        private static instance;
-        static get Instance(): LoaderManager;
-        setup(): void;
-        destroy(): boolean;
-        private registerEvent;
-        private unRegisterEvent;
-        /**加载进度事件*/
-        private onLoadViewEvt;
-        private show;
-        updateView(view: any, total: number, tips: string): void;
-        private setProgress;
-        private close;
-    }
-}
-declare namespace airkit {
-    interface Res {
-        url: string;
-        type: typeof cc.Asset;
-        refCount: number;
-        pkg: string;
-    }
-    /**
-     * 资源管理
-     * @author ankye
-     * @time 2018-7-10
-     */
-    const FONT_SIZE_4 = 18;
-    const FONT_SIZE_5 = 22;
-    const FONT_SIZE_6 = 25;
-    const FONT_SIZE_7 = 29;
-    class FguiAsset extends cc.BufferAsset {
-    }
-    class FguiAtlas extends cc.BufferAsset {
-    }
-    class ResourceManager extends Singleton {
-        static FONT_Yuanti: string;
-        static Font_Helvetica: string;
-        static FONT_DEFAULT: string;
-        static FONT_DEFAULT_SIZE: number;
-        private _dicResInfo;
-        private _minLoaderTime;
-        private static instance;
-        static get Instance(): ResourceManager;
-        setup(): void;
-        /**
-         * 异步加载
-         * @param    url  要加载的单个资源地址或资源信息数组。比如：简单数组：["a.png","b.png"]；复杂数组[{url:"a.png",type:Loader.IMAGE,size:100,priority:1},{url:"b.json",type:Loader.JSON,size:50,priority:1}]。
-         * @param    progress  加载进度
-         * @param    type		数组的时候，类型为undefined 资源类型。比如：Loader.IMAGE。
-         * @param	priority	(default = 1)加载的优先级，优先级高的优先加载。有0-4共5个优先级，0最高，4最低。
-         * @param	cache		是否缓存加载结果。
-         * @param	group		分组，方便对资源进行管理。
-         * @param    ignoreCache	是否忽略缓存，强制重新加载。
-         */
-        destroy(): boolean;
-        update(dt: number): void;
-        /**获取资源*/
-        getRes(url: string): any;
-        dump(): void;
-        /**
-         * 加载资源，如果资源在此之前已经加载过，则当前帧会调用complete
-         * @param	url 		单个资源地址
-         * @param	type 		资源类型
-         * @param	viewType 	加载界面
-         * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
-         * @param	cache 		是否缓存加载结果。
-         * @param	group 		分组，方便对资源进行管理。
-         * @param	ignoreCache 是否忽略缓存，强制重新加载
-         * @return 	结束回调(参数：string 加载的资源url)
-         */
-        loadRes(url: string, type?: typeof cc.Asset, refCount?: number, viewType?: number, priority?: number, cache?: boolean, pkg?: string, ignoreCache?: boolean): Promise<string>;
-        /**
-         * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
-         * @param	arr_res 	需要加载的资源数组
-         * @param	viewType 	加载界面
-         * @param   tips		提示文字
-         * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
-         * @param	cache 		是否缓存加载结果。
-         * @return 	结束回调(参数：Array<string>，加载的url数组)
-         */
-        loadArrayRes(arr_res: Array<Res>, viewType?: number, tips?: string, priority?: number, cache?: boolean): Promise<string[]>;
-        /**
-         * 加载完成
-         * @param	viewType	显示的加载界面类型
-         * @param 	handle 		加载时，传入的回调函数
-         * @param 	args		第一个参数为加载的资源url列表；第二个参数为是否加载成功
-         */
-        onLoadComplete(viewType: number, urls: string[], arr_res: Array<Res>, tips: string): void;
-        /**
-         * 加载进度
-         * @param	viewType	显示的加载界面类型
-         * @param	total		总共需要加载的资源数量
-         * @param	progress	已经加载的数量，百分比；注意，有可能相同进度会下发多次
-         */
-        onLoadProgress(viewType: number, total: number, tips: string, progress: number): void;
-        /**
-         * 释放指定资源
-         * @param	url	资源路径
-         */
-        clearRes(url: string, refCount: number): void;
-        releaseRes(url: string): void;
-        /**
-         * 图片代理，可以远程加载图片显示
-         * @param image
-         * @param skin
-         * @param proxy
-         * @param atlas
-         */
-        static imageProxy(image: fgui.GLoader, skin: string, proxy?: string, atlas?: string): Promise<any>;
-    }
-}
-declare namespace airkit {
-    /**
      * 日志类处理
      * @author ankye
      * @time 2018-7-8
@@ -1081,6 +932,121 @@ declare namespace airkit {
         encode(endian: string): any;
     }
 }
+/**
+ * 本地数据
+ * @author ankye
+ * @time 2018-7-15
+ */
+declare namespace airkit {
+    class LocalDB {
+        private static _globalKey;
+        /**
+         * 设置全局id，用于区分同一个设备的不同玩家
+         * @param	key	唯一键，可以使用玩家id
+         */
+        static setGlobalKey(key: string): void;
+        static has(key: string): boolean;
+        static getInt(key: string): number;
+        static setInt(key: string, value: number): void;
+        static getFloat(key: string): number;
+        static setFloat(key: string, value: number): void;
+        static getString(key: string): string;
+        static setString(key: string, value: string): void;
+        static remove(key: string): void;
+        static clear(): void;
+        private static getFullKey;
+    }
+}
+/**
+ * 定时执行
+ * @author ankye
+ * @time 2018-7-11
+ */
+declare namespace airkit {
+    class IntervalTimer {
+        private _intervalTime;
+        private _nowTime;
+        constructor();
+        /**
+         * 初始化定时器
+         * @param	interval	触发间隔
+         * @param	firstFrame	是否第一帧开始执行
+         */
+        init(interval: number, firstFrame: boolean): void;
+        reset(): void;
+        update(elapseTime: number): boolean;
+    }
+}
+/**
+ * 时间
+ * @author ankye
+ * @time 2018-7-3
+ */
+declare namespace airkit {
+    class Timer {
+        static get deltaTimeMS(): number;
+        /**游戏启动后，经过的帧数*/
+        static get frameCount(): number;
+        static get timeScale(): number;
+        static set timeScale(scale: number);
+    }
+}
+declare namespace airkit {
+    /**
+     * 定时器
+     * @author ankye
+     * @time 2018-7-11
+     */
+    class TimerManager extends Singleton {
+        private _idCounter;
+        private _removalPending;
+        private _timers;
+        static TIMER_OBJECT: string;
+        private static instance;
+        static get Instance(): TimerManager;
+        setup(): void;
+        destroy(): boolean;
+        update(dt: number): void;
+        /**
+         * 定时重复执行
+         * @param	rate	间隔时间(单位毫秒)。
+         * @param	ticks	执行次数
+         * @param	caller	执行域(this)。
+         * @param	method	定时器回调函数：注意，返回函数第一个参数为定时器id，后面参数依次时传入的参数。例OnTime(timer_id:number, args1:any, args2:any,...):void
+         * @param	args	回调参数。
+         */
+        addLoop(rate: number, ticks: number, caller: any, method: Function, args?: Array<any>): number;
+        /**
+         * 单次执行
+         * 间隔时间(单位毫秒)。
+         */
+        addOnce(rate: number, caller: any, method: Function, args?: Array<any>): number;
+        /**
+         * 移除定时器
+         * @param	timerId	定时器id
+         */
+        removeTimer(timerId: number): void;
+        /**
+         * 移除过期定时器
+         */
+        private remove;
+    }
+    class TimerObject implements IPoolsObject {
+        static objectKey: string;
+        id: number;
+        isActive: boolean;
+        mRate: number;
+        mTicks: number;
+        mTicksElapsed: number;
+        handle: Handler;
+        mTime: IntervalTimer;
+        constructor();
+        init(): void;
+        clear(): void;
+        set(id: number, rate: number, ticks: number, handle: Handler): void;
+        update(dt: number): void;
+    }
+}
 declare namespace airkit {
     /**
      * 非可拖动界面基类
@@ -1151,9 +1117,6 @@ declare namespace airkit {
         /**注册界面事件*/
         private registeGUIEvent;
         private unregisteGUIEvent;
-        protected static buildRes(resMap: {
-            [index: string]: {};
-        }): Array<Res>;
     }
 }
 declare namespace airkit {
@@ -1321,6 +1284,155 @@ declare namespace airkit {
     }
 }
 declare namespace airkit {
+    class LoaderDialog extends Dialog {
+        setup(args?: any): void;
+        /**
+         * 打开
+         */
+        onOpen(total: number): void;
+        /**
+         * 设置提示
+         */
+        setTips(s: string): void;
+        /**
+         * 加载进度
+         * @param 	cur		当前加载数量
+         * @param	total	总共需要加载的数量
+         */
+        setProgress(cur: number, total: number): void;
+        /**
+         * 关闭
+         */
+        onClose(): boolean;
+    }
+}
+declare namespace airkit {
+    /**
+     * 加载界面管理器
+     * @author ankye
+     * @time 2017-7-25
+     */
+    class LoaderManager extends Singleton {
+        _dicLoadView: NDictionary<LoaderDialog>;
+        static loaders: NDictionary<string>;
+        /**
+         * 注册加载类，存放场景id和url的对应关系
+         * @param view_type
+         * @param className
+         */
+        static register(view_type: number, className: string, cls: any): void;
+        private static instance;
+        static get Instance(): LoaderManager;
+        setup(): void;
+        destroy(): boolean;
+        private registerEvent;
+        private unRegisterEvent;
+        /**加载进度事件*/
+        private onLoadViewEvt;
+        show(type: number, total: number, tips: string): void;
+        updateView(view: LoaderDialog, total: number, tips: string): void;
+        setProgress(type: eLoaderType, cur: number, total: number): void;
+        close(type: eLoaderType): void;
+    }
+}
+declare namespace airkit {
+    interface Res {
+        url: string;
+        type: typeof cc.Asset;
+        refCount: number;
+        pkg: string;
+    }
+    /**
+     * 资源管理
+     * @author ankye
+     * @time 2018-7-10
+     */
+    const FONT_SIZE_4 = 18;
+    const FONT_SIZE_5 = 22;
+    const FONT_SIZE_6 = 25;
+    const FONT_SIZE_7 = 29;
+    class FguiAsset extends cc.BufferAsset {
+    }
+    class FguiAtlas extends cc.BufferAsset {
+    }
+    class ResourceManager extends Singleton {
+        static FONT_Yuanti: string;
+        static Font_Helvetica: string;
+        static FONT_DEFAULT: string;
+        static FONT_DEFAULT_SIZE: number;
+        private _dicResInfo;
+        private _minLoaderTime;
+        private static instance;
+        static get Instance(): ResourceManager;
+        setup(): void;
+        /**
+         * 异步加载
+         * @param    url  要加载的单个资源地址或资源信息数组。比如：简单数组：["a.png","b.png"]；复杂数组[{url:"a.png",type:Loader.IMAGE,size:100,priority:1},{url:"b.json",type:Loader.JSON,size:50,priority:1}]。
+         * @param    progress  加载进度
+         * @param    type		数组的时候，类型为undefined 资源类型。比如：Loader.IMAGE。
+         * @param	priority	(default = 1)加载的优先级，优先级高的优先加载。有0-4共5个优先级，0最高，4最低。
+         * @param	cache		是否缓存加载结果。
+         * @param	group		分组，方便对资源进行管理。
+         * @param    ignoreCache	是否忽略缓存，强制重新加载。
+         */
+        destroy(): boolean;
+        update(dt: number): void;
+        /**获取资源*/
+        getRes(url: string): any;
+        dump(): void;
+        /**
+         * 加载资源，如果资源在此之前已经加载过，则当前帧会调用complete
+         * @param	url 		单个资源地址
+         * @param	type 		资源类型
+         * @param	viewType 	加载界面
+         * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
+         * @param	cache 		是否缓存加载结果。
+         * @param	group 		分组，方便对资源进行管理。
+         * @param	ignoreCache 是否忽略缓存，强制重新加载
+         * @return 	结束回调(参数：string 加载的资源url)
+         */
+        loadRes(url: string, type?: typeof cc.Asset, refCount?: number, viewType?: number, priority?: number, cache?: boolean, pkg?: string, ignoreCache?: boolean): Promise<string>;
+        /**
+         * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
+         * @param	arr_res 	需要加载的资源数组
+         * @param	viewType 	加载界面
+         * @param   tips		提示文字
+         * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
+         * @param	cache 		是否缓存加载结果。
+         * @return 	结束回调(参数：Array<string>，加载的url数组)
+         */
+        loadArrayRes(arr_res: Array<Res>, viewType?: number, tips?: string, priority?: number, cache?: boolean): Promise<string[]>;
+        /**
+         * 加载完成
+         * @param	viewType	显示的加载界面类型
+         * @param 	handle 		加载时，传入的回调函数
+         * @param 	args		第一个参数为加载的资源url列表；第二个参数为是否加载成功
+         */
+        onLoadComplete(viewType: number, urls: string[], arr_res: Array<Res>, tips: string): void;
+        /**
+         * 加载进度
+         * @param	viewType	显示的加载界面类型
+         * @param	total		总共需要加载的资源数量
+         * @param	progress	已经加载的数量，百分比；注意，有可能相同进度会下发多次
+         */
+        onLoadProgress(viewType: number, total: number, tips: string, progress: number): void;
+        /**
+         * 释放指定资源
+         * @param	url	资源路径
+         */
+        clearRes(url: string, refCount: number): void;
+        releaseRes(url: string): void;
+        /**
+         * 图片代理，可以远程加载图片显示
+         * @param image
+         * @param skin
+         * @param proxy
+         * @param atlas
+         */
+        static imageProxy(image: fgui.GLoader, skin: string, proxy?: string, atlas?: string): Promise<any>;
+    }
+}
+declare namespace airkit {
     /**
      * 场景管理器
      * @author ankye
@@ -1443,121 +1555,6 @@ declare namespace airkit {
         private onUIEvent;
     }
     export {};
-}
-/**
- * 本地数据
- * @author ankye
- * @time 2018-7-15
- */
-declare namespace airkit {
-    class LocalDB {
-        private static _globalKey;
-        /**
-         * 设置全局id，用于区分同一个设备的不同玩家
-         * @param	key	唯一键，可以使用玩家id
-         */
-        static setGlobalKey(key: string): void;
-        static has(key: string): boolean;
-        static getInt(key: string): number;
-        static setInt(key: string, value: number): void;
-        static getFloat(key: string): number;
-        static setFloat(key: string, value: number): void;
-        static getString(key: string): string;
-        static setString(key: string, value: string): void;
-        static remove(key: string): void;
-        static clear(): void;
-        private static getFullKey;
-    }
-}
-/**
- * 定时执行
- * @author ankye
- * @time 2018-7-11
- */
-declare namespace airkit {
-    class IntervalTimer {
-        private _intervalTime;
-        private _nowTime;
-        constructor();
-        /**
-         * 初始化定时器
-         * @param	interval	触发间隔
-         * @param	firstFrame	是否第一帧开始执行
-         */
-        init(interval: number, firstFrame: boolean): void;
-        reset(): void;
-        update(elapseTime: number): boolean;
-    }
-}
-/**
- * 时间
- * @author ankye
- * @time 2018-7-3
- */
-declare namespace airkit {
-    class Timer {
-        static get deltaTimeMS(): number;
-        /**游戏启动后，经过的帧数*/
-        static get frameCount(): number;
-        static get timeScale(): number;
-        static set timeScale(scale: number);
-    }
-}
-declare namespace airkit {
-    /**
-     * 定时器
-     * @author ankye
-     * @time 2018-7-11
-     */
-    class TimerManager extends Singleton {
-        private _idCounter;
-        private _removalPending;
-        private _timers;
-        static TIMER_OBJECT: string;
-        private static instance;
-        static get Instance(): TimerManager;
-        setup(): void;
-        destroy(): boolean;
-        update(dt: number): void;
-        /**
-         * 定时重复执行
-         * @param	rate	间隔时间(单位毫秒)。
-         * @param	ticks	执行次数
-         * @param	caller	执行域(this)。
-         * @param	method	定时器回调函数：注意，返回函数第一个参数为定时器id，后面参数依次时传入的参数。例OnTime(timer_id:number, args1:any, args2:any,...):void
-         * @param	args	回调参数。
-         */
-        addLoop(rate: number, ticks: number, caller: any, method: Function, args?: Array<any>): number;
-        /**
-         * 单次执行
-         * 间隔时间(单位毫秒)。
-         */
-        addOnce(rate: number, caller: any, method: Function, args?: Array<any>): number;
-        /**
-         * 移除定时器
-         * @param	timerId	定时器id
-         */
-        removeTimer(timerId: number): void;
-        /**
-         * 移除过期定时器
-         */
-        private remove;
-    }
-    class TimerObject implements IPoolsObject {
-        static objectKey: string;
-        id: number;
-        isActive: boolean;
-        mRate: number;
-        mTicks: number;
-        mTicksElapsed: number;
-        handle: Handler;
-        mTime: IntervalTimer;
-        constructor();
-        init(): void;
-        clear(): void;
-        set(id: number, rate: number, ticks: number, handle: Handler): void;
-        update(dt: number): void;
-    }
 }
 declare namespace airkit {
     /**数组排序方式*/
@@ -2512,6 +2509,9 @@ declare namespace airkit {
      * @time 2018-7-11
      */
     class Utils {
+        static buildRes(resMap: {
+            [index: string]: {};
+        }): Array<Res>;
         /**打开外部链接，如https://ask.laya.ui.Box.com/xxx*/
         static openURL(url: string): void;
         /**获取当前地址栏参数*/

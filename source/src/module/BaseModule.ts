@@ -43,7 +43,7 @@ namespace airkit {
 
         /**是否显示加载界面*/
         public static loaderType(): number {
-            return LOADVIEW_TYPE_NONE;
+            return  eLoaderType.NONE;
         }
 
         private registerSignalEvent(): void {

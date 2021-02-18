@@ -43,31 +43,29 @@ namespace airkit {
       LayerManager.setup(root);
       Mediator.Instance.setup();
       TimerManager.Instance.setup();
-      // UIManager.Instance.setup();
-      
        ResourceManager.Instance.setup();
+       LoaderManager.Instance.setup();
       // DataProvider.Instance.setup();
       // LangManager.Instance.init();
 
       // SceneManager.Instance.setup();
       // 
-      // LoaderManager.Instance.setup();
+       
      // cc.director.getScheduler().scheduleUpdate(this, 0, false);
 
     }
 
     public destroy(): boolean {
-      //  Laya.timer.clearAll(this);
-      //
-      // LoaderManager.Instance.destroy();
+      LoaderManager.Instance.destroy();
       ResourceManager.Instance.destroy();
-       TimerManager.Instance.destroy();
-       Mediator.Instance.destroy();
+      TimerManager.Instance.destroy();
+      Mediator.Instance.destroy();
+      LayerManager.destroy();
       // UIManager.Instance.destroy();
       // SceneManager.Instance.destroy();
        
       // DataProvider.Instance.destroy();
-      LayerManager.destroy();
+      
       // LangManager.Instance.destory();
       return true;
     }
@@ -85,10 +83,10 @@ namespace airkit {
     }
     public preTick(dt: number): void {
        TimerManager.Instance.update(dt);
-      // UIManager.Instance.update(dt);
+       //UIManager.Instance.update(dt);
        ResourceManager.Instance.update(dt);
        Mediator.Instance.update(dt);
-      // SceneManager.Instance.update(dt);
+      SceneManager.Instance.update(dt);
     }
     public tick(dt: number): void {
       if (this._mainloopHandle) {

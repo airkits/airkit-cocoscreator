@@ -6,7 +6,7 @@ namespace airkit {
    */
 
   export class LoaderManager extends Singleton {
-    public _dicLoadView: NDictionary<ILoadingView>;
+    public _dicLoadView: NDictionary<LoaderDialog>;
 
     public static loaders: NDictionary<string> = new NDictionary<string>();
 
@@ -15,7 +15,7 @@ namespace airkit {
      * @param view_type
      * @param className
      */
-    public static registerLoadingView(
+    public static register(
       view_type: number,
       className: string,
       cls: any
@@ -32,13 +32,13 @@ namespace airkit {
 
     public setup(): void {
       this.registerEvent();
-      this._dicLoadView = new NDictionary<ILoadingView>();
+      this._dicLoadView = new NDictionary<LoaderDialog>();
     }
 
     public destroy(): boolean {
       this.unRegisterEvent();
       if (this._dicLoadView) {
-        let view: any = null;
+        let view: LoaderDialog = null;
         this._dicLoadView.foreach(function (key, value) {
           view = value;
           view.close();
@@ -69,6 +69,7 @@ namespace airkit {
         this.onLoadViewEvt
       );
     }
+    
     /**加载进度事件*/
     private onLoadViewEvt(args: EventArgs): void {
       let type: string = args.type;
@@ -99,24 +100,35 @@ namespace airkit {
       }
     }
 
-    private show(type: number, total: number, tips: string): void {
-      if (type == null || type == LOADVIEW_TYPE_NONE) return;
+    public show(type: number, total: number, tips: string): void {
+      if (type == null || type == eLoaderType.NONE) return;
 
       let view: any = this._dicLoadView.getValue(type);
       if (!view) {
+        
+
         let className: string = LoaderManager.loaders.getValue(type);
         //切换
         if (className.length > 0) {
-          view = ClassUtils.getInstance(className);
-          if (view == null) return;
-
-          view.setup([]);
           let clas = ClassUtils.getClass(className);
-          view.loadResource(() => {
-            LayerManager.loadingLayer.addChild(view);
+          let res = clas.res();
+          if(res == null || (Array.isArray(res) && res.length == 0)){
+            view = ClassUtils.getInstance(className);
+            view.setup(null);
             this._dicLoadView.add(type, view);
             this.updateView(view, total, tips);
-          });
+          }else{
+            clas.loadResource((v)=>{
+              if(v){
+                view = ClassUtils.getInstance(className);
+                view.setup(null);
+                this._dicLoadView.add(type, view);
+                this.updateView(view, total, tips);
+              }else{
+                  Log.error("创建加载类失败 {1}",className);
+              }
+            });
+          }
         } else {
           Log.error("Must set loadingview first type= {0}", type);
         }
@@ -124,28 +136,27 @@ namespace airkit {
         this.updateView(view, total, tips);
       }
     }
-    public updateView(view: any, total: number, tips: string): void {
-      if (!view.parent) {
-        LayerManager.loadingLayer.addChild(view);
-      }
+
+    public updateView(view: LoaderDialog, total: number, tips: string): void {
+      view.sortingOrder = 9999;
+      view.show();
       view.onOpen(total);
       view.setTips(tips);
       view.setVisible(true);
     }
-    private setProgress(type: number, cur: number, total: number): void {
+    public setProgress(type: eLoaderType, cur: number, total: number): void {
       let view = this._dicLoadView.getValue(type);
       if (!view) {
         return;
       }
       view.setProgress(cur, total);
     }
-    private close(type: number): void {
+    public close(type: eLoaderType): void {
       let view: any = this._dicLoadView.getValue(type);
       if (!view) {
         return;
       }
-      view.setVisible(false);
-      view.onClose();
+      view.close();
       this._dicLoadView.remove(type);
       view = null;
 

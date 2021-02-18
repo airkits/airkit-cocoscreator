@@ -8,6 +8,18 @@ namespace airkit {
      * @time 2018-7-11
      */
     export class Utils {
+
+        public static buildRes(resMap:{ [index: string]: {} }):Array<Res> {
+            let res = [];
+            for (let k in resMap) {
+                res.push({ url: "ui/" + k, type: airkit.FguiAsset,refCount:1,pkg:k });
+                for (let k2 in resMap[k]) {
+                    res.push({ url: "ui/" + k2, type: airkit.FguiAtlas,refCount:resMap[k][k2],pkg:k });
+                }
+            }
+            return res;
+        }
+
         /**打开外部链接，如https://ask.laya.ui.Box.com/xxx*/
         public static openURL(url: string): void {
             window.location.href = url;

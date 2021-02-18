@@ -30,15 +30,15 @@ export default class HomeScene extends UIHomeScene{
     }
     //先加载资源
     public static res(): Array<ak.Res> {
-        return this.buildRes(UIHomeScene.ResMap);
+        return ak.Utils.buildRes(UIHomeScene.ResMap);
     }
    
-    //public loaderType(): number {
-        
-       // return eLoaderType.FULLSCREEN
-    // }
-    public loaderTips(): string {
-        return "动画资源加载"
+    public static loaderTips(): string {
+        return "美术资源加载中"
+    }
+    /**是否显示加载界面*/
+    public static loaderType(): number {
+        return ak.eLoaderType.FULL_SCREEN
     }
     protected eventMap(): Array<any> {
         return [

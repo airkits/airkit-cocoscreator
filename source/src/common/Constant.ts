@@ -3,29 +3,20 @@ namespace airkit {
   export type Dict<T> = { [key: string]: T };
 
   export type Point = cc.Vec2;
-  /**
-   * 预留id=0，不显示加载界面
-   */
-  export const LOADVIEW_TYPE_NONE: number = 0;
+
+  export enum eLoaderType {
+      NONE = 0,
+      VIEW = 1,
+      FULL_SCREEN = 2,
+      CUSTOM_1 = 3,
+      CUSTOM_2 = 4,
+      CUSTOM_3 = 5
+  } 
 
   export enum eUIType {
     SHOW = 0,
     POPUP = 1
   }
-
-
-  // export enum eAligeType {
-  //   NONE = 0,
-  //   RIGHT,
-  //   RIGHT_BOTTOM,
-  //   BOTTOM,
-  //   LEFT_BOTTOM,
-  //   LEFT,
-  //   LEFT_TOP,
-  //   TOP,
-  //   RIGHT_TOP,
-  //   MID
-  // }
 
   /**
    * UI层级
@@ -54,9 +45,4 @@ namespace airkit {
      YES = 1,
      NO = 2,  
   }
-  // export enum ePopupButton {
-  //   Close = 0, //关闭按钮
-  //   Cancel = 1, //取消按钮
-  //   Ok = 2 //确定按钮
-  // }
 }

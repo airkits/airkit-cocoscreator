@@ -209,6 +209,7 @@ namespace airkit {
          * @param uiid    界面id
          */
         public close(uiid:string,vid:number): Promise<any> {
+            if(StringUtils.isNullOrEmpty(uiid)) return;
             return new Promise((resolve, reject) => {
                 Log.info("close panel {0} {1}", uiid,vid);
                 for(let i=this._cacheViews.length-1;i>=0 ; i--){

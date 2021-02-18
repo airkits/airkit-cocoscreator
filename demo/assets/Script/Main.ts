@@ -11,6 +11,7 @@ import { eDialogUIID } from './game/common/DialogType';
 import { AlertDlg } from './game/module/login/AlertDlg';
 import UIAlert from "./game/gen/ui/Loader/UIAlert";
 import UIAlertDlg from "./game/gen/ui/Loader/UIAlertDlg";
+import { FullScreenLoaderDlg } from "./game/module/system/FullScreenLoaderDlg";
 const { ccclass, property } = cc._decorator;
 
 @ccclass
@@ -30,9 +31,13 @@ export default class Main extends cc.Component {
         ak.SceneManager.register(eSceneType.BATTLE, BattleScene);
         ak.SceneManager.register(eSceneType.HOME, HomeScene)
         ak.UIManager.register(eDialogUIID.ALERT,AlertDlg)
-        M.login().then(v=>{     
-            v.enterScene();
+        ak.LoaderManager.register(ak.eLoaderType.FULL_SCREEN,"FullScreenLoaderDlg",FullScreenLoaderDlg);
+        M.preloadModule().then(v=>{
+            M.login().then(v=>{     
+                v.enterScene();
+            })
         })
+        
         
       
        
