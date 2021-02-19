@@ -44,7 +44,7 @@ namespace airkit {
             }
             return dic;
         }
-
+       
         /**
          * object转成查询字符串
          * @param obj

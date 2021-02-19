@@ -68,7 +68,7 @@ window.ak = window.airkit;
             airkit.LoaderManager.Instance.setup();
             // DataProvider.Instance.setup();
             // LangManager.Instance.init();
-            // SceneManager.Instance.setup();
+            airkit.SceneManager.Instance.setup();
             // 
             // cc.director.getScheduler().scheduleUpdate(this, 0, false);
         }
@@ -78,8 +78,8 @@ window.ak = window.airkit;
             airkit.TimerManager.Instance.destroy();
             airkit.Mediator.Instance.destroy();
             airkit.LayerManager.destroy();
-            // UIManager.Instance.destroy();
-            // SceneManager.Instance.destroy();
+            //UIManager.Instance.destroy();
+            airkit.SceneManager.Instance.destroy();
             // DataProvider.Instance.destroy();
             // LangManager.Instance.destory();
             return true;
@@ -1007,9 +1007,11 @@ window.ak = window.airkit;
         eLoaderType[eLoaderType["NONE"] = 0] = "NONE";
         eLoaderType[eLoaderType["VIEW"] = 1] = "VIEW";
         eLoaderType[eLoaderType["FULL_SCREEN"] = 2] = "FULL_SCREEN";
-        eLoaderType[eLoaderType["CUSTOM_1"] = 3] = "CUSTOM_1";
-        eLoaderType[eLoaderType["CUSTOM_2"] = 4] = "CUSTOM_2";
-        eLoaderType[eLoaderType["CUSTOM_3"] = 5] = "CUSTOM_3";
+        eLoaderType[eLoaderType["WINDOW"] = 3] = "WINDOW";
+        eLoaderType[eLoaderType["NET_LOADING"] = 4] = "NET_LOADING";
+        eLoaderType[eLoaderType["CUSTOM_1"] = 5] = "CUSTOM_1";
+        eLoaderType[eLoaderType["CUSTOM_2"] = 6] = "CUSTOM_2";
+        eLoaderType[eLoaderType["CUSTOM_3"] = 7] = "CUSTOM_3";
     })(eLoaderType = airkit.eLoaderType || (airkit.eLoaderType = {}));
     let eUIType;
     (function (eUIType) {
@@ -1024,11 +1026,7 @@ window.ak = window.airkit;
         eUILayer[eUILayer["BG"] = 0] = "BG";
         eUILayer[eUILayer["MAIN"] = 1] = "MAIN";
         eUILayer[eUILayer["GUI"] = 2] = "GUI";
-        //POPUP, //弹出层
-        // TOOLTIP, //提示层
-        // SYSTEM, //system层
         eUILayer[eUILayer["LOADING"] = 3] = "LOADING";
-        eUILayer[eUILayer["TOP"] = 4] = "TOP";
         //  MAX
     })(eUILayer = airkit.eUILayer || (airkit.eUILayer = {}));
     let LogLevel;
@@ -3506,7 +3504,7 @@ window.ak = window.airkit;
         /**
          * 定时重复执行
          * @param	rate	间隔时间(单位毫秒)。
-         * @param	ticks	执行次数
+         * @param	ticks	执行次数,-1=forever
          * @param	caller	执行域(this)。
          * @param	method	定时器回调函数：注意，返回函数第一个参数为定时器id，后面参数依次时传入的参数。例OnTime(timer_id:number, args1:any, args2:any,...):void
          * @param	args	回调参数。
@@ -3518,7 +3516,8 @@ window.ak = window.airkit;
             ++this._idCounter;
             // if (args != null) ArrayUtils.insert(args, this._idCounter, 0);
             let handler = airkit.Handler.create(caller, method, args, false);
-            timer.set(this._idCounter, rate, ticks, handler);
+            let forever = ticks == -1;
+            timer.set(this._idCounter, rate, ticks, handler, forever);
             this._timers.push(timer);
             return timer.id;
         }
@@ -3531,7 +3530,7 @@ window.ak = window.airkit;
             ++this._idCounter;
             // if (args != null) ArrayUtils.insert(args, this._idCounter, 0);
             let handler = airkit.Handler.create(caller, method, args, false);
-            timer.set(this._idCounter, rate, 1, handler);
+            timer.set(this._idCounter, rate, 1, handler, false);
             this._timers.push(timer);
             return timer.id;
         }
@@ -3553,7 +3552,6 @@ window.ak = window.airkit;
                         t = this._timers[i];
                         if (t.id == id) {
                             t.clear();
-                            // ObjectPools.recover(t)
                             airkit.ObjectPools.recover(t);
                             this._timers.splice(i, 1);
                             break;
@@ -3578,7 +3576,7 @@ window.ak = window.airkit;
                 this.handle = null;
             }
         }
-        set(id, rate, ticks, handle) {
+        set(id, rate, ticks, handle, forever) {
             this.id = id;
             this.mRate = rate < 0 ? 0 : rate;
             this.mTicks = ticks < 0 ? 0 : ticks;
@@ -3586,14 +3584,17 @@ window.ak = window.airkit;
             this.mTicksElapsed = 0;
             this.isActive = true;
             this.mTime.init(this.mRate, false);
+            this.forever = forever;
         }
         update(dt) {
             if (this.isActive && this.mTime.update(dt)) {
                 if (this.handle != null)
                     this.handle.run();
-                this.mTicksElapsed++;
-                if (this.mTicks > 0 && this.mTicks == this.mTicksElapsed) {
-                    this.isActive = false;
+                if (!this.forever) {
+                    this.mTicksElapsed++;
+                    if (this.mTicks > 0 && this.mTicks == this.mTicksElapsed) {
+                        this.isActive = false;
+                    }
                 }
             }
         }
@@ -3830,6 +3831,16 @@ window.ak = window.airkit;
                 }, this);
             });
         }
+        setupClickBg() {
+            let bg = new fgui.GGraph();
+            bg.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
+            bg.onClick(this.close, this);
+            bg.drawRect(0, cc.Color.TRANSPARENT, new cc.Color(0x0, 0x0, 0x0, 0));
+            bg.addRelation(this, fgui.RelationType.Size);
+            this.addChildAt(bg, 0);
+            bg.center();
+            this._clickMask = bg;
+        }
         /**设置界面唯一id，在UIManager设置dialogName,ScemeManager设置scenename，其他地方不要再次设置*/
         set UIID(id) {
             this._UIID = id;
@@ -3893,6 +3904,11 @@ window.ak = window.airkit;
             this.unregisterSignalEvent();
             this._isOpen = false;
             this.objectData = null;
+            if (this._clickMask) {
+                this._clickMask.offClick(this.close, this);
+                this._clickMask.removeFromParent();
+                this._clickMask = null;
+            }
             if (this._UIID)
                 airkit.EventCenter.dispatchEvent(airkit.EventID.UI_CLOSE, this._UIID, this._viewID);
             airkit.EventCenter.off(airkit.EventID.UI_LANG, this, this.onLangChange);
@@ -3978,6 +3994,13 @@ window.ak = window.airkit;
          */
         staticCacheUI() {
             return null;
+        }
+        resize() {
+            this.center();
+            if (this._clickMask) {
+                this._clickMask.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
+                this._clickMask.center();
+            }
         }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～内部方法～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**处理需要提前加载的资源,手动创建的view需要手动调用*/
@@ -4273,11 +4296,12 @@ window.ak = window.airkit;
 
 (function (airkit) {
     class LoaderDialog extends airkit.Dialog {
-        setup(args) {
-            super.setup(args);
-            this.center();
+        setup(type) {
             this.modal = true;
-            this.sortingOrder = 9999;
+            this.sortingOrder = 1000 + this.type;
+            super.setup(type);
+            this.type = type;
+            this.center();
         }
         /**
          * 打开
@@ -4384,7 +4408,7 @@ window.ak = window.airkit;
                     break;
             }
         }
-        show(type, total, tips) {
+        show(type, total = 1, tips) {
             if (type == null || type == airkit.eLoaderType.NONE)
                 return;
             let view = this._dicLoadView.getValue(type);
@@ -4396,7 +4420,7 @@ window.ak = window.airkit;
                     let res = clas.res();
                     if (res == null || (Array.isArray(res) && res.length == 0)) {
                         view = airkit.ClassUtils.getInstance(className);
-                        view.setup(null);
+                        view.setup(type);
                         this._dicLoadView.add(type, view);
                         this.updateView(view, total, tips);
                     }
@@ -4404,7 +4428,7 @@ window.ak = window.airkit;
                         clas.loadResource((v) => {
                             if (v) {
                                 view = airkit.ClassUtils.getInstance(className);
-                                view.setup(null);
+                                view.setup(type);
                                 this._dicLoadView.add(type, view);
                                 this.updateView(view, total, tips);
                             }
@@ -4483,6 +4507,29 @@ window.ak = window.airkit;
         setup() {
             this._dicResInfo = new airkit.SDictionary();
             this._minLoaderTime = 400;
+        }
+        static memory() {
+            let cache = cc.loader._cache;
+            let totalMemory = 0;
+            let size = 0;
+            for (let key in cache) {
+                let asset = cc.loader["_cache"][key];
+                if (asset instanceof cc.Texture2D) {
+                    if (asset.width && asset.height && asset["_format"]) {
+                        size = asset.width * asset.height * (asset["_native"] === '.jpg' ? 3 : 4) / (1024.0 * 1024.0);
+                        airkit.Log.info("Texture {0} 资源占用内存{1}MB", asset.nativeUrl, size.toFixed(3));
+                        totalMemory += size;
+                    }
+                }
+                else if (asset instanceof cc.SpriteFrame) {
+                    if (asset["_originalSize"] && asset["_texture"]) {
+                        size = asset["_originalSize"].width * asset["_originalSize"].height * asset["_texture"]._format / 4 / (1024.0 * 1024.0);
+                        totalMemory += size;
+                        airkit.Log.info("SpriteFrame {0} 资源占用内存{1}MB", asset.nativeUrl, size.toFixed(3));
+                    }
+                }
+            }
+            airkit.Log.info("资源占用内存{0}MB", totalMemory.toFixed(3));
         }
         /**
          * 异步加载
@@ -4861,6 +4908,16 @@ window.ak = window.airkit;
                 if (func) {
                     result = func.apply(this._curScene);
                 }
+                for (var i = 0; i < fgui.GRoot.inst.numChildren; i++) {
+                    let v = fgui.GRoot.inst._children[i];
+                    if (v instanceof airkit.Dialog) {
+                        var func = v["resize"];
+                        if (func) {
+                            result = func.apply(v);
+                        }
+                    }
+                }
+                fgui.GRoot.inst.modalLayer.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
             }
         }
         onChangeScene(evt) {
@@ -5099,6 +5156,9 @@ window.ak = window.airkit;
             airkit.assert(ui != null, "UIManager::Show - cannot create ui:" + uiid);
             ui.UIID = uiid;
             ui.setup(params.data);
+            if (params.clickMaskClose) {
+                ui.setupClickBg();
+            }
             if (type == airkit.eUIType.POPUP) {
                 if (params.target) {
                     fgui.GRoot.inst.showPopup(ui, params.target);

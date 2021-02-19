@@ -85,6 +85,16 @@ namespace airkit {
                 if (func) {
                     result = func.apply(this._curScene);
                 }
+                for (var i: number = 0; i < fgui.GRoot.inst.numChildren; i++) {
+                    let v = fgui.GRoot.inst._children[i];
+                    if (v instanceof Dialog){
+                        var func: Function = v["resize"];
+                        if (func) {
+                            result = func.apply(v);
+                        }
+                    }
+                }
+                fgui.GRoot.inst.modalLayer.setSize(fgui.GRoot.inst.width,fgui.GRoot.inst.height)
             }
         }
         private onChangeScene(evt: EventArgs): void {

@@ -10,9 +10,10 @@ export class AlertDlg extends ak.Dialog {
 
     public setup(args?:any): void {
         super.setup(args);
-        this.center();
+       
         this.modal = true;
-        
+       
+        // this.center();
     }
 
     protected eventMap(): Array<any>{

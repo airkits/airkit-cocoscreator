@@ -48,7 +48,7 @@ namespace airkit {
       // DataProvider.Instance.setup();
       // LangManager.Instance.init();
 
-      // SceneManager.Instance.setup();
+       SceneManager.Instance.setup();
       // 
        
      // cc.director.getScheduler().scheduleUpdate(this, 0, false);
@@ -61,8 +61,8 @@ namespace airkit {
       TimerManager.Instance.destroy();
       Mediator.Instance.destroy();
       LayerManager.destroy();
-      // UIManager.Instance.destroy();
-      // SceneManager.Instance.destroy();
+      //UIManager.Instance.destroy();
+       SceneManager.Instance.destroy();
        
       // DataProvider.Instance.destroy();
       

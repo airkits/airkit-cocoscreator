@@ -17,6 +17,7 @@ namespace airkit {
         private _destory: boolean;
         private _viewID: number;
         private _resultData: DialogResultData;
+        private _clickMask: fgui.GGraph;
 
         constructor() {
             super();
@@ -31,6 +32,16 @@ namespace airkit {
                     resolve({ result: this._resultData.result, data: this._resultData.data });
                 },this)
             })
+        }
+        setupClickBg():void {
+            let bg = new fgui.GGraph();
+            bg.setSize(fgui.GRoot.inst.width,fgui.GRoot.inst.height);
+            bg.onClick(this.close,this);
+            bg.drawRect(0, cc.Color.TRANSPARENT, new cc.Color(0x0, 0x0, 0x0,0));
+            bg.addRelation(this, fgui.RelationType.Size);
+            this.addChildAt(bg,0);
+            bg.center();
+            this._clickMask = bg;
         }
         /**设置界面唯一id，在UIManager设置dialogName,ScemeManager设置scenename，其他地方不要再次设置*/
         public set UIID(id: string) {
@@ -61,6 +72,7 @@ namespace airkit {
             this.registerEvent();
             this.registeGUIEvent();
             this.registerSignalEvent();
+           
         }
         protected onShown(): void{
            
@@ -104,6 +116,11 @@ namespace airkit {
             this.unregisterSignalEvent();
             this._isOpen = false;
             this.objectData = null;
+            if(this._clickMask){
+                this._clickMask.offClick(this.close,this);
+                this._clickMask.removeFromParent();
+                this._clickMask = null;
+            }
             if(this._UIID)
                 EventCenter.dispatchEvent(EventID.UI_CLOSE, this._UIID,this._viewID);
             EventCenter.off(EventID.UI_LANG, this, this.onLangChange);
@@ -207,7 +224,13 @@ namespace airkit {
         protected staticCacheUI(): any[] {
             return null;
         }
-        
+        resize():void {
+            this.center();
+            if(this._clickMask){
+                this._clickMask.setSize(fgui.GRoot.inst.width,fgui.GRoot.inst.height);
+                this._clickMask.center();
+            }
+        }
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～内部方法～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**处理需要提前加载的资源,手动创建的view需要手动调用*/
         public static loadResource(onAssetLoaded:(v:boolean)=>void): void {

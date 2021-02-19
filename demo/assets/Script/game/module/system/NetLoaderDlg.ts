@@ -1,21 +1,21 @@
-import UIFullScreenLoadingDlg from '../../gen/ui/Loader/UIFullScreenLoadingDlg';
-export class FullScreenLoaderDlg extends ak.LoaderDialog {
+import UILoadingDlg from '../../gen/ui/Loader/UILoadingDlg';
+export class NetLoaderDlg extends ak.LoaderDialog {
     public constructor() {
         super();
     }
 
     public createDlgView():fgui.GComponent {
-        return UIFullScreenLoadingDlg.createInstance();
+        return UILoadingDlg.createInstance();
     }
 
-    public get view(): UIFullScreenLoadingDlg {
-        return <UIFullScreenLoadingDlg>this.contentPane
+    public get view(): UILoadingDlg {
+        return <UILoadingDlg>this.contentPane
     }
     public setup(type:ak.eLoaderType): void {
         super.setup(type);
         this.center();
         this.modal = true;
-        console.log("full screen setup")
+        fgui.GRoot.inst.modalLayer.alpha = 0;
     }
     protected doHideAnimation(): void {
        
@@ -26,18 +26,17 @@ export class FullScreenLoaderDlg extends ak.LoaderDialog {
     }
      //先加载资源
      public static res(): Array<ak.Res> {
-        return this.buildRes(UIFullScreenLoadingDlg.ResMap);
+        return this.buildRes(UILoadingDlg.ResMap);
     }
    
     public onOpen(total: number): void {
-        this.view.progressBar.value = 0;
+        
         console.log("full screen onOpen")
     }
     public setTips(s: string): void{
         this.view.tips.text = s;
     }
     public setProgress(cur: number, total: number): void{
-        this.view.progressBar.value = (cur/total * 100) >> 0;
         console.log("full screen setProgress")
     }
     public onClose(): boolean{

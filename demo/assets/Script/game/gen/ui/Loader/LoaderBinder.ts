@@ -13,6 +13,7 @@ import UIbg from "./UIbg";
 import UIFullScreenLoadingDlg from "./UIFullScreenLoadingDlg";
 import UILoadingDlg from "./UILoadingDlg";
 import UILoginScene from "./UILoginScene";
+import UIMaskBg2 from "./UIMaskBg2";
 import UIToastView from "./UIToastView";
 import UIWindowLoadingDlg from "./UIWindowLoadingDlg";
 
@@ -31,6 +32,7 @@ export default class LoaderBinder {
 		fgui.UIObjectFactory.setExtension(UIFullScreenLoadingDlg.URL, UIFullScreenLoadingDlg);
 		fgui.UIObjectFactory.setExtension(UILoadingDlg.URL, UILoadingDlg);
 		fgui.UIObjectFactory.setExtension(UILoginScene.URL, UILoginScene);
+		fgui.UIObjectFactory.setExtension(UIMaskBg2.URL, UIMaskBg2);
 		fgui.UIObjectFactory.setExtension(UIToastView.URL, UIToastView);
 		fgui.UIObjectFactory.setExtension(UIWindowLoadingDlg.URL, UIWindowLoadingDlg);
 	}

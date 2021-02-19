@@ -1,15 +1,15 @@
-import UIFullScreenLoadingDlg from '../../gen/ui/Loader/UIFullScreenLoadingDlg';
-export class FullScreenLoaderDlg extends ak.LoaderDialog {
+import UIWindowLoadingDlg from '../../gen/ui/Loader/UIWindowLoadingDlg';
+export class WindowLoaderDlg extends ak.LoaderDialog {
     public constructor() {
         super();
     }
 
     public createDlgView():fgui.GComponent {
-        return UIFullScreenLoadingDlg.createInstance();
+        return UIWindowLoadingDlg.createInstance();
     }
 
-    public get view(): UIFullScreenLoadingDlg {
-        return <UIFullScreenLoadingDlg>this.contentPane
+    public get view(): UIWindowLoadingDlg {
+        return <UIWindowLoadingDlg>this.contentPane
     }
     public setup(type:ak.eLoaderType): void {
         super.setup(type);
@@ -26,7 +26,7 @@ export class FullScreenLoaderDlg extends ak.LoaderDialog {
     }
      //先加载资源
      public static res(): Array<ak.Res> {
-        return this.buildRes(UIFullScreenLoadingDlg.ResMap);
+        return this.buildRes(UIWindowLoadingDlg.ResMap);
     }
    
     public onOpen(total: number): void {

@@ -12,6 +12,9 @@ import { AlertDlg } from './game/module/login/AlertDlg';
 import UIAlert from "./game/gen/ui/Loader/UIAlert";
 import UIAlertDlg from "./game/gen/ui/Loader/UIAlertDlg";
 import { FullScreenLoaderDlg } from "./game/module/system/FullScreenLoaderDlg";
+import { NetLoaderDlg } from "./game/module/system/NetLoaderDlg";
+import { WindowLoaderDlg } from "./game/module/system/WindowLoaderDlg";
+import { NetLoader2Dlg } from './game/module/system/NetLoader2Dlg';
 const { ccclass, property } = cc._decorator;
 
 @ccclass
@@ -32,6 +35,9 @@ export default class Main extends cc.Component {
         ak.SceneManager.register(eSceneType.HOME, HomeScene)
         ak.UIManager.register(eDialogUIID.ALERT,AlertDlg)
         ak.LoaderManager.register(ak.eLoaderType.FULL_SCREEN,"FullScreenLoaderDlg",FullScreenLoaderDlg);
+        ak.LoaderManager.register(ak.eLoaderType.NET_LOADING,"NetLoaderDlg",NetLoaderDlg);
+        ak.LoaderManager.register(ak.eLoaderType.WINDOW,"WindowLoaderDlg",WindowLoaderDlg);
+        ak.LoaderManager.register(ak.eLoaderType.CUSTOM_1,"NetLoader2Dlg",NetLoader2Dlg);
         M.preloadModule().then(v=>{
             M.login().then(v=>{     
                 v.enterScene();

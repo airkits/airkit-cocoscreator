@@ -1865,8 +1865,8 @@ window.fairygui = window.fgui;
                 return oldIndex;
             var cnt = this._children.length;
             if (this._sortingChildCount > 0) {
-                if (index > (cnt - this._sortingChildCount - 1))
-                    index = cnt - this._sortingChildCount - 1;
+                if (index > (cnt - this._sortingChildCount ))
+                    index = cnt - this._sortingChildCount ;
             }
             if (oldIndex < index)
                 return this._setChildIndex(child, oldIndex, index - 1);

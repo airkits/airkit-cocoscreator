@@ -38,7 +38,7 @@ export default class HomeScene extends UIHomeScene{
     }
     /**是否显示加载界面*/
     public static loaderType(): number {
-        return ak.eLoaderType.FULL_SCREEN
+        return ak.eLoaderType.NET_LOADING
     }
     protected eventMap(): Array<any> {
         return [

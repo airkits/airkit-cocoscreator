@@ -100,7 +100,7 @@ namespace airkit {
       }
     }
 
-    public show(type: number, total: number, tips: string): void {
+    public show(type: number, total: number=1, tips?: string): void {
       if (type == null || type == eLoaderType.NONE) return;
 
       let view: any = this._dicLoadView.getValue(type);
@@ -114,14 +114,14 @@ namespace airkit {
           let res = clas.res();
           if(res == null || (Array.isArray(res) && res.length == 0)){
             view = ClassUtils.getInstance(className);
-            view.setup(null);
+            view.setup(type);
             this._dicLoadView.add(type, view);
             this.updateView(view, total, tips);
           }else{
             clas.loadResource((v)=>{
               if(v){
                 view = ClassUtils.getInstance(className);
-                view.setup(null);
+                view.setup(type);
                 this._dicLoadView.add(type, view);
                 this.updateView(view, total, tips);
               }else{

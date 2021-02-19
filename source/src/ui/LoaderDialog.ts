@@ -1,11 +1,16 @@
 namespace airkit {
     export class LoaderDialog extends Dialog {
-            public setup(args?:any): void {
-                super.setup(args);
-                this.center();
+            public type: eLoaderType;
+            
+            public setup(type:eLoaderType): void {
                 this.modal = true;
-                this.sortingOrder = 9999;
+                this.sortingOrder = 1000 + this.type;
+                super.setup(type);
+                this.type = type;
+                this.center();
+                
             }
+            
             /**
              * 打开
              */

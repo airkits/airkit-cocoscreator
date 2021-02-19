@@ -54,10 +54,10 @@ export default class LoginScene extends UILoginScene{
         ]
     }
     public onBtnShowDlg():void {
-     
+       
       // ak.UIManager.show(eDialogUIID.ALERT);
      //  ak.UIManager.show(eDialogUIID.ALERT);
-      ak.UIManager.popupQ(eDialogUIID.ALERT).then(v=>{
+      ak.UIManager.show(eDialogUIID.ALERT,{clickMaskClose:false}).then(v=>{
         if(v){  
             console.log("showQ dlg ="+v.viewID);
             v.wait().then(result=>{
@@ -66,7 +66,7 @@ export default class LoginScene extends UILoginScene{
             });
         }
       });
-       ak.UIManager.popupQ(eDialogUIID.ALERT).then(v=>{
+       ak.UIManager.show(eDialogUIID.ALERT,{clickMaskClose:true}).then(v=>{
         if(v){  
             console.log("showQ dlg ="+v.viewID);
             v.wait().then(result=>{
@@ -77,7 +77,7 @@ export default class LoginScene extends UILoginScene{
     });
       //  ak.UIManager.popup(eDialogUIID.ALERT);
       //  ak.UIManager.popup(eDialogUIID.ALERT);
-
+   //   ak.LoaderManager.Instance.show(ak.eLoaderType.CUSTOM_1)
     }
     public onBtnStart():void {
         console.log("start btn");

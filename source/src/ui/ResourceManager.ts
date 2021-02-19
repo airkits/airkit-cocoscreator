@@ -38,6 +38,29 @@ namespace airkit {
             this._minLoaderTime = 400;
         }
 
+        public static memory():void {
+            let cache = (<any>cc.loader)._cache;
+            let totalMemory = 0;
+            let size = 0;
+            for(let key in cache){
+                let asset = cc.loader["_cache"][key];
+                if (asset instanceof cc.Texture2D) {
+                    if (asset.width && asset.height && asset["_format"]) {
+                        size = asset.width * asset.height * (asset["_native"] === '.jpg' ? 3 : 4) / (1024.0 * 1024.0);
+                        Log.info("Texture {0} 资源占用内存{1}MB",asset.nativeUrl,size.toFixed(3));
+                        totalMemory += size;
+                    }
+                }else if (asset instanceof cc.SpriteFrame) {
+                    if (asset["_originalSize"] && asset["_texture"]) {
+                        size = asset["_originalSize"].width * asset["_originalSize"].height * asset["_texture"]._format / 4/ (1024.0 * 1024.0);
+                        totalMemory += size;
+                        Log.info("SpriteFrame {0} 资源占用内存{1}MB",asset.nativeUrl,size.toFixed(3));
+                    }
+
+                }
+            }
+            Log.info("资源占用内存{0}MB",totalMemory.toFixed(3));
+        }
         /**
          * 异步加载
          * @param    url  要加载的单个资源地址或资源信息数组。比如：简单数组：["a.png","b.png"]；复杂数组[{url:"a.png",type:Loader.IMAGE,size:100,priority:1},{url:"b.json",type:Loader.JSON,size:50,priority:1}]。

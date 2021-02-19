@@ -183,6 +183,9 @@ namespace airkit {
             assert(ui != null, "UIManager::Show - cannot create ui:" + uiid);
             ui.UIID = uiid;
             ui.setup(params.data);
+            if(params.clickMaskClose){
+                ui.setupClickBg();
+            }
             if(type == eUIType.POPUP){
                 if(params.target){
                     fgui.GRoot.inst.showPopup(ui,params.target);

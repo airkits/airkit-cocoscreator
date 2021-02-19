@@ -44,7 +44,7 @@ namespace airkit {
     /**
      * 定时重复执行
      * @param	rate	间隔时间(单位毫秒)。
-     * @param	ticks	执行次数
+     * @param	ticks	执行次数,-1=forever
      * @param	caller	执行域(this)。
      * @param	method	定时器回调函数：注意，返回函数第一个参数为定时器id，后面参数依次时传入的参数。例OnTime(timer_id:number, args1:any, args2:any,...):void
      * @param	args	回调参数。
@@ -62,7 +62,8 @@ namespace airkit {
       ++this._idCounter;
      // if (args != null) ArrayUtils.insert(args, this._idCounter, 0);
       let handler = Handler.create(caller, method, args, false);
-      timer.set(this._idCounter, rate, ticks, handler);
+      let forever = ticks == -1;
+      timer.set(this._idCounter, rate, ticks, handler,forever);
       this._timers.push(timer);
       return timer.id;
     }
@@ -81,7 +82,7 @@ namespace airkit {
       ++this._idCounter;
      // if (args != null) ArrayUtils.insert(args, this._idCounter, 0);
       let handler = Handler.create(caller, method, args, false);
-      timer.set(this._idCounter, rate, 1, handler);
+      timer.set(this._idCounter, rate, 1, handler,false);
       this._timers.push(timer);
       return timer.id;
     }
@@ -103,7 +104,6 @@ namespace airkit {
             t = this._timers[i];
             if (t.id == id) {
               t.clear();
-              // ObjectPools.recover(t)
               ObjectPools.recover(t);
 
               this._timers.splice(i, 1);
@@ -129,6 +129,7 @@ namespace airkit {
     public handle: Handler;
 
     public mTime: IntervalTimer;
+    public forever:boolean;
 
     constructor() {
       this.mTime = new IntervalTimer();
@@ -143,7 +144,7 @@ namespace airkit {
       }
     }
 
-    public set(id: number, rate: number, ticks: number, handle: Handler) {
+    public set(id: number, rate: number, ticks: number, handle: Handler,forever:boolean) {
       this.id = id;
       this.mRate = rate < 0 ? 0 : rate;
       this.mTicks = ticks < 0 ? 0 : ticks;
@@ -151,15 +152,17 @@ namespace airkit {
       this.mTicksElapsed = 0;
       this.isActive = true;
       this.mTime.init(this.mRate, false);
+      this.forever = forever;
     }
 
     public update(dt: number): void {
       if (this.isActive && this.mTime.update(dt)) {
         if (this.handle != null) this.handle.run();
-
-        this.mTicksElapsed++;
-        if (this.mTicks > 0 && this.mTicks == this.mTicksElapsed) {
-          this.isActive = false;
+        if(!this.forever){
+          this.mTicksElapsed++;
+          if (this.mTicks > 0 && this.mTicks == this.mTicksElapsed) {
+            this.isActive = false;
+          }
         }
       }
     }

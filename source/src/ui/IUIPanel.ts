@@ -12,6 +12,7 @@ namespace airkit {
     single?:boolean; //是否唯一实例，默认true
     clothOther?:boolean; //是否关闭其他弹窗，默认false
     resolve?: any; //promise回调,队列显示
+    clickMaskClose?:boolean; //点击空白处关闭，默认false
 }
 
   export interface IUIPanel {

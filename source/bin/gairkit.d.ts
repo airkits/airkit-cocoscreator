@@ -287,9 +287,11 @@ declare namespace airkit {
         NONE = 0,
         VIEW = 1,
         FULL_SCREEN = 2,
-        CUSTOM_1 = 3,
-        CUSTOM_2 = 4,
-        CUSTOM_3 = 5
+        WINDOW = 3,
+        NET_LOADING = 4,
+        CUSTOM_1 = 5,
+        CUSTOM_2 = 6,
+        CUSTOM_3 = 7
     }
     enum eUIType {
         SHOW = 0,
@@ -302,8 +304,7 @@ declare namespace airkit {
         BG = 0,
         MAIN = 1,
         GUI = 2,
-        LOADING = 3,
-        TOP = 4
+        LOADING = 3
     }
     enum LogLevel {
         DEBUG = 7,
@@ -1010,7 +1011,7 @@ declare namespace airkit {
         /**
          * 定时重复执行
          * @param	rate	间隔时间(单位毫秒)。
-         * @param	ticks	执行次数
+         * @param	ticks	执行次数,-1=forever
          * @param	caller	执行域(this)。
          * @param	method	定时器回调函数：注意，返回函数第一个参数为定时器id，后面参数依次时传入的参数。例OnTime(timer_id:number, args1:any, args2:any,...):void
          * @param	args	回调参数。
@@ -1040,10 +1041,11 @@ declare namespace airkit {
         mTicksElapsed: number;
         handle: Handler;
         mTime: IntervalTimer;
+        forever: boolean;
         constructor();
         init(): void;
         clear(): void;
-        set(id: number, rate: number, ticks: number, handle: Handler): void;
+        set(id: number, rate: number, ticks: number, handle: Handler, forever: boolean): void;
         update(dt: number): void;
     }
 }
@@ -1136,8 +1138,10 @@ declare namespace airkit {
         private _destory;
         private _viewID;
         private _resultData;
+        private _clickMask;
         constructor();
         wait(): Promise<DialogResultData>;
+        setupClickBg(): void;
         /**设置界面唯一id，在UIManager设置dialogName,ScemeManager设置scenename，其他地方不要再次设置*/
         set UIID(id: string);
         get UIID(): string;
@@ -1196,6 +1200,7 @@ declare namespace airkit {
          * 4.对象非常简单，比如一个字或者一个图片，设置cacheAs=”bitmap”不但不提高性能，反而会损失性能。
          */
         protected staticCacheUI(): any[];
+        resize(): void;
         /**处理需要提前加载的资源,手动创建的view需要手动调用*/
         static loadResource(onAssetLoaded: (v: boolean) => void): void;
         private registerSignalEvent;
@@ -1222,6 +1227,7 @@ declare namespace airkit {
         single?: boolean;
         clothOther?: boolean;
         resolve?: any;
+        clickMaskClose?: boolean;
     }
     interface IUIPanel {
         /**打开*/
@@ -1285,7 +1291,8 @@ declare namespace airkit {
 }
 declare namespace airkit {
     class LoaderDialog extends Dialog {
-        setup(args?: any): void;
+        type: eLoaderType;
+        setup(type: eLoaderType): void;
         /**
          * 打开
          */
@@ -1329,7 +1336,7 @@ declare namespace airkit {
         private unRegisterEvent;
         /**加载进度事件*/
         private onLoadViewEvt;
-        show(type: number, total: number, tips: string): void;
+        show(type: number, total?: number, tips?: string): void;
         updateView(view: LoaderDialog, total: number, tips: string): void;
         setProgress(type: eLoaderType, cur: number, total: number): void;
         close(type: eLoaderType): void;
@@ -1365,6 +1372,7 @@ declare namespace airkit {
         private static instance;
         static get Instance(): ResourceManager;
         setup(): void;
+        static memory(): void;
         /**
          * 异步加载
          * @param    url  要加载的单个资源地址或资源信息数组。比如：简单数组：["a.png","b.png"]；复杂数组[{url:"a.png",type:Loader.IMAGE,size:100,priority:1},{url:"b.json",type:Loader.JSON,size:50,priority:1}]。
