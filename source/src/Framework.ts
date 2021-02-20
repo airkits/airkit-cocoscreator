@@ -43,9 +43,9 @@ namespace airkit {
       LayerManager.setup(root);
       Mediator.Instance.setup();
       TimerManager.Instance.setup();
-       ResourceManager.Instance.setup();
-       LoaderManager.Instance.setup();
-      // DataProvider.Instance.setup();
+      ResourceManager.Instance.setup();
+      LoaderManager.Instance.setup();
+      DataProvider.Instance.setup();
       // LangManager.Instance.init();
 
        SceneManager.Instance.setup();
@@ -62,9 +62,8 @@ namespace airkit {
       Mediator.Instance.destroy();
       LayerManager.destroy();
       //UIManager.Instance.destroy();
-       SceneManager.Instance.destroy();
-       
-      // DataProvider.Instance.destroy();
+      SceneManager.Instance.destroy(); 
+      DataProvider.Instance.destroy();
       
       // LangManager.Instance.destory();
       return true;

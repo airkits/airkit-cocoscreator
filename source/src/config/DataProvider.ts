@@ -44,10 +44,9 @@ namespace airkit {
       return true;
     }
     public loadZip(url: string, list: ConfigItem[]): Promise<any> {
-      return new Promise((resolve, reject) => {
-        ResourceManager.Instance.loadRes(url, cc.BufferAsset).then((v) => {
+      return  ResourceManager.Instance.loadRes(url, cc.BufferAsset).then((v) => {
           let ab = ResourceManager.Instance.getRes(url);
-          ZipUtils.unzip(ab)
+          ZipUtils.unzip((<cc.BufferAsset>ab)["_buffer"])
             .then((v) => {
               for (let i = 0; i < list.length; i++) {
                 let template = list[i];
@@ -81,14 +80,14 @@ namespace airkit {
                   this._dicData.add(template.name, map);
                 }
               }
-              resolve(v);
+              return v;
             })
             .catch((e) => {
               Log.error(e);
-              reject(e);
+              return null;
             });
         });
-      });
+    
     }
     public load(list: ConfigItem[]): Promise<any> {
       return new Promise((resolve, reject) => {

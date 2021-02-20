@@ -12,7 +12,7 @@ namespace airkit {
     private _listTables: Array<ConfigItem>;
 
     private static instance: ConfigManger = null;
-    public static zipUrl: string = "res/config.zip";
+    public static zipUrl: string = "config/config";
     public static get Instance(): ConfigManger {
       if (!this.instance) this.instance = new ConfigManger();
       return this.instance;
@@ -40,11 +40,11 @@ namespace airkit {
       this._listTables = null;
     }
     /**开始加载*/
-    public loadAll(): Promise<any> {
+    public loadAll(url:string = ConfigManger.zipUrl): Promise<any> {
       if (this._listTables.length > 0) {
         DataProvider.Instance.enableZip();
         return DataProvider.Instance.loadZip(
-          ConfigManger.zipUrl,
+          url,
           this._listTables
         );
       }

@@ -128,11 +128,7 @@ namespace airkit {
             }
             //显示加载界面
             if (viewType !=  eLoaderType.NONE) {
-                EventCenter.dispatchEvent(
-                    LoaderEventID.LOADVIEW_OPEN,
-                    viewType,
-                    1
-                );
+                LoaderManager.Instance.show(viewType,1);
             }
             let resInfo = this._dicResInfo.getValue(url);
             if (!resInfo) {

@@ -1,9 +1,24 @@
 window.fgui = {};
 window.fairygui = window.fgui;
+window.__extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 
 (function (fgui) {
-    class AsyncOperation {
-        createObject(pkgName, resName) {
+    var AsyncOperation = (function () {
+        function AsyncOperation() {
+        }
+        AsyncOperation.prototype.createObject = function (pkgName, resName) {
             if (this._node)
                 throw 'Already running';
             var pkg = fgui.UIPackage.getByName(pkgName);
@@ -15,8 +30,8 @@ window.fairygui = window.fgui;
             }
             else
                 throw new Error("package not found: " + pkgName);
-        }
-        createObjectFromURL(url) {
+        };
+        AsyncOperation.prototype.createObjectFromURL = function (url) {
             if (this._node)
                 throw 'Already running';
             var pi = fgui.UIPackage.getItemByURL(url);
@@ -24,41 +39,44 @@ window.fairygui = window.fgui;
                 this.internalCreateObject(pi);
             else
                 throw new Error("resource not found: " + url);
-        }
-        cancel() {
+        };
+        AsyncOperation.prototype.cancel = function () {
             if (this._node) {
                 this._node.destroy();
                 this._node = null;
             }
-        }
-        internalCreateObject(item) {
+        };
+        AsyncOperation.prototype.internalCreateObject = function (item) {
             this._node = new cc.Node("[AsyncCreating:" + item.name + "]");
             this._node.parent = cc.director.getScene();
             this._node.on("#", this.completed, this);
             this._node.addComponent(AsyncOperationRunner).init(item);
-        }
-        completed(result) {
+        };
+        AsyncOperation.prototype.completed = function (result) {
             this.cancel();
             if (this.callback)
                 this.callback(result);
-        }
-    }
+        };
+        return AsyncOperation;
+    }());
     fgui.AsyncOperation = AsyncOperation;
-    class AsyncOperationRunner extends cc.Component {
-        constructor() {
-            super();
-            this._itemList = new Array();
-            this._objectPool = new Array();
+    var AsyncOperationRunner = (function (_super) {
+        __extends(AsyncOperationRunner, _super);
+        function AsyncOperationRunner() {
+            var _this = _super.call(this) || this;
+            _this._itemList = new Array();
+            _this._objectPool = new Array();
+            return _this;
         }
-        init(item) {
+        AsyncOperationRunner.prototype.init = function (item) {
             this._itemList.length = 0;
             this._objectPool.length = 0;
             var di = { pi: item, type: item.objectType };
             di.childCount = this.collectComponentChildren(item);
             this._itemList.push(di);
             this._index = 0;
-        }
-        onDestroy() {
+        };
+        AsyncOperationRunner.prototype.onDestroy = function () {
             this._itemList.length = 0;
             var cnt = this._objectPool.length;
             if (cnt > 0) {
@@ -66,8 +84,8 @@ window.fairygui = window.fgui;
                     this._objectPool[i].dispose();
                 this._objectPool.length = 0;
             }
-        }
-        collectComponentChildren(item) {
+        };
+        AsyncOperationRunner.prototype.collectComponentChildren = function (item) {
             var buffer = item.rawData;
             buffer.seek(0, 2);
             var di;
@@ -104,8 +122,8 @@ window.fairygui = window.fgui;
                 buffer.position = curPos + dataLen;
             }
             return dcnt;
-        }
-        collectListChildren(buffer) {
+        };
+        AsyncOperationRunner.prototype.collectListChildren = function (buffer) {
             buffer.seek(buffer.position, 8);
             var listItemCount = 0;
             var i;
@@ -134,8 +152,8 @@ window.fairygui = window.fgui;
                 buffer.position = nextPos;
             }
             return listItemCount;
-        }
-        update() {
+        };
+        AsyncOperationRunner.prototype.update = function () {
             var obj;
             var di;
             var poolStart;
@@ -177,44 +195,51 @@ window.fairygui = window.fgui;
             this._itemList.length = 0;
             this._objectPool.length = 0;
             this.node.emit("#", result);
-        }
-    }
+        };
+        return AsyncOperationRunner;
+    }(cc.Component));
 })(fgui || (fgui = {}));
 
 (function (fgui) {
     var _nextPageId = 0;
-    class Controller extends cc.EventTarget {
-        constructor() {
-            super();
-            this._pageIds = [];
-            this._pageNames = [];
-            this._selectedIndex = -1;
-            this._previousIndex = -1;
+    var Controller = (function (_super) {
+        __extends(Controller, _super);
+        function Controller() {
+            var _this = _super.call(this) || this;
+            _this._pageIds = [];
+            _this._pageNames = [];
+            _this._selectedIndex = -1;
+            _this._previousIndex = -1;
+            return _this;
         }
-        dispose() {
-        }
-        get selectedIndex() {
-            return this._selectedIndex;
-        }
-        set selectedIndex(value) {
-            if (this._selectedIndex != value) {
-                if (value > this._pageIds.length - 1)
-                    throw "index out of bounds: " + value;
-                this.changing = true;
-                this._previousIndex = this._selectedIndex;
-                this._selectedIndex = value;
-                this.parent.applyController(this);
-                this.emit(fgui.Event.STATUS_CHANGED, this);
-                this.changing = false;
-            }
-        }
-        onChanged(callback, target) {
+        Controller.prototype.dispose = function () {
+        };
+        Object.defineProperty(Controller.prototype, "selectedIndex", {
+            get: function () {
+                return this._selectedIndex;
+            },
+            set: function (value) {
+                if (this._selectedIndex != value) {
+                    if (value > this._pageIds.length - 1)
+                        throw "index out of bounds: " + value;
+                    this.changing = true;
+                    this._previousIndex = this._selectedIndex;
+                    this._selectedIndex = value;
+                    this.parent.applyController(this);
+                    this.emit(fgui.Event.STATUS_CHANGED, this);
+                    this.changing = false;
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Controller.prototype.onChanged = function (callback, target) {
             this.on(fgui.Event.STATUS_CHANGED, callback, target);
-        }
-        offChanged(callback, target) {
+        };
+        Controller.prototype.offChanged = function (callback, target) {
             this.off(fgui.Event.STATUS_CHANGED, callback, target);
-        }
-        setSelectedIndex(value) {
+        };
+        Controller.prototype.setSelectedIndex = function (value) {
             if (this._selectedIndex != value) {
                 if (value > this._pageIds.length - 1)
                     throw "index out of bounds: " + value;
@@ -224,44 +249,61 @@ window.fairygui = window.fgui;
                 this.parent.applyController(this);
                 this.changing = false;
             }
-        }
-        get previsousIndex() {
-            return this._previousIndex;
-        }
-        get selectedPage() {
-            if (this._selectedIndex == -1)
-                return null;
-            else
-                return this._pageNames[this._selectedIndex];
-        }
-        set selectedPage(val) {
-            var i = this._pageNames.indexOf(val);
-            if (i == -1)
-                i = 0;
-            this.selectedIndex = i;
-        }
-        setSelectedPage(value) {
+        };
+        Object.defineProperty(Controller.prototype, "previsousIndex", {
+            get: function () {
+                return this._previousIndex;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "selectedPage", {
+            get: function () {
+                if (this._selectedIndex == -1)
+                    return null;
+                else
+                    return this._pageNames[this._selectedIndex];
+            },
+            set: function (val) {
+                var i = this._pageNames.indexOf(val);
+                if (i == -1)
+                    i = 0;
+                this.selectedIndex = i;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Controller.prototype.setSelectedPage = function (value) {
             var i = this._pageNames.indexOf(value);
             if (i == -1)
                 i = 0;
             this.setSelectedIndex(i);
-        }
-        get previousPage() {
-            if (this._previousIndex == -1)
-                return null;
-            else
-                return this._pageNames[this._previousIndex];
-        }
-        get pageCount() {
-            return this._pageIds.length;
-        }
-        getPageName(index) {
+        };
+        Object.defineProperty(Controller.prototype, "previousPage", {
+            get: function () {
+                if (this._previousIndex == -1)
+                    return null;
+                else
+                    return this._pageNames[this._previousIndex];
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "pageCount", {
+            get: function () {
+                return this._pageIds.length;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Controller.prototype.getPageName = function (index) {
             return this._pageNames[index];
-        }
-        addPage(name = "") {
+        };
+        Controller.prototype.addPage = function (name) {
+            if (name === void 0) { name = ""; }
             this.addPageAt(name, this._pageIds.length);
-        }
-        addPageAt(name, index) {
+        };
+        Controller.prototype.addPageAt = function (name, index) {
             var nid = "" + (_nextPageId++);
             if (index == this._pageIds.length) {
                 this._pageIds.push(nid);
@@ -271,8 +313,8 @@ window.fairygui = window.fgui;
                 this._pageIds.splice(index, 0, nid);
                 this._pageNames.splice(index, 0, name);
             }
-        }
-        removePage(name) {
+        };
+        Controller.prototype.removePage = function (name) {
             var i = this._pageNames.indexOf(name);
             if (i != -1) {
                 this._pageIds.splice(i, 1);
@@ -282,77 +324,89 @@ window.fairygui = window.fgui;
                 else
                     this.parent.applyController(this);
             }
-        }
-        removePageAt(index) {
+        };
+        Controller.prototype.removePageAt = function (index) {
             this._pageIds.splice(index, 1);
             this._pageNames.splice(index, 1);
             if (this._selectedIndex >= this._pageIds.length)
                 this.selectedIndex = this._selectedIndex - 1;
             else
                 this.parent.applyController(this);
-        }
-        clearPages() {
+        };
+        Controller.prototype.clearPages = function () {
             this._pageIds.length = 0;
             this._pageNames.length = 0;
             if (this._selectedIndex != -1)
                 this.selectedIndex = -1;
             else
                 this.parent.applyController(this);
-        }
-        hasPage(aName) {
+        };
+        Controller.prototype.hasPage = function (aName) {
             return this._pageNames.indexOf(aName) != -1;
-        }
-        getPageIndexById(aId) {
+        };
+        Controller.prototype.getPageIndexById = function (aId) {
             return this._pageIds.indexOf(aId);
-        }
-        getPageIdByName(aName) {
+        };
+        Controller.prototype.getPageIdByName = function (aName) {
             var i = this._pageNames.indexOf(aName);
             if (i != -1)
                 return this._pageIds[i];
             else
                 return null;
-        }
-        getPageNameById(aId) {
+        };
+        Controller.prototype.getPageNameById = function (aId) {
             var i = this._pageIds.indexOf(aId);
             if (i != -1)
                 return this._pageNames[i];
             else
                 return null;
-        }
-        getPageId(index) {
+        };
+        Controller.prototype.getPageId = function (index) {
             return this._pageIds[index];
-        }
-        get selectedPageId() {
-            if (this._selectedIndex == -1)
-                return null;
-            else
-                return this._pageIds[this._selectedIndex];
-        }
-        set selectedPageId(val) {
-            var i = this._pageIds.indexOf(val);
-            this.selectedIndex = i;
-        }
-        set oppositePageId(val) {
-            var i = this._pageIds.indexOf(val);
-            if (i > 0)
-                this.selectedIndex = 0;
-            else if (this._pageIds.length > 1)
-                this.selectedIndex = 1;
-        }
-        get previousPageId() {
-            if (this._previousIndex == -1)
-                return null;
-            else
-                return this._pageIds[this._previousIndex];
-        }
-        runActions() {
+        };
+        Object.defineProperty(Controller.prototype, "selectedPageId", {
+            get: function () {
+                if (this._selectedIndex == -1)
+                    return null;
+                else
+                    return this._pageIds[this._selectedIndex];
+            },
+            set: function (val) {
+                var i = this._pageIds.indexOf(val);
+                this.selectedIndex = i;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "oppositePageId", {
+            set: function (val) {
+                var i = this._pageIds.indexOf(val);
+                if (i > 0)
+                    this.selectedIndex = 0;
+                else if (this._pageIds.length > 1)
+                    this.selectedIndex = 1;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "previousPageId", {
+            get: function () {
+                if (this._previousIndex == -1)
+                    return null;
+                else
+                    return this._pageIds[this._previousIndex];
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Controller.prototype.runActions = function () {
             if (this._actions) {
                 var cnt = this._actions.length;
                 for (var i = 0; i < cnt; i++)
                     this._actions[i].run(this, this.previousPageId, this.selectedPageId);
             }
-        }
-        setup(buffer) {
+        };
+        Controller.prototype.setup = function (buffer) {
             var beginPos = buffer.position;
             buffer.seek(beginPos, 0);
             this.name = buffer.readS();
@@ -403,14 +457,15 @@ window.fairygui = window.fgui;
                 this._selectedIndex = homePageIndex;
             else
                 this._selectedIndex = -1;
-        }
-    }
+        };
+        return Controller;
+    }(cc.EventTarget));
     fgui.Controller = Controller;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class DragDropManager {
-        constructor() {
+    var DragDropManager = (function () {
+        function DragDropManager() {
             this._agent = new fgui.GLoader();
             this._agent.draggable = true;
             this._agent.touchable = false;
@@ -421,36 +476,48 @@ window.fairygui = window.fgui;
             this._agent.sortingOrder = 1000000;
             this._agent.on(fgui.Event.DRAG_END, this.onDragEnd, this);
         }
-        static get inst() {
-            if (!DragDropManager._inst)
-                DragDropManager._inst = new DragDropManager();
-            return DragDropManager._inst;
-        }
-        get dragAgent() {
-            return this._agent;
-        }
-        get dragging() {
-            return this._agent.parent != null;
-        }
-        startDrag(source, icon, sourceData, touchId) {
+        Object.defineProperty(DragDropManager, "inst", {
+            get: function () {
+                if (!DragDropManager._inst)
+                    DragDropManager._inst = new DragDropManager();
+                return DragDropManager._inst;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(DragDropManager.prototype, "dragAgent", {
+            get: function () {
+                return this._agent;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(DragDropManager.prototype, "dragging", {
+            get: function () {
+                return this._agent.parent != null;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        DragDropManager.prototype.startDrag = function (source, icon, sourceData, touchId) {
             if (this._agent.parent)
                 return;
             this._sourceData = sourceData;
             this._agent.url = icon;
             fgui.GRoot.inst.addChild(this._agent);
-            let pt = fgui.GRoot.inst.getTouchPosition(touchId);
+            var pt = fgui.GRoot.inst.getTouchPosition(touchId);
             pt = fgui.GRoot.inst.globalToLocal(pt.x, pt.y);
             this._agent.setPosition(pt.x, pt.y);
             this._agent.startDrag(touchId);
-        }
-        cancel() {
+        };
+        DragDropManager.prototype.cancel = function () {
             if (this._agent.parent) {
                 this._agent.stopDrag();
                 fgui.GRoot.inst.removeChild(this._agent);
                 this._sourceData = null;
             }
-        }
-        onDragEnd() {
+        };
+        DragDropManager.prototype.onDragEnd = function () {
             if (!this._agent.parent)
                 return;
             fgui.GRoot.inst.removeChild(this._agent);
@@ -465,38 +532,39 @@ window.fairygui = window.fgui;
                 }
                 obj = obj.parent;
             }
-        }
-    }
+        };
+        return DragDropManager;
+    }());
     fgui.DragDropManager = DragDropManager;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    let ButtonMode;
+    var ButtonMode;
     (function (ButtonMode) {
         ButtonMode[ButtonMode["Common"] = 0] = "Common";
         ButtonMode[ButtonMode["Check"] = 1] = "Check";
         ButtonMode[ButtonMode["Radio"] = 2] = "Radio";
     })(ButtonMode = fgui.ButtonMode || (fgui.ButtonMode = {}));
-    let AutoSizeType;
+    var AutoSizeType;
     (function (AutoSizeType) {
         AutoSizeType[AutoSizeType["None"] = 0] = "None";
         AutoSizeType[AutoSizeType["Both"] = 1] = "Both";
         AutoSizeType[AutoSizeType["Height"] = 2] = "Height";
         AutoSizeType[AutoSizeType["Shrink"] = 3] = "Shrink";
     })(AutoSizeType = fgui.AutoSizeType || (fgui.AutoSizeType = {}));
-    let AlignType;
+    var AlignType;
     (function (AlignType) {
         AlignType[AlignType["Left"] = 0] = "Left";
         AlignType[AlignType["Center"] = 1] = "Center";
         AlignType[AlignType["Right"] = 2] = "Right";
     })(AlignType = fgui.AlignType || (fgui.AlignType = {}));
-    let VertAlignType;
+    var VertAlignType;
     (function (VertAlignType) {
         VertAlignType[VertAlignType["Top"] = 0] = "Top";
         VertAlignType[VertAlignType["Middle"] = 1] = "Middle";
         VertAlignType[VertAlignType["Bottom"] = 2] = "Bottom";
     })(VertAlignType = fgui.VertAlignType || (fgui.VertAlignType = {}));
-    let LoaderFillType;
+    var LoaderFillType;
     (function (LoaderFillType) {
         LoaderFillType[LoaderFillType["None"] = 0] = "None";
         LoaderFillType[LoaderFillType["Scale"] = 1] = "Scale";
@@ -505,7 +573,7 @@ window.fairygui = window.fgui;
         LoaderFillType[LoaderFillType["ScaleFree"] = 4] = "ScaleFree";
         LoaderFillType[LoaderFillType["ScaleNoBorder"] = 5] = "ScaleNoBorder";
     })(LoaderFillType = fgui.LoaderFillType || (fgui.LoaderFillType = {}));
-    let ListLayoutType;
+    var ListLayoutType;
     (function (ListLayoutType) {
         ListLayoutType[ListLayoutType["SingleColumn"] = 0] = "SingleColumn";
         ListLayoutType[ListLayoutType["SingleRow"] = 1] = "SingleRow";
@@ -513,20 +581,20 @@ window.fairygui = window.fgui;
         ListLayoutType[ListLayoutType["FlowVertical"] = 3] = "FlowVertical";
         ListLayoutType[ListLayoutType["Pagination"] = 4] = "Pagination";
     })(ListLayoutType = fgui.ListLayoutType || (fgui.ListLayoutType = {}));
-    let ListSelectionMode;
+    var ListSelectionMode;
     (function (ListSelectionMode) {
         ListSelectionMode[ListSelectionMode["Single"] = 0] = "Single";
         ListSelectionMode[ListSelectionMode["Multiple"] = 1] = "Multiple";
         ListSelectionMode[ListSelectionMode["Multiple_SingleClick"] = 2] = "Multiple_SingleClick";
         ListSelectionMode[ListSelectionMode["None"] = 3] = "None";
     })(ListSelectionMode = fgui.ListSelectionMode || (fgui.ListSelectionMode = {}));
-    let OverflowType;
+    var OverflowType;
     (function (OverflowType) {
         OverflowType[OverflowType["Visible"] = 0] = "Visible";
         OverflowType[OverflowType["Hidden"] = 1] = "Hidden";
         OverflowType[OverflowType["Scroll"] = 2] = "Scroll";
     })(OverflowType = fgui.OverflowType || (fgui.OverflowType = {}));
-    let PackageItemType;
+    var PackageItemType;
     (function (PackageItemType) {
         PackageItemType[PackageItemType["Image"] = 0] = "Image";
         PackageItemType[PackageItemType["MovieClip"] = 1] = "MovieClip";
@@ -540,7 +608,7 @@ window.fairygui = window.fgui;
         PackageItemType[PackageItemType["Spine"] = 9] = "Spine";
         PackageItemType[PackageItemType["DragonBones"] = 10] = "DragonBones";
     })(PackageItemType = fgui.PackageItemType || (fgui.PackageItemType = {}));
-    let ObjectType;
+    var ObjectType;
     (function (ObjectType) {
         ObjectType[ObjectType["Image"] = 0] = "Image";
         ObjectType[ObjectType["MovieClip"] = 1] = "MovieClip";
@@ -562,52 +630,52 @@ window.fairygui = window.fgui;
         ObjectType[ObjectType["Tree"] = 17] = "Tree";
         ObjectType[ObjectType["Loader3D"] = 18] = "Loader3D";
     })(ObjectType = fgui.ObjectType || (fgui.ObjectType = {}));
-    let ProgressTitleType;
+    var ProgressTitleType;
     (function (ProgressTitleType) {
         ProgressTitleType[ProgressTitleType["Percent"] = 0] = "Percent";
         ProgressTitleType[ProgressTitleType["ValueAndMax"] = 1] = "ValueAndMax";
         ProgressTitleType[ProgressTitleType["Value"] = 2] = "Value";
         ProgressTitleType[ProgressTitleType["Max"] = 3] = "Max";
     })(ProgressTitleType = fgui.ProgressTitleType || (fgui.ProgressTitleType = {}));
-    let ScrollBarDisplayType;
+    var ScrollBarDisplayType;
     (function (ScrollBarDisplayType) {
         ScrollBarDisplayType[ScrollBarDisplayType["Default"] = 0] = "Default";
         ScrollBarDisplayType[ScrollBarDisplayType["Visible"] = 1] = "Visible";
         ScrollBarDisplayType[ScrollBarDisplayType["Auto"] = 2] = "Auto";
         ScrollBarDisplayType[ScrollBarDisplayType["Hidden"] = 3] = "Hidden";
     })(ScrollBarDisplayType = fgui.ScrollBarDisplayType || (fgui.ScrollBarDisplayType = {}));
-    let ScrollType;
+    var ScrollType;
     (function (ScrollType) {
         ScrollType[ScrollType["Horizontal"] = 0] = "Horizontal";
         ScrollType[ScrollType["Vertical"] = 1] = "Vertical";
         ScrollType[ScrollType["Both"] = 2] = "Both";
     })(ScrollType = fgui.ScrollType || (fgui.ScrollType = {}));
-    let FlipType;
+    var FlipType;
     (function (FlipType) {
         FlipType[FlipType["None"] = 0] = "None";
         FlipType[FlipType["Horizontal"] = 1] = "Horizontal";
         FlipType[FlipType["Vertical"] = 2] = "Vertical";
         FlipType[FlipType["Both"] = 3] = "Both";
     })(FlipType = fgui.FlipType || (fgui.FlipType = {}));
-    let ChildrenRenderOrder;
+    var ChildrenRenderOrder;
     (function (ChildrenRenderOrder) {
         ChildrenRenderOrder[ChildrenRenderOrder["Ascent"] = 0] = "Ascent";
         ChildrenRenderOrder[ChildrenRenderOrder["Descent"] = 1] = "Descent";
         ChildrenRenderOrder[ChildrenRenderOrder["Arch"] = 2] = "Arch";
     })(ChildrenRenderOrder = fgui.ChildrenRenderOrder || (fgui.ChildrenRenderOrder = {}));
-    let GroupLayoutType;
+    var GroupLayoutType;
     (function (GroupLayoutType) {
         GroupLayoutType[GroupLayoutType["None"] = 0] = "None";
         GroupLayoutType[GroupLayoutType["Horizontal"] = 1] = "Horizontal";
         GroupLayoutType[GroupLayoutType["Vertical"] = 2] = "Vertical";
     })(GroupLayoutType = fgui.GroupLayoutType || (fgui.GroupLayoutType = {}));
-    let PopupDirection;
+    var PopupDirection;
     (function (PopupDirection) {
         PopupDirection[PopupDirection["Auto"] = 0] = "Auto";
         PopupDirection[PopupDirection["Up"] = 1] = "Up";
         PopupDirection[PopupDirection["Down"] = 2] = "Down";
     })(PopupDirection = fgui.PopupDirection || (fgui.PopupDirection = {}));
-    let RelationType;
+    var RelationType;
     (function (RelationType) {
         RelationType[RelationType["Left_Left"] = 0] = "Left_Left";
         RelationType[RelationType["Left_Center"] = 1] = "Left_Center";
@@ -635,7 +703,7 @@ window.fairygui = window.fgui;
         RelationType[RelationType["BottomExt_Bottom"] = 23] = "BottomExt_Bottom";
         RelationType[RelationType["Size"] = 24] = "Size";
     })(RelationType = fgui.RelationType || (fgui.RelationType = {}));
-    let FillMethod;
+    var FillMethod;
     (function (FillMethod) {
         FillMethod[FillMethod["None"] = 0] = "None";
         FillMethod[FillMethod["Horizontal"] = 1] = "Horizontal";
@@ -644,14 +712,14 @@ window.fairygui = window.fgui;
         FillMethod[FillMethod["Radial180"] = 4] = "Radial180";
         FillMethod[FillMethod["Radial360"] = 5] = "Radial360";
     })(FillMethod = fgui.FillMethod || (fgui.FillMethod = {}));
-    let FillOrigin;
+    var FillOrigin;
     (function (FillOrigin) {
         FillOrigin[FillOrigin["Top"] = 0] = "Top";
         FillOrigin[FillOrigin["Bottom"] = 1] = "Bottom";
         FillOrigin[FillOrigin["Left"] = 2] = "Left";
         FillOrigin[FillOrigin["Right"] = 3] = "Right";
     })(FillOrigin = fgui.FillOrigin || (fgui.FillOrigin = {}));
-    let ObjectPropID;
+    var ObjectPropID;
     (function (ObjectPropID) {
         ObjectPropID[ObjectPropID["Text"] = 0] = "Text";
         ObjectPropID[ObjectPropID["Icon"] = 1] = "Icon";
@@ -667,8 +735,8 @@ window.fairygui = window.fgui;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GObject {
-        constructor() {
+    var GObject = (function () {
+        function GObject() {
             this._x = 0;
             this._y = 0;
             this._alpha = 1;
@@ -694,9 +762,9 @@ window.fairygui = window.fgui;
             this._node = new cc.Node();
             if (GObject._defaultGroupIndex == -1) {
                 GObject._defaultGroupIndex = 0;
-                let groups = cc.game.groupList;
-                let cnt = groups.length;
-                for (let i = 0; i < cnt; i++) {
+                var groups = cc.game.groupList;
+                var cnt = groups.length;
+                for (var i = 0; i < cnt; i++) {
                     if (groups[i].toLowerCase() == fgui.UIConfig.defaultUIGroup.toLowerCase()) {
                         GObject._defaultGroupIndex = i;
                         break;
@@ -714,28 +782,44 @@ window.fairygui = window.fgui;
             this._blendMode = fgui.BlendMode.Normal;
             this._partner = this._node.addComponent(GObjectPartner);
         }
-        get id() {
-            return this._id;
-        }
-        get name() {
-            return this._name;
-        }
-        set name(value) {
-            this._name = value;
-        }
-        get x() {
-            return this._x;
-        }
-        set x(value) {
-            this.setPosition(value, this._y);
-        }
-        get y() {
-            return this._y;
-        }
-        set y(value) {
-            this.setPosition(this._x, value);
-        }
-        setPosition(xv, yv) {
+        Object.defineProperty(GObject.prototype, "id", {
+            get: function () {
+                return this._id;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "name", {
+            get: function () {
+                return this._name;
+            },
+            set: function (value) {
+                this._name = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "x", {
+            get: function () {
+                return this._x;
+            },
+            set: function (value) {
+                this.setPosition(value, this._y);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "y", {
+            get: function () {
+                return this._y;
+            },
+            set: function (value) {
+                this.setPosition(this._x, value);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GObject.prototype.setPosition = function (xv, yv) {
             if (this._x != xv || this._y != yv) {
                 var dx = xv - this._x;
                 var dy = yv - this._y;
@@ -754,35 +838,47 @@ window.fairygui = window.fgui;
                 if (GObject.draggingObject == this && !sUpdateInDragging)
                     this.localToGlobalRect(0, 0, this._width, this._height, sGlobalRect);
             }
-        }
-        get xMin() {
-            return this._pivotAsAnchor ? (this._x - this._width * this.node.anchorX) : this._x;
-        }
-        set xMin(value) {
-            if (this._pivotAsAnchor)
-                this.setPosition(value + this._width * this.node.anchorX, this._y);
-            else
-                this.setPosition(value, this._y);
-        }
-        get yMin() {
-            return this._pivotAsAnchor ? (this._y - this._height * (1 - this.node.anchorY)) : this._y;
-        }
-        set yMin(value) {
-            if (this._pivotAsAnchor)
-                this.setPosition(this._x, value + this._height * (1 - this.node.anchorY));
-            else
-                this.setPosition(this._x, value);
-        }
-        get pixelSnapping() {
-            return this._pixelSnapping;
-        }
-        set pixelSnapping(value) {
-            if (this._pixelSnapping != value) {
-                this._pixelSnapping = value;
-                this.handlePositionChanged();
-            }
-        }
-        center(restraint) {
+        };
+        Object.defineProperty(GObject.prototype, "xMin", {
+            get: function () {
+                return this._pivotAsAnchor ? (this._x - this._width * this.node.anchorX) : this._x;
+            },
+            set: function (value) {
+                if (this._pivotAsAnchor)
+                    this.setPosition(value + this._width * this.node.anchorX, this._y);
+                else
+                    this.setPosition(value, this._y);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "yMin", {
+            get: function () {
+                return this._pivotAsAnchor ? (this._y - this._height * (1 - this.node.anchorY)) : this._y;
+            },
+            set: function (value) {
+                if (this._pivotAsAnchor)
+                    this.setPosition(this._x, value + this._height * (1 - this.node.anchorY));
+                else
+                    this.setPosition(this._x, value);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "pixelSnapping", {
+            get: function () {
+                return this._pixelSnapping;
+            },
+            set: function (value) {
+                if (this._pixelSnapping != value) {
+                    this._pixelSnapping = value;
+                    this.handlePositionChanged();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GObject.prototype.center = function (restraint) {
             var r;
             if (this._parent)
                 r = this.parent;
@@ -793,26 +889,34 @@ window.fairygui = window.fgui;
                 this.addRelation(r, fgui.RelationType.Center_Center);
                 this.addRelation(r, fgui.RelationType.Middle_Middle);
             }
-        }
-        get width() {
-            this.ensureSizeCorrect();
-            if (this._relations.sizeDirty)
-                this._relations.ensureRelationsSizeCorrect();
-            return this._width;
-        }
-        set width(value) {
-            this.setSize(value, this._rawHeight);
-        }
-        get height() {
-            this.ensureSizeCorrect();
-            if (this._relations.sizeDirty)
-                this._relations.ensureRelationsSizeCorrect();
-            return this._height;
-        }
-        set height(value) {
-            this.setSize(this._rawWidth, value);
-        }
-        setSize(wv, hv, ignorePivot) {
+        };
+        Object.defineProperty(GObject.prototype, "width", {
+            get: function () {
+                this.ensureSizeCorrect();
+                if (this._relations.sizeDirty)
+                    this._relations.ensureRelationsSizeCorrect();
+                return this._width;
+            },
+            set: function (value) {
+                this.setSize(value, this._rawHeight);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "height", {
+            get: function () {
+                this.ensureSizeCorrect();
+                if (this._relations.sizeDirty)
+                    this._relations.ensureRelationsSizeCorrect();
+                return this._height;
+            },
+            set: function (value) {
+                this.setSize(this._rawWidth, value);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GObject.prototype.setSize = function (wv, hv, ignorePivot) {
             if (this._rawWidth != wv || this._rawHeight != hv) {
                 this._rawWidth = wv;
                 this._rawHeight = hv;
@@ -844,69 +948,101 @@ window.fairygui = window.fgui;
                 }
                 this._node.emit(fgui.Event.SIZE_CHANGED, this);
             }
-        }
-        makeFullScreen() {
+        };
+        GObject.prototype.makeFullScreen = function () {
             this.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
-        }
-        ensureSizeCorrect() {
-        }
-        get actualWidth() {
-            return this.width * Math.abs(this._node.scaleX);
-        }
-        get actualHeight() {
-            return this.height * Math.abs(this._node.scaleY);
-        }
-        get scaleX() {
-            return this._node.scaleX;
-        }
-        set scaleX(value) {
-            this.setScale(value, this._node.scaleY);
-        }
-        get scaleY() {
-            return this._node.scaleY;
-        }
-        set scaleY(value) {
-            this.setScale(this._node.scaleX, value);
-        }
-        setScale(sx, sy) {
+        };
+        GObject.prototype.ensureSizeCorrect = function () {
+        };
+        Object.defineProperty(GObject.prototype, "actualWidth", {
+            get: function () {
+                return this.width * Math.abs(this._node.scaleX);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "actualHeight", {
+            get: function () {
+                return this.height * Math.abs(this._node.scaleY);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "scaleX", {
+            get: function () {
+                return this._node.scaleX;
+            },
+            set: function (value) {
+                this.setScale(value, this._node.scaleY);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "scaleY", {
+            get: function () {
+                return this._node.scaleY;
+            },
+            set: function (value) {
+                this.setScale(this._node.scaleX, value);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GObject.prototype.setScale = function (sx, sy) {
             if (this._node.scaleX != sx || this._node.scaleY != sy) {
                 this._node.setScale(sx, sy);
                 this.updateGear(2);
             }
-        }
-        get skewX() {
-            return this._skewX;
-        }
-        set skewX(value) {
-            this.setSkew(value, this._skewY);
-        }
-        get skewY() {
-            return this._skewY;
-        }
-        set skewY(value) {
-            this.setSkew(this._skewX, value);
-        }
-        setSkew(xv, yv) {
+        };
+        Object.defineProperty(GObject.prototype, "skewX", {
+            get: function () {
+                return this._skewX;
+            },
+            set: function (value) {
+                this.setSkew(value, this._skewY);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "skewY", {
+            get: function () {
+                return this._skewY;
+            },
+            set: function (value) {
+                this.setSkew(this._skewX, value);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GObject.prototype.setSkew = function (xv, yv) {
             if (this._skewX != xv || this._skewY != yv) {
                 this._skewX = xv;
                 this._skewY = yv;
                 this._node.skewX = xv;
                 this._node.skewY = yv;
             }
-        }
-        get pivotX() {
-            return this.node.anchorX;
-        }
-        set pivotX(value) {
-            this.node.anchorX = value;
-        }
-        get pivotY() {
-            return 1 - this.node.anchorY;
-        }
-        set pivotY(value) {
-            this.node.anchorY = 1 - value;
-        }
-        setPivot(xv, yv, asAnchor) {
+        };
+        Object.defineProperty(GObject.prototype, "pivotX", {
+            get: function () {
+                return this.node.anchorX;
+            },
+            set: function (value) {
+                this.node.anchorX = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "pivotY", {
+            get: function () {
+                return 1 - this.node.anchorY;
+            },
+            set: function (value) {
+                this.node.anchorY = 1 - value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GObject.prototype.setPivot = function (xv, yv, asAnchor) {
             if (this.node.anchorX != xv || this.node.anchorY != 1 - yv) {
                 this._pivotAsAnchor = asAnchor;
                 this.node.setAnchorPoint(xv, 1 - yv);
@@ -915,155 +1051,215 @@ window.fairygui = window.fgui;
                 this._pivotAsAnchor = asAnchor;
                 this.handlePositionChanged();
             }
-        }
-        get pivotAsAnchor() {
-            return this._pivotAsAnchor;
-        }
-        get touchable() {
-            return this._touchable;
-        }
-        set touchable(value) {
-            if (this._touchable != value) {
-                this._touchable = value;
-                this.updateGear(3);
-            }
-        }
-        get grayed() {
-            return this._grayed;
-        }
-        set grayed(value) {
-            if (this._grayed != value) {
-                this._grayed = value;
-                this.handleGrayedChanged();
-                this.updateGear(3);
-            }
-        }
-        get enabled() {
-            return !this._grayed && this._touchable;
-        }
-        set enabled(value) {
-            this.grayed = !value;
-            this.touchable = value;
-        }
-        get rotation() {
-            return -this._node.angle;
-        }
-        set rotation(value) {
-            value = -value;
-            if (this._node.angle != value) {
-                this._node.angle = value;
-                this.updateGear(3);
-            }
-        }
-        get alpha() {
-            return this._alpha;
-        }
-        set alpha(value) {
-            if (this._alpha != value) {
-                this._alpha = value;
-                this._node.opacity = this._alpha * 255;
-                if (this instanceof fgui.GGroup)
-                    this.handleAlphaChanged();
-                this.updateGear(3);
-            }
-        }
-        get visible() {
-            return this._visible;
-        }
-        set visible(value) {
-            if (this._visible != value) {
-                this._visible = value;
-                this.handleVisibleChanged();
-                if (this._group && this._group.excludeInvisibles)
-                    this._group.setBoundsChangedFlag();
-            }
-        }
-        get _finalVisible() {
-            return this._visible && this._internalVisible && (!this._group || this._group._finalVisible);
-        }
-        get internalVisible3() {
-            return this._visible && this._internalVisible;
-        }
-        get sortingOrder() {
-            return this._sortingOrder;
-        }
-        set sortingOrder(value) {
-            if (value < 0)
-                value = 0;
-            if (this._sortingOrder != value) {
-                var old = this._sortingOrder;
-                this._sortingOrder = value;
-                if (this._parent)
-                    this._parent.childSortingOrderChanged(this, old, this._sortingOrder);
-            }
-        }
-        requestFocus() {
-        }
-        get tooltips() {
-            return this._tooltips;
-        }
-        set tooltips(value) {
-            if (this._tooltips) {
-                this._node.off(fgui.Event.ROLL_OVER, this.onRollOver, this);
-                this._node.off(fgui.Event.ROLL_OUT, this.onRollOut, this);
-            }
-            this._tooltips = value;
-            if (this._tooltips) {
-                this._node.on(fgui.Event.ROLL_OVER, this.onRollOver, this);
-                this._node.on(fgui.Event.ROLL_OUT, this.onRollOut, this);
-            }
-        }
-        get blendMode() {
-            return this._blendMode;
-        }
-        set blendMode(value) {
-            if (this._blendMode != value) {
-                this._blendMode = value;
-                fgui.BlendModeUtils.apply(this._node, value);
-            }
-        }
-        get onStage() {
-            return this._node && this._node.activeInHierarchy;
-        }
-        get resourceURL() {
-            if (this.packageItem)
-                return "ui://" + this.packageItem.owner.id + this.packageItem.id;
-            else
-                return null;
-        }
-        set group(value) {
-            if (this._group != value) {
-                if (this._group)
-                    this._group.setBoundsChangedFlag();
-                this._group = value;
-                if (this._group)
-                    this._group.setBoundsChangedFlag();
-            }
-        }
-        get group() {
-            return this._group;
-        }
-        getGear(index) {
+        };
+        Object.defineProperty(GObject.prototype, "pivotAsAnchor", {
+            get: function () {
+                return this._pivotAsAnchor;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "touchable", {
+            get: function () {
+                return this._touchable;
+            },
+            set: function (value) {
+                if (this._touchable != value) {
+                    this._touchable = value;
+                    this.updateGear(3);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "grayed", {
+            get: function () {
+                return this._grayed;
+            },
+            set: function (value) {
+                if (this._grayed != value) {
+                    this._grayed = value;
+                    this.handleGrayedChanged();
+                    this.updateGear(3);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "enabled", {
+            get: function () {
+                return !this._grayed && this._touchable;
+            },
+            set: function (value) {
+                this.grayed = !value;
+                this.touchable = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "rotation", {
+            get: function () {
+                return -this._node.angle;
+            },
+            set: function (value) {
+                value = -value;
+                if (this._node.angle != value) {
+                    this._node.angle = value;
+                    this.updateGear(3);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "alpha", {
+            get: function () {
+                return this._alpha;
+            },
+            set: function (value) {
+                if (this._alpha != value) {
+                    this._alpha = value;
+                    this._node.opacity = this._alpha * 255;
+                    if (this instanceof fgui.GGroup)
+                        this.handleAlphaChanged();
+                    this.updateGear(3);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "visible", {
+            get: function () {
+                return this._visible;
+            },
+            set: function (value) {
+                if (this._visible != value) {
+                    this._visible = value;
+                    this.handleVisibleChanged();
+                    if (this._group && this._group.excludeInvisibles)
+                        this._group.setBoundsChangedFlag();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "_finalVisible", {
+            get: function () {
+                return this._visible && this._internalVisible && (!this._group || this._group._finalVisible);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "internalVisible3", {
+            get: function () {
+                return this._visible && this._internalVisible;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "sortingOrder", {
+            get: function () {
+                return this._sortingOrder;
+            },
+            set: function (value) {
+                if (value < 0)
+                    value = 0;
+                if (this._sortingOrder != value) {
+                    var old = this._sortingOrder;
+                    this._sortingOrder = value;
+                    if (this._parent)
+                        this._parent.childSortingOrderChanged(this, old, this._sortingOrder);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GObject.prototype.requestFocus = function () {
+        };
+        Object.defineProperty(GObject.prototype, "tooltips", {
+            get: function () {
+                return this._tooltips;
+            },
+            set: function (value) {
+                if (this._tooltips) {
+                    this._node.off(fgui.Event.ROLL_OVER, this.onRollOver, this);
+                    this._node.off(fgui.Event.ROLL_OUT, this.onRollOut, this);
+                }
+                this._tooltips = value;
+                if (this._tooltips) {
+                    this._node.on(fgui.Event.ROLL_OVER, this.onRollOver, this);
+                    this._node.on(fgui.Event.ROLL_OUT, this.onRollOut, this);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "blendMode", {
+            get: function () {
+                return this._blendMode;
+            },
+            set: function (value) {
+                if (this._blendMode != value) {
+                    this._blendMode = value;
+                    fgui.BlendModeUtils.apply(this._node, value);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "onStage", {
+            get: function () {
+                return this._node && this._node.activeInHierarchy;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "resourceURL", {
+            get: function () {
+                if (this.packageItem)
+                    return "ui://" + this.packageItem.owner.id + this.packageItem.id;
+                else
+                    return null;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "group", {
+            get: function () {
+                return this._group;
+            },
+            set: function (value) {
+                if (this._group != value) {
+                    if (this._group)
+                        this._group.setBoundsChangedFlag();
+                    this._group = value;
+                    if (this._group)
+                        this._group.setBoundsChangedFlag();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GObject.prototype.getGear = function (index) {
             var gear = this._gears[index];
             if (!gear)
                 this._gears[index] = gear = fgui.GearBase.create(this, index);
             return gear;
-        }
-        updateGear(index) {
+        };
+        GObject.prototype.updateGear = function (index) {
             if (this._underConstruct || this._gearLocked)
                 return;
             var gear = this._gears[index];
             if (gear && gear.controller)
                 gear.updateState();
-        }
-        checkGearController(index, c) {
+        };
+        GObject.prototype.checkGearController = function (index, c) {
             return this._gears[index] && this._gears[index].controller == c;
-        }
-        updateGearFromRelations(index, dx, dy) {
+        };
+        GObject.prototype.updateGearFromRelations = function (index, dx, dy) {
             if (this._gears[index])
                 this._gears[index].updateFromRelations(dx, dy);
-        }
-        addDisplayLock() {
+        };
+        GObject.prototype.addDisplayLock = function () {
             var gearDisplay = this._gears[0];
             if (gearDisplay && gearDisplay.controller) {
                 var ret = gearDisplay.addLock();
@@ -1072,15 +1268,15 @@ window.fairygui = window.fgui;
             }
             else
                 return 0;
-        }
-        releaseDisplayLock(token) {
+        };
+        GObject.prototype.releaseDisplayLock = function (token) {
             var gearDisplay = this._gears[0];
             if (gearDisplay && gearDisplay.controller) {
                 gearDisplay.releaseLock(token);
                 this.checkGearDisplay();
             }
-        }
-        checkGearDisplay() {
+        };
+        GObject.prototype.checkGearDisplay = function () {
             if (this._handlingController)
                 return;
             var connected = this._gears[0] == null || this._gears[0].connected;
@@ -1092,124 +1288,228 @@ window.fairygui = window.fgui;
                 if (this._group && this._group.excludeInvisibles)
                     this._group.setBoundsChangedFlag();
             }
-        }
-        get gearXY() {
-            return this.getGear(1);
-        }
-        get gearSize() {
-            return this.getGear(2);
-        }
-        get gearLook() {
-            return this.getGear(3);
-        }
-        get relations() {
-            return this._relations;
-        }
-        addRelation(target, relationType, usePercent) {
+        };
+        Object.defineProperty(GObject.prototype, "gearXY", {
+            get: function () {
+                return this.getGear(1);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "gearSize", {
+            get: function () {
+                return this.getGear(2);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "gearLook", {
+            get: function () {
+                return this.getGear(3);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "relations", {
+            get: function () {
+                return this._relations;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GObject.prototype.addRelation = function (target, relationType, usePercent) {
             this._relations.add(target, relationType, usePercent);
-        }
-        removeRelation(target, relationType) {
+        };
+        GObject.prototype.removeRelation = function (target, relationType) {
             this._relations.remove(target, relationType);
-        }
-        get node() {
-            return this._node;
-        }
-        get parent() {
-            return this._parent;
-        }
-        removeFromParent() {
+        };
+        Object.defineProperty(GObject.prototype, "node", {
+            get: function () {
+                return this._node;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "parent", {
+            get: function () {
+                return this._parent;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GObject.prototype.removeFromParent = function () {
             if (this._parent)
                 this._parent.removeChild(this);
-        }
-        findParent() {
+        };
+        GObject.prototype.findParent = function () {
             if (this._parent)
                 return this._parent;
-            let pn = this._node.parent;
+            var pn = this._node.parent;
             while (pn) {
-                let gobj = pn["$gobj"];
+                var gobj = pn["$gobj"];
                 if (gobj)
                     return gobj;
                 pn = pn.parent;
             }
             return null;
-        }
-        get root() {
-            if (this instanceof fgui.GRoot)
+        };
+        Object.defineProperty(GObject.prototype, "root", {
+            get: function () {
+                if (this instanceof fgui.GRoot)
+                    return this;
+                var p = this._parent;
+                while (p) {
+                    if (p instanceof fgui.GRoot)
+                        return p;
+                    p = p.parent;
+                }
+                return fgui.GRoot.inst;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asCom", {
+            get: function () {
                 return this;
-            var p = this._parent;
-            while (p) {
-                if (p instanceof fgui.GRoot)
-                    return p;
-                p = p.parent;
-            }
-            return fgui.GRoot.inst;
-        }
-        get asCom() {
-            return this;
-        }
-        get asButton() {
-            return this;
-        }
-        get asLabel() {
-            return this;
-        }
-        get asProgress() {
-            return this;
-        }
-        get asTextField() {
-            return this;
-        }
-        get asRichTextField() {
-            return this;
-        }
-        get asTextInput() {
-            return this;
-        }
-        get asLoader() {
-            return this;
-        }
-        get asList() {
-            return this;
-        }
-        get asTree() {
-            return this;
-        }
-        get asGraph() {
-            return this;
-        }
-        get asGroup() {
-            return this;
-        }
-        get asSlider() {
-            return this;
-        }
-        get asComboBox() {
-            return this;
-        }
-        get asImage() {
-            return this;
-        }
-        get asMovieClip() {
-            return this;
-        }
-        static cast(obj) {
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asButton", {
+            get: function () {
+                return this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asLabel", {
+            get: function () {
+                return this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asProgress", {
+            get: function () {
+                return this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asTextField", {
+            get: function () {
+                return this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asRichTextField", {
+            get: function () {
+                return this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asTextInput", {
+            get: function () {
+                return this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asLoader", {
+            get: function () {
+                return this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asList", {
+            get: function () {
+                return this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asTree", {
+            get: function () {
+                return this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asGraph", {
+            get: function () {
+                return this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asGroup", {
+            get: function () {
+                return this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asSlider", {
+            get: function () {
+                return this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asComboBox", {
+            get: function () {
+                return this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asImage", {
+            get: function () {
+                return this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asMovieClip", {
+            get: function () {
+                return this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GObject.cast = function (obj) {
             return obj["$gobj"];
-        }
-        get text() {
-            return null;
-        }
-        set text(value) {
-        }
-        get icon() {
-            return null;
-        }
-        set icon(value) {
-        }
-        get treeNode() {
-            return this._treeNode;
-        }
-        dispose() {
-            let n = this._node;
+        };
+        Object.defineProperty(GObject.prototype, "text", {
+            get: function () {
+                return null;
+            },
+            set: function (value) {
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "icon", {
+            get: function () {
+                return null;
+            },
+            set: function (value) {
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "treeNode", {
+            get: function () {
+                return this._treeNode;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GObject.prototype.dispose = function () {
+            var n = this._node;
             if (!n)
                 return;
             this.removeFromParent();
@@ -1221,70 +1521,82 @@ window.fairygui = window.fgui;
                 if (gear)
                     gear.dispose();
             }
-        }
-        onEnable() {
-        }
-        onDisable() {
-        }
-        onUpdate() {
-        }
-        onDestroy() {
-        }
-        onClick(listener, target) {
+        };
+        GObject.prototype.onEnable = function () {
+        };
+        GObject.prototype.onDisable = function () {
+        };
+        GObject.prototype.onUpdate = function () {
+        };
+        GObject.prototype.onDestroy = function () {
+        };
+        GObject.prototype.onClick = function (listener, target) {
             this._node.on(fgui.Event.CLICK, listener, target);
-        }
-        onceClick(listener, target) {
+        };
+        GObject.prototype.onceClick = function (listener, target) {
             this._node.once(fgui.Event.CLICK, listener, target);
-        }
-        offClick(listener, target) {
+        };
+        GObject.prototype.offClick = function (listener, target) {
             this._node.off(fgui.Event.CLICK, listener, target);
-        }
-        clearClick() {
+        };
+        GObject.prototype.clearClick = function () {
             this._node.off(fgui.Event.CLICK);
-        }
-        hasClickListener() {
+        };
+        GObject.prototype.hasClickListener = function () {
             return this._node.hasEventListener(fgui.Event.CLICK);
-        }
-        on(type, listener, target) {
+        };
+        GObject.prototype.on = function (type, listener, target) {
             if (type == fgui.Event.DISPLAY || type == fgui.Event.UNDISPLAY)
                 this._partner._emitDisplayEvents = true;
             this._node.on(type, listener, target);
-        }
-        once(type, listener, target) {
+        };
+        GObject.prototype.once = function (type, listener, target) {
             if (type == fgui.Event.DISPLAY || type == fgui.Event.UNDISPLAY)
                 this._partner._emitDisplayEvents = true;
             this._node.once(type, listener, target);
-        }
-        off(type, listener, target) {
+        };
+        GObject.prototype.off = function (type, listener, target) {
             this._node.off(type, listener, target);
-        }
-        get draggable() {
-            return this._draggable;
-        }
-        set draggable(value) {
-            if (this._draggable != value) {
-                this._draggable = value;
-                this.initDrag();
-            }
-        }
-        get dragBounds() {
-            return this._dragBounds;
-        }
-        set dragBounds(value) {
-            this._dragBounds = value;
-        }
-        startDrag(touchId) {
+        };
+        Object.defineProperty(GObject.prototype, "draggable", {
+            get: function () {
+                return this._draggable;
+            },
+            set: function (value) {
+                if (this._draggable != value) {
+                    this._draggable = value;
+                    this.initDrag();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "dragBounds", {
+            get: function () {
+                return this._dragBounds;
+            },
+            set: function (value) {
+                this._dragBounds = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GObject.prototype.startDrag = function (touchId) {
             if (!this._node.activeInHierarchy)
                 return;
             this.dragBegin(touchId);
-        }
-        stopDrag() {
+        };
+        GObject.prototype.stopDrag = function () {
             this.dragEnd();
-        }
-        get dragging() {
-            return GObject.draggingObject == this;
-        }
-        localToGlobal(ax, ay, result) {
+        };
+        Object.defineProperty(GObject.prototype, "dragging", {
+            get: function () {
+                return GObject.draggingObject == this;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GObject.prototype.localToGlobal = function (ax, ay, result) {
             ax = ax || 0;
             ay = ay || 0;
             result = result || new cc.Vec2();
@@ -1298,8 +1610,8 @@ window.fairygui = window.fgui;
             this._node.convertToWorldSpaceAR(result, result);
             result.y = fgui.GRoot.inst.height - result.y;
             return result;
-        }
-        globalToLocal(ax, ay, result) {
+        };
+        GObject.prototype.globalToLocal = function (ax, ay, result) {
             ax = ax || 0;
             ay = ay || 0;
             result = result || new cc.Vec2();
@@ -1312,8 +1624,8 @@ window.fairygui = window.fgui;
             }
             result.y = -result.y;
             return result;
-        }
-        localToGlobalRect(ax, ay, aw, ah, result) {
+        };
+        GObject.prototype.localToGlobalRect = function (ax, ay, aw, ah, result) {
             ax = ax || 0;
             ay = ay || 0;
             aw = aw || 0;
@@ -1326,8 +1638,8 @@ window.fairygui = window.fgui;
             result.xMax = pt.x;
             result.yMax = pt.y;
             return result;
-        }
-        globalToLocalRect(ax, ay, aw, ah, result) {
+        };
+        GObject.prototype.globalToLocalRect = function (ax, ay, aw, ah, result) {
             ax = ax || 0;
             ay = ay || 0;
             aw = aw || 0;
@@ -1340,8 +1652,8 @@ window.fairygui = window.fgui;
             result.xMax = pt.x;
             result.yMax = pt.y;
             return result;
-        }
-        handleControllerChanged(c) {
+        };
+        GObject.prototype.handleControllerChanged = function (c) {
             this._handlingController = true;
             for (var i = 0; i < 10; i++) {
                 var gear = this._gears[i];
@@ -1350,11 +1662,11 @@ window.fairygui = window.fgui;
             }
             this._handlingController = false;
             this.checkGearDisplay();
-        }
-        handleAnchorChanged() {
+        };
+        GObject.prototype.handleAnchorChanged = function () {
             this.handlePositionChanged();
-        }
-        handlePositionChanged() {
+        };
+        GObject.prototype.handlePositionChanged = function () {
             var xv = this._x;
             var yv = -this._y;
             if (!this._pivotAsAnchor) {
@@ -1366,20 +1678,20 @@ window.fairygui = window.fgui;
                 yv = Math.round(yv);
             }
             this._node.setPosition(xv, yv);
-        }
-        handleSizeChanged() {
+        };
+        GObject.prototype.handleSizeChanged = function () {
             this._node.setContentSize(this._width, this._height);
-        }
-        handleGrayedChanged() {
-        }
-        handleVisibleChanged() {
+        };
+        GObject.prototype.handleGrayedChanged = function () {
+        };
+        GObject.prototype.handleVisibleChanged = function () {
             this._node.active = this._finalVisible;
             if (this instanceof fgui.GGroup)
                 this.handleVisibleChanged();
             if (this._parent)
                 this._parent.setBoundsChangedFlag();
-        }
-        hitTest(globalPt, forTouch) {
+        };
+        GObject.prototype.hitTest = function (globalPt, forTouch) {
             if (forTouch == null)
                 forTouch = true;
             if (forTouch && (this._touchDisabled || !this._touchable || !this._node.activeInHierarchy))
@@ -1392,14 +1704,14 @@ window.fairygui = window.fgui;
                 this._hitTestPt.y += (1 - this.node.anchorY) * this._height;
             }
             return this._hitTest(this._hitTestPt, globalPt);
-        }
-        _hitTest(pt, globalPt) {
+        };
+        GObject.prototype._hitTest = function (pt, globalPt) {
             if (pt.x >= 0 && pt.y >= 0 && pt.x < this._width && pt.y < this._height)
                 return this;
             else
                 return null;
-        }
-        getProp(index) {
+        };
+        GObject.prototype.getProp = function (index) {
             switch (index) {
                 case fgui.ObjectPropID.Text:
                     return this.text;
@@ -1424,8 +1736,8 @@ window.fairygui = window.fgui;
                 default:
                     return undefined;
             }
-        }
-        setProp(index, value) {
+        };
+        GObject.prototype.setProp = function (index, value) {
             switch (index) {
                 case fgui.ObjectPropID.Text:
                     this.text = value;
@@ -1434,10 +1746,10 @@ window.fairygui = window.fgui;
                     this.icon = value;
                     break;
             }
-        }
-        constructFromResource() {
-        }
-        setup_beforeAdd(buffer, beginPos) {
+        };
+        GObject.prototype.constructFromResource = function () {
+        };
+        GObject.prototype.setup_beforeAdd = function (buffer, beginPos) {
             buffer.seek(beginPos, 0);
             buffer.skip(5);
             var f1;
@@ -1492,8 +1804,8 @@ window.fairygui = window.fgui;
             var str = buffer.readS();
             if (str != null)
                 this.data = str;
-        }
-        setup_afterAdd(buffer, beginPos) {
+        };
+        GObject.prototype.setup_afterAdd = function (buffer, beginPos) {
             buffer.seek(beginPos, 1);
             var str = buffer.readS();
             if (str != null)
@@ -1510,16 +1822,16 @@ window.fairygui = window.fgui;
                 gear.setup(buffer);
                 buffer.position = nextPos;
             }
-        }
-        onRollOver() {
+        };
+        GObject.prototype.onRollOver = function () {
             this.root.showTooltips(this.tooltips);
-        }
+        };
         ;
-        onRollOut() {
+        GObject.prototype.onRollOut = function () {
             this.root.hideTooltips();
-        }
+        };
         ;
-        initDrag() {
+        GObject.prototype.initDrag = function () {
             if (this._draggable) {
                 this.on(fgui.Event.TOUCH_BEGIN, this.onTouchBegin_0, this);
                 this.on(fgui.Event.TOUCH_MOVE, this.onTouchMove_0, this);
@@ -1530,10 +1842,10 @@ window.fairygui = window.fgui;
                 this.off(fgui.Event.TOUCH_MOVE, this.onTouchMove_0, this);
                 this.off(fgui.Event.TOUCH_END, this.onTouchEnd_0, this);
             }
-        }
-        dragBegin(touchId) {
+        };
+        GObject.prototype.dragBegin = function (touchId) {
             if (GObject.draggingObject) {
-                let tmp = GObject.draggingObject;
+                var tmp = GObject.draggingObject;
                 tmp.stopDrag();
                 GObject.draggingObject = null;
                 tmp._node.emit(fgui.Event.DRAG_END);
@@ -1547,22 +1859,22 @@ window.fairygui = window.fgui;
             fgui.GRoot.inst.inputProcessor.addTouchMonitor(touchId, this);
             this.on(fgui.Event.TOUCH_MOVE, this.onTouchMove_0, this);
             this.on(fgui.Event.TOUCH_END, this.onTouchEnd_0, this);
-        }
-        dragEnd() {
+        };
+        GObject.prototype.dragEnd = function () {
             if (GObject.draggingObject == this) {
                 this._dragTesting = false;
                 GObject.draggingObject = null;
             }
             sDragQuery = false;
-        }
-        onTouchBegin_0(evt) {
+        };
+        GObject.prototype.onTouchBegin_0 = function (evt) {
             if (this._dragStartPos == null)
                 this._dragStartPos = new cc.Vec2();
             this._dragStartPos.set(evt.pos);
             this._dragTesting = true;
             evt.captureTouch();
-        }
-        onTouchMove_0(evt) {
+        };
+        GObject.prototype.onTouchMove_0 = function (evt) {
             if (GObject.draggingObject != this && this._draggable && this._dragTesting) {
                 var sensitivity = fgui.UIConfig.touchDragSensitivity;
                 if (this._dragStartPos
@@ -1601,15 +1913,16 @@ window.fairygui = window.fgui;
                 sUpdateInDragging = false;
                 this._node.emit(fgui.Event.DRAG_MOVE, evt);
             }
-        }
-        onTouchEnd_0(evt) {
+        };
+        GObject.prototype.onTouchEnd_0 = function (evt) {
             if (GObject.draggingObject == this) {
                 GObject.draggingObject = null;
                 this._node.emit(fgui.Event.DRAG_END, evt);
             }
-        }
-    }
-    GObject._defaultGroupIndex = -1;
+        };
+        GObject._defaultGroupIndex = -1;
+        return GObject;
+    }());
     fgui.GObject = GObject;
     var sGlobalDragStart = new cc.Vec2();
     var sGlobalRect = new cc.Rect();
@@ -1617,56 +1930,61 @@ window.fairygui = window.fgui;
     var sDragHelperRect = new cc.Rect();
     var sUpdateInDragging;
     var sDragQuery = false;
-    class GObjectPartner extends cc.Component {
-        constructor() {
-            super(...arguments);
-            this._emitDisplayEvents = false;
+    var GObjectPartner = (function (_super) {
+        __extends(GObjectPartner, _super);
+        function GObjectPartner() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._emitDisplayEvents = false;
+            return _this;
         }
-        callLater(callback, delay) {
+        GObjectPartner.prototype.callLater = function (callback, delay) {
             if (!cc.director.getScheduler().isScheduled(callback, this))
                 this.scheduleOnce(callback, delay);
-        }
-        onClickLink(evt, text) {
+        };
+        GObjectPartner.prototype.onClickLink = function (evt, text) {
             this.node.emit(fgui.Event.LINK, text, evt);
-        }
-        onEnable() {
+        };
+        GObjectPartner.prototype.onEnable = function () {
             this.node["$gobj"].onEnable();
             if (this._emitDisplayEvents)
                 this.node.emit(fgui.Event.DISPLAY);
-        }
-        onDisable() {
+        };
+        GObjectPartner.prototype.onDisable = function () {
             this.node["$gobj"].onDisable();
             if (this._emitDisplayEvents)
                 this.node.emit(fgui.Event.UNDISPLAY);
-        }
-        update(dt) {
+        };
+        GObjectPartner.prototype.update = function (dt) {
             this.node["$gobj"].onUpdate(dt);
-        }
-        onDestroy() {
+        };
+        GObjectPartner.prototype.onDestroy = function () {
             this.node["$gobj"].onDestroy();
-        }
-    }
+        };
+        return GObjectPartner;
+    }(cc.Component));
     fgui.GObjectPartner = GObjectPartner;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GComponent extends fgui.GObject {
-        constructor() {
-            super();
-            this._sortingChildCount = 0;
-            this._childrenRenderOrder = fgui.ChildrenRenderOrder.Ascent;
-            this._apexIndex = 0;
-            this._node.name = "GComponent";
-            this._children = new Array();
-            this._controllers = new Array();
-            this._transitions = new Array();
-            this._margin = new fgui.Margin();
-            this._alignOffset = new cc.Vec2();
-            this._container = new cc.Node("Container");
-            this._container.setAnchorPoint(0, 1);
-            this._node.addChild(this._container);
+    var GComponent = (function (_super) {
+        __extends(GComponent, _super);
+        function GComponent() {
+            var _this = _super.call(this) || this;
+            _this._sortingChildCount = 0;
+            _this._childrenRenderOrder = fgui.ChildrenRenderOrder.Ascent;
+            _this._apexIndex = 0;
+            _this._node.name = "GComponent";
+            _this._children = new Array();
+            _this._controllers = new Array();
+            _this._transitions = new Array();
+            _this._margin = new fgui.Margin();
+            _this._alignOffset = new cc.Vec2();
+            _this._container = new cc.Node("Container");
+            _this._container.setAnchorPoint(0, 1);
+            _this._node.addChild(_this._container);
+            return _this;
         }
-        dispose() {
+        GComponent.prototype.dispose = function () {
             var i;
             var cnt;
             cnt = this._transitions.length;
@@ -1688,16 +2006,20 @@ window.fairygui = window.fgui;
                 obj.dispose();
             }
             this._boundsChanged = false;
-            super.dispose();
-        }
-        get displayListContainer() {
-            return this._container;
-        }
-        addChild(child) {
+            _super.prototype.dispose.call(this);
+        };
+        Object.defineProperty(GComponent.prototype, "displayListContainer", {
+            get: function () {
+                return this._container;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GComponent.prototype.addChild = function (child) {
             this.addChildAt(child, this._children.length);
             return child;
-        }
-        addChildAt(child, index) {
+        };
+        GComponent.prototype.addChildAt = function (child, index) {
             if (!child)
                 throw "child is null";
             var numChildren = this._children.length;
@@ -1729,8 +2051,8 @@ window.fairygui = window.fgui;
             else {
                 throw "Invalid child index";
             }
-        }
-        getInsertPosForSortingChild(target) {
+        };
+        GComponent.prototype.getInsertPosForSortingChild = function (target) {
             var cnt = this._children.length;
             var i = 0;
             for (i = 0; i < cnt; i++) {
@@ -1741,15 +2063,15 @@ window.fairygui = window.fgui;
                     break;
             }
             return i;
-        }
-        removeChild(child, dispose) {
+        };
+        GComponent.prototype.removeChild = function (child, dispose) {
             var childIndex = this._children.indexOf(child);
             if (childIndex != -1) {
                 this.removeChildAt(childIndex, dispose);
             }
             return child;
-        }
-        removeChildAt(index, dispose) {
+        };
+        GComponent.prototype.removeChildAt = function (index, dispose) {
             if (index >= 0 && index < this.numChildren) {
                 var child = this._children[index];
                 child._parent = null;
@@ -1770,8 +2092,8 @@ window.fairygui = window.fgui;
             else {
                 throw "Invalid child index";
             }
-        }
-        removeChildren(beginIndex, endIndex, dispose) {
+        };
+        GComponent.prototype.removeChildren = function (beginIndex, endIndex, dispose) {
             if (beginIndex == undefined)
                 beginIndex = 0;
             if (endIndex == undefined)
@@ -1780,22 +2102,22 @@ window.fairygui = window.fgui;
                 endIndex = this.numChildren - 1;
             for (var i = beginIndex; i <= endIndex; ++i)
                 this.removeChildAt(beginIndex, dispose);
-        }
-        getChildAt(index) {
+        };
+        GComponent.prototype.getChildAt = function (index) {
             if (index >= 0 && index < this.numChildren)
                 return this._children[index];
             else
                 throw "Invalid child index";
-        }
-        getChild(name) {
+        };
+        GComponent.prototype.getChild = function (name) {
             var cnt = this._children.length;
             for (var i = 0; i < cnt; ++i) {
                 if (this._children[i].name == name)
                     return this._children[i];
             }
             return null;
-        }
-        getChildByPath(path) {
+        };
+        GComponent.prototype.getChildByPath = function (path) {
             var arr = path.split(".");
             var cnt = arr.length;
             var gcom = this;
@@ -1814,8 +2136,8 @@ window.fairygui = window.fgui;
                 }
             }
             return obj;
-        }
-        getVisibleChild(name) {
+        };
+        GComponent.prototype.getVisibleChild = function (name) {
             var cnt = this._children.length;
             for (var i = 0; i < cnt; ++i) {
                 var child = this._children[i];
@@ -1823,8 +2145,8 @@ window.fairygui = window.fgui;
                     return child;
             }
             return null;
-        }
-        getChildInGroup(name, group) {
+        };
+        GComponent.prototype.getChildInGroup = function (name, group) {
             var cnt = this._children.length;
             for (var i = 0; i < cnt; ++i) {
                 var child = this._children[i];
@@ -1832,19 +2154,19 @@ window.fairygui = window.fgui;
                     return child;
             }
             return null;
-        }
-        getChildById(id) {
+        };
+        GComponent.prototype.getChildById = function (id) {
             var cnt = this._children.length;
             for (var i = 0; i < cnt; ++i) {
                 if (this._children[i]._id == id)
                     return this._children[i];
             }
             return null;
-        }
-        getChildIndex(child) {
+        };
+        GComponent.prototype.getChildIndex = function (child) {
             return this._children.indexOf(child);
-        }
-        setChildIndex(child, index) {
+        };
+        GComponent.prototype.setChildIndex = function (child, index) {
             var oldIndex = this._children.indexOf(child);
             if (oldIndex == -1)
                 throw "Not a child of this container";
@@ -1856,8 +2178,8 @@ window.fairygui = window.fgui;
                     index = cnt - this._sortingChildCount - 1;
             }
             this._setChildIndex(child, oldIndex, index);
-        }
-        setChildIndexBefore(child, index) {
+        };
+        GComponent.prototype.setChildIndexBefore = function (child, index) {
             var oldIndex = this._children.indexOf(child);
             if (oldIndex == -1)
                 throw "Not a child of this container";
@@ -1865,15 +2187,15 @@ window.fairygui = window.fgui;
                 return oldIndex;
             var cnt = this._children.length;
             if (this._sortingChildCount > 0) {
-                if (index > (cnt - this._sortingChildCount ))
-                    index = cnt - this._sortingChildCount ;
+                if (index > (cnt - this._sortingChildCount))
+                    index = cnt - this._sortingChildCount;
             }
             if (oldIndex < index)
                 return this._setChildIndex(child, oldIndex, index - 1);
             else
                 return this._setChildIndex(child, oldIndex, index);
-        }
-        _setChildIndex(child, oldIndex, index) {
+        };
+        GComponent.prototype._setChildIndex = function (child, oldIndex, index) {
             var cnt = this._children.length;
             if (index > cnt)
                 index = cnt;
@@ -1889,24 +2211,28 @@ window.fairygui = window.fgui;
                 this._partner.callLater(this.buildNativeDisplayList);
             this.setBoundsChangedFlag();
             return index;
-        }
-        swapChildren(child1, child2) {
+        };
+        GComponent.prototype.swapChildren = function (child1, child2) {
             var index1 = this._children.indexOf(child1);
             var index2 = this._children.indexOf(child2);
             if (index1 == -1 || index2 == -1)
                 throw "Not a child of this container";
             this.swapChildrenAt(index1, index2);
-        }
-        swapChildrenAt(index1, index2) {
+        };
+        GComponent.prototype.swapChildrenAt = function (index1, index2) {
             var child1 = this._children[index1];
             var child2 = this._children[index2];
             this.setChildIndex(child1, index2);
             this.setChildIndex(child2, index1);
-        }
-        get numChildren() {
-            return this._children.length;
-        }
-        isAncestorOf(child) {
+        };
+        Object.defineProperty(GComponent.prototype, "numChildren", {
+            get: function () {
+                return this._children.length;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GComponent.prototype.isAncestorOf = function (child) {
             if (child == null)
                 return false;
             var p = child.parent;
@@ -1916,16 +2242,16 @@ window.fairygui = window.fgui;
                 p = p.parent;
             }
             return false;
-        }
-        addController(controller) {
+        };
+        GComponent.prototype.addController = function (controller) {
             this._controllers.push(controller);
             controller.parent = this;
             this.applyController(controller);
-        }
-        getControllerAt(index) {
+        };
+        GComponent.prototype.getControllerAt = function (index) {
             return this._controllers[index];
-        }
-        getController(name) {
+        };
+        GComponent.prototype.getController = function (name) {
             var cnt = this._controllers.length;
             for (var i = 0; i < cnt; ++i) {
                 var c = this._controllers[i];
@@ -1933,8 +2259,8 @@ window.fairygui = window.fgui;
                     return c;
             }
             return null;
-        }
-        removeController(c) {
+        };
+        GComponent.prototype.removeController = function (c) {
             var index = this._controllers.indexOf(c);
             if (index == -1)
                 throw "controller not exists";
@@ -1945,38 +2271,42 @@ window.fairygui = window.fgui;
                 var child = this._children[i];
                 child.handleControllerChanged(c);
             }
-        }
-        get controllers() {
-            return this._controllers;
-        }
-        onChildAdd(child, index) {
+        };
+        Object.defineProperty(GComponent.prototype, "controllers", {
+            get: function () {
+                return this._controllers;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GComponent.prototype.onChildAdd = function (child, index) {
             child.node.parent = this._container;
             child.node.active = child._finalVisible;
             if (this._buildingDisplayList)
                 return;
-            let cnt = this._children.length;
+            var cnt = this._children.length;
             if (this._childrenRenderOrder == fgui.ChildrenRenderOrder.Ascent)
                 child.node.setSiblingIndex(index);
             else if (this._childrenRenderOrder == fgui.ChildrenRenderOrder.Descent)
                 child.node.setSiblingIndex(cnt - index);
             else
                 this._partner.callLater(this.buildNativeDisplayList);
-        }
-        buildNativeDisplayList(dt) {
+        };
+        GComponent.prototype.buildNativeDisplayList = function (dt) {
             if (!isNaN(dt)) {
-                let _t = (this.node["$gobj"]);
+                var _t = (this.node["$gobj"]);
                 _t.buildNativeDisplayList();
                 return;
             }
-            let cnt = this._children.length;
+            var cnt = this._children.length;
             if (cnt == 0)
                 return;
-            let child;
+            var child;
             switch (this._childrenRenderOrder) {
                 case fgui.ChildrenRenderOrder.Ascent:
                     {
-                        let j = 0;
-                        for (let i = 0; i < cnt; i++) {
+                        var j = 0;
+                        for (var i = 0; i < cnt; i++) {
                             child = this._children[i];
                             child.node.setSiblingIndex(j++);
                         }
@@ -1984,8 +2314,8 @@ window.fairygui = window.fgui;
                     break;
                 case fgui.ChildrenRenderOrder.Descent:
                     {
-                        let j = 0;
-                        for (let i = cnt - 1; i >= 0; i--) {
+                        var j = 0;
+                        for (var i = cnt - 1; i >= 0; i--) {
                             child = this._children[i];
                             child.node.setSiblingIndex(j++);
                         }
@@ -1993,20 +2323,20 @@ window.fairygui = window.fgui;
                     break;
                 case fgui.ChildrenRenderOrder.Arch:
                     {
-                        let j = 0;
-                        for (let i = 0; i < this._apexIndex; i++) {
+                        var j = 0;
+                        for (var i = 0; i < this._apexIndex; i++) {
                             child = this._children[i];
                             child.node.setSiblingIndex(j++);
                         }
-                        for (let i = cnt - 1; i >= this._apexIndex; i--) {
+                        for (var i = cnt - 1; i >= this._apexIndex; i--) {
                             child = this._children[i];
                             child.node.setSiblingIndex(j++);
                         }
                     }
                     break;
             }
-        }
-        applyController(c) {
+        };
+        GComponent.prototype.applyController = function (c) {
             this._applyingController = c;
             var child;
             var length = this._children.length;
@@ -2016,14 +2346,14 @@ window.fairygui = window.fgui;
             }
             this._applyingController = null;
             c.runActions();
-        }
-        applyAllControllers() {
+        };
+        GComponent.prototype.applyAllControllers = function () {
             var cnt = this._controllers.length;
             for (var i = 0; i < cnt; ++i) {
                 this.applyController(this._controllers[i]);
             }
-        }
-        adjustRadioGroupDepth(obj, c) {
+        };
+        GComponent.prototype.adjustRadioGroupDepth = function (obj, c) {
             var cnt = this._children.length;
             var i;
             var child;
@@ -2043,11 +2373,11 @@ window.fairygui = window.fgui;
                     this._children[maxIndex].handleControllerChanged(this._applyingController);
                 this.swapChildrenAt(myIndex, maxIndex);
             }
-        }
-        getTransitionAt(index) {
+        };
+        GComponent.prototype.getTransitionAt = function (index) {
             return this._transitions[index];
-        }
-        getTransition(transName) {
+        };
+        GComponent.prototype.getTransition = function (transName) {
             var cnt = this._transitions.length;
             for (var i = 0; i < cnt; ++i) {
                 var trans = this._transitions[i];
@@ -2055,8 +2385,8 @@ window.fairygui = window.fgui;
                     return trans;
             }
             return null;
-        }
-        isChildInView(child) {
+        };
+        GComponent.prototype.isChildInView = function (child) {
             if (this._rectMask) {
                 return child.x + child.width >= 0 && child.x <= this.width
                     && child.y + child.height >= 0 && child.y <= this.height;
@@ -2066,8 +2396,8 @@ window.fairygui = window.fgui;
             }
             else
                 return true;
-        }
-        getFirstChildInView() {
+        };
+        GComponent.prototype.getFirstChildInView = function () {
             var cnt = this._children.length;
             for (var i = 0; i < cnt; ++i) {
                 var child = this._children[i];
@@ -2075,49 +2405,73 @@ window.fairygui = window.fgui;
                     return i;
             }
             return -1;
-        }
-        get scrollPane() {
-            return this._scrollPane;
-        }
-        get opaque() {
-            return this._opaque;
-        }
-        set opaque(value) {
-            this._opaque = value;
-        }
-        get margin() {
-            return this._margin;
-        }
-        set margin(value) {
-            this._margin.copy(value);
-            this.handleSizeChanged();
-        }
-        get childrenRenderOrder() {
-            return this._childrenRenderOrder;
-        }
-        set childrenRenderOrder(value) {
-            if (this._childrenRenderOrder != value) {
-                this._childrenRenderOrder = value;
-                this.buildNativeDisplayList();
-            }
-        }
-        get apexIndex() {
-            return this._apexIndex;
-        }
-        set apexIndex(value) {
-            if (this._apexIndex != value) {
-                this._apexIndex = value;
-                if (this._childrenRenderOrder == fgui.ChildrenRenderOrder.Arch)
+        };
+        Object.defineProperty(GComponent.prototype, "scrollPane", {
+            get: function () {
+                return this._scrollPane;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "opaque", {
+            get: function () {
+                return this._opaque;
+            },
+            set: function (value) {
+                this._opaque = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "margin", {
+            get: function () {
+                return this._margin;
+            },
+            set: function (value) {
+                this._margin.copy(value);
+                this.handleSizeChanged();
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "childrenRenderOrder", {
+            get: function () {
+                return this._childrenRenderOrder;
+            },
+            set: function (value) {
+                if (this._childrenRenderOrder != value) {
+                    this._childrenRenderOrder = value;
                     this.buildNativeDisplayList();
-            }
-        }
-        get mask() {
-            return this._maskContent;
-        }
-        set mask(value) {
-            this.setMask(value, false);
-        }
-        setMask(value, inverted) {
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "apexIndex", {
+            get: function () {
+                return this._apexIndex;
+            },
+            set: function (value) {
+                if (this._apexIndex != value) {
+                    this._apexIndex = value;
+                    if (this._childrenRenderOrder == fgui.ChildrenRenderOrder.Arch)
+                        this.buildNativeDisplayList();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "mask", {
+            get: function () {
+                return this._maskContent;
+            },
+            set: function (value) {
+                this.setMask(value, false);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GComponent.prototype.setMask = function (value, inverted) {
             if (this._maskContent) {
                 this._maskContent.node.off(cc.Node.EventType.POSITION_CHANGED, this.onMaskContentChanged, this);
                 this._maskContent.node.off(cc.Node.EventType.SIZE_CHANGED, this.onMaskContentChanged, this);
@@ -2130,7 +2484,7 @@ window.fairygui = window.fgui;
                 if (!(value instanceof fgui.GImage) && !(value instanceof fgui.GGraph))
                     return;
                 if (!this._customMask) {
-                    let maskNode = new cc.Node("Mask");
+                    var maskNode = new cc.Node("Mask");
                     maskNode.parent = this._node;
                     if (this._scrollPane)
                         this._container.parent.parent = maskNode;
@@ -2166,8 +2520,8 @@ window.fairygui = window.fgui;
                 else
                     this._container.setPosition(this._pivotCorrectX, this._pivotCorrectY);
             }
-        }
-        onMaskReady() {
+        };
+        GComponent.prototype.onMaskReady = function () {
             this.off(fgui.Event.DISPLAY, this.onMaskReady, this);
             if (this._maskContent instanceof fgui.GImage) {
                 this._customMask.type = cc.Mask.Type.IMAGE_STENCIL;
@@ -2180,50 +2534,62 @@ window.fairygui = window.fgui;
                 else
                     this._customMask.type = cc.Mask.Type.RECT;
             }
-        }
-        onMaskContentChanged() {
-            let maskNode = this._customMask.node;
-            let contentNode = this._maskContent.node;
-            let w = contentNode.width * contentNode.scaleX;
-            let h = contentNode.height * contentNode.scaleY;
+        };
+        GComponent.prototype.onMaskContentChanged = function () {
+            var maskNode = this._customMask.node;
+            var contentNode = this._maskContent.node;
+            var w = contentNode.width * contentNode.scaleX;
+            var h = contentNode.height * contentNode.scaleY;
             maskNode.setContentSize(w, h);
-            let left = contentNode.x - contentNode.anchorX * w;
-            let top = contentNode.y - contentNode.anchorY * h;
+            var left = contentNode.x - contentNode.anchorX * w;
+            var top = contentNode.y - contentNode.anchorY * h;
             maskNode.setAnchorPoint(-left / maskNode.width, -top / maskNode.height);
             maskNode.setPosition(this._pivotCorrectX, this._pivotCorrectY);
-        }
-        get _pivotCorrectX() {
-            return -this.pivotX * this._width + this._margin.left;
-        }
-        get _pivotCorrectY() {
-            return this.pivotY * this._height - this._margin.top;
-        }
-        get baseUserData() {
-            var buffer = this.packageItem.rawData;
-            buffer.seek(0, 4);
-            return buffer.readS();
-        }
-        setupScroll(buffer) {
+        };
+        Object.defineProperty(GComponent.prototype, "_pivotCorrectX", {
+            get: function () {
+                return -this.pivotX * this._width + this._margin.left;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "_pivotCorrectY", {
+            get: function () {
+                return this.pivotY * this._height - this._margin.top;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "baseUserData", {
+            get: function () {
+                var buffer = this.packageItem.rawData;
+                buffer.seek(0, 4);
+                return buffer.readS();
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GComponent.prototype.setupScroll = function (buffer) {
             this._scrollPane = this._node.addComponent(fgui.ScrollPane);
             this._scrollPane.setup(buffer);
-        }
-        setupOverflow(overflow) {
+        };
+        GComponent.prototype.setupOverflow = function (overflow) {
             if (overflow == fgui.OverflowType.Hidden)
                 this._rectMask = this._container.addComponent(cc.Mask);
             if (!this._margin.isNone)
                 this.handleSizeChanged();
-        }
-        handleAnchorChanged() {
-            super.handleAnchorChanged();
+        };
+        GComponent.prototype.handleAnchorChanged = function () {
+            _super.prototype.handleAnchorChanged.call(this);
             if (this._customMask)
                 this._customMask.node.setPosition(this._pivotCorrectX, this._pivotCorrectY);
             else if (this._scrollPane)
                 this._scrollPane.adjustMaskContainer();
             else
                 this._container.setPosition(this._pivotCorrectX + this._alignOffset.x, this._pivotCorrectY - this._alignOffset.y);
-        }
-        handleSizeChanged() {
-            super.handleSizeChanged();
+        };
+        GComponent.prototype.handleSizeChanged = function () {
+            _super.prototype.handleSizeChanged.call(this);
             if (this._customMask)
                 this._customMask.node.setPosition(this._pivotCorrectX, this._pivotCorrectY);
             else if (!this._scrollPane)
@@ -2232,8 +2598,8 @@ window.fairygui = window.fgui;
                 this._scrollPane.onOwnerSizeChanged();
             else
                 this._container.setContentSize(this.viewWidth, this.viewHeight);
-        }
-        handleGrayedChanged() {
+        };
+        GComponent.prototype.handleGrayedChanged = function () {
             var c = this.getController("grayed");
             if (c) {
                 c.selectedIndex = this.grayed ? 1 : 0;
@@ -2244,17 +2610,17 @@ window.fairygui = window.fgui;
             for (var i = 0; i < cnt; ++i) {
                 this._children[i].grayed = v;
             }
-        }
-        handleControllerChanged(c) {
-            super.handleControllerChanged(c);
+        };
+        GComponent.prototype.handleControllerChanged = function (c) {
+            _super.prototype.handleControllerChanged.call(this, c);
             if (this._scrollPane)
                 this._scrollPane.handleControllerChanged(c);
-        }
-        _hitTest(pt, globalPt) {
+        };
+        GComponent.prototype._hitTest = function (pt, globalPt) {
             if (this._customMask) {
                 s_vec2.set(globalPt);
                 s_vec2.y = fgui.GRoot.inst.height - globalPt.y;
-                let b = this._customMask["_hitTest"](s_vec2) || false;
+                var b = this._customMask["_hitTest"](s_vec2) || false;
                 if (!b)
                     return null;
             }
@@ -2266,21 +2632,21 @@ window.fairygui = window.fgui;
                 s_vec2.set(pt);
                 s_vec2.x += this._container.x;
                 s_vec2.y += this._container.y;
-                let clippingSize = this._container.getContentSize();
+                var clippingSize = this._container.getContentSize();
                 if (s_vec2.x < 0 || s_vec2.y < 0 || s_vec2.x >= clippingSize.width || s_vec2.y >= clippingSize.height)
                     return null;
             }
             if (this._scrollPane) {
-                let target = this._scrollPane.hitTest(pt, globalPt);
-                if (!target)
+                var target_1 = this._scrollPane.hitTest(pt, globalPt);
+                if (!target_1)
                     return null;
-                if (target != this)
-                    return target;
+                if (target_1 != this)
+                    return target_1;
             }
-            let target = null;
-            let cnt = this._children.length;
-            for (let i = cnt - 1; i >= 0; i--) {
-                let child = this._children[i];
+            var target = null;
+            var cnt = this._children.length;
+            for (var i = cnt - 1; i >= 0; i--) {
+                var child = this._children[i];
                 if (this._maskContent == child || child._touchDisabled)
                     continue;
                 target = child.hitTest(globalPt);
@@ -2290,18 +2656,18 @@ window.fairygui = window.fgui;
             if (!target && this._opaque && (this.hitArea || pt.x >= 0 && pt.y >= 0 && pt.x < this._width && pt.y < this._height))
                 target = this;
             return target;
-        }
-        setBoundsChangedFlag() {
+        };
+        GComponent.prototype.setBoundsChangedFlag = function () {
             if (!this._scrollPane && !this._trackBounds)
                 return;
             if (!this._boundsChanged) {
                 this._boundsChanged = true;
                 this._partner.callLater(this.refresh);
             }
-        }
-        refresh(dt) {
+        };
+        GComponent.prototype.refresh = function (dt) {
             if (!isNaN(dt)) {
-                let _t = (this.node["$gobj"]);
+                var _t = (this.node["$gobj"]);
                 _t.refresh();
                 return;
             }
@@ -2315,8 +2681,8 @@ window.fairygui = window.fgui;
                 }
                 this.updateBounds();
             }
-        }
-        ensureBoundsCorrect() {
+        };
+        GComponent.prototype.ensureBoundsCorrect = function () {
             var len = this._children.length;
             if (len > 0) {
                 for (var i = 0; i < len; i++) {
@@ -2326,8 +2692,8 @@ window.fairygui = window.fgui;
             }
             if (this._boundsChanged)
                 this.updateBounds();
-        }
-        updateBounds() {
+        };
+        GComponent.prototype.updateBounds = function () {
             var ax = 0, ay = 0, aw = 0, ah = 0;
             var len = this._children.length;
             if (len > 0) {
@@ -2354,37 +2720,46 @@ window.fairygui = window.fgui;
                 ah = ab - ay;
             }
             this.setBounds(ax, ay, aw, ah);
-        }
-        setBounds(ax, ay, aw, ah = 0) {
+        };
+        GComponent.prototype.setBounds = function (ax, ay, aw, ah) {
+            if (ah === void 0) { ah = 0; }
             this._boundsChanged = false;
             if (this._scrollPane)
                 this._scrollPane.setContentSize(Math.round(ax + aw), Math.round(ay + ah));
-        }
-        get viewWidth() {
-            if (this._scrollPane)
-                return this._scrollPane.viewWidth;
-            else
-                return this.width - this._margin.left - this._margin.right;
-        }
-        set viewWidth(value) {
-            if (this._scrollPane)
-                this._scrollPane.viewWidth = value;
-            else
-                this.width = value + this._margin.left + this._margin.right;
-        }
-        get viewHeight() {
-            if (this._scrollPane)
-                return this._scrollPane.viewHeight;
-            else
-                return this.height - this._margin.top - this._margin.bottom;
-        }
-        set viewHeight(value) {
-            if (this._scrollPane)
-                this._scrollPane.viewHeight = value;
-            else
-                this.height = value + this._margin.top + this._margin.bottom;
-        }
-        getSnappingPosition(xValue, yValue, resultPoint) {
+        };
+        Object.defineProperty(GComponent.prototype, "viewWidth", {
+            get: function () {
+                if (this._scrollPane)
+                    return this._scrollPane.viewWidth;
+                else
+                    return this.width - this._margin.left - this._margin.right;
+            },
+            set: function (value) {
+                if (this._scrollPane)
+                    this._scrollPane.viewWidth = value;
+                else
+                    this.width = value + this._margin.left + this._margin.right;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "viewHeight", {
+            get: function () {
+                if (this._scrollPane)
+                    return this._scrollPane.viewHeight;
+                else
+                    return this.height - this._margin.top - this._margin.bottom;
+            },
+            set: function (value) {
+                if (this._scrollPane)
+                    this._scrollPane.viewHeight = value;
+                else
+                    this.height = value + this._margin.top + this._margin.bottom;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GComponent.prototype.getSnappingPosition = function (xValue, yValue, resultPoint) {
             if (!resultPoint)
                 resultPoint = new cc.Vec2();
             var cnt = this._children.length;
@@ -2444,8 +2819,9 @@ window.fairygui = window.fgui;
             resultPoint.x = xValue;
             resultPoint.y = yValue;
             return resultPoint;
-        }
-        childSortingOrderChanged(child, oldValue, newValue = 0) {
+        };
+        GComponent.prototype.childSortingOrderChanged = function (child, oldValue, newValue) {
+            if (newValue === void 0) { newValue = 0; }
             if (newValue == 0) {
                 this._sortingChildCount--;
                 this.setChildIndex(child, this._children.length);
@@ -2460,11 +2836,11 @@ window.fairygui = window.fgui;
                 else
                     this._setChildIndex(child, oldIndex, index);
             }
-        }
-        constructFromResource() {
+        };
+        GComponent.prototype.constructFromResource = function () {
             this.constructFromResource2(null, 0);
-        }
-        constructFromResource2(objectPool, poolIndex) {
+        };
+        GComponent.prototype.constructFromResource2 = function (objectPool, poolIndex) {
             var contentItem = this.packageItem.getBranch();
             if (!contentItem.decoded) {
                 contentItem.decoded = true;
@@ -2619,13 +2995,13 @@ window.fairygui = window.fgui;
             if (contentItem.objectType != fgui.ObjectType.Component)
                 this.constructExtension(buffer);
             this.onConstruct();
-        }
-        constructExtension(buffer) {
-        }
-        onConstruct() {
-        }
-        setup_afterAdd(buffer, beginPos) {
-            super.setup_afterAdd(buffer, beginPos);
+        };
+        GComponent.prototype.constructExtension = function (buffer) {
+        };
+        GComponent.prototype.onConstruct = function () {
+        };
+        GComponent.prototype.setup_afterAdd = function (buffer, beginPos) {
+            _super.prototype.setup_afterAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 4);
             var pageController = buffer.readShort();
             if (pageController != -1 && this._scrollPane)
@@ -2648,189 +3024,252 @@ window.fairygui = window.fgui;
                         obj.setProp(propertyId, value);
                 }
             }
-        }
-        onEnable() {
-            let cnt = this._transitions.length;
-            for (let i = 0; i < cnt; ++i)
+        };
+        GComponent.prototype.onEnable = function () {
+            var cnt = this._transitions.length;
+            for (var i = 0; i < cnt; ++i)
                 this._transitions[i].onEnable();
-        }
-        onDisable() {
-            let cnt = this._transitions.length;
-            for (let i = 0; i < cnt; ++i)
+        };
+        GComponent.prototype.onDisable = function () {
+            var cnt = this._transitions.length;
+            for (var i = 0; i < cnt; ++i)
                 this._transitions[i].onDisable();
-        }
-    }
+        };
+        return GComponent;
+    }(fgui.GObject));
     fgui.GComponent = GComponent;
     var s_vec2 = new cc.Vec2();
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GButton extends fgui.GComponent {
-        constructor() {
-            super();
-            this._node.name = "GButton";
-            this._mode = fgui.ButtonMode.Common;
-            this._title = "";
-            this._icon = "";
-            this._sound = fgui.UIConfig.buttonSound;
-            this._soundVolumeScale = fgui.UIConfig.buttonSoundVolumeScale;
-            this._changeStateOnClick = true;
-            this._downEffect = 0;
-            this._downEffectValue = 0.8;
+    var GButton = (function (_super) {
+        __extends(GButton, _super);
+        function GButton() {
+            var _this = _super.call(this) || this;
+            _this._node.name = "GButton";
+            _this._mode = fgui.ButtonMode.Common;
+            _this._title = "";
+            _this._icon = "";
+            _this._sound = fgui.UIConfig.buttonSound;
+            _this._soundVolumeScale = fgui.UIConfig.buttonSoundVolumeScale;
+            _this._changeStateOnClick = true;
+            _this._downEffect = 0;
+            _this._downEffectValue = 0.8;
+            return _this;
         }
-        get icon() {
-            return this._icon;
-        }
-        set icon(value) {
-            this._icon = value;
-            value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
-            if (this._iconObject)
-                this._iconObject.icon = value;
-            this.updateGear(7);
-        }
-        get selectedIcon() {
-            return this._selectedIcon;
-        }
-        set selectedIcon(value) {
-            this._selectedIcon = value;
-            value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
-            if (this._iconObject)
-                this._iconObject.icon = value;
-        }
-        get title() {
-            return this._title;
-        }
-        set title(value) {
-            this._title = value;
-            if (this._titleObject)
-                this._titleObject.text = (this._selected && this._selectedTitle) ? this._selectedTitle : this._title;
-            this.updateGear(6);
-        }
-        get text() {
-            return this.title;
-        }
-        set text(value) {
-            this.title = value;
-        }
-        get selectedTitle() {
-            return this._selectedTitle;
-        }
-        set selectedTitle(value) {
-            this._selectedTitle = value;
-            if (this._titleObject)
-                this._titleObject.text = (this._selected && this._selectedTitle) ? this._selectedTitle : this._title;
-        }
-        get titleColor() {
-            var tf = this.getTextField();
-            if (tf)
-                return tf.color;
-            else
-                return cc.Color.BLACK;
-        }
-        set titleColor(value) {
-            var tf = this.getTextField();
-            if (tf)
-                tf.color = value;
-        }
-        get titleFontSize() {
-            var tf = this.getTextField();
-            if (tf)
-                return tf.fontSize;
-            else
-                return 0;
-        }
-        set titleFontSize(value) {
-            var tf = this.getTextField();
-            if (tf)
-                tf.fontSize = value;
-        }
-        get sound() {
-            return this._sound;
-        }
-        set sound(val) {
-            this._sound = val;
-        }
-        get soundVolumeScale() {
-            return this._soundVolumeScale;
-        }
-        set soundVolumeScale(value) {
-            this._soundVolumeScale = value;
-        }
-        set selected(val) {
-            if (this._mode == fgui.ButtonMode.Common)
-                return;
-            if (this._selected != val) {
-                this._selected = val;
-                this.setCurrentState();
-                if (this._selectedTitle && this._titleObject)
-                    this._titleObject.text = this._selected ? this._selectedTitle : this._title;
-                if (this._selectedIcon) {
-                    var str = this._selected ? this._selectedIcon : this._icon;
-                    if (this._iconObject)
-                        this._iconObject.icon = str;
-                }
-                if (this._relatedController
-                    && this._parent
-                    && !this._parent._buildingDisplayList) {
-                    if (this._selected) {
-                        this._relatedController.selectedPageId = this._relatedPageId;
-                        if (this._relatedController.autoRadioGroupDepth)
-                            this._parent.adjustRadioGroupDepth(this, this._relatedController);
+        Object.defineProperty(GButton.prototype, "icon", {
+            get: function () {
+                return this._icon;
+            },
+            set: function (value) {
+                this._icon = value;
+                value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
+                if (this._iconObject)
+                    this._iconObject.icon = value;
+                this.updateGear(7);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "selectedIcon", {
+            get: function () {
+                return this._selectedIcon;
+            },
+            set: function (value) {
+                this._selectedIcon = value;
+                value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
+                if (this._iconObject)
+                    this._iconObject.icon = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "title", {
+            get: function () {
+                return this._title;
+            },
+            set: function (value) {
+                this._title = value;
+                if (this._titleObject)
+                    this._titleObject.text = (this._selected && this._selectedTitle) ? this._selectedTitle : this._title;
+                this.updateGear(6);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "text", {
+            get: function () {
+                return this.title;
+            },
+            set: function (value) {
+                this.title = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "selectedTitle", {
+            get: function () {
+                return this._selectedTitle;
+            },
+            set: function (value) {
+                this._selectedTitle = value;
+                if (this._titleObject)
+                    this._titleObject.text = (this._selected && this._selectedTitle) ? this._selectedTitle : this._title;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "titleColor", {
+            get: function () {
+                var tf = this.getTextField();
+                if (tf)
+                    return tf.color;
+                else
+                    return cc.Color.BLACK;
+            },
+            set: function (value) {
+                var tf = this.getTextField();
+                if (tf)
+                    tf.color = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "titleFontSize", {
+            get: function () {
+                var tf = this.getTextField();
+                if (tf)
+                    return tf.fontSize;
+                else
+                    return 0;
+            },
+            set: function (value) {
+                var tf = this.getTextField();
+                if (tf)
+                    tf.fontSize = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "sound", {
+            get: function () {
+                return this._sound;
+            },
+            set: function (val) {
+                this._sound = val;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "soundVolumeScale", {
+            get: function () {
+                return this._soundVolumeScale;
+            },
+            set: function (value) {
+                this._soundVolumeScale = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "selected", {
+            get: function () {
+                return this._selected;
+            },
+            set: function (val) {
+                if (this._mode == fgui.ButtonMode.Common)
+                    return;
+                if (this._selected != val) {
+                    this._selected = val;
+                    this.setCurrentState();
+                    if (this._selectedTitle && this._titleObject)
+                        this._titleObject.text = this._selected ? this._selectedTitle : this._title;
+                    if (this._selectedIcon) {
+                        var str = this._selected ? this._selectedIcon : this._icon;
+                        if (this._iconObject)
+                            this._iconObject.icon = str;
                     }
-                    else if (this._mode == fgui.ButtonMode.Check && this._relatedController.selectedPageId == this._relatedPageId)
-                        this._relatedController.oppositePageId = this._relatedPageId;
+                    if (this._relatedController
+                        && this._parent
+                        && !this._parent._buildingDisplayList) {
+                        if (this._selected) {
+                            this._relatedController.selectedPageId = this._relatedPageId;
+                            if (this._relatedController.autoRadioGroupDepth)
+                                this._parent.adjustRadioGroupDepth(this, this._relatedController);
+                        }
+                        else if (this._mode == fgui.ButtonMode.Check && this._relatedController.selectedPageId == this._relatedPageId)
+                            this._relatedController.oppositePageId = this._relatedPageId;
+                    }
                 }
-            }
-        }
-        get selected() {
-            return this._selected;
-        }
-        get mode() {
-            return this._mode;
-        }
-        set mode(value) {
-            if (this._mode != value) {
-                if (value == fgui.ButtonMode.Common)
-                    this.selected = false;
-                this._mode = value;
-            }
-        }
-        get relatedController() {
-            return this._relatedController;
-        }
-        set relatedController(val) {
-            this._relatedController = val;
-        }
-        get relatedPageId() {
-            return this._relatedPageId;
-        }
-        set relatedPageId(val) {
-            this._relatedPageId = val;
-        }
-        get changeStateOnClick() {
-            return this._changeStateOnClick;
-        }
-        set changeStateOnClick(value) {
-            this._changeStateOnClick = value;
-        }
-        get linkedPopup() {
-            return this._linkedPopup;
-        }
-        set linkedPopup(value) {
-            this._linkedPopup = value;
-        }
-        getTextField() {
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "mode", {
+            get: function () {
+                return this._mode;
+            },
+            set: function (value) {
+                if (this._mode != value) {
+                    if (value == fgui.ButtonMode.Common)
+                        this.selected = false;
+                    this._mode = value;
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "relatedController", {
+            get: function () {
+                return this._relatedController;
+            },
+            set: function (val) {
+                this._relatedController = val;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "relatedPageId", {
+            get: function () {
+                return this._relatedPageId;
+            },
+            set: function (val) {
+                this._relatedPageId = val;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "changeStateOnClick", {
+            get: function () {
+                return this._changeStateOnClick;
+            },
+            set: function (value) {
+                this._changeStateOnClick = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "linkedPopup", {
+            get: function () {
+                return this._linkedPopup;
+            },
+            set: function (value) {
+                this._linkedPopup = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GButton.prototype.getTextField = function () {
             if (this._titleObject instanceof fgui.GTextField)
                 return this._titleObject;
             else if ((this._titleObject instanceof fgui.GLabel) || (this._titleObject instanceof GButton))
                 return this._titleObject.getTextField();
             else
                 return null;
-        }
-        fireClick() {
+        };
+        GButton.prototype.fireClick = function () {
             fgui.GRoot.inst.inputProcessor.simulateClick(this);
-        }
-        setState(val) {
+        };
+        GButton.prototype.setState = function (val) {
             if (this._buttonController)
                 this._buttonController.selectedPage = val;
             if (this._downEffect == 1) {
@@ -2868,8 +3307,8 @@ window.fairygui = window.fgui;
                     }
                 }
             }
-        }
-        setCurrentState() {
+        };
+        GButton.prototype.setCurrentState = function () {
             if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED)) {
                 if (this._selected)
                     this.setState(GButton.SELECTED_DISABLED);
@@ -2882,13 +3321,13 @@ window.fairygui = window.fgui;
                 else
                     this.setState(this._over ? GButton.OVER : GButton.UP);
             }
-        }
-        handleControllerChanged(c) {
-            super.handleControllerChanged(c);
+        };
+        GButton.prototype.handleControllerChanged = function (c) {
+            _super.prototype.handleControllerChanged.call(this, c);
             if (this._relatedController == c)
                 this.selected = this._relatedPageId == c.selectedPageId;
-        }
-        handleGrayedChanged() {
+        };
+        GButton.prototype.handleGrayedChanged = function () {
             if (this._buttonController && this._buttonController.hasPage(GButton.DISABLED)) {
                 if (this.grayed) {
                     if (this._selected && this._buttonController.hasPage(GButton.SELECTED_DISABLED))
@@ -2902,9 +3341,9 @@ window.fairygui = window.fgui;
                     this.setState(GButton.UP);
             }
             else
-                super.handleGrayedChanged();
-        }
-        getProp(index) {
+                _super.prototype.handleGrayedChanged.call(this);
+        };
+        GButton.prototype.getProp = function (index) {
             switch (index) {
                 case fgui.ObjectPropID.Color:
                     return this.titleColor;
@@ -2921,10 +3360,10 @@ window.fairygui = window.fgui;
                 case fgui.ObjectPropID.Selected:
                     return this.selected;
                 default:
-                    return super.getProp(index);
+                    return _super.prototype.getProp.call(this, index);
             }
-        }
-        setProp(index, value) {
+        };
+        GButton.prototype.setProp = function (index, value) {
             switch (index) {
                 case fgui.ObjectPropID.Color:
                     this.titleColor = value;
@@ -2943,11 +3382,11 @@ window.fairygui = window.fgui;
                     this.selected = value;
                     break;
                 default:
-                    super.setProp(index, value);
+                    _super.prototype.setProp.call(this, index, value);
                     break;
             }
-        }
-        constructExtension(buffer) {
+        };
+        GButton.prototype.constructExtension = function (buffer) {
             buffer.seek(0, 6);
             this._mode = buffer.readByte();
             var str = buffer.readS();
@@ -2972,9 +3411,9 @@ window.fairygui = window.fgui;
             this._node.on(fgui.Event.ROLL_OVER, this.onRollOver_1, this);
             this._node.on(fgui.Event.ROLL_OUT, this.onRollOut_1, this);
             this._node.on(fgui.Event.CLICK, this.onClick_1, this);
-        }
-        setup_afterAdd(buffer, beginPos) {
-            super.setup_afterAdd(buffer, beginPos);
+        };
+        GButton.prototype.setup_afterAdd = function (buffer, beginPos) {
+            _super.prototype.setup_afterAdd.call(this, buffer, beginPos);
             if (!buffer.seek(beginPos, 6))
                 return;
             if (buffer.readByte() != this.packageItem.objectType)
@@ -3008,8 +3447,8 @@ window.fairygui = window.fgui;
             if (buffer.readBool())
                 this._soundVolumeScale = buffer.readFloat();
             this.selected = buffer.readBool();
-        }
-        onRollOver_1() {
+        };
+        GButton.prototype.onRollOver_1 = function () {
             if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
                 return;
             this._over = true;
@@ -3018,8 +3457,8 @@ window.fairygui = window.fgui;
             if (this.grayed && this._buttonController.hasPage(GButton.DISABLED))
                 return;
             this.setState(this._selected ? GButton.SELECTED_OVER : GButton.OVER);
-        }
-        onRollOut_1() {
+        };
+        GButton.prototype.onRollOut_1 = function () {
             if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
                 return;
             this._over = false;
@@ -3028,8 +3467,8 @@ window.fairygui = window.fgui;
             if (this.grayed && this._buttonController.hasPage(GButton.DISABLED))
                 return;
             this.setState(this._selected ? GButton.DOWN : GButton.UP);
-        }
-        onTouchBegin_1(evt) {
+        };
+        GButton.prototype.onTouchBegin_1 = function (evt) {
             if (evt.button != cc.Event.EventMouse.BUTTON_LEFT)
                 return;
             this._down = true;
@@ -3046,8 +3485,8 @@ window.fairygui = window.fgui;
                 else
                     this.root.togglePopup(this._linkedPopup, this);
             }
-        }
-        onTouchEnd_1(evt) {
+        };
+        GButton.prototype.onTouchEnd_1 = function (evt) {
             if (evt.button != cc.Event.EventMouse.BUTTON_LEFT)
                 return;
             if (this._down) {
@@ -3071,8 +3510,8 @@ window.fairygui = window.fgui;
                     }
                 }
             }
-        }
-        onClick_1() {
+        };
+        GButton.prototype.onClick_1 = function () {
             if (this._sound) {
                 var pi = fgui.UIPackage.getItemByURL(this._sound);
                 if (pi) {
@@ -3097,178 +3536,229 @@ window.fairygui = window.fgui;
                 if (this._relatedController)
                     this._relatedController.selectedPageId = this._relatedPageId;
             }
-        }
-    }
-    GButton.UP = "up";
-    GButton.DOWN = "down";
-    GButton.OVER = "over";
-    GButton.SELECTED_OVER = "selectedOver";
-    GButton.DISABLED = "disabled";
-    GButton.SELECTED_DISABLED = "selectedDisabled";
+        };
+        GButton.UP = "up";
+        GButton.DOWN = "down";
+        GButton.OVER = "over";
+        GButton.SELECTED_OVER = "selectedOver";
+        GButton.DISABLED = "disabled";
+        GButton.SELECTED_DISABLED = "selectedDisabled";
+        return GButton;
+    }(fgui.GComponent));
     fgui.GButton = GButton;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GComboBox extends fgui.GComponent {
-        constructor() {
-            super();
-            this._visibleItemCount = 0;
-            this._selectedIndex = 0;
-            this._popupDirection = fgui.PopupDirection.Auto;
-            this._node.name = "GComboBox";
-            this._visibleItemCount = fgui.UIConfig.defaultComboBoxVisibleItemCount;
-            this._itemsUpdated = true;
-            this._selectedIndex = -1;
-            this._items = [];
-            this._values = [];
+    var GComboBox = (function (_super) {
+        __extends(GComboBox, _super);
+        function GComboBox() {
+            var _this = _super.call(this) || this;
+            _this._visibleItemCount = 0;
+            _this._selectedIndex = 0;
+            _this._popupDirection = fgui.PopupDirection.Auto;
+            _this._node.name = "GComboBox";
+            _this._visibleItemCount = fgui.UIConfig.defaultComboBoxVisibleItemCount;
+            _this._itemsUpdated = true;
+            _this._selectedIndex = -1;
+            _this._items = [];
+            _this._values = [];
+            return _this;
         }
-        get text() {
-            if (this._titleObject)
-                return this._titleObject.text;
-            else
-                return null;
-        }
-        set text(value) {
-            if (this._titleObject)
-                this._titleObject.text = value;
-            this.updateGear(6);
-        }
-        get icon() {
-            if (this._iconObject)
-                return this._iconObject.icon;
-            else
-                return null;
-        }
-        set icon(value) {
-            if (this._iconObject)
-                this._iconObject.icon = value;
-            this.updateGear(7);
-        }
-        get titleColor() {
-            var tf = this.getTextField();
-            if (tf)
-                return tf.color;
-            else
-                return cc.Color.BLACK;
-        }
-        set titleColor(value) {
-            var tf = this.getTextField();
-            if (tf)
-                tf.color = value;
-        }
-        get titleFontSize() {
-            var tf = this.getTextField();
-            if (tf)
-                return tf.fontSize;
-            else
-                return 0;
-        }
-        set titleFontSize(value) {
-            var tf = this.getTextField();
-            if (tf)
-                tf.fontSize = value;
-        }
-        get visibleItemCount() {
-            return this._visibleItemCount;
-        }
-        set visibleItemCount(value) {
-            this._visibleItemCount = value;
-        }
-        get popupDirection() {
-            return this._popupDirection;
-        }
-        set popupDirection(value) {
-            this._popupDirection = value;
-        }
-        get items() {
-            return this._items;
-        }
-        set items(value) {
-            if (!value)
-                this._items.length = 0;
-            else
-                this._items = value.concat();
-            if (this._items.length > 0) {
-                if (this._selectedIndex >= this._items.length)
-                    this._selectedIndex = this._items.length - 1;
-                else if (this._selectedIndex == -1)
-                    this._selectedIndex = 0;
-                this.text = this._items[this._selectedIndex];
-                if (this._icons && this._selectedIndex < this._icons.length)
+        Object.defineProperty(GComboBox.prototype, "text", {
+            get: function () {
+                if (this._titleObject)
+                    return this._titleObject.text;
+                else
+                    return null;
+            },
+            set: function (value) {
+                if (this._titleObject)
+                    this._titleObject.text = value;
+                this.updateGear(6);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "icon", {
+            get: function () {
+                if (this._iconObject)
+                    return this._iconObject.icon;
+                else
+                    return null;
+            },
+            set: function (value) {
+                if (this._iconObject)
+                    this._iconObject.icon = value;
+                this.updateGear(7);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "titleColor", {
+            get: function () {
+                var tf = this.getTextField();
+                if (tf)
+                    return tf.color;
+                else
+                    return cc.Color.BLACK;
+            },
+            set: function (value) {
+                var tf = this.getTextField();
+                if (tf)
+                    tf.color = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "titleFontSize", {
+            get: function () {
+                var tf = this.getTextField();
+                if (tf)
+                    return tf.fontSize;
+                else
+                    return 0;
+            },
+            set: function (value) {
+                var tf = this.getTextField();
+                if (tf)
+                    tf.fontSize = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "visibleItemCount", {
+            get: function () {
+                return this._visibleItemCount;
+            },
+            set: function (value) {
+                this._visibleItemCount = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "popupDirection", {
+            get: function () {
+                return this._popupDirection;
+            },
+            set: function (value) {
+                this._popupDirection = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "items", {
+            get: function () {
+                return this._items;
+            },
+            set: function (value) {
+                if (!value)
+                    this._items.length = 0;
+                else
+                    this._items = value.concat();
+                if (this._items.length > 0) {
+                    if (this._selectedIndex >= this._items.length)
+                        this._selectedIndex = this._items.length - 1;
+                    else if (this._selectedIndex == -1)
+                        this._selectedIndex = 0;
+                    this.text = this._items[this._selectedIndex];
+                    if (this._icons && this._selectedIndex < this._icons.length)
+                        this.icon = this._icons[this._selectedIndex];
+                }
+                else {
+                    this.text = "";
+                    if (this._icons)
+                        this.icon = null;
+                    this._selectedIndex = -1;
+                }
+                this._itemsUpdated = true;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "icons", {
+            get: function () {
+                return this._icons;
+            },
+            set: function (value) {
+                this._icons = value;
+                if (this._icons && this._selectedIndex != -1 && this._selectedIndex < this._icons.length)
                     this.icon = this._icons[this._selectedIndex];
-            }
-            else {
-                this.text = "";
-                if (this._icons)
-                    this.icon = null;
-                this._selectedIndex = -1;
-            }
-            this._itemsUpdated = true;
-        }
-        get icons() {
-            return this._icons;
-        }
-        set icons(value) {
-            this._icons = value;
-            if (this._icons && this._selectedIndex != -1 && this._selectedIndex < this._icons.length)
-                this.icon = this._icons[this._selectedIndex];
-        }
-        get values() {
-            return this._values;
-        }
-        set values(value) {
-            if (!value)
-                this._values.length = 0;
-            else
-                this._values = value.concat();
-        }
-        get selectedIndex() {
-            return this._selectedIndex;
-        }
-        set selectedIndex(val) {
-            if (this._selectedIndex == val)
-                return;
-            this._selectedIndex = val;
-            if (this._selectedIndex >= 0 && this._selectedIndex < this._items.length) {
-                this.text = this._items[this._selectedIndex];
-                if (this._icons && this._selectedIndex < this._icons.length)
-                    this.icon = this._icons[this._selectedIndex];
-            }
-            else {
-                this.text = "";
-                if (this._icons)
-                    this.icon = null;
-            }
-            this.updateSelectionController();
-        }
-        get value() {
-            return this._values[this._selectedIndex];
-        }
-        set value(val) {
-            var index = this._values.indexOf(val);
-            if (index == -1 && val == null)
-                index = this._values.indexOf("");
-            this.selectedIndex = index;
-        }
-        get selectionController() {
-            return this._selectionController;
-        }
-        set selectionController(value) {
-            this._selectionController = value;
-        }
-        getTextField() {
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "values", {
+            get: function () {
+                return this._values;
+            },
+            set: function (value) {
+                if (!value)
+                    this._values.length = 0;
+                else
+                    this._values = value.concat();
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "selectedIndex", {
+            get: function () {
+                return this._selectedIndex;
+            },
+            set: function (val) {
+                if (this._selectedIndex == val)
+                    return;
+                this._selectedIndex = val;
+                if (this._selectedIndex >= 0 && this._selectedIndex < this._items.length) {
+                    this.text = this._items[this._selectedIndex];
+                    if (this._icons && this._selectedIndex < this._icons.length)
+                        this.icon = this._icons[this._selectedIndex];
+                }
+                else {
+                    this.text = "";
+                    if (this._icons)
+                        this.icon = null;
+                }
+                this.updateSelectionController();
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "value", {
+            get: function () {
+                return this._values[this._selectedIndex];
+            },
+            set: function (val) {
+                var index = this._values.indexOf(val);
+                if (index == -1 && val == null)
+                    index = this._values.indexOf("");
+                this.selectedIndex = index;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "selectionController", {
+            get: function () {
+                return this._selectionController;
+            },
+            set: function (value) {
+                this._selectionController = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GComboBox.prototype.getTextField = function () {
             if (this._titleObject instanceof fgui.GTextField)
                 return this._titleObject;
             else if ((this._titleObject instanceof fgui.GLabel) || (this._titleObject instanceof fgui.GButton))
                 return this._titleObject.getTextField();
             else
                 return null;
-        }
-        setState(val) {
+        };
+        GComboBox.prototype.setState = function (val) {
             if (this._buttonController)
                 this._buttonController.selectedPage = val;
-        }
-        getProp(index) {
+        };
+        GComboBox.prototype.getProp = function (index) {
             switch (index) {
                 case fgui.ObjectPropID.Color:
                     return this.titleColor;
@@ -3289,10 +3779,10 @@ window.fairygui = window.fgui;
                             return 0;
                     }
                 default:
-                    return super.getProp(index);
+                    return _super.prototype.getProp.call(this, index);
             }
-        }
-        setProp(index, value) {
+        };
+        GComboBox.prototype.setProp = function (index, value) {
             switch (index) {
                 case fgui.ObjectPropID.Color:
                     this.titleColor = value;
@@ -3312,18 +3802,18 @@ window.fairygui = window.fgui;
                     }
                     break;
                 default:
-                    super.setProp(index, value);
+                    _super.prototype.setProp.call(this, index, value);
                     break;
             }
-        }
-        constructExtension(buffer) {
+        };
+        GComboBox.prototype.constructExtension = function (buffer) {
             var str;
             this._buttonController = this.getController("button");
             this._titleObject = this.getChild("title");
             this._iconObject = this.getChild("icon");
             str = buffer.readS();
             if (str) {
-                let obj = fgui.UIPackage.createObjectFromURL(str);
+                var obj = fgui.UIPackage.createObjectFromURL(str);
                 if (!(obj instanceof fgui.GComponent)) {
                     console.error("下拉框必须为元件");
                     return;
@@ -3346,13 +3836,13 @@ window.fairygui = window.fgui;
             this._node.on(fgui.Event.TOUCH_END, this.onTouchEnd_1, this);
             this._node.on(fgui.Event.ROLL_OVER, this.onRollOver_1, this);
             this._node.on(fgui.Event.ROLL_OUT, this.onRollOut_1, this);
-        }
-        handleControllerChanged(c) {
-            super.handleControllerChanged(c);
+        };
+        GComboBox.prototype.handleControllerChanged = function (c) {
+            _super.prototype.handleControllerChanged.call(this, c);
             if (this._selectionController == c)
                 this.selectedIndex = c.selectedIndex;
-        }
-        updateSelectionController() {
+        };
+        GComboBox.prototype.updateSelectionController = function () {
             if (this._selectionController && !this._selectionController.changing
                 && this._selectedIndex < this._selectionController.pageCount) {
                 var c = this._selectionController;
@@ -3360,16 +3850,16 @@ window.fairygui = window.fgui;
                 c.selectedIndex = this._selectedIndex;
                 this._selectionController = c;
             }
-        }
-        dispose() {
+        };
+        GComboBox.prototype.dispose = function () {
             if (this.dropdown) {
                 this.dropdown.dispose();
                 this.dropdown = null;
             }
-            super.dispose();
-        }
-        setup_afterAdd(buffer, beginPos) {
-            super.setup_afterAdd(buffer, beginPos);
+            _super.prototype.dispose.call(this);
+        };
+        GComboBox.prototype.setup_afterAdd = function (buffer, beginPos) {
+            _super.prototype.setup_afterAdd.call(this, buffer, beginPos);
             if (!buffer.seek(beginPos, 6))
                 return;
             if (buffer.readByte() != this.packageItem.objectType)
@@ -3415,8 +3905,8 @@ window.fairygui = window.fgui;
             iv = buffer.readShort();
             if (iv >= 0)
                 this._selectionController = this.parent.getControllerAt(iv);
-        }
-        showDropdown() {
+        };
+        GComboBox.prototype.showDropdown = function () {
             if (this._itemsUpdated) {
                 this._itemsUpdated = false;
                 this._list.removeChildrenToPool();
@@ -3435,40 +3925,40 @@ window.fairygui = window.fgui;
             this.root.togglePopup(this.dropdown, this, this._popupDirection);
             if (this.dropdown.parent)
                 this.setState(fgui.GButton.DOWN);
-        }
-        onPopupClosed() {
+        };
+        GComboBox.prototype.onPopupClosed = function () {
             if (this._over)
                 this.setState(fgui.GButton.OVER);
             else
                 this.setState(fgui.GButton.UP);
-        }
-        onClickItem(itemObject) {
-            let _t = this;
-            let index = this._list.getChildIndex(itemObject);
+        };
+        GComboBox.prototype.onClickItem = function (itemObject) {
+            var _t = this;
+            var index = this._list.getChildIndex(itemObject);
             this._partner.callLater(function (dt) {
                 _t.onClickItem2(index);
             }, 0.1);
-        }
-        onClickItem2(index) {
+        };
+        GComboBox.prototype.onClickItem2 = function (index) {
             if (this.dropdown.parent instanceof fgui.GRoot)
                 this.dropdown.parent.hidePopup();
             this._selectedIndex = -1;
             this.selectedIndex = index;
             this._node.emit(fgui.Event.STATUS_CHANGED, this);
-        }
-        onRollOver_1() {
+        };
+        GComboBox.prototype.onRollOver_1 = function () {
             this._over = true;
             if (this._down || this.dropdown && this.dropdown.parent)
                 return;
             this.setState(fgui.GButton.OVER);
-        }
-        onRollOut_1() {
+        };
+        GComboBox.prototype.onRollOut_1 = function () {
             this._over = false;
             if (this._down || this.dropdown && this.dropdown.parent)
                 return;
             this.setState(fgui.GButton.UP);
-        }
-        onTouchBegin_1(evt) {
+        };
+        GComboBox.prototype.onTouchBegin_1 = function (evt) {
             if (evt.button != cc.Event.EventMouse.BUTTON_LEFT)
                 return;
             if ((evt.initiator instanceof fgui.GTextInput) && evt.initiator.editable)
@@ -3477,8 +3967,8 @@ window.fairygui = window.fgui;
             evt.captureTouch();
             if (this.dropdown)
                 this.showDropdown();
-        }
-        onTouchEnd_1(evt) {
+        };
+        GComboBox.prototype.onTouchEnd_1 = function (evt) {
             if (evt.button != cc.Event.EventMouse.BUTTON_LEFT)
                 return;
             if (this._down) {
@@ -3490,39 +3980,42 @@ window.fairygui = window.fgui;
                         this.setState(fgui.GButton.UP);
                 }
             }
-        }
-    }
+        };
+        return GComboBox;
+    }(fgui.GComponent));
     fgui.GComboBox = GComboBox;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GGraph extends fgui.GObject {
-        constructor() {
-            super();
-            this._type = 0;
-            this._lineSize = 0;
-            this._node.name = "GGraph";
-            this._lineSize = 1;
-            this._lineColor = new cc.Color();
-            this._fillColor = new cc.Color(255, 255, 255, 255);
-            this._content = this._node.addComponent(cc.Graphics);
+    var GGraph = (function (_super) {
+        __extends(GGraph, _super);
+        function GGraph() {
+            var _this = _super.call(this) || this;
+            _this._type = 0;
+            _this._lineSize = 0;
+            _this._node.name = "GGraph";
+            _this._lineSize = 1;
+            _this._lineColor = new cc.Color();
+            _this._fillColor = new cc.Color(255, 255, 255, 255);
+            _this._content = _this._node.addComponent(cc.Graphics);
+            return _this;
         }
-        drawRect(lineSize, lineColor, fillColor, corner) {
+        GGraph.prototype.drawRect = function (lineSize, lineColor, fillColor, corner) {
             this._type = 1;
             this._lineSize = lineSize;
             this._lineColor.set(lineColor);
             this._fillColor.set(fillColor);
             this._cornerRadius = corner;
             this.updateGraph();
-        }
-        drawEllipse(lineSize, lineColor, fillColor) {
+        };
+        GGraph.prototype.drawEllipse = function (lineSize, lineColor, fillColor) {
             this._type = 2;
             this._lineSize = lineSize;
             this._lineColor.set(lineColor);
             this._fillColor.set(fillColor);
             this.updateGraph();
-        }
-        drawRegularPolygon(lineSize, lineColor, fillColor, sides, startAngle, distances) {
+        };
+        GGraph.prototype.drawRegularPolygon = function (lineSize, lineColor, fillColor, sides, startAngle, distances) {
             this._type = 4;
             this._lineSize = lineSize;
             this._lineColor.set(lineColor);
@@ -3531,43 +4024,55 @@ window.fairygui = window.fgui;
             this._startAngle = startAngle || 0;
             this._distances = distances;
             this.updateGraph();
-        }
-        drawPolygon(lineSize, lineColor, fillColor, points) {
+        };
+        GGraph.prototype.drawPolygon = function (lineSize, lineColor, fillColor, points) {
             this._type = 3;
             this._lineSize = lineSize;
             this._lineColor.set(lineColor);
             this._fillColor.set(fillColor);
             this._polygonPoints = points;
             this.updateGraph();
-        }
-        get distances() {
-            return this._distances;
-        }
-        set distances(value) {
-            this._distances = value;
-            if (this._type == 3)
-                this.updateGraph();
-        }
-        clearGraphics() {
+        };
+        Object.defineProperty(GGraph.prototype, "distances", {
+            get: function () {
+                return this._distances;
+            },
+            set: function (value) {
+                this._distances = value;
+                if (this._type == 3)
+                    this.updateGraph();
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GGraph.prototype.clearGraphics = function () {
             this._type = 0;
             if (this._hasContent) {
                 this._content.clear();
                 this._hasContent = false;
             }
-        }
-        get type() {
-            return this._type;
-        }
-        get color() {
-            return this._fillColor;
-        }
-        set color(value) {
-            this._fillColor.set(value);
-            if (this._type != 0)
-                this.updateGraph();
-        }
-        updateGraph() {
-            let ctx = this._content;
+        };
+        Object.defineProperty(GGraph.prototype, "type", {
+            get: function () {
+                return this._type;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GGraph.prototype, "color", {
+            get: function () {
+                return this._fillColor;
+            },
+            set: function (value) {
+                this._fillColor.set(value);
+                if (this._type != 0)
+                    this.updateGraph();
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GGraph.prototype.updateGraph = function () {
+            var ctx = this._content;
             if (this._hasContent) {
                 this._hasContent = false;
                 ctx.clear();
@@ -3578,7 +4083,7 @@ window.fairygui = window.fgui;
                 return;
             var px = -this.pivotX * this._width;
             var py = this.pivotY * this._height;
-            let ls = this._lineSize / 2;
+            var ls = this._lineSize / 2;
             ctx.lineWidth = this._lineSize;
             ctx.strokeColor = this._lineColor;
             ctx.fillColor = this._fillColor;
@@ -3623,51 +4128,51 @@ window.fairygui = window.fgui;
             if (this._fillColor.a != 0)
                 ctx.fill();
             this._hasContent = true;
-        }
-        drawPath(ctx, points, px, py) {
+        };
+        GGraph.prototype.drawPath = function (ctx, points, px, py) {
             var cnt = points.length;
             ctx.moveTo(points[0] + px, -points[1] + py);
             for (var i = 2; i < cnt; i += 2)
                 ctx.lineTo(points[i] + px, -points[i + 1] + py);
             ctx.lineTo(points[0] + px, -points[1] + py);
-        }
-        handleSizeChanged() {
-            super.handleSizeChanged();
+        };
+        GGraph.prototype.handleSizeChanged = function () {
+            _super.prototype.handleSizeChanged.call(this);
             if (this._type != 0)
                 this.updateGraph();
-        }
-        handleAnchorChanged() {
-            super.handleAnchorChanged();
+        };
+        GGraph.prototype.handleAnchorChanged = function () {
+            _super.prototype.handleAnchorChanged.call(this);
             if (this._type != 0)
                 this.updateGraph();
-        }
-        getProp(index) {
+        };
+        GGraph.prototype.getProp = function (index) {
             if (index == fgui.ObjectPropID.Color)
                 return this.color;
             else
-                return super.getProp(index);
-        }
-        setProp(index, value) {
+                return _super.prototype.getProp.call(this, index);
+        };
+        GGraph.prototype.setProp = function (index, value) {
             if (index == fgui.ObjectPropID.Color)
                 this.color = value;
             else
-                super.setProp(index, value);
-        }
-        _hitTest(pt) {
+                _super.prototype.setProp.call(this, index, value);
+        };
+        GGraph.prototype._hitTest = function (pt) {
             if (pt.x >= 0 && pt.y >= 0 && pt.x < this._width && pt.y < this._height) {
                 if (this._type == 3) {
-                    let points = this._polygonPoints;
-                    let len = points.length / 2;
-                    let i;
-                    let j = len - 1;
-                    let oddNodes = false;
-                    let w = this._width;
-                    let h = this._height;
+                    var points = this._polygonPoints;
+                    var len = points.length / 2;
+                    var i = void 0;
+                    var j = len - 1;
+                    var oddNodes = false;
+                    var w = this._width;
+                    var h = this._height;
                     for (i = 0; i < len; ++i) {
-                        let ix = points[i * 2];
-                        let iy = points[i * 2 + 1];
-                        let jx = points[j * 2];
-                        let jy = points[j * 2 + 1];
+                        var ix = points[i * 2];
+                        var iy = points[i * 2 + 1];
+                        var jx = points[j * 2];
+                        var jy = points[j * 2 + 1];
                         if ((iy < pt.y && jy >= pt.y || jy < pt.y && iy >= pt.y) && (ix <= pt.x || jx <= pt.x)) {
                             if (ix + (pt.y - iy) / (jy - iy) * (jx - ix) < pt.x)
                                 oddNodes = !oddNodes;
@@ -3681,9 +4186,9 @@ window.fairygui = window.fgui;
             }
             else
                 return null;
-        }
-        setup_beforeAdd(buffer, beginPos) {
-            super.setup_beforeAdd(buffer, beginPos);
+        };
+        GGraph.prototype.setup_beforeAdd = function (buffer, beginPos) {
+            _super.prototype.setup_beforeAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 5);
             this._type = buffer.readByte();
             if (this._type != 0) {
@@ -3716,92 +4221,124 @@ window.fairygui = window.fgui;
                 }
                 this.updateGraph();
             }
-        }
-    }
+        };
+        return GGraph;
+    }(fgui.GObject));
     fgui.GGraph = GGraph;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GGroup extends fgui.GObject {
-        constructor() {
-            super();
-            this._layout = 0;
-            this._lineGap = 0;
-            this._columnGap = 0;
-            this._mainGridIndex = -1;
-            this._mainGridMinSize = 50;
-            this._mainChildIndex = -1;
-            this._totalSize = 0;
-            this._numChildren = 0;
-            this._updating = 0;
-            this._node.name = "GGroup";
-            this._touchDisabled = true;
+    var GGroup = (function (_super) {
+        __extends(GGroup, _super);
+        function GGroup() {
+            var _this = _super.call(this) || this;
+            _this._layout = 0;
+            _this._lineGap = 0;
+            _this._columnGap = 0;
+            _this._mainGridIndex = -1;
+            _this._mainGridMinSize = 50;
+            _this._mainChildIndex = -1;
+            _this._totalSize = 0;
+            _this._numChildren = 0;
+            _this._updating = 0;
+            _this._node.name = "GGroup";
+            _this._touchDisabled = true;
+            return _this;
         }
-        dispose() {
+        GGroup.prototype.dispose = function () {
             this._boundsChanged = false;
-            super.dispose();
-        }
-        get layout() {
-            return this._layout;
-        }
-        set layout(value) {
-            if (this._layout != value) {
-                this._layout = value;
-                this.setBoundsChangedFlag();
-            }
-        }
-        get lineGap() {
-            return this._lineGap;
-        }
-        set lineGap(value) {
-            if (this._lineGap != value) {
-                this._lineGap = value;
-                this.setBoundsChangedFlag(true);
-            }
-        }
-        get columnGap() {
-            return this._columnGap;
-        }
-        set columnGap(value) {
-            if (this._columnGap != value) {
-                this._columnGap = value;
-                this.setBoundsChangedFlag(true);
-            }
-        }
-        get excludeInvisibles() {
-            return this._excludeInvisibles;
-        }
-        set excludeInvisibles(value) {
-            if (this._excludeInvisibles != value) {
-                this._excludeInvisibles = value;
-                this.setBoundsChangedFlag();
-            }
-        }
-        get autoSizeDisabled() {
-            return this._autoSizeDisabled;
-        }
-        set autoSizeDisabled(value) {
-            this._autoSizeDisabled = value;
-        }
-        get mainGridMinSize() {
-            return this._mainGridMinSize;
-        }
-        set mainGridMinSize(value) {
-            if (this._mainGridMinSize != value) {
-                this._mainGridMinSize = value;
-                this.setBoundsChangedFlag();
-            }
-        }
-        get mainGridIndex() {
-            return this._mainGridIndex;
-        }
-        set mainGridIndex(value) {
-            if (this._mainGridIndex != value) {
-                this._mainGridIndex = value;
-                this.setBoundsChangedFlag();
-            }
-        }
-        setBoundsChangedFlag(positionChangedOnly = false) {
+            _super.prototype.dispose.call(this);
+        };
+        Object.defineProperty(GGroup.prototype, "layout", {
+            get: function () {
+                return this._layout;
+            },
+            set: function (value) {
+                if (this._layout != value) {
+                    this._layout = value;
+                    this.setBoundsChangedFlag();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GGroup.prototype, "lineGap", {
+            get: function () {
+                return this._lineGap;
+            },
+            set: function (value) {
+                if (this._lineGap != value) {
+                    this._lineGap = value;
+                    this.setBoundsChangedFlag(true);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GGroup.prototype, "columnGap", {
+            get: function () {
+                return this._columnGap;
+            },
+            set: function (value) {
+                if (this._columnGap != value) {
+                    this._columnGap = value;
+                    this.setBoundsChangedFlag(true);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GGroup.prototype, "excludeInvisibles", {
+            get: function () {
+                return this._excludeInvisibles;
+            },
+            set: function (value) {
+                if (this._excludeInvisibles != value) {
+                    this._excludeInvisibles = value;
+                    this.setBoundsChangedFlag();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GGroup.prototype, "autoSizeDisabled", {
+            get: function () {
+                return this._autoSizeDisabled;
+            },
+            set: function (value) {
+                this._autoSizeDisabled = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GGroup.prototype, "mainGridMinSize", {
+            get: function () {
+                return this._mainGridMinSize;
+            },
+            set: function (value) {
+                if (this._mainGridMinSize != value) {
+                    this._mainGridMinSize = value;
+                    this.setBoundsChangedFlag();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GGroup.prototype, "mainGridIndex", {
+            get: function () {
+                return this._mainGridIndex;
+            },
+            set: function (value) {
+                if (this._mainGridIndex != value) {
+                    this._mainGridIndex = value;
+                    this.setBoundsChangedFlag();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GGroup.prototype.setBoundsChangedFlag = function (positionChangedOnly) {
+            if (positionChangedOnly === void 0) { positionChangedOnly = false; }
             if (this._updating == 0 && this._parent) {
                 if (!positionChangedOnly)
                     this._percentReady = false;
@@ -3811,12 +4348,12 @@ window.fairygui = window.fgui;
                         this._partner.callLater(this._ensureBoundsCorrect);
                 }
             }
-        }
-        _ensureBoundsCorrect() {
-            let _t = (this.node["$gobj"]);
+        };
+        GGroup.prototype._ensureBoundsCorrect = function () {
+            var _t = (this.node["$gobj"]);
             _t.ensureBoundsCorrect();
-        }
-        ensureSizeCorrect() {
+        };
+        GGroup.prototype.ensureSizeCorrect = function () {
             if (this._parent == null || !this._boundsChanged || this._layout == 0)
                 return;
             this._boundsChanged = false;
@@ -3826,8 +4363,8 @@ window.fairygui = window.fgui;
                 this.handleLayout();
                 this.updateBounds();
             }
-        }
-        ensureBoundsCorrect() {
+        };
+        GGroup.prototype.ensureBoundsCorrect = function () {
             if (this._parent == null || !this._boundsChanged)
                 return;
             this._boundsChanged = false;
@@ -3841,8 +4378,8 @@ window.fairygui = window.fgui;
                     this.updateBounds();
                 }
             }
-        }
-        updateBounds() {
+        };
+        GGroup.prototype.updateBounds = function () {
             this._partner.unschedule(this._ensureBoundsCorrect);
             var cnt = this._parent.numChildren;
             var i;
@@ -3886,8 +4423,8 @@ window.fairygui = window.fgui;
                 this._updating &= 1;
                 this.resizeChildren(this._width - w, this._height - h);
             }
-        }
-        handleLayout() {
+        };
+        GGroup.prototype.handleLayout = function () {
             this._updating |= 1;
             var child;
             var i;
@@ -3921,8 +4458,8 @@ window.fairygui = window.fgui;
                 }
             }
             this._updating &= 2;
-        }
-        moveChildren(dx, dy) {
+        };
+        GGroup.prototype.moveChildren = function (dx, dy) {
             if ((this._updating & 1) != 0 || this._parent == null)
                 return;
             this._updating |= 1;
@@ -3936,8 +4473,8 @@ window.fairygui = window.fgui;
                 }
             }
             this._updating &= 2;
-        }
-        resizeChildren(dw, dh) {
+        };
+        GGroup.prototype.resizeChildren = function (dw, dh) {
             if (this._layout == fgui.GroupLayoutType.None || (this._updating & 2) != 0 || this._parent == null)
                 return;
             this._updating |= 2;
@@ -4056,8 +4593,8 @@ window.fairygui = window.fgui;
                 }
             }
             this._updating &= 1;
-        }
-        handleAlphaChanged() {
+        };
+        GGroup.prototype.handleAlphaChanged = function () {
             if (this._underConstruct)
                 return;
             var cnt = this._parent.numChildren;
@@ -4066,8 +4603,8 @@ window.fairygui = window.fgui;
                 if (child.group == this)
                     child.alpha = this.alpha;
             }
-        }
-        handleVisibleChanged() {
+        };
+        GGroup.prototype.handleVisibleChanged = function () {
             if (!this._parent)
                 return;
             var cnt = this._parent.numChildren;
@@ -4076,9 +4613,9 @@ window.fairygui = window.fgui;
                 if (child.group == this)
                     child.handleVisibleChanged();
             }
-        }
-        setup_beforeAdd(buffer, beginPos) {
-            super.setup_beforeAdd(buffer, beginPos);
+        };
+        GGroup.prototype.setup_beforeAdd = function (buffer, beginPos) {
+            _super.prototype.setup_beforeAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 5);
             this._layout = buffer.readByte();
             this._lineGap = buffer.readInt();
@@ -4088,64 +4625,91 @@ window.fairygui = window.fgui;
                 this._autoSizeDisabled = buffer.readBool();
                 this._mainGridIndex = buffer.readShort();
             }
-        }
-        setup_afterAdd(buffer, beginPos) {
-            super.setup_afterAdd(buffer, beginPos);
+        };
+        GGroup.prototype.setup_afterAdd = function (buffer, beginPos) {
+            _super.prototype.setup_afterAdd.call(this, buffer, beginPos);
             if (!this.visible)
                 this.handleVisibleChanged();
-        }
-    }
+        };
+        return GGroup;
+    }(fgui.GObject));
     fgui.GGroup = GGroup;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GImage extends fgui.GObject {
-        constructor() {
-            super();
-            this._node.name = "GImage";
-            this._touchDisabled = true;
-            this._content = this._node.addComponent(fgui.Image);
-            this._content.sizeMode = cc.Sprite.SizeMode.CUSTOM;
-            this._content.trim = false;
+    var GImage = (function (_super) {
+        __extends(GImage, _super);
+        function GImage() {
+            var _this = _super.call(this) || this;
+            _this._node.name = "GImage";
+            _this._touchDisabled = true;
+            _this._content = _this._node.addComponent(fgui.Image);
+            _this._content.sizeMode = cc.Sprite.SizeMode.CUSTOM;
+            _this._content.trim = false;
+            return _this;
         }
-        get color() {
-            return this._node.color;
-        }
-        set color(value) {
-            this._node.color = value;
-            this.updateGear(4);
-        }
-        get flip() {
-            return this._content.flip;
-        }
-        set flip(value) {
-            this._content.flip = value;
-        }
-        get fillMethod() {
-            return this._content.fillMethod;
-        }
-        set fillMethod(value) {
-            this._content.fillMethod = value;
-        }
-        get fillOrigin() {
-            return this._content.fillOrigin;
-        }
-        set fillOrigin(value) {
-            this._content.fillOrigin = value;
-        }
-        get fillClockwise() {
-            return this._content.fillClockwise;
-        }
-        set fillClockwise(value) {
-            this._content.fillClockwise = value;
-        }
-        get fillAmount() {
-            return this._content.fillAmount;
-        }
-        set fillAmount(value) {
-            this._content.fillAmount = value;
-        }
-        constructFromResource() {
+        Object.defineProperty(GImage.prototype, "color", {
+            get: function () {
+                return this._node.color;
+            },
+            set: function (value) {
+                this._node.color = value;
+                this.updateGear(4);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GImage.prototype, "flip", {
+            get: function () {
+                return this._content.flip;
+            },
+            set: function (value) {
+                this._content.flip = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GImage.prototype, "fillMethod", {
+            get: function () {
+                return this._content.fillMethod;
+            },
+            set: function (value) {
+                this._content.fillMethod = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GImage.prototype, "fillOrigin", {
+            get: function () {
+                return this._content.fillOrigin;
+            },
+            set: function (value) {
+                this._content.fillOrigin = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GImage.prototype, "fillClockwise", {
+            get: function () {
+                return this._content.fillClockwise;
+            },
+            set: function (value) {
+                this._content.fillClockwise = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GImage.prototype, "fillAmount", {
+            get: function () {
+                return this._content.fillAmount;
+            },
+            set: function (value) {
+                this._content.fillAmount = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GImage.prototype.constructFromResource = function () {
             var contentItem = this.packageItem.getBranch();
             this.sourceWidth = contentItem.width;
             this.sourceHeight = contentItem.height;
@@ -4159,24 +4723,24 @@ window.fairygui = window.fgui;
             else if (contentItem.scaleByTile)
                 this._content.type = cc.Sprite.Type.TILED;
             this._content.spriteFrame = contentItem.asset;
-        }
-        handleGrayedChanged() {
+        };
+        GImage.prototype.handleGrayedChanged = function () {
             this._content.grayed = this._grayed;
-        }
-        getProp(index) {
+        };
+        GImage.prototype.getProp = function (index) {
             if (index == fgui.ObjectPropID.Color)
                 return this.color;
             else
-                return super.getProp(index);
-        }
-        setProp(index, value) {
+                return _super.prototype.getProp.call(this, index);
+        };
+        GImage.prototype.setProp = function (index, value) {
             if (index == fgui.ObjectPropID.Color)
                 this.color = value;
             else
-                super.setProp(index, value);
-        }
-        setup_beforeAdd(buffer, beginPos) {
-            super.setup_beforeAdd(buffer, beginPos);
+                _super.prototype.setProp.call(this, index, value);
+        };
+        GImage.prototype.setup_beforeAdd = function (buffer, beginPos) {
+            _super.prototype.setup_beforeAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 5);
             if (buffer.readBool())
                 this.color = buffer.readColor();
@@ -4187,87 +4751,114 @@ window.fairygui = window.fgui;
                 this._content.fillClockwise = buffer.readBool();
                 this._content.fillAmount = buffer.readFloat();
             }
-        }
-    }
+        };
+        return GImage;
+    }(fgui.GObject));
     fgui.GImage = GImage;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GLabel extends fgui.GComponent {
-        constructor() {
-            super();
-            this._node.name = "GLabel";
+    var GLabel = (function (_super) {
+        __extends(GLabel, _super);
+        function GLabel() {
+            var _this = _super.call(this) || this;
+            _this._node.name = "GLabel";
+            return _this;
         }
-        get icon() {
-            if (this._iconObject)
-                return this._iconObject.icon;
-        }
-        set icon(value) {
-            if (this._iconObject)
-                this._iconObject.icon = value;
-            this.updateGear(7);
-        }
-        get title() {
-            if (this._titleObject)
-                return this._titleObject.text;
-            else
-                return null;
-        }
-        set title(value) {
-            if (this._titleObject)
-                this._titleObject.text = value;
-            this.updateGear(6);
-        }
-        get text() {
-            return this.title;
-        }
-        set text(value) {
-            this.title = value;
-        }
-        get titleColor() {
-            var tf = this.getTextField();
-            if (tf)
-                return tf.color;
-            else
-                return cc.Color.WHITE;
-        }
-        set titleColor(value) {
-            var tf = this.getTextField();
-            if (tf)
-                tf.color = value;
-            this.updateGear(4);
-        }
-        get titleFontSize() {
-            var tf = this.getTextField();
-            if (tf)
-                return tf.fontSize;
-            else
-                return 0;
-        }
-        set titleFontSize(value) {
-            var tf = this.getTextField();
-            if (tf)
-                tf.fontSize = value;
-        }
-        set editable(val) {
-            if (this._titleObject && (this._titleObject instanceof fgui.GTextInput))
-                this._titleObject.editable = val;
-        }
-        get editable() {
-            if (this._titleObject && (this._titleObject instanceof fgui.GTextInput))
-                return this._titleObject.editable;
-            else
-                return false;
-        }
-        getTextField() {
+        Object.defineProperty(GLabel.prototype, "icon", {
+            get: function () {
+                if (this._iconObject)
+                    return this._iconObject.icon;
+            },
+            set: function (value) {
+                if (this._iconObject)
+                    this._iconObject.icon = value;
+                this.updateGear(7);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLabel.prototype, "title", {
+            get: function () {
+                if (this._titleObject)
+                    return this._titleObject.text;
+                else
+                    return null;
+            },
+            set: function (value) {
+                if (this._titleObject)
+                    this._titleObject.text = value;
+                this.updateGear(6);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLabel.prototype, "text", {
+            get: function () {
+                return this.title;
+            },
+            set: function (value) {
+                this.title = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLabel.prototype, "titleColor", {
+            get: function () {
+                var tf = this.getTextField();
+                if (tf)
+                    return tf.color;
+                else
+                    return cc.Color.WHITE;
+            },
+            set: function (value) {
+                var tf = this.getTextField();
+                if (tf)
+                    tf.color = value;
+                this.updateGear(4);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLabel.prototype, "titleFontSize", {
+            get: function () {
+                var tf = this.getTextField();
+                if (tf)
+                    return tf.fontSize;
+                else
+                    return 0;
+            },
+            set: function (value) {
+                var tf = this.getTextField();
+                if (tf)
+                    tf.fontSize = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLabel.prototype, "editable", {
+            get: function () {
+                if (this._titleObject && (this._titleObject instanceof fgui.GTextInput))
+                    return this._titleObject.editable;
+                else
+                    return false;
+            },
+            set: function (val) {
+                if (this._titleObject && (this._titleObject instanceof fgui.GTextInput))
+                    this._titleObject.editable = val;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GLabel.prototype.getTextField = function () {
             if (this._titleObject instanceof fgui.GTextField)
                 return this._titleObject;
             else if ((this._titleObject instanceof GLabel) || (this._titleObject instanceof fgui.GButton))
                 return this._titleObject.getTextField();
             else
                 return null;
-        }
-        getProp(index) {
+        };
+        GLabel.prototype.getProp = function (index) {
             switch (index) {
                 case fgui.ObjectPropID.Color:
                     return this.titleColor;
@@ -4282,10 +4873,10 @@ window.fairygui = window.fgui;
                 case fgui.ObjectPropID.FontSize:
                     return this.titleFontSize;
                 default:
-                    return super.getProp(index);
+                    return _super.prototype.getProp.call(this, index);
             }
-        }
-        setProp(index, value) {
+        };
+        GLabel.prototype.setProp = function (index, value) {
             switch (index) {
                 case fgui.ObjectPropID.Color:
                     this.titleColor = value;
@@ -4301,16 +4892,16 @@ window.fairygui = window.fgui;
                     this.titleFontSize = value;
                     break;
                 default:
-                    super.setProp(index, value);
+                    _super.prototype.setProp.call(this, index, value);
                     break;
             }
-        }
-        constructExtension(buffer) {
+        };
+        GLabel.prototype.constructExtension = function (buffer) {
             this._titleObject = this.getChild("title");
             this._iconObject = this.getChild("icon");
-        }
-        setup_afterAdd(buffer, beginPos) {
-            super.setup_afterAdd(buffer, beginPos);
+        };
+        GLabel.prototype.setup_afterAdd = function (buffer, beginPos) {
+            _super.prototype.setup_afterAdd.call(this, buffer, beginPos);
             if (!buffer.seek(beginPos, 6))
                 return;
             if (buffer.readByte() != this.packageItem.objectType)
@@ -4348,209 +4939,264 @@ window.fairygui = window.fgui;
                 else
                     buffer.skip(13);
             }
-        }
-    }
+        };
+        return GLabel;
+    }(fgui.GComponent));
     fgui.GLabel = GLabel;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GList extends fgui.GComponent {
-        constructor() {
-            super();
-            this.scrollItemToViewOnClick = true;
-            this.foldInvisibleItems = false;
-            this._lineCount = 0;
-            this._columnCount = 0;
-            this._lineGap = 0;
-            this._columnGap = 0;
-            this._lastSelectedIndex = 0;
-            this._numItems = 0;
-            this._realNumItems = 0;
-            this._firstIndex = 0;
-            this._curLineItemCount = 0;
-            this._curLineItemCount2 = 0;
-            this._virtualListChanged = 0;
-            this.itemInfoVer = 0;
-            this._node.name = "GList";
-            this._trackBounds = true;
-            this._pool = new fgui.GObjectPool();
-            this._layout = fgui.ListLayoutType.SingleColumn;
-            this._autoResizeItem = true;
-            this._lastSelectedIndex = -1;
-            this._selectionMode = fgui.ListSelectionMode.Single;
-            this.opaque = true;
-            this._align = fgui.AlignType.Left;
-            this._verticalAlign = fgui.VertAlignType.Top;
+    var GList = (function (_super) {
+        __extends(GList, _super);
+        function GList() {
+            var _this = _super.call(this) || this;
+            _this.scrollItemToViewOnClick = true;
+            _this.foldInvisibleItems = false;
+            _this._lineCount = 0;
+            _this._columnCount = 0;
+            _this._lineGap = 0;
+            _this._columnGap = 0;
+            _this._lastSelectedIndex = 0;
+            _this._numItems = 0;
+            _this._realNumItems = 0;
+            _this._firstIndex = 0;
+            _this._curLineItemCount = 0;
+            _this._curLineItemCount2 = 0;
+            _this._virtualListChanged = 0;
+            _this.itemInfoVer = 0;
+            _this._node.name = "GList";
+            _this._trackBounds = true;
+            _this._pool = new fgui.GObjectPool();
+            _this._layout = fgui.ListLayoutType.SingleColumn;
+            _this._autoResizeItem = true;
+            _this._lastSelectedIndex = -1;
+            _this._selectionMode = fgui.ListSelectionMode.Single;
+            _this.opaque = true;
+            _this._align = fgui.AlignType.Left;
+            _this._verticalAlign = fgui.VertAlignType.Top;
+            return _this;
         }
-        dispose() {
+        GList.prototype.dispose = function () {
             this._partner.unschedule(this._refreshVirtualList);
             this._pool.clear();
-            super.dispose();
-        }
-        get layout() {
-            return this._layout;
-        }
-        set layout(value) {
-            if (this._layout != value) {
-                this._layout = value;
-                this.setBoundsChangedFlag();
-                if (this._virtual)
+            _super.prototype.dispose.call(this);
+        };
+        Object.defineProperty(GList.prototype, "layout", {
+            get: function () {
+                return this._layout;
+            },
+            set: function (value) {
+                if (this._layout != value) {
+                    this._layout = value;
+                    this.setBoundsChangedFlag();
+                    if (this._virtual)
+                        this.setVirtualListChangedFlag(true);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "lineCount", {
+            get: function () {
+                return this._lineCount;
+            },
+            set: function (value) {
+                if (this._lineCount != value) {
+                    this._lineCount = value;
+                    this.setBoundsChangedFlag();
+                    if (this._virtual)
+                        this.setVirtualListChangedFlag(true);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "columnCount", {
+            get: function () {
+                return this._columnCount;
+            },
+            set: function (value) {
+                if (this._columnCount != value) {
+                    this._columnCount = value;
+                    this.setBoundsChangedFlag();
+                    if (this._virtual)
+                        this.setVirtualListChangedFlag(true);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "lineGap", {
+            get: function () {
+                return this._lineGap;
+            },
+            set: function (value) {
+                if (this._lineGap != value) {
+                    this._lineGap = value;
+                    this.setBoundsChangedFlag();
+                    if (this._virtual)
+                        this.setVirtualListChangedFlag(true);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "columnGap", {
+            get: function () {
+                return this._columnGap;
+            },
+            set: function (value) {
+                if (this._columnGap != value) {
+                    this._columnGap = value;
+                    this.setBoundsChangedFlag();
+                    if (this._virtual)
+                        this.setVirtualListChangedFlag(true);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "align", {
+            get: function () {
+                return this._align;
+            },
+            set: function (value) {
+                if (this._align != value) {
+                    this._align = value;
+                    this.setBoundsChangedFlag();
+                    if (this._virtual)
+                        this.setVirtualListChangedFlag(true);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "verticalAlign", {
+            get: function () {
+                return this._verticalAlign;
+            },
+            set: function (value) {
+                if (this._verticalAlign != value) {
+                    this._verticalAlign = value;
+                    this.setBoundsChangedFlag();
+                    if (this._virtual)
+                        this.setVirtualListChangedFlag(true);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "virtualItemSize", {
+            get: function () {
+                return this._itemSize;
+            },
+            set: function (value) {
+                if (this._virtual) {
+                    if (this._itemSize == null)
+                        this._itemSize = new cc.Size(0, 0);
+                    this._itemSize.width = value.width;
+                    this._itemSize.height = value.height;
                     this.setVirtualListChangedFlag(true);
-            }
-        }
-        get lineCount() {
-            return this._lineCount;
-        }
-        set lineCount(value) {
-            if (this._lineCount != value) {
-                this._lineCount = value;
-                this.setBoundsChangedFlag();
-                if (this._virtual)
-                    this.setVirtualListChangedFlag(true);
-            }
-        }
-        get columnCount() {
-            return this._columnCount;
-        }
-        set columnCount(value) {
-            if (this._columnCount != value) {
-                this._columnCount = value;
-                this.setBoundsChangedFlag();
-                if (this._virtual)
-                    this.setVirtualListChangedFlag(true);
-            }
-        }
-        get lineGap() {
-            return this._lineGap;
-        }
-        set lineGap(value) {
-            if (this._lineGap != value) {
-                this._lineGap = value;
-                this.setBoundsChangedFlag();
-                if (this._virtual)
-                    this.setVirtualListChangedFlag(true);
-            }
-        }
-        get columnGap() {
-            return this._columnGap;
-        }
-        set columnGap(value) {
-            if (this._columnGap != value) {
-                this._columnGap = value;
-                this.setBoundsChangedFlag();
-                if (this._virtual)
-                    this.setVirtualListChangedFlag(true);
-            }
-        }
-        get align() {
-            return this._align;
-        }
-        set align(value) {
-            if (this._align != value) {
-                this._align = value;
-                this.setBoundsChangedFlag();
-                if (this._virtual)
-                    this.setVirtualListChangedFlag(true);
-            }
-        }
-        get verticalAlign() {
-            return this._verticalAlign;
-        }
-        set verticalAlign(value) {
-            if (this._verticalAlign != value) {
-                this._verticalAlign = value;
-                this.setBoundsChangedFlag();
-                if (this._virtual)
-                    this.setVirtualListChangedFlag(true);
-            }
-        }
-        get virtualItemSize() {
-            return this._itemSize;
-        }
-        set virtualItemSize(value) {
-            if (this._virtual) {
-                if (this._itemSize == null)
-                    this._itemSize = new cc.Size(0, 0);
-                this._itemSize.width = value.width;
-                this._itemSize.height = value.height;
-                this.setVirtualListChangedFlag(true);
-            }
-        }
-        get defaultItem() {
-            return this._defaultItem;
-        }
-        set defaultItem(val) {
-            this._defaultItem = val;
-        }
-        get autoResizeItem() {
-            return this._autoResizeItem;
-        }
-        set autoResizeItem(value) {
-            if (this._autoResizeItem != value) {
-                this._autoResizeItem = value;
-                this.setBoundsChangedFlag();
-                if (this._virtual)
-                    this.setVirtualListChangedFlag(true);
-            }
-        }
-        get selectionMode() {
-            return this._selectionMode;
-        }
-        set selectionMode(value) {
-            this._selectionMode = value;
-        }
-        get selectionController() {
-            return this._selectionController;
-        }
-        set selectionController(value) {
-            this._selectionController = value;
-        }
-        get itemPool() {
-            return this._pool;
-        }
-        getFromPool(url) {
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "defaultItem", {
+            get: function () {
+                return this._defaultItem;
+            },
+            set: function (val) {
+                this._defaultItem = val;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "autoResizeItem", {
+            get: function () {
+                return this._autoResizeItem;
+            },
+            set: function (value) {
+                if (this._autoResizeItem != value) {
+                    this._autoResizeItem = value;
+                    this.setBoundsChangedFlag();
+                    if (this._virtual)
+                        this.setVirtualListChangedFlag(true);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "selectionMode", {
+            get: function () {
+                return this._selectionMode;
+            },
+            set: function (value) {
+                this._selectionMode = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "selectionController", {
+            get: function () {
+                return this._selectionController;
+            },
+            set: function (value) {
+                this._selectionController = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "itemPool", {
+            get: function () {
+                return this._pool;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GList.prototype.getFromPool = function (url) {
             if (!url)
                 url = this._defaultItem;
             var obj = this._pool.getObject(url);
             if (obj)
                 obj.visible = true;
             return obj;
-        }
-        returnToPool(obj) {
+        };
+        GList.prototype.returnToPool = function (obj) {
             this._pool.returnObject(obj);
-        }
-        addChildAt(child, index) {
-            super.addChildAt(child, index);
+        };
+        GList.prototype.addChildAt = function (child, index) {
+            _super.prototype.addChildAt.call(this, child, index);
             if (child instanceof fgui.GButton) {
                 child.selected = false;
                 child.changeStateOnClick = false;
             }
             child.on(fgui.Event.CLICK, this.onClickItem, this);
             return child;
-        }
-        addItem(url) {
+        };
+        GList.prototype.addItem = function (url) {
             if (!url)
                 url = this._defaultItem;
             return this.addChild(fgui.UIPackage.createObjectFromURL(url));
-        }
-        addItemFromPool(url) {
+        };
+        GList.prototype.addItemFromPool = function (url) {
             return this.addChild(this.getFromPool(url));
-        }
-        removeChildAt(index, dispose) {
-            var child = super.removeChildAt(index, dispose);
+        };
+        GList.prototype.removeChildAt = function (index, dispose) {
+            var child = _super.prototype.removeChildAt.call(this, index, dispose);
             if (!dispose)
                 child.off(fgui.Event.CLICK, this.onClickItem, this);
             return child;
-        }
-        removeChildToPoolAt(index) {
-            var child = super.removeChildAt(index);
+        };
+        GList.prototype.removeChildToPoolAt = function (index) {
+            var child = _super.prototype.removeChildAt.call(this, index);
             this.returnToPool(child);
-        }
-        removeChildToPool(child) {
-            super.removeChild(child);
+        };
+        GList.prototype.removeChildToPool = function (child) {
+            _super.prototype.removeChild.call(this, child);
             this.returnToPool(child);
-        }
-        removeChildrenToPool(beginIndex, endIndex) {
+        };
+        GList.prototype.removeChildrenToPool = function (beginIndex, endIndex) {
             if (beginIndex == undefined)
                 beginIndex = 0;
             if (endIndex == undefined)
@@ -4559,40 +5205,44 @@ window.fairygui = window.fgui;
                 endIndex = this._children.length - 1;
             for (var i = beginIndex; i <= endIndex; ++i)
                 this.removeChildToPoolAt(beginIndex);
-        }
-        get selectedIndex() {
-            var i;
-            if (this._virtual) {
-                for (i = 0; i < this._realNumItems; i++) {
-                    var ii = this._virtualItems[i];
-                    if ((ii.obj instanceof fgui.GButton) && ii.obj.selected || !ii.obj && ii.selected) {
-                        if (this._loop)
-                            return i % this._numItems;
-                        else
+        };
+        Object.defineProperty(GList.prototype, "selectedIndex", {
+            get: function () {
+                var i;
+                if (this._virtual) {
+                    for (i = 0; i < this._realNumItems; i++) {
+                        var ii = this._virtualItems[i];
+                        if ((ii.obj instanceof fgui.GButton) && ii.obj.selected || !ii.obj && ii.selected) {
+                            if (this._loop)
+                                return i % this._numItems;
+                            else
+                                return i;
+                        }
+                    }
+                }
+                else {
+                    var cnt = this._children.length;
+                    for (i = 0; i < cnt; i++) {
+                        var obj = this._children[i];
+                        if ((obj instanceof fgui.GButton) && obj.selected)
                             return i;
                     }
                 }
-            }
-            else {
-                var cnt = this._children.length;
-                for (i = 0; i < cnt; i++) {
-                    var obj = this._children[i];
-                    if ((obj instanceof fgui.GButton) && obj.selected)
-                        return i;
+                return -1;
+            },
+            set: function (value) {
+                if (value >= 0 && value < this.numItems) {
+                    if (this._selectionMode != fgui.ListSelectionMode.Single)
+                        this.clearSelection();
+                    this.addSelection(value);
                 }
-            }
-            return -1;
-        }
-        set selectedIndex(value) {
-            if (value >= 0 && value < this.numItems) {
-                if (this._selectionMode != fgui.ListSelectionMode.Single)
+                else
                     this.clearSelection();
-                this.addSelection(value);
-            }
-            else
-                this.clearSelection();
-        }
-        getSelection(result) {
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GList.prototype.getSelection = function (result) {
             if (!result)
                 result = new Array();
             var i;
@@ -4619,8 +5269,8 @@ window.fairygui = window.fgui;
                 }
             }
             return result;
-        }
-        addSelection(index, scrollItToView) {
+        };
+        GList.prototype.addSelection = function (index, scrollItToView) {
             if (this._selectionMode == fgui.ListSelectionMode.None)
                 return;
             this.checkVirtualList();
@@ -4642,8 +5292,8 @@ window.fairygui = window.fgui;
                 obj.selected = true;
                 this.updateSelectionController(index);
             }
-        }
-        removeSelection(index) {
+        };
+        GList.prototype.removeSelection = function (index) {
             if (this._selectionMode == fgui.ListSelectionMode.None)
                 return;
             var obj;
@@ -4657,8 +5307,8 @@ window.fairygui = window.fgui;
                 obj = this.getChildAt(index);
             if (obj instanceof fgui.GButton)
                 obj.selected = false;
-        }
-        clearSelection() {
+        };
+        GList.prototype.clearSelection = function () {
             var i;
             if (this._virtual) {
                 for (i = 0; i < this._realNumItems; i++) {
@@ -4676,8 +5326,8 @@ window.fairygui = window.fgui;
                         obj.selected = false;
                 }
             }
-        }
-        clearSelectionExcept(g) {
+        };
+        GList.prototype.clearSelectionExcept = function (g) {
             var i;
             if (this._virtual) {
                 for (i = 0; i < this._realNumItems; i++) {
@@ -4697,8 +5347,8 @@ window.fairygui = window.fgui;
                         obj.selected = false;
                 }
             }
-        }
-        selectAll() {
+        };
+        GList.prototype.selectAll = function () {
             this.checkVirtualList();
             var last = -1;
             var i;
@@ -4724,11 +5374,11 @@ window.fairygui = window.fgui;
             }
             if (last != -1)
                 this.updateSelectionController(last);
-        }
-        selectNone() {
+        };
+        GList.prototype.selectNone = function () {
             this.clearSelection();
-        }
-        selectReverse() {
+        };
+        GList.prototype.selectReverse = function () {
             this.checkVirtualList();
             var last = -1;
             var i;
@@ -4756,8 +5406,8 @@ window.fairygui = window.fgui;
             }
             if (last != -1)
                 this.updateSelectionController(last);
-        }
-        handleArrowKey(dir) {
+        };
+        GList.prototype.handleArrowKey = function (dir) {
             var index = this.selectedIndex;
             if (index == -1)
                 return;
@@ -4881,8 +5531,8 @@ window.fairygui = window.fgui;
                     }
                     break;
             }
-        }
-        onClickItem(evt) {
+        };
+        GList.prototype.onClickItem = function (evt) {
             if (this._scrollPane && this._scrollPane.isDragged)
                 return;
             var item = fgui.GObject.cast(evt.currentTarget);
@@ -4890,11 +5540,11 @@ window.fairygui = window.fgui;
             if (this._scrollPane && this.scrollItemToViewOnClick)
                 this._scrollPane.scrollToView(item, true);
             this.dispatchItemEvent(item, evt);
-        }
-        dispatchItemEvent(item, evt) {
+        };
+        GList.prototype.dispatchItemEvent = function (item, evt) {
             this._node.emit(fgui.Event.CLICK_ITEM, item, evt);
-        }
-        setSelectionOnEvent(item, evt) {
+        };
+        GList.prototype.setSelectionOnEvent = function (item, evt) {
             if (!(item instanceof fgui.GButton) || this._selectionMode == fgui.ListSelectionMode.None)
                 return;
             var dontChangeLastIndex = false;
@@ -4951,8 +5601,10 @@ window.fairygui = window.fgui;
                 this._lastSelectedIndex = index;
             if (item.selected)
                 this.updateSelectionController(index);
-        }
-        resizeToFit(itemCount = Number.POSITIVE_INFINITY, minSize = 0) {
+        };
+        GList.prototype.resizeToFit = function (itemCount, minSize) {
+            if (itemCount === void 0) { itemCount = Number.POSITIVE_INFINITY; }
+            if (minSize === void 0) { minSize = 0; }
             this.ensureBoundsCorrect();
             var curCount = this.numItems;
             if (itemCount > curCount)
@@ -5001,8 +5653,8 @@ window.fairygui = window.fgui;
                     }
                 }
             }
-        }
-        getMaxItemWidth() {
+        };
+        GList.prototype.getMaxItemWidth = function () {
             var cnt = this._children.length;
             var max = 0;
             for (var i = 0; i < cnt; i++) {
@@ -5011,19 +5663,19 @@ window.fairygui = window.fgui;
                     max = child.width;
             }
             return max;
-        }
-        handleSizeChanged() {
-            super.handleSizeChanged();
+        };
+        GList.prototype.handleSizeChanged = function () {
+            _super.prototype.handleSizeChanged.call(this);
             this.setBoundsChangedFlag();
             if (this._virtual)
                 this.setVirtualListChangedFlag(true);
-        }
-        handleControllerChanged(c) {
-            super.handleControllerChanged(c);
+        };
+        GList.prototype.handleControllerChanged = function (c) {
+            _super.prototype.handleControllerChanged.call(this, c);
             if (this._selectionController == c)
                 this.selectedIndex = c.selectedIndex;
-        }
-        updateSelectionController(index) {
+        };
+        GList.prototype.updateSelectionController = function (index) {
             if (this._selectionController && !this._selectionController.changing
                 && index < this._selectionController.pageCount) {
                 var c = this._selectionController;
@@ -5031,8 +5683,8 @@ window.fairygui = window.fgui;
                 c.selectedIndex = index;
                 this._selectionController = c;
             }
-        }
-        getSnappingPosition(xValue, yValue, resultPoint) {
+        };
+        GList.prototype.getSnappingPosition = function (xValue, yValue, resultPoint) {
             if (this._virtual) {
                 resultPoint = resultPoint || new cc.Vec2();
                 var saved;
@@ -5066,10 +5718,10 @@ window.fairygui = window.fgui;
                 return resultPoint;
             }
             else {
-                return super.getSnappingPosition(xValue, yValue, resultPoint);
+                return _super.prototype.getSnappingPosition.call(this, xValue, yValue, resultPoint);
             }
-        }
-        scrollToView(index, ani, setFirst) {
+        };
+        GList.prototype.scrollToView = function (index, ani, setFirst) {
             if (this._virtual) {
                 if (this._numItems == 0)
                     return;
@@ -5108,11 +5760,11 @@ window.fairygui = window.fgui;
                         this.parent.scrollPane.scrollToView(obj, ani, setFirst);
                 }
             }
-        }
-        getFirstChildInView() {
-            return this.childIndexToItemIndex(super.getFirstChildInView());
-        }
-        childIndexToItemIndex(index) {
+        };
+        GList.prototype.getFirstChildInView = function () {
+            return this.childIndexToItemIndex(_super.prototype.getFirstChildInView.call(this));
+        };
+        GList.prototype.childIndexToItemIndex = function (index) {
             if (!this._virtual)
                 return index;
             if (this._layout == fgui.ListLayoutType.Pagination) {
@@ -5131,8 +5783,8 @@ window.fairygui = window.fgui;
                     index = index % this._numItems;
                 return index;
             }
-        }
-        itemIndexToChildIndex(index) {
+        };
+        GList.prototype.itemIndexToChildIndex = function (index) {
             if (!this._virtual)
                 return index;
             if (this._layout == fgui.ListLayoutType.Pagination) {
@@ -5150,14 +5802,14 @@ window.fairygui = window.fgui;
                     index -= this._firstIndex;
                 return index;
             }
-        }
-        setVirtual() {
+        };
+        GList.prototype.setVirtual = function () {
             this._setVirtual(false);
-        }
-        setVirtualAndLoop() {
+        };
+        GList.prototype.setVirtualAndLoop = function () {
             this._setVirtual(true);
-        }
-        _setVirtual(loop) {
+        };
+        GList.prototype._setVirtual = function (loop) {
             if (!this._virtual) {
                 if (!this._scrollPane)
                     throw "Virtual list must be scrollable!";
@@ -5195,79 +5847,83 @@ window.fairygui = window.fgui;
                 this._node.on(fgui.Event.SCROLL, this.__scrolled, this);
                 this.setVirtualListChangedFlag(true);
             }
-        }
-        get numItems() {
-            if (this._virtual)
-                return this._numItems;
-            else
-                return this._children.length;
-        }
-        set numItems(value) {
-            if (this._virtual) {
-                if (this.itemRenderer == null)
-                    throw "Set itemRenderer first!";
-                this._numItems = value;
-                if (this._loop)
-                    this._realNumItems = this._numItems * 6;
+        };
+        Object.defineProperty(GList.prototype, "numItems", {
+            get: function () {
+                if (this._virtual)
+                    return this._numItems;
                 else
-                    this._realNumItems = this._numItems;
-                var oldCount = this._virtualItems.length;
-                if (this._realNumItems > oldCount) {
-                    for (i = oldCount; i < this._realNumItems; i++) {
-                        var ii = {
-                            width: this._itemSize.width,
-                            height: this._itemSize.height,
-                            updateFlag: 0
-                        };
-                        this._virtualItems.push(ii);
+                    return this._children.length;
+            },
+            set: function (value) {
+                if (this._virtual) {
+                    if (this.itemRenderer == null)
+                        throw "Set itemRenderer first!";
+                    this._numItems = value;
+                    if (this._loop)
+                        this._realNumItems = this._numItems * 6;
+                    else
+                        this._realNumItems = this._numItems;
+                    var oldCount = this._virtualItems.length;
+                    if (this._realNumItems > oldCount) {
+                        for (i = oldCount; i < this._realNumItems; i++) {
+                            var ii = {
+                                width: this._itemSize.width,
+                                height: this._itemSize.height,
+                                updateFlag: 0
+                            };
+                            this._virtualItems.push(ii);
+                        }
                     }
+                    else {
+                        for (i = this._realNumItems; i < oldCount; i++)
+                            this._virtualItems[i].selected = false;
+                    }
+                    if (this._virtualListChanged != 0)
+                        this._partner.unschedule(this._refreshVirtualList);
+                    this._refreshVirtualList();
                 }
                 else {
-                    for (i = this._realNumItems; i < oldCount; i++)
-                        this._virtualItems[i].selected = false;
-                }
-                if (this._virtualListChanged != 0)
-                    this._partner.unschedule(this._refreshVirtualList);
-                this._refreshVirtualList();
-            }
-            else {
-                var cnt = this._children.length;
-                if (value > cnt) {
-                    for (var i = cnt; i < value; i++) {
-                        if (this.itemProvider == null)
-                            this.addItemFromPool();
-                        else
-                            this.addItemFromPool(this.itemProvider(i));
+                    var cnt = this._children.length;
+                    if (value > cnt) {
+                        for (var i = cnt; i < value; i++) {
+                            if (this.itemProvider == null)
+                                this.addItemFromPool();
+                            else
+                                this.addItemFromPool(this.itemProvider(i));
+                        }
+                    }
+                    else {
+                        this.removeChildrenToPool(value, cnt);
+                    }
+                    if (this.itemRenderer != null) {
+                        for (i = 0; i < value; i++)
+                            this.itemRenderer(i, this.getChildAt(i));
                     }
                 }
-                else {
-                    this.removeChildrenToPool(value, cnt);
-                }
-                if (this.itemRenderer != null) {
-                    for (i = 0; i < value; i++)
-                        this.itemRenderer(i, this.getChildAt(i));
-                }
-            }
-        }
-        refreshVirtualList() {
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GList.prototype.refreshVirtualList = function () {
             this.setVirtualListChangedFlag(false);
-        }
-        checkVirtualList() {
+        };
+        GList.prototype.checkVirtualList = function () {
             if (this._virtualListChanged != 0) {
                 this._refreshVirtualList();
                 this._partner.unschedule(this._refreshVirtualList);
             }
-        }
-        setVirtualListChangedFlag(layoutChanged) {
+        };
+        GList.prototype.setVirtualListChangedFlag = function (layoutChanged) {
             if (layoutChanged)
                 this._virtualListChanged = 2;
             else if (this._virtualListChanged == 0)
                 this._virtualListChanged = 1;
             this._partner.callLater(this._refreshVirtualList);
-        }
-        _refreshVirtualList(dt) {
+        };
+        GList.prototype._refreshVirtualList = function (dt) {
             if (!isNaN(dt)) {
-                let _t = (this.node["$gobj"]);
+                var _t = (this.node["$gobj"]);
                 _t._refreshVirtualList();
                 return;
             }
@@ -5355,11 +6011,11 @@ window.fairygui = window.fgui;
             this._scrollPane.setContentSize(cw, ch);
             this._eventLocked = false;
             this.handleScroll(true);
-        }
-        __scrolled(evt) {
+        };
+        GList.prototype.__scrolled = function (evt) {
             this.handleScroll(false);
-        }
-        getIndexOnPos1(forceUpdate) {
+        };
+        GList.prototype.getIndexOnPos1 = function (forceUpdate) {
             if (this._realNumItems < this._curLineItemCount) {
                 s_n = 0;
                 return 0;
@@ -5406,8 +6062,8 @@ window.fairygui = window.fgui;
                 s_n = pos2;
                 return this._realNumItems - this._curLineItemCount;
             }
-        }
-        getIndexOnPos2(forceUpdate) {
+        };
+        GList.prototype.getIndexOnPos2 = function (forceUpdate) {
             if (this._realNumItems < this._curLineItemCount) {
                 s_n = 0;
                 return 0;
@@ -5454,8 +6110,8 @@ window.fairygui = window.fgui;
                 s_n = pos2;
                 return this._realNumItems - this._curLineItemCount;
             }
-        }
-        getIndexOnPos3(forceUpdate) {
+        };
+        GList.prototype.getIndexOnPos3 = function (forceUpdate) {
             if (this._realNumItems < this._curLineItemCount) {
                 s_n = 0;
                 return 0;
@@ -5476,8 +6132,8 @@ window.fairygui = window.fgui;
             }
             s_n = pos2;
             return startIndex + this._curLineItemCount - 1;
-        }
-        handleScroll(forceUpdate) {
+        };
+        GList.prototype.handleScroll = function (forceUpdate) {
             if (this._eventLocked)
                 return;
             if (this._layout == fgui.ListLayoutType.SingleColumn || this._layout == fgui.ListLayoutType.FlowHorizontal) {
@@ -5508,8 +6164,8 @@ window.fairygui = window.fgui;
                 this.handleScroll3(forceUpdate);
             }
             this._boundsChanged = false;
-        }
-        handleScroll1(forceUpdate) {
+        };
+        GList.prototype.handleScroll1 = function (forceUpdate) {
             var pos = this._scrollPane.scrollingPosY;
             var max = pos + this._scrollPane.viewHeight;
             var end = max == this._scrollPane.contentHeight;
@@ -5631,7 +6287,7 @@ window.fairygui = window.fgui;
             }
             childCount = this._children.length;
             for (i = 0; i < childCount; i++) {
-                let obj = this._virtualItems[newFirstIndex + i].obj;
+                var obj = this._virtualItems[newFirstIndex + i].obj;
                 if (this._children[i] != obj)
                     this.setChildIndex(obj, i);
             }
@@ -5641,8 +6297,8 @@ window.fairygui = window.fgui;
                 return true;
             else
                 return false;
-        }
-        handleScroll2(forceUpdate) {
+        };
+        GList.prototype.handleScroll2 = function (forceUpdate) {
             var pos = this._scrollPane.scrollingPosX;
             var max = pos + this._scrollPane.viewWidth;
             var end = pos == this._scrollPane.contentWidth;
@@ -5764,7 +6420,7 @@ window.fairygui = window.fgui;
             }
             childCount = this._children.length;
             for (i = 0; i < childCount; i++) {
-                let obj = this._virtualItems[newFirstIndex + i].obj;
+                var obj = this._virtualItems[newFirstIndex + i].obj;
                 if (this._children[i] != obj)
                     this.setChildIndex(obj, i);
             }
@@ -5774,8 +6430,8 @@ window.fairygui = window.fgui;
                 return true;
             else
                 return false;
-        }
-        handleScroll3(forceUpdate) {
+        };
+        GList.prototype.handleScroll3 = function (forceUpdate) {
             var pos = this._scrollPane.scrollingPosX;
             s_n = pos;
             var newFirstIndex = this.getIndexOnPos3(forceUpdate);
@@ -5908,8 +6564,8 @@ window.fairygui = window.fgui;
                     ii.obj = null;
                 }
             }
-        }
-        handleArchOrder1() {
+        };
+        GList.prototype.handleArchOrder1 = function () {
             if (this._childrenRenderOrder == fgui.ChildrenRenderOrder.Arch) {
                 var mid = this._scrollPane.posY + this.viewHeight / 2;
                 var minDist = Number.POSITIVE_INFINITY;
@@ -5928,8 +6584,8 @@ window.fairygui = window.fgui;
                 }
                 this.apexIndex = apexIndex;
             }
-        }
-        handleArchOrder2() {
+        };
+        GList.prototype.handleArchOrder2 = function () {
             if (this._childrenRenderOrder == fgui.ChildrenRenderOrder.Arch) {
                 var mid = this._scrollPane.posX + this.viewWidth / 2;
                 var minDist = Number.POSITIVE_INFINITY;
@@ -5948,8 +6604,8 @@ window.fairygui = window.fgui;
                 }
                 this.apexIndex = apexIndex;
             }
-        }
-        handleAlign(contentWidth, contentHeight) {
+        };
+        GList.prototype.handleAlign = function (contentWidth, contentHeight) {
             var newOffsetX = 0;
             var newOffsetY = 0;
             if (contentHeight < this.viewHeight) {
@@ -5972,8 +6628,8 @@ window.fairygui = window.fgui;
                 else
                     this._container.setPosition(this._pivotCorrectX + this._alignOffset.x, this._pivotCorrectY - this._alignOffset.y);
             }
-        }
-        updateBounds() {
+        };
+        GList.prototype.updateBounds = function () {
             if (this._virtual)
                 return;
             var i;
@@ -6253,9 +6909,9 @@ window.fairygui = window.fgui;
             }
             this.handleAlign(cw, ch);
             this.setBounds(0, 0, cw, ch);
-        }
-        setup_beforeAdd(buffer, beginPos) {
-            super.setup_beforeAdd(buffer, beginPos);
+        };
+        GList.prototype.setup_beforeAdd = function (buffer, beginPos) {
+            _super.prototype.setup_beforeAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 5);
             this._layout = buffer.readByte();
             this._selectionMode = buffer.readByte();
@@ -6292,8 +6948,8 @@ window.fairygui = window.fgui;
             buffer.seek(beginPos, 8);
             this._defaultItem = buffer.readS();
             this.readItems(buffer);
-        }
-        readItems(buffer) {
+        };
+        GList.prototype.readItems = function (buffer) {
             var cnt;
             var i;
             var nextPos;
@@ -6317,8 +6973,8 @@ window.fairygui = window.fgui;
                 }
                 buffer.position = nextPos;
             }
-        }
-        setupItem(buffer, obj) {
+        };
+        GList.prototype.setupItem = function (buffer, obj) {
             var str;
             str = buffer.readS();
             if (str != null)
@@ -6357,26 +7013,27 @@ window.fairygui = window.fgui;
                     }
                 }
             }
-        }
-        setup_afterAdd(buffer, beginPos) {
-            super.setup_afterAdd(buffer, beginPos);
+        };
+        GList.prototype.setup_afterAdd = function (buffer, beginPos) {
+            _super.prototype.setup_afterAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 6);
             var i = buffer.readShort();
             if (i != -1)
                 this._selectionController = this.parent.getControllerAt(i);
-        }
-    }
+        };
+        return GList;
+    }(fgui.GComponent));
     fgui.GList = GList;
     var s_n = 0;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GObjectPool {
-        constructor() {
+    var GObjectPool = (function () {
+        function GObjectPool() {
             this._count = 0;
             this._pool = {};
         }
-        clear() {
+        GObjectPool.prototype.clear = function () {
             for (var i1 in this._pool) {
                 var arr = this._pool[i1];
                 var cnt = arr.length;
@@ -6385,11 +7042,15 @@ window.fairygui = window.fgui;
             }
             this._pool = {};
             this._count = 0;
-        }
-        get count() {
-            return this._count;
-        }
-        getObject(url) {
+        };
+        Object.defineProperty(GObjectPool.prototype, "count", {
+            get: function () {
+                return this._count;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GObjectPool.prototype.getObject = function (url) {
             url = fgui.UIPackage.normalizeURL(url);
             if (url == null)
                 return null;
@@ -6400,8 +7061,8 @@ window.fairygui = window.fgui;
             }
             var child = fgui.UIPackage.createObjectFromURL(url);
             return child;
-        }
-        returnObject(obj) {
+        };
+        GObjectPool.prototype.returnObject = function (obj) {
             var url = obj.resourceURL;
             if (!url)
                 return;
@@ -6412,182 +7073,253 @@ window.fairygui = window.fgui;
             }
             this._count++;
             arr.push(obj);
-        }
-    }
+        };
+        return GObjectPool;
+    }());
     fgui.GObjectPool = GObjectPool;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GLoader extends fgui.GObject {
-        constructor() {
-            super();
-            this._frame = 0;
-            this._node.name = "GLoader";
-            this._playing = true;
-            this._url = "";
-            this._fill = fgui.LoaderFillType.None;
-            this._align = fgui.AlignType.Left;
-            this._verticalAlign = fgui.VertAlignType.Top;
-            this._showErrorSign = true;
-            this._color = new cc.Color(255, 255, 255, 255);
-            this._container = new cc.Node("Image");
-            this._container.setAnchorPoint(0, 1);
-            this._node.addChild(this._container);
-            this._content = this._container.addComponent(fgui.MovieClip);
-            this._content.sizeMode = cc.Sprite.SizeMode.CUSTOM;
-            this._content.trim = false;
-            this._content.setPlaySettings();
+    var GLoader = (function (_super) {
+        __extends(GLoader, _super);
+        function GLoader() {
+            var _this = _super.call(this) || this;
+            _this._frame = 0;
+            _this._node.name = "GLoader";
+            _this._playing = true;
+            _this._url = "";
+            _this._fill = fgui.LoaderFillType.None;
+            _this._align = fgui.AlignType.Left;
+            _this._verticalAlign = fgui.VertAlignType.Top;
+            _this._showErrorSign = true;
+            _this._color = new cc.Color(255, 255, 255, 255);
+            _this._container = new cc.Node("Image");
+            _this._container.setAnchorPoint(0, 1);
+            _this._node.addChild(_this._container);
+            _this._content = _this._container.addComponent(fgui.MovieClip);
+            _this._content.sizeMode = cc.Sprite.SizeMode.CUSTOM;
+            _this._content.trim = false;
+            _this._content.setPlaySettings();
+            return _this;
         }
-        dispose() {
+        GLoader.prototype.dispose = function () {
             if (this._contentItem == null) {
                 if (this._content.spriteFrame)
                     this.freeExternal(this._content.spriteFrame);
             }
             if (this._content2)
                 this._content2.dispose();
-            super.dispose();
-        }
-        get url() {
-            return this._url;
-        }
-        set url(value) {
-            if (this._url == value)
-                return;
-            this._url = value;
-            this.loadContent();
-            this.updateGear(7);
-        }
-        get icon() {
-            return this._url;
-        }
-        set icon(value) {
-            this.url = value;
-        }
-        get align() {
-            return this._align;
-        }
-        set align(value) {
-            if (this._align != value) {
-                this._align = value;
+            _super.prototype.dispose.call(this);
+        };
+        Object.defineProperty(GLoader.prototype, "url", {
+            get: function () {
+                return this._url;
+            },
+            set: function (value) {
+                if (this._url == value)
+                    return;
+                this._url = value;
+                this.loadContent();
+                this.updateGear(7);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "icon", {
+            get: function () {
+                return this._url;
+            },
+            set: function (value) {
+                this.url = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "align", {
+            get: function () {
+                return this._align;
+            },
+            set: function (value) {
+                if (this._align != value) {
+                    this._align = value;
+                    this.updateLayout();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "verticalAlign", {
+            get: function () {
+                return this._verticalAlign;
+            },
+            set: function (value) {
+                if (this._verticalAlign != value) {
+                    this._verticalAlign = value;
+                    this.updateLayout();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "fill", {
+            get: function () {
+                return this._fill;
+            },
+            set: function (value) {
+                if (this._fill != value) {
+                    this._fill = value;
+                    this.updateLayout();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "shrinkOnly", {
+            get: function () {
+                return this._shrinkOnly;
+            },
+            set: function (value) {
+                if (this._shrinkOnly != value) {
+                    this._shrinkOnly = value;
+                    this.updateLayout();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "autoSize", {
+            get: function () {
+                return this._autoSize;
+            },
+            set: function (value) {
+                if (this._autoSize != value) {
+                    this._autoSize = value;
+                    this.updateLayout();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "playing", {
+            get: function () {
+                return this._playing;
+            },
+            set: function (value) {
+                if (this._playing != value) {
+                    this._playing = value;
+                    if (this._content instanceof fgui.MovieClip)
+                        this._content.playing = value;
+                    this.updateGear(5);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "frame", {
+            get: function () {
+                return this._frame;
+            },
+            set: function (value) {
+                if (this._frame != value) {
+                    this._frame = value;
+                    if (this._content instanceof fgui.MovieClip)
+                        this._content.frame = value;
+                    this.updateGear(5);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "color", {
+            get: function () {
+                return this._color;
+            },
+            set: function (value) {
+                this._color.set(value);
+                this.updateGear(4);
+                this._container.color = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "fillMethod", {
+            get: function () {
+                return this._content.fillMethod;
+            },
+            set: function (value) {
+                this._content.fillMethod = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "fillOrigin", {
+            get: function () {
+                return this._content.fillOrigin;
+            },
+            set: function (value) {
+                this._content.fillOrigin = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "fillClockwise", {
+            get: function () {
+                return this._content.fillClockwise;
+            },
+            set: function (value) {
+                this._content.fillClockwise = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "fillAmount", {
+            get: function () {
+                return this._content.fillAmount;
+            },
+            set: function (value) {
+                this._content.fillAmount = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "showErrorSign", {
+            get: function () {
+                return this._showErrorSign;
+            },
+            set: function (value) {
+                this._showErrorSign = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "component", {
+            get: function () {
+                return this._content2;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "texture", {
+            get: function () {
+                return this._content.spriteFrame;
+            },
+            set: function (value) {
+                this.url = null;
+                this._content.spriteFrame = value;
+                this._content.type = cc.Sprite.Type.SIMPLE;
+                if (value != null) {
+                    this.sourceWidth = value.getRect().width;
+                    this.sourceHeight = value.getRect().height;
+                }
+                else {
+                    this.sourceWidth = this.sourceHeight = 0;
+                }
                 this.updateLayout();
-            }
-        }
-        get verticalAlign() {
-            return this._verticalAlign;
-        }
-        set verticalAlign(value) {
-            if (this._verticalAlign != value) {
-                this._verticalAlign = value;
-                this.updateLayout();
-            }
-        }
-        get fill() {
-            return this._fill;
-        }
-        set fill(value) {
-            if (this._fill != value) {
-                this._fill = value;
-                this.updateLayout();
-            }
-        }
-        get shrinkOnly() {
-            return this._shrinkOnly;
-        }
-        set shrinkOnly(value) {
-            if (this._shrinkOnly != value) {
-                this._shrinkOnly = value;
-                this.updateLayout();
-            }
-        }
-        get autoSize() {
-            return this._autoSize;
-        }
-        set autoSize(value) {
-            if (this._autoSize != value) {
-                this._autoSize = value;
-                this.updateLayout();
-            }
-        }
-        get playing() {
-            return this._playing;
-        }
-        set playing(value) {
-            if (this._playing != value) {
-                this._playing = value;
-                if (this._content instanceof fgui.MovieClip)
-                    this._content.playing = value;
-                this.updateGear(5);
-            }
-        }
-        get frame() {
-            return this._frame;
-        }
-        set frame(value) {
-            if (this._frame != value) {
-                this._frame = value;
-                if (this._content instanceof fgui.MovieClip)
-                    this._content.frame = value;
-                this.updateGear(5);
-            }
-        }
-        get color() {
-            return this._color;
-        }
-        set color(value) {
-            this._color.set(value);
-            this.updateGear(4);
-            this._container.color = value;
-        }
-        get fillMethod() {
-            return this._content.fillMethod;
-        }
-        set fillMethod(value) {
-            this._content.fillMethod = value;
-        }
-        get fillOrigin() {
-            return this._content.fillOrigin;
-        }
-        set fillOrigin(value) {
-            this._content.fillOrigin = value;
-        }
-        get fillClockwise() {
-            return this._content.fillClockwise;
-        }
-        set fillClockwise(value) {
-            this._content.fillClockwise = value;
-        }
-        get fillAmount() {
-            return this._content.fillAmount;
-        }
-        set fillAmount(value) {
-            this._content.fillAmount = value;
-        }
-        get showErrorSign() {
-            return this._showErrorSign;
-        }
-        set showErrorSign(value) {
-            this._showErrorSign = value;
-        }
-        get component() {
-            return this._content2;
-        }
-        get texture() {
-            return this._content.spriteFrame;
-        }
-        set texture(value) {
-            this.url = null;
-            this._content.spriteFrame = value;
-            this._content.type = cc.Sprite.Type.SIMPLE;
-            if (value != null) {
-                this.sourceWidth = value.getRect().width;
-                this.sourceHeight = value.getRect().height;
-            }
-            else {
-                this.sourceWidth = this.sourceHeight = 0;
-            }
-            this.updateLayout();
-        }
-        loadContent() {
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GLoader.prototype.loadContent = function () {
             this.clearContent();
             if (!this._url)
                 return;
@@ -6595,8 +7327,8 @@ window.fairygui = window.fgui;
                 this.loadFromPackage(this._url);
             else
                 this.loadExternal();
-        }
-        loadFromPackage(itemURL) {
+        };
+        GLoader.prototype.loadFromPackage = function (itemURL) {
             this._contentItem = fgui.UIPackage.getItemByURL(itemURL);
             if (this._contentItem) {
                 this._contentItem = this._contentItem.getBranch();
@@ -6649,18 +7381,19 @@ window.fairygui = window.fgui;
             }
             else
                 this.setErrorState();
-        }
-        loadExternal() {
-            let url = this.url;
-            let callback = (err, asset) => {
-                if (this._url != url || !cc.isValid(this._node))
+        };
+        GLoader.prototype.loadExternal = function () {
+            var _this = this;
+            var url = this.url;
+            var callback = function (err, asset) {
+                if (_this._url != url || !cc.isValid(_this._node))
                     return;
                 if (err)
                     console.warn(err);
                 if (asset instanceof cc.SpriteFrame)
-                    this.onExternalLoadSuccess(asset);
+                    _this.onExternalLoadSuccess(asset);
                 else if (asset instanceof cc.Texture2D)
-                    this.onExternalLoadSuccess(new cc.SpriteFrame(asset));
+                    _this.onExternalLoadSuccess(new cc.SpriteFrame(asset));
             };
             if (fgui.ToolSet.startsWith(this._url, "http://")
                 || fgui.ToolSet.startsWith(this._url, "https://")
@@ -6668,10 +7401,10 @@ window.fairygui = window.fgui;
                 cc.assetManager.loadRemote(this._url, callback);
             else
                 cc.resources.load(this._url, cc.Asset, callback);
-        }
-        freeExternal(texture) {
-        }
-        onExternalLoadSuccess(texture) {
+        };
+        GLoader.prototype.freeExternal = function (texture) {
+        };
+        GLoader.prototype.onExternalLoadSuccess = function (texture) {
             this._content.spriteFrame = texture;
             this._content.type = cc.Sprite.Type.SIMPLE;
             this.sourceWidth = texture.getRect().width;
@@ -6679,11 +7412,11 @@ window.fairygui = window.fgui;
             if (this._autoSize)
                 this.setSize(this.sourceWidth, this.sourceHeight);
             this.updateLayout();
-        }
-        onExternalLoadFailed() {
+        };
+        GLoader.prototype.onExternalLoadFailed = function () {
             this.setErrorState();
-        }
-        setErrorState() {
+        };
+        GLoader.prototype.setErrorState = function () {
             if (!this._showErrorSign)
                 return;
             if (this._errorSign == null) {
@@ -6695,15 +7428,15 @@ window.fairygui = window.fgui;
                 this._errorSign.setSize(this.width, this.height);
                 this._container.addChild(this._errorSign.node);
             }
-        }
-        clearErrorState() {
+        };
+        GLoader.prototype.clearErrorState = function () {
             if (this._errorSign) {
                 this._container.removeChild(this._errorSign.node);
                 GLoader._errorSignPool.returnObject(this._errorSign);
                 this._errorSign = null;
             }
-        }
-        updateLayout() {
+        };
+        GLoader.prototype.updateLayout = function () {
             if (this._content2 == null && this._content == null) {
                 if (this._autoSize) {
                     this._updatingLayout = true;
@@ -6712,10 +7445,10 @@ window.fairygui = window.fgui;
                 }
                 return;
             }
-            let cw = this.sourceWidth;
-            let ch = this.sourceHeight;
-            let pivotCorrectX = -this.pivotX * this._width;
-            let pivotCorrectY = this.pivotY * this._height;
+            var cw = this.sourceWidth;
+            var ch = this.sourceHeight;
+            var pivotCorrectX = -this.pivotX * this._width;
+            var pivotCorrectY = this.pivotY * this._height;
             if (this._autoSize) {
                 this._updatingLayout = true;
                 if (cw == 0)
@@ -6784,8 +7517,8 @@ window.fairygui = window.fgui;
                 ny = this._height - ch;
             ny = -ny;
             this._container.setPosition(pivotCorrectX + nx, pivotCorrectY + ny);
-        }
-        clearContent() {
+        };
+        GLoader.prototype.clearContent = function () {
             this.clearErrorState();
             if (!this._contentItem) {
                 var texture = this._content.spriteFrame;
@@ -6800,23 +7533,23 @@ window.fairygui = window.fgui;
             this._content.frames = null;
             this._content.spriteFrame = null;
             this._contentItem = null;
-        }
-        handleSizeChanged() {
-            super.handleSizeChanged();
+        };
+        GLoader.prototype.handleSizeChanged = function () {
+            _super.prototype.handleSizeChanged.call(this);
             if (!this._updatingLayout)
                 this.updateLayout();
-        }
-        handleAnchorChanged() {
-            super.handleAnchorChanged();
+        };
+        GLoader.prototype.handleAnchorChanged = function () {
+            _super.prototype.handleAnchorChanged.call(this);
             if (!this._updatingLayout)
                 this.updateLayout();
-        }
-        handleGrayedChanged() {
+        };
+        GLoader.prototype.handleGrayedChanged = function () {
             this._content.grayed = this._grayed;
-        }
-        _hitTest(pt, globalPt) {
+        };
+        GLoader.prototype._hitTest = function (pt, globalPt) {
             if (this._content2) {
-                let obj = this._content2.hitTest(globalPt);
+                var obj = this._content2.hitTest(globalPt);
                 if (obj)
                     return obj;
             }
@@ -6824,8 +7557,8 @@ window.fairygui = window.fgui;
                 return this;
             else
                 return null;
-        }
-        getProp(index) {
+        };
+        GLoader.prototype.getProp = function (index) {
             switch (index) {
                 case fgui.ObjectPropID.Color:
                     return this.color;
@@ -6836,10 +7569,10 @@ window.fairygui = window.fgui;
                 case fgui.ObjectPropID.TimeScale:
                     return this._content.timeScale;
                 default:
-                    return super.getProp(index);
+                    return _super.prototype.getProp.call(this, index);
             }
-        }
-        setProp(index, value) {
+        };
+        GLoader.prototype.setProp = function (index, value) {
             switch (index) {
                 case fgui.ObjectPropID.Color:
                     this.color = value;
@@ -6857,12 +7590,12 @@ window.fairygui = window.fgui;
                     this._content.advance(value);
                     break;
                 default:
-                    super.setProp(index, value);
+                    _super.prototype.setProp.call(this, index, value);
                     break;
             }
-        }
-        setup_beforeAdd(buffer, beginPos) {
-            super.setup_beforeAdd(buffer, beginPos);
+        };
+        GLoader.prototype.setup_beforeAdd = function (buffer, beginPos) {
+            _super.prototype.setup_beforeAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 5);
             this._url = buffer.readS();
             this._align = buffer.readByte();
@@ -6883,152 +7616,211 @@ window.fairygui = window.fgui;
             }
             if (this._url)
                 this.loadContent();
-        }
-    }
-    GLoader._errorSignPool = new fgui.GObjectPool();
+        };
+        GLoader._errorSignPool = new fgui.GObjectPool();
+        return GLoader;
+    }(fgui.GObject));
     fgui.GLoader = GLoader;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GLoader3D extends fgui.GObject {
-        constructor() {
-            super();
-            this._frame = 0;
-            this._node.name = "GLoader3D";
-            this._playing = true;
-            this._url = "";
-            this._fill = fgui.LoaderFillType.None;
-            this._align = fgui.AlignType.Left;
-            this._verticalAlign = fgui.VertAlignType.Top;
-            this._color = new cc.Color(255, 255, 255, 255);
-            this._container = new cc.Node("Wrapper");
-            this._container.setAnchorPoint(0, 1);
-            this._node.addChild(this._container);
+    var GLoader3D = (function (_super) {
+        __extends(GLoader3D, _super);
+        function GLoader3D() {
+            var _this = _super.call(this) || this;
+            _this._frame = 0;
+            _this._node.name = "GLoader3D";
+            _this._playing = true;
+            _this._url = "";
+            _this._fill = fgui.LoaderFillType.None;
+            _this._align = fgui.AlignType.Left;
+            _this._verticalAlign = fgui.VertAlignType.Top;
+            _this._color = new cc.Color(255, 255, 255, 255);
+            _this._container = new cc.Node("Wrapper");
+            _this._container.setAnchorPoint(0, 1);
+            _this._node.addChild(_this._container);
+            return _this;
         }
-        dispose() {
-            super.dispose();
-        }
-        get url() {
-            return this._url;
-        }
-        set url(value) {
-            if (this._url == value)
-                return;
-            this._url = value;
-            this.loadContent();
-            this.updateGear(7);
-        }
-        get icon() {
-            return this._url;
-        }
-        set icon(value) {
-            this.url = value;
-        }
-        get align() {
-            return this._align;
-        }
-        set align(value) {
-            if (this._align != value) {
-                this._align = value;
-                this.updateLayout();
-            }
-        }
-        get verticalAlign() {
-            return this._verticalAlign;
-        }
-        set verticalAlign(value) {
-            if (this._verticalAlign != value) {
-                this._verticalAlign = value;
-                this.updateLayout();
-            }
-        }
-        get fill() {
-            return this._fill;
-        }
-        set fill(value) {
-            if (this._fill != value) {
-                this._fill = value;
-                this.updateLayout();
-            }
-        }
-        get shrinkOnly() {
-            return this._shrinkOnly;
-        }
-        set shrinkOnly(value) {
-            if (this._shrinkOnly != value) {
-                this._shrinkOnly = value;
-                this.updateLayout();
-            }
-        }
-        get autoSize() {
-            return this._autoSize;
-        }
-        set autoSize(value) {
-            if (this._autoSize != value) {
-                this._autoSize = value;
-                this.updateLayout();
-            }
-        }
-        get playing() {
-            return this._playing;
-        }
-        set playing(value) {
-            if (this._playing != value) {
-                this._playing = value;
-                this.updateGear(5);
-                this.onChange();
-            }
-        }
-        get frame() {
-            return this._frame;
-        }
-        set frame(value) {
-            if (this._frame != value) {
-                this._frame = value;
-                this.updateGear(5);
-                this.onChange();
-            }
-        }
-        get animationName() {
-            return this._animationName;
-        }
-        set animationName(value) {
-            if (this._animationName != value) {
-                this._animationName = value;
-                this.onChange();
-            }
-        }
-        get skinName() {
-            return this._skinName;
-        }
-        set skinName(value) {
-            if (this._skinName != value) {
-                this._skinName = value;
-                this.onChange();
-            }
-        }
-        get loop() {
-            return this._loop;
-        }
-        set loop(value) {
-            if (this._loop != value) {
-                this._loop = value;
-                this.onChange();
-            }
-        }
-        get color() {
-            return this._color;
-        }
-        set color(value) {
-            this._color.set(value);
-            this.updateGear(4);
-            if (this._content)
-                this._content.node.color = value;
-        }
-        get content() {
-            return this._content;
-        }
-        loadContent() {
+        GLoader3D.prototype.dispose = function () {
+            _super.prototype.dispose.call(this);
+        };
+        Object.defineProperty(GLoader3D.prototype, "url", {
+            get: function () {
+                return this._url;
+            },
+            set: function (value) {
+                if (this._url == value)
+                    return;
+                this._url = value;
+                this.loadContent();
+                this.updateGear(7);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader3D.prototype, "icon", {
+            get: function () {
+                return this._url;
+            },
+            set: function (value) {
+                this.url = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader3D.prototype, "align", {
+            get: function () {
+                return this._align;
+            },
+            set: function (value) {
+                if (this._align != value) {
+                    this._align = value;
+                    this.updateLayout();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader3D.prototype, "verticalAlign", {
+            get: function () {
+                return this._verticalAlign;
+            },
+            set: function (value) {
+                if (this._verticalAlign != value) {
+                    this._verticalAlign = value;
+                    this.updateLayout();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader3D.prototype, "fill", {
+            get: function () {
+                return this._fill;
+            },
+            set: function (value) {
+                if (this._fill != value) {
+                    this._fill = value;
+                    this.updateLayout();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader3D.prototype, "shrinkOnly", {
+            get: function () {
+                return this._shrinkOnly;
+            },
+            set: function (value) {
+                if (this._shrinkOnly != value) {
+                    this._shrinkOnly = value;
+                    this.updateLayout();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader3D.prototype, "autoSize", {
+            get: function () {
+                return this._autoSize;
+            },
+            set: function (value) {
+                if (this._autoSize != value) {
+                    this._autoSize = value;
+                    this.updateLayout();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader3D.prototype, "playing", {
+            get: function () {
+                return this._playing;
+            },
+            set: function (value) {
+                if (this._playing != value) {
+                    this._playing = value;
+                    this.updateGear(5);
+                    this.onChange();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader3D.prototype, "frame", {
+            get: function () {
+                return this._frame;
+            },
+            set: function (value) {
+                if (this._frame != value) {
+                    this._frame = value;
+                    this.updateGear(5);
+                    this.onChange();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader3D.prototype, "animationName", {
+            get: function () {
+                return this._animationName;
+            },
+            set: function (value) {
+                if (this._animationName != value) {
+                    this._animationName = value;
+                    this.onChange();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader3D.prototype, "skinName", {
+            get: function () {
+                return this._skinName;
+            },
+            set: function (value) {
+                if (this._skinName != value) {
+                    this._skinName = value;
+                    this.onChange();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader3D.prototype, "loop", {
+            get: function () {
+                return this._loop;
+            },
+            set: function (value) {
+                if (this._loop != value) {
+                    this._loop = value;
+                    this.onChange();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader3D.prototype, "color", {
+            get: function () {
+                return this._color;
+            },
+            set: function (value) {
+                this._color.set(value);
+                this.updateGear(4);
+                if (this._content)
+                    this._content.node.color = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GLoader3D.prototype, "content", {
+            get: function () {
+                return this._content;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GLoader3D.prototype.loadContent = function () {
             this.clearContent();
             if (!this._url)
                 return;
@@ -7036,8 +7828,8 @@ window.fairygui = window.fgui;
                 this.loadFromPackage(this._url);
             else
                 this.loadExternal();
-        }
-        loadFromPackage(itemURL) {
+        };
+        GLoader3D.prototype.loadFromPackage = function (itemURL) {
             this._contentItem = fgui.UIPackage.getItemByURL(itemURL);
             if (this._contentItem) {
                 this._contentItem = this._contentItem.getBranch();
@@ -7049,8 +7841,8 @@ window.fairygui = window.fgui;
                 if (this._contentItem.type == fgui.PackageItemType.Spine || this._contentItem.type == fgui.PackageItemType.DragonBones)
                     this._contentItem.owner.getItemAssetAsync(this._contentItem, this.onLoaded.bind(this));
             }
-        }
-        onLoaded(err, item) {
+        };
+        GLoader3D.prototype.onLoaded = function (err, item) {
             if (this._contentItem != item)
                 return;
             if (err)
@@ -7061,11 +7853,11 @@ window.fairygui = window.fgui;
                 this.setSpine(this._contentItem.asset, this._contentItem.skeletonAnchor);
             else if (this._contentItem.type == fgui.PackageItemType.DragonBones)
                 this.setDragonBones(this._contentItem.asset, this._contentItem.atlasAsset, this._contentItem.skeletonAnchor);
-        }
-        setSpine(asset, anchor, pma) {
+        };
+        GLoader3D.prototype.setSpine = function (asset, anchor, pma) {
             this.url = null;
             this.clearContent();
-            let node = new cc.Node();
+            var node = new cc.Node();
             node.color = this._color;
             this._container.addChild(node);
             node.setPosition(anchor.x, -anchor.y);
@@ -7074,11 +7866,11 @@ window.fairygui = window.fgui;
             this._content.skeletonData = asset;
             this.onChangeSpine();
             this.updateLayout();
-        }
-        setDragonBones(asset, atlasAsset, anchor, pma) {
+        };
+        GLoader3D.prototype.setDragonBones = function (asset, atlasAsset, anchor, pma) {
             this.url = null;
             this.clearContent();
-            let node = new cc.Node();
+            var node = new cc.Node();
             node.color = this._color;
             this._container.addChild(node);
             node.setPosition(anchor.x, -anchor.y);
@@ -7086,21 +7878,21 @@ window.fairygui = window.fgui;
             this._content.premultipliedAlpha = pma;
             this._content.dragonAsset = asset;
             this._content.dragonAtlasAsset = atlasAsset;
-            let armatureKey = asset["init"](dragonBones.CCFactory.getInstance(), atlasAsset["_uuid"]);
-            let dragonBonesData = this._content["_factory"].getDragonBonesData(armatureKey);
+            var armatureKey = asset["init"](dragonBones.CCFactory.getInstance(), atlasAsset["_uuid"]);
+            var dragonBonesData = this._content["_factory"].getDragonBonesData(armatureKey);
             this._content.armatureName = dragonBonesData.armatureNames[0];
             this.onChangeDragonBones();
             this.updateLayout();
-        }
-        onChange() {
+        };
+        GLoader3D.prototype.onChange = function () {
             this.onChangeSpine();
             this.onChangeDragonBones();
-        }
-        onChangeSpine() {
+        };
+        GLoader3D.prototype.onChangeSpine = function () {
             if (!(this._content instanceof sp.Skeleton))
                 return;
             if (this._animationName) {
-                let trackEntry = this._content.getCurrent(0);
+                var trackEntry = this._content.getCurrent(0);
                 if (!trackEntry || trackEntry.animation.name != this._animationName || trackEntry.isComplete() && !trackEntry.loop) {
                     this._content.defaultAnimation = this._animationName;
                     trackEntry = this._content.setAnimation(0, this._animationName, this._loop);
@@ -7114,11 +7906,11 @@ window.fairygui = window.fgui;
             }
             else
                 this._content.clearTrack(0);
-            let skin = this._skinName || this._content.skeletonData.getRuntimeData().skins[0].name;
+            var skin = this._skinName || this._content.skeletonData.getRuntimeData().skins[0].name;
             if (this._content["_skeleton"].skin != skin)
                 this._content.setSkin(skin);
-        }
-        onChangeDragonBones() {
+        };
+        GLoader3D.prototype.onChangeDragonBones = function () {
             if (!(this._content instanceof dragonBones.ArmatureDisplay))
                 return;
             if (this._animationName) {
@@ -7129,26 +7921,26 @@ window.fairygui = window.fgui;
             }
             else
                 this._content.armature().animation.reset();
-        }
-        loadExternal() {
+        };
+        GLoader3D.prototype.loadExternal = function () {
             if (fgui.ToolSet.startsWith(this._url, "http://")
                 || fgui.ToolSet.startsWith(this._url, "https://")
                 || fgui.ToolSet.startsWith(this._url, '/'))
                 cc.assetManager.loadRemote(this._url, sp.SkeletonData, this.onLoaded2.bind(this));
             else
                 cc.resources.load(this._url, sp.SkeletonData, this.onLoaded2.bind(this));
-        }
-        onLoaded2(err, asset) {
+        };
+        GLoader3D.prototype.onLoaded2 = function (err, asset) {
             if (!this._url || !cc.isValid(this._node))
                 return;
             if (err)
                 console.warn(err);
-        }
-        updateLayout() {
-            let cw = this.sourceWidth;
-            let ch = this.sourceHeight;
-            let pivotCorrectX = -this.pivotX * this._width;
-            let pivotCorrectY = this.pivotY * this._height;
+        };
+        GLoader3D.prototype.updateLayout = function () {
+            var cw = this.sourceWidth;
+            var ch = this.sourceHeight;
+            var pivotCorrectX = -this.pivotX * this._width;
+            var pivotCorrectY = this.pivotY * this._height;
             if (this._autoSize) {
                 this._updatingLayout = true;
                 if (cw == 0)
@@ -7210,27 +8002,27 @@ window.fairygui = window.fgui;
                 ny = this._height - ch;
             ny = -ny;
             this._container.setPosition(pivotCorrectX + nx, pivotCorrectY + ny);
-        }
-        clearContent() {
+        };
+        GLoader3D.prototype.clearContent = function () {
             this._contentItem = null;
             if (this._content) {
                 this._content.node.destroy();
                 this._content = null;
             }
-        }
-        handleSizeChanged() {
-            super.handleSizeChanged();
+        };
+        GLoader3D.prototype.handleSizeChanged = function () {
+            _super.prototype.handleSizeChanged.call(this);
             if (!this._updatingLayout)
                 this.updateLayout();
-        }
-        handleAnchorChanged() {
-            super.handleAnchorChanged();
+        };
+        GLoader3D.prototype.handleAnchorChanged = function () {
+            _super.prototype.handleAnchorChanged.call(this);
             if (!this._updatingLayout)
                 this.updateLayout();
-        }
-        handleGrayedChanged() {
-        }
-        getProp(index) {
+        };
+        GLoader3D.prototype.handleGrayedChanged = function () {
+        };
+        GLoader3D.prototype.getProp = function (index) {
             switch (index) {
                 case fgui.ObjectPropID.Color:
                     return this.color;
@@ -7241,10 +8033,10 @@ window.fairygui = window.fgui;
                 case fgui.ObjectPropID.TimeScale:
                     return 1;
                 default:
-                    return super.getProp(index);
+                    return _super.prototype.getProp.call(this, index);
             }
-        }
-        setProp(index, value) {
+        };
+        GLoader3D.prototype.setProp = function (index, value) {
             switch (index) {
                 case fgui.ObjectPropID.Color:
                     this.color = value;
@@ -7260,12 +8052,12 @@ window.fairygui = window.fgui;
                 case fgui.ObjectPropID.DeltaTime:
                     break;
                 default:
-                    super.setProp(index, value);
+                    _super.prototype.setProp.call(this, index, value);
                     break;
             }
-        }
-        setup_beforeAdd(buffer, beginPos) {
-            super.setup_beforeAdd(buffer, beginPos);
+        };
+        GLoader3D.prototype.setup_beforeAdd = function (buffer, beginPos) {
+            _super.prototype.setup_beforeAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 5);
             this._url = buffer.readS();
             this._align = buffer.readByte();
@@ -7282,73 +8074,92 @@ window.fairygui = window.fgui;
                 this.color = buffer.readColor();
             if (this._url)
                 this.loadContent();
-        }
-    }
+        };
+        return GLoader3D;
+    }(fgui.GObject));
     fgui.GLoader3D = GLoader3D;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GMovieClip extends fgui.GObject {
-        constructor() {
-            super();
-            this._node.name = "GMovieClip";
-            this._touchDisabled = true;
-            this._content = this._node.addComponent(fgui.MovieClip);
-            this._content.sizeMode = cc.Sprite.SizeMode.CUSTOM;
-            this._content.trim = false;
-            this._content.setPlaySettings();
+    var GMovieClip = (function (_super) {
+        __extends(GMovieClip, _super);
+        function GMovieClip() {
+            var _this = _super.call(this) || this;
+            _this._node.name = "GMovieClip";
+            _this._touchDisabled = true;
+            _this._content = _this._node.addComponent(fgui.MovieClip);
+            _this._content.sizeMode = cc.Sprite.SizeMode.CUSTOM;
+            _this._content.trim = false;
+            _this._content.setPlaySettings();
+            return _this;
         }
-        get color() {
-            return this._node.color;
-        }
-        set color(value) {
-            this._node.color = value;
-            this.updateGear(4);
-        }
-        get playing() {
-            return this._content.playing;
-        }
-        set playing(value) {
-            if (this._content.playing != value) {
-                this._content.playing = value;
-                this.updateGear(5);
-            }
-        }
-        get frame() {
-            return this._content.frame;
-        }
-        set frame(value) {
-            if (this._content.frame != value) {
-                this._content.frame = value;
-                this.updateGear(5);
-            }
-        }
-        get timeScale() {
-            return this._content.timeScale;
-        }
-        set timeScale(value) {
-            this._content.timeScale = value;
-        }
-        rewind() {
+        Object.defineProperty(GMovieClip.prototype, "color", {
+            get: function () {
+                return this._node.color;
+            },
+            set: function (value) {
+                this._node.color = value;
+                this.updateGear(4);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GMovieClip.prototype, "playing", {
+            get: function () {
+                return this._content.playing;
+            },
+            set: function (value) {
+                if (this._content.playing != value) {
+                    this._content.playing = value;
+                    this.updateGear(5);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GMovieClip.prototype, "frame", {
+            get: function () {
+                return this._content.frame;
+            },
+            set: function (value) {
+                if (this._content.frame != value) {
+                    this._content.frame = value;
+                    this.updateGear(5);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GMovieClip.prototype, "timeScale", {
+            get: function () {
+                return this._content.timeScale;
+            },
+            set: function (value) {
+                this._content.timeScale = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GMovieClip.prototype.rewind = function () {
             this._content.rewind();
-        }
-        syncStatus(anotherMc) {
+        };
+        GMovieClip.prototype.syncStatus = function (anotherMc) {
             this._content.syncStatus(anotherMc._content);
-        }
-        advance(timeInSeconds) {
+        };
+        GMovieClip.prototype.advance = function (timeInSeconds) {
             this._content.advance(timeInSeconds);
-        }
-        setPlaySettings(start, end, times, endAt, endCallback, callbackObj) {
+        };
+        GMovieClip.prototype.setPlaySettings = function (start, end, times, endAt, endCallback, callbackObj) {
             this._content.setPlaySettings(start, end, times, endAt, endCallback, callbackObj);
-        }
-        handleGrayedChanged() {
+        };
+        GMovieClip.prototype.handleGrayedChanged = function () {
             this._content.grayed = this._grayed;
-        }
-        handleSizeChanged() {
-            super.handleSizeChanged();
+        };
+        GMovieClip.prototype.handleSizeChanged = function () {
+            _super.prototype.handleSizeChanged.call(this);
             this._content.sizeMode = cc.Sprite.SizeMode.CUSTOM;
-        }
-        getProp(index) {
+        };
+        GMovieClip.prototype.getProp = function (index) {
             switch (index) {
                 case fgui.ObjectPropID.Color:
                     return this.color;
@@ -7359,10 +8170,10 @@ window.fairygui = window.fgui;
                 case fgui.ObjectPropID.TimeScale:
                     return this.timeScale;
                 default:
-                    return super.getProp(index);
+                    return _super.prototype.getProp.call(this, index);
             }
-        }
-        setProp(index, value) {
+        };
+        GMovieClip.prototype.setProp = function (index, value) {
             switch (index) {
                 case fgui.ObjectPropID.Color:
                     this.color = value;
@@ -7380,11 +8191,11 @@ window.fairygui = window.fgui;
                     this.advance(value);
                     break;
                 default:
-                    super.setProp(index, value);
+                    _super.prototype.setProp.call(this, index, value);
                     break;
             }
-        }
-        constructFromResource() {
+        };
+        GMovieClip.prototype.constructFromResource = function () {
             var contentItem = this.packageItem.getBranch();
             this.sourceWidth = contentItem.width;
             this.sourceHeight = contentItem.height;
@@ -7398,76 +8209,95 @@ window.fairygui = window.fgui;
             this._content.repeatDelay = contentItem.repeatDelay;
             this._content.frames = contentItem.frames;
             this._content.smoothing = contentItem.smoothing;
-        }
-        setup_beforeAdd(buffer, beginPos) {
-            super.setup_beforeAdd(buffer, beginPos);
+        };
+        GMovieClip.prototype.setup_beforeAdd = function (buffer, beginPos) {
+            _super.prototype.setup_beforeAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 5);
             if (buffer.readBool())
                 this.color = buffer.readColor();
             buffer.readByte();
             this._content.frame = buffer.readInt();
             this._content.playing = buffer.readBool();
-        }
-    }
+        };
+        return GMovieClip;
+    }(fgui.GObject));
     fgui.GMovieClip = GMovieClip;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GProgressBar extends fgui.GComponent {
-        constructor() {
-            super();
-            this._min = 0;
-            this._max = 0;
-            this._value = 0;
-            this._barMaxWidth = 0;
-            this._barMaxHeight = 0;
-            this._barMaxWidthDelta = 0;
-            this._barMaxHeightDelta = 0;
-            this._barStartX = 0;
-            this._barStartY = 0;
-            this._node.name = "GProgressBar";
-            this._titleType = fgui.ProgressTitleType.Percent;
-            this._value = 50;
-            this._max = 100;
+    var GProgressBar = (function (_super) {
+        __extends(GProgressBar, _super);
+        function GProgressBar() {
+            var _this = _super.call(this) || this;
+            _this._min = 0;
+            _this._max = 0;
+            _this._value = 0;
+            _this._barMaxWidth = 0;
+            _this._barMaxHeight = 0;
+            _this._barMaxWidthDelta = 0;
+            _this._barMaxHeightDelta = 0;
+            _this._barStartX = 0;
+            _this._barStartY = 0;
+            _this._node.name = "GProgressBar";
+            _this._titleType = fgui.ProgressTitleType.Percent;
+            _this._value = 50;
+            _this._max = 100;
+            return _this;
         }
-        get titleType() {
-            return this._titleType;
-        }
-        set titleType(value) {
-            if (this._titleType != value) {
-                this._titleType = value;
-                this.update(this._value);
-            }
-        }
-        get min() {
-            return this._min;
-        }
-        set min(value) {
-            if (this._min != value) {
-                this._min = value;
-                this.update(this._value);
-            }
-        }
-        get max() {
-            return this._max;
-        }
-        set max(value) {
-            if (this._max != value) {
-                this._max = value;
-                this.update(this._value);
-            }
-        }
-        get value() {
-            return this._value;
-        }
-        set value(value) {
-            if (this._value != value) {
-                fgui.GTween.kill(this, false, this.update);
-                this._value = value;
-                this.update(value);
-            }
-        }
-        tweenValue(value, duration) {
+        Object.defineProperty(GProgressBar.prototype, "titleType", {
+            get: function () {
+                return this._titleType;
+            },
+            set: function (value) {
+                if (this._titleType != value) {
+                    this._titleType = value;
+                    this.update(this._value);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GProgressBar.prototype, "min", {
+            get: function () {
+                return this._min;
+            },
+            set: function (value) {
+                if (this._min != value) {
+                    this._min = value;
+                    this.update(this._value);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GProgressBar.prototype, "max", {
+            get: function () {
+                return this._max;
+            },
+            set: function (value) {
+                if (this._max != value) {
+                    this._max = value;
+                    this.update(this._value);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GProgressBar.prototype, "value", {
+            get: function () {
+                return this._value;
+            },
+            set: function (value) {
+                if (this._value != value) {
+                    fgui.GTween.kill(this, false, this.update);
+                    this._value = value;
+                    this.update(value);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GProgressBar.prototype.tweenValue = function (value, duration) {
             var oldValule;
             var tweener = fgui.GTween.getTween(this, this.update);
             if (tweener) {
@@ -7478,8 +8308,8 @@ window.fairygui = window.fgui;
                 oldValule = this._value;
             this._value = value;
             return fgui.GTween.to(oldValule, this._value, duration).setTarget(this, this.update).setEase(fgui.EaseType.Linear);
-        }
-        update(newValue) {
+        };
+        GProgressBar.prototype.update = function (newValue) {
             var percent = fgui.ToolSet.clamp01((newValue - this._min) / (this._max - this._min));
             if (this._titleObject) {
                 switch (this._titleType) {
@@ -7525,16 +8355,16 @@ window.fairygui = window.fgui;
             }
             if (this._aniObject)
                 this._aniObject.setProp(fgui.ObjectPropID.Frame, Math.floor(percent * 100));
-        }
-        setFillAmount(bar, percent) {
+        };
+        GProgressBar.prototype.setFillAmount = function (bar, percent) {
             if (((bar instanceof fgui.GImage) || (bar instanceof fgui.GLoader)) && bar.fillMethod != fgui.FillMethod.None) {
                 bar.fillAmount = percent;
                 return true;
             }
             else
                 return false;
-        }
-        constructExtension(buffer) {
+        };
+        GProgressBar.prototype.constructExtension = function (buffer) {
             buffer.seek(0, 6);
             this._titleType = buffer.readByte();
             this._reverse = buffer.readBool();
@@ -7552,18 +8382,18 @@ window.fairygui = window.fgui;
                 this._barMaxHeightDelta = this.height - this._barMaxHeight;
                 this._barStartY = this._barObjectV.y;
             }
-        }
-        handleSizeChanged() {
-            super.handleSizeChanged();
+        };
+        GProgressBar.prototype.handleSizeChanged = function () {
+            _super.prototype.handleSizeChanged.call(this);
             if (this._barObjectH)
                 this._barMaxWidth = this.width - this._barMaxWidthDelta;
             if (this._barObjectV)
                 this._barMaxHeight = this.height - this._barMaxHeightDelta;
             if (!this._underConstruct)
                 this.update(this._value);
-        }
-        setup_afterAdd(buffer, beginPos) {
-            super.setup_afterAdd(buffer, beginPos);
+        };
+        GProgressBar.prototype.setup_afterAdd = function (buffer, beginPos) {
+            _super.prototype.setup_afterAdd.call(this, buffer, beginPos);
             if (!buffer.seek(beginPos, 6)) {
                 this.update(this._value);
                 return;
@@ -7577,221 +8407,296 @@ window.fairygui = window.fgui;
             if (buffer.version >= 2)
                 this._min = buffer.readInt();
             this.update(this._value);
-        }
-    }
+        };
+        return GProgressBar;
+    }(fgui.GComponent));
     fgui.GProgressBar = GProgressBar;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GTextField extends fgui.GObject {
-        constructor() {
-            super();
-            this._fontSize = 0;
-            this._leading = 0;
-            this._node.name = "GTextField";
-            this._touchDisabled = true;
-            this._text = "";
-            this._color = new cc.Color(255, 255, 255, 255);
-            this.createRenderer();
-            this.fontSize = 12;
-            this.leading = 3;
-            this.singleLine = false;
-            this._sizeDirty = false;
-            this._node.on(cc.Node.EventType.SIZE_CHANGED, this.onLabelSizeChanged, this);
+    var GTextField = (function (_super) {
+        __extends(GTextField, _super);
+        function GTextField() {
+            var _this = _super.call(this) || this;
+            _this._fontSize = 0;
+            _this._leading = 0;
+            _this._node.name = "GTextField";
+            _this._touchDisabled = true;
+            _this._text = "";
+            _this._color = new cc.Color(255, 255, 255, 255);
+            _this.createRenderer();
+            _this.fontSize = 12;
+            _this.leading = 3;
+            _this.singleLine = false;
+            _this._sizeDirty = false;
+            _this._node.on(cc.Node.EventType.SIZE_CHANGED, _this.onLabelSizeChanged, _this);
+            return _this;
         }
-        createRenderer() {
+        GTextField.prototype.createRenderer = function () {
             this._label = this._node.addComponent(cc.Label);
             this.autoSize = fgui.AutoSizeType.Both;
-        }
-        set text(value) {
-            this._text = value;
-            if (this._text == null)
-                this._text = "";
-            this.updateGear(6);
-            this.markSizeChanged();
-            this.updateText();
-        }
-        get text() {
-            return this._text;
-        }
-        get font() {
-            return this._font;
-        }
-        set font(value) {
-            if (this._font != value || !value) {
-                this._font = value;
-                this.markSizeChanged();
-                let newFont = value ? value : fgui.UIConfig.defaultFont;
-                if (fgui.ToolSet.startsWith(newFont, "ui://")) {
-                    var pi = fgui.UIPackage.getItemByURL(newFont);
-                    if (pi)
-                        newFont = pi.owner.getItemAsset(pi);
-                    else
-                        newFont = fgui.UIConfig.defaultFont;
-                }
-                this._realFont = newFont;
-                this.updateFont();
-            }
-        }
-        get fontSize() {
-            return this._fontSize;
-        }
-        set fontSize(value) {
-            if (value < 0)
-                return;
-            if (this._fontSize != value) {
-                this._fontSize = value;
-                this.markSizeChanged();
-                this.updateFontSize();
-            }
-        }
-        get color() {
-            return this._color;
-        }
-        set color(value) {
-            this._color.set(value);
-            this.updateGear(4);
-            this.updateFontColor();
-        }
-        get align() {
-            return this._label ? this._label.horizontalAlign : 0;
-        }
-        set align(value) {
-            if (this._label)
-                this._label.horizontalAlign = value;
-        }
-        get verticalAlign() {
-            return this._label ? this._label.verticalAlign : 0;
-        }
-        set verticalAlign(value) {
-            if (this._label)
-                this._label.verticalAlign = value;
-        }
-        get leading() {
-            return this._leading;
-        }
-        set leading(value) {
-            if (this._leading != value) {
-                this._leading = value;
-                this.markSizeChanged();
-                this.updateFontSize();
-            }
-        }
-        get letterSpacing() {
-            return this._label ? this._label.spacingX : 0;
-        }
-        set letterSpacing(value) {
-            if (this._label && this._label.spacingX != value) {
-                this.markSizeChanged();
-                this._label.spacingX = value;
-            }
-        }
-        get underline() {
-            return this._label ? this._label.enableUnderline : false;
-        }
-        set underline(value) {
-            if (this._label)
-                this._label.enableUnderline = value;
-        }
-        get bold() {
-            return this._label ? this._label.enableBold : false;
-        }
-        set bold(value) {
-            if (this._label)
-                this._label.enableBold = value;
-        }
-        get italic() {
-            return this._label ? this._label.enableItalic : false;
-        }
-        set italic(value) {
-            if (this._label)
-                this._label.enableItalic = value;
-        }
-        get singleLine() {
-            return this._label ? !this._label.enableWrapText : false;
-        }
-        set singleLine(value) {
-            if (this._label)
-                this._label.enableWrapText = !value;
-        }
-        get stroke() {
-            return (this._outline && this._outline.enabled) ? this._outline.width : 0;
-        }
-        set stroke(value) {
-            if (value == 0) {
-                if (this._outline)
-                    this._outline.enabled = false;
-            }
-            else {
-                if (!this._outline) {
-                    this._outline = this._node.addComponent(cc.LabelOutline);
-                    this.updateStrokeColor();
-                }
-                else
-                    this._outline.enabled = true;
-                this._outline.width = value;
-            }
-        }
-        get strokeColor() {
-            return this._strokeColor;
-        }
-        set strokeColor(value) {
-            if (!this._strokeColor)
-                this._strokeColor = new cc.Color();
-            this._strokeColor.set(value);
-            this.updateGear(4);
-            this.updateStrokeColor();
-        }
-        get shadowOffset() {
-            return this._shadowOffset;
-        }
-        set shadowOffset(value) {
-            if (!this._shadowOffset)
-                this._shadowOffset = new cc.Vec2();
-            this._shadowOffset.set(value);
-            if (this._shadowOffset.x != 0 || this._shadowOffset.y != 0) {
-                if (!this._shadow) {
-                    this._shadow = this._node.addComponent(cc.LabelShadow);
-                    this.updateShadowColor();
-                }
-                else
-                    this._shadow.enabled = true;
-                this._shadow.offset.x = value.x;
-                this._shadow.offset.y = -value.y;
-            }
-            else if (this._shadow)
-                this._shadow.enabled = false;
-        }
-        get shadowColor() {
-            return this._shadowColor;
-        }
-        set shadowColor(value) {
-            if (!this._shadowColor)
-                this._shadowColor = new cc.Color();
-            this._shadowColor.set(value);
-            this.updateShadowColor();
-        }
-        set ubbEnabled(value) {
-            if (this._ubbEnabled != value) {
-                this._ubbEnabled = value;
+        };
+        Object.defineProperty(GTextField.prototype, "text", {
+            get: function () {
+                return this._text;
+            },
+            set: function (value) {
+                this._text = value;
+                if (this._text == null)
+                    this._text = "";
+                this.updateGear(6);
                 this.markSizeChanged();
                 this.updateText();
-            }
-        }
-        get ubbEnabled() {
-            return this._ubbEnabled;
-        }
-        set autoSize(value) {
-            if (this._autoSize != value) {
-                this._autoSize = value;
-                this.markSizeChanged();
-                this.updateOverflow();
-            }
-        }
-        get autoSize() {
-            return this._autoSize;
-        }
-        parseTemplate(template) {
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "font", {
+            get: function () {
+                return this._font;
+            },
+            set: function (value) {
+                if (this._font != value || !value) {
+                    this._font = value;
+                    this.markSizeChanged();
+                    var newFont = value ? value : fgui.UIConfig.defaultFont;
+                    if (fgui.ToolSet.startsWith(newFont, "ui://")) {
+                        var pi = fgui.UIPackage.getItemByURL(newFont);
+                        if (pi)
+                            newFont = pi.owner.getItemAsset(pi);
+                        else
+                            newFont = fgui.UIConfig.defaultFont;
+                    }
+                    this._realFont = newFont;
+                    this.updateFont();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "fontSize", {
+            get: function () {
+                return this._fontSize;
+            },
+            set: function (value) {
+                if (value < 0)
+                    return;
+                if (this._fontSize != value) {
+                    this._fontSize = value;
+                    this.markSizeChanged();
+                    this.updateFontSize();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "color", {
+            get: function () {
+                return this._color;
+            },
+            set: function (value) {
+                this._color.set(value);
+                this.updateGear(4);
+                this.updateFontColor();
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "align", {
+            get: function () {
+                return this._label ? this._label.horizontalAlign : 0;
+            },
+            set: function (value) {
+                if (this._label)
+                    this._label.horizontalAlign = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "verticalAlign", {
+            get: function () {
+                return this._label ? this._label.verticalAlign : 0;
+            },
+            set: function (value) {
+                if (this._label)
+                    this._label.verticalAlign = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "leading", {
+            get: function () {
+                return this._leading;
+            },
+            set: function (value) {
+                if (this._leading != value) {
+                    this._leading = value;
+                    this.markSizeChanged();
+                    this.updateFontSize();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "letterSpacing", {
+            get: function () {
+                return this._label ? this._label.spacingX : 0;
+            },
+            set: function (value) {
+                if (this._label && this._label.spacingX != value) {
+                    this.markSizeChanged();
+                    this._label.spacingX = value;
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "underline", {
+            get: function () {
+                return this._label ? this._label.enableUnderline : false;
+            },
+            set: function (value) {
+                if (this._label)
+                    this._label.enableUnderline = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "bold", {
+            get: function () {
+                return this._label ? this._label.enableBold : false;
+            },
+            set: function (value) {
+                if (this._label)
+                    this._label.enableBold = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "italic", {
+            get: function () {
+                return this._label ? this._label.enableItalic : false;
+            },
+            set: function (value) {
+                if (this._label)
+                    this._label.enableItalic = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "singleLine", {
+            get: function () {
+                return this._label ? !this._label.enableWrapText : false;
+            },
+            set: function (value) {
+                if (this._label)
+                    this._label.enableWrapText = !value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "stroke", {
+            get: function () {
+                return (this._outline && this._outline.enabled) ? this._outline.width : 0;
+            },
+            set: function (value) {
+                if (value == 0) {
+                    if (this._outline)
+                        this._outline.enabled = false;
+                }
+                else {
+                    if (!this._outline) {
+                        this._outline = this._node.addComponent(cc.LabelOutline);
+                        this.updateStrokeColor();
+                    }
+                    else
+                        this._outline.enabled = true;
+                    this._outline.width = value;
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "strokeColor", {
+            get: function () {
+                return this._strokeColor;
+            },
+            set: function (value) {
+                if (!this._strokeColor)
+                    this._strokeColor = new cc.Color();
+                this._strokeColor.set(value);
+                this.updateGear(4);
+                this.updateStrokeColor();
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "shadowOffset", {
+            get: function () {
+                return this._shadowOffset;
+            },
+            set: function (value) {
+                if (!this._shadowOffset)
+                    this._shadowOffset = new cc.Vec2();
+                this._shadowOffset.set(value);
+                if (this._shadowOffset.x != 0 || this._shadowOffset.y != 0) {
+                    if (!this._shadow) {
+                        this._shadow = this._node.addComponent(cc.LabelShadow);
+                        this.updateShadowColor();
+                    }
+                    else
+                        this._shadow.enabled = true;
+                    this._shadow.offset.x = value.x;
+                    this._shadow.offset.y = -value.y;
+                }
+                else if (this._shadow)
+                    this._shadow.enabled = false;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "shadowColor", {
+            get: function () {
+                return this._shadowColor;
+            },
+            set: function (value) {
+                if (!this._shadowColor)
+                    this._shadowColor = new cc.Color();
+                this._shadowColor.set(value);
+                this.updateShadowColor();
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "ubbEnabled", {
+            get: function () {
+                return this._ubbEnabled;
+            },
+            set: function (value) {
+                if (this._ubbEnabled != value) {
+                    this._ubbEnabled = value;
+                    this.markSizeChanged();
+                    this.updateText();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "autoSize", {
+            get: function () {
+                return this._autoSize;
+            },
+            set: function (value) {
+                if (this._autoSize != value) {
+                    this._autoSize = value;
+                    this.markSizeChanged();
+                    this.updateOverflow();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GTextField.prototype.parseTemplate = function (template) {
             var pos1 = 0, pos2, pos3;
             var tag;
             var value;
@@ -7832,31 +8737,39 @@ window.fairygui = window.fgui;
             if (pos1 < template.length)
                 result += template.substr(pos1);
             return result;
-        }
-        get templateVars() {
-            return this._templateVars;
-        }
-        set templateVars(value) {
-            if (this._templateVars == null && value == null)
-                return;
-            this._templateVars = value;
-            this.flushVars();
-        }
-        setVar(name, value) {
+        };
+        Object.defineProperty(GTextField.prototype, "templateVars", {
+            get: function () {
+                return this._templateVars;
+            },
+            set: function (value) {
+                if (this._templateVars == null && value == null)
+                    return;
+                this._templateVars = value;
+                this.flushVars();
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GTextField.prototype.setVar = function (name, value) {
             if (!this._templateVars)
                 this._templateVars = {};
             this._templateVars[name] = value;
             return this;
-        }
-        flushVars() {
+        };
+        GTextField.prototype.flushVars = function () {
             this.markSizeChanged();
             this.updateText();
-        }
-        get textWidth() {
-            this.ensureSizeCorrect();
-            return this._node.width;
-        }
-        ensureSizeCorrect() {
+        };
+        Object.defineProperty(GTextField.prototype, "textWidth", {
+            get: function () {
+                this.ensureSizeCorrect();
+                return this._node.width;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GTextField.prototype.ensureSizeCorrect = function () {
             if (this._sizeDirty) {
                 if (this._label["_forceUpdateRenderData"])
                     this._label["_forceUpdateRenderData"]();
@@ -7864,20 +8777,20 @@ window.fairygui = window.fgui;
                     this._label["_updateRenderData"](true);
                 this._sizeDirty = false;
             }
-        }
-        updateText() {
+        };
+        GTextField.prototype.updateText = function () {
             var text2 = this._text;
             if (this._templateVars)
                 text2 = this.parseTemplate(text2);
             if (this._ubbEnabled)
                 text2 = fgui.UBBParser.inst.parse(text2, true);
             this._label.string = text2;
-        }
-        assignFont(label, value) {
+        };
+        GTextField.prototype.assignFont = function (label, value) {
             if (value instanceof cc.Font)
                 label.font = value;
             else {
-                let font = fgui.getFontByName(value);
+                var font = fgui.getFontByName(value);
                 if (!font) {
                     label.fontFamily = value;
                     label.useSystemFont = true;
@@ -7885,22 +8798,22 @@ window.fairygui = window.fgui;
                 else
                     label.font = font;
             }
-        }
-        assignFontColor(label, value) {
-            let font = label.font;
+        };
+        GTextField.prototype.assignFontColor = function (label, value) {
+            var font = label.font;
             if ((font instanceof cc.BitmapFont) && !(font._fntConfig.canTint))
                 value = cc.Color.WHITE;
             if (this._grayed)
                 value = fgui.ToolSet.toGrayed(value);
             label.node.color = value;
-        }
-        updateFont() {
+        };
+        GTextField.prototype.updateFont = function () {
             this.assignFont(this._label, this._realFont);
-        }
-        updateFontColor() {
+        };
+        GTextField.prototype.updateFontColor = function () {
             this.assignFontColor(this._label, this._color);
-        }
-        updateStrokeColor() {
+        };
+        GTextField.prototype.updateStrokeColor = function () {
             if (!this._outline)
                 return;
             if (!this._strokeColor)
@@ -7909,8 +8822,8 @@ window.fairygui = window.fgui;
                 this._outline.color = fgui.ToolSet.toGrayed(this._strokeColor);
             else
                 this._outline.color = this._strokeColor;
-        }
-        updateShadowColor() {
+        };
+        GTextField.prototype.updateShadowColor = function () {
             if (!this._shadow)
                 return;
             if (!this._shadowColor)
@@ -7919,11 +8832,11 @@ window.fairygui = window.fgui;
                 this._shadow.color = fgui.ToolSet.toGrayed(this._shadowColor);
             else
                 this._shadow.color = this._shadowColor;
-        }
-        updateFontSize() {
-            let font = this._label.font;
+        };
+        GTextField.prototype.updateFontSize = function () {
+            var font = this._label.font;
             if (font instanceof cc.BitmapFont) {
-                let fntConfig = font._fntConfig;
+                var fntConfig = font._fntConfig;
                 if (fntConfig.resizable)
                     this._label.fontSize = this._fontSize;
                 else
@@ -7934,8 +8847,8 @@ window.fairygui = window.fgui;
                 this._label.fontSize = this._fontSize;
                 this._label.lineHeight = this._fontSize + this._leading;
             }
-        }
-        updateOverflow() {
+        };
+        GTextField.prototype.updateOverflow = function () {
             if (this._autoSize == fgui.AutoSizeType.Both)
                 this._label.overflow = cc.Label.Overflow.NONE;
             else if (this._autoSize == fgui.AutoSizeType.Height) {
@@ -7950,8 +8863,8 @@ window.fairygui = window.fgui;
                 this._label.overflow = cc.Label.Overflow.CLAMP;
                 this._node.setContentSize(this._width, this._height);
             }
-        }
-        markSizeChanged() {
+        };
+        GTextField.prototype.markSizeChanged = function () {
             if (this._underConstruct)
                 return;
             if (this._autoSize == fgui.AutoSizeType.Both || this._autoSize == fgui.AutoSizeType.Height) {
@@ -7960,8 +8873,8 @@ window.fairygui = window.fgui;
                     this._sizeDirty = true;
                 }
             }
-        }
-        onLabelSizeChanged() {
+        };
+        GTextField.prototype.onLabelSizeChanged = function () {
             this._sizeDirty = false;
             if (this._underConstruct)
                 return;
@@ -7970,8 +8883,8 @@ window.fairygui = window.fgui;
                 this.setSize(this._node.width, this._node.height);
                 this._updatingSize = false;
             }
-        }
-        handleSizeChanged() {
+        };
+        GTextField.prototype.handleSizeChanged = function () {
             if (this._updatingSize)
                 return;
             if (this._autoSize == fgui.AutoSizeType.None || this._autoSize == fgui.AutoSizeType.Shrink) {
@@ -7979,12 +8892,12 @@ window.fairygui = window.fgui;
             }
             else if (this._autoSize == fgui.AutoSizeType.Height)
                 this._node.width = this._width;
-        }
-        handleGrayedChanged() {
+        };
+        GTextField.prototype.handleGrayedChanged = function () {
             this.updateFontColor();
             this.updateStrokeColor();
-        }
-        getProp(index) {
+        };
+        GTextField.prototype.getProp = function (index) {
             switch (index) {
                 case fgui.ObjectPropID.Color:
                     return this.color;
@@ -7993,10 +8906,10 @@ window.fairygui = window.fgui;
                 case fgui.ObjectPropID.FontSize:
                     return this.fontSize;
                 default:
-                    return super.getProp(index);
+                    return _super.prototype.getProp.call(this, index);
             }
-        }
-        setProp(index, value) {
+        };
+        GTextField.prototype.setProp = function (index, value) {
             switch (index) {
                 case fgui.ObjectPropID.Color:
                     this.color = value;
@@ -8008,12 +8921,12 @@ window.fairygui = window.fgui;
                     this.fontSize = value;
                     break;
                 default:
-                    super.setProp(index, value);
+                    _super.prototype.setProp.call(this, index, value);
                     break;
             }
-        }
-        setup_beforeAdd(buffer, beginPos) {
-            super.setup_beforeAdd(buffer, beginPos);
+        };
+        GTextField.prototype.setup_beforeAdd = function (buffer, beginPos) {
+            _super.prototype.setup_beforeAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 5);
             this.font = buffer.readS();
             this.fontSize = buffer.readShort();
@@ -8034,28 +8947,33 @@ window.fairygui = window.fgui;
             }
             if (buffer.readBool()) {
                 this.shadowColor = buffer.readColor();
-                let f1 = buffer.readFloat();
-                let f2 = buffer.readFloat();
+                var f1 = buffer.readFloat();
+                var f2 = buffer.readFloat();
                 this.shadowOffset = new cc.Vec2(f1, f2);
             }
             if (buffer.readBool())
                 this._templateVars = {};
-        }
-        setup_afterAdd(buffer, beginPos) {
-            super.setup_afterAdd(buffer, beginPos);
+        };
+        GTextField.prototype.setup_afterAdd = function (buffer, beginPos) {
+            _super.prototype.setup_afterAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 6);
             var str = buffer.readS();
             if (str != null)
                 this.text = str;
-        }
-    }
+        };
+        return GTextField;
+    }(fgui.GObject));
     fgui.GTextField = GTextField;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class RichTextImageAtlas extends cc.SpriteAtlas {
-        getSpriteFrame(key) {
-            let pi = fgui.UIPackage.getItemByURL(key);
+    var RichTextImageAtlas = (function (_super) {
+        __extends(RichTextImageAtlas, _super);
+        function RichTextImageAtlas() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        RichTextImageAtlas.prototype.getSpriteFrame = function (key) {
+            var pi = fgui.UIPackage.getItemByURL(key);
             if (pi) {
                 pi.load();
                 if (pi.type == fgui.PackageItemType.Image)
@@ -8063,60 +8981,79 @@ window.fairygui = window.fgui;
                 else if (pi.type == fgui.PackageItemType.MovieClip)
                     return pi.frames[0].texture;
             }
-            return super.getSpriteFrame(key);
-        }
-    }
+            return _super.prototype.getSpriteFrame.call(this, key);
+        };
+        return RichTextImageAtlas;
+    }(cc.SpriteAtlas));
     fgui.RichTextImageAtlas = RichTextImageAtlas;
-    const imageAtlas = new RichTextImageAtlas();
-    class GRichTextField extends fgui.GTextField {
-        constructor() {
-            super();
-            this._node.name = "GRichTextField";
-            this._touchDisabled = false;
-            this.linkUnderline = fgui.UIConfig.linkUnderline;
+    var imageAtlas = new RichTextImageAtlas();
+    var GRichTextField = (function (_super) {
+        __extends(GRichTextField, _super);
+        function GRichTextField() {
+            var _this = _super.call(this) || this;
+            _this._node.name = "GRichTextField";
+            _this._touchDisabled = false;
+            _this.linkUnderline = fgui.UIConfig.linkUnderline;
+            return _this;
         }
-        createRenderer() {
+        GRichTextField.prototype.createRenderer = function () {
             this._richText = this._node.addComponent(cc.RichText);
             this._richText.handleTouchEvent = false;
             this.autoSize = fgui.AutoSizeType.None;
             this._richText.imageAtlas = imageAtlas;
-        }
-        get align() {
-            return this._richText.horizontalAlign;
-        }
-        set align(value) {
-            this._richText.horizontalAlign = value;
-        }
-        get underline() {
-            return this._underline;
-        }
-        set underline(value) {
-            if (this._underline != value) {
-                this._underline = value;
-                this.updateText();
-            }
-        }
-        get bold() {
-            return this._bold;
-        }
-        set bold(value) {
-            if (this._bold != value) {
-                this._bold = value;
-                this.updateText();
-            }
-        }
-        get italic() {
-            return this._italics;
-        }
-        set italic(value) {
-            if (this._italics != value) {
-                this._italics = value;
-                this.updateText();
-            }
-        }
-        markSizeChanged() {
-        }
-        updateText() {
+        };
+        Object.defineProperty(GRichTextField.prototype, "align", {
+            get: function () {
+                return this._richText.horizontalAlign;
+            },
+            set: function (value) {
+                this._richText.horizontalAlign = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GRichTextField.prototype, "underline", {
+            get: function () {
+                return this._underline;
+            },
+            set: function (value) {
+                if (this._underline != value) {
+                    this._underline = value;
+                    this.updateText();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GRichTextField.prototype, "bold", {
+            get: function () {
+                return this._bold;
+            },
+            set: function (value) {
+                if (this._bold != value) {
+                    this._bold = value;
+                    this.updateText();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GRichTextField.prototype, "italic", {
+            get: function () {
+                return this._italics;
+            },
+            set: function (value) {
+                if (this._italics != value) {
+                    this._italics = value;
+                    this.updateText();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GRichTextField.prototype.markSizeChanged = function () {
+        };
+        GRichTextField.prototype.updateText = function () {
             var text2 = this._text;
             if (this._templateVars)
                 text2 = this.parseTemplate(text2);
@@ -8131,7 +9068,7 @@ window.fairygui = window.fgui;
                 text2 = "<i>" + text2 + "</i>";
             if (this._underline)
                 text2 = "<u>" + text2 + "</u>";
-            let c = this._color;
+            var c = this._color;
             if (this._grayed)
                 c = fgui.ToolSet.toGrayed(c);
             text2 = "<color=" + c.toHEX("#rrggbb") + ">" + text2 + "</color>";
@@ -8144,74 +9081,81 @@ window.fairygui = window.fgui;
             }
             else
                 this._richText.string = text2;
-        }
-        updateFont() {
+        };
+        GRichTextField.prototype.updateFont = function () {
             this.assignFont(this._richText, this._realFont);
-        }
-        updateFontColor() {
+        };
+        GRichTextField.prototype.updateFontColor = function () {
             this.assignFontColor(this._richText, this._color);
-        }
-        updateFontSize() {
-            let fontSize = this._fontSize;
-            let font = this._richText.font;
+        };
+        GRichTextField.prototype.updateFontSize = function () {
+            var fontSize = this._fontSize;
+            var font = this._richText.font;
             if (font instanceof cc.BitmapFont) {
                 if (!font._fntConfig.resizable)
                     fontSize = font._fntConfig.fontSize;
             }
             this._richText.fontSize = fontSize;
             this._richText.lineHeight = fontSize + this._leading * 2;
-        }
-        updateOverflow() {
+        };
+        GRichTextField.prototype.updateOverflow = function () {
             if (this._autoSize == fgui.AutoSizeType.Both)
                 this._richText.maxWidth = 0;
             else
                 this._richText.maxWidth = this._width;
-        }
-        handleSizeChanged() {
+        };
+        GRichTextField.prototype.handleSizeChanged = function () {
             if (this._updatingSize)
                 return;
             if (this._autoSize != fgui.AutoSizeType.Both)
                 this._richText.maxWidth = this._width;
-        }
-    }
+        };
+        return GRichTextField;
+    }(fgui.GTextField));
     fgui.GRichTextField = GRichTextField;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GRoot extends fgui.GComponent {
-        constructor() {
-            super();
-            this._node.name = "GRoot";
-            this.opaque = false;
-            this._volumeScale = 1;
-            this._popupStack = new Array();
-            this._justClosedPopups = new Array();
-            this._modalLayer = new fgui.GGraph();
-            this._modalLayer.setSize(this.width, this.height);
-            this._modalLayer.drawRect(0, cc.Color.TRANSPARENT, fgui.UIConfig.modalLayerColor);
-            this._modalLayer.addRelation(this, fgui.RelationType.Size);
-            this._thisOnResized = this.onWinResize.bind(this);
-            this._inputProcessor = this.node.addComponent(fgui.InputProcessor);
-            this._inputProcessor._captureCallback = this.onTouchBegin_1;
+    var GRoot = (function (_super) {
+        __extends(GRoot, _super);
+        function GRoot() {
+            var _this = _super.call(this) || this;
+            _this._node.name = "GRoot";
+            _this.opaque = false;
+            _this._volumeScale = 1;
+            _this._popupStack = new Array();
+            _this._justClosedPopups = new Array();
+            _this._modalLayer = new fgui.GGraph();
+            _this._modalLayer.setSize(_this.width, _this.height);
+            _this._modalLayer.drawRect(0, cc.Color.TRANSPARENT, fgui.UIConfig.modalLayerColor);
+            _this._modalLayer.addRelation(_this, fgui.RelationType.Size);
+            _this._thisOnResized = _this.onWinResize.bind(_this);
+            _this._inputProcessor = _this.node.addComponent(fgui.InputProcessor);
+            _this._inputProcessor._captureCallback = _this.onTouchBegin_1;
             if (CC_EDITOR) {
-                cc.engine.on('design-resolution-changed', this._thisOnResized);
+                cc.engine.on('design-resolution-changed', _this._thisOnResized);
             }
             else {
-                cc.view.on('canvas-resize', this._thisOnResized);
+                cc.view.on('canvas-resize', _this._thisOnResized);
             }
-            this.onWinResize();
+            _this.onWinResize();
+            return _this;
         }
-        static get inst() {
-            if (!GRoot._inst)
-                throw 'Call GRoot.create first!';
-            return GRoot._inst;
-        }
-        static create() {
+        Object.defineProperty(GRoot, "inst", {
+            get: function () {
+                if (!GRoot._inst)
+                    throw 'Call GRoot.create first!';
+                return GRoot._inst;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GRoot.create = function () {
             GRoot._inst = new GRoot();
             GRoot._inst.node.parent = cc.director.getScene();
             return GRoot._inst;
-        }
-        onDestroy() {
+        };
+        GRoot.prototype.onDestroy = function () {
             if (CC_EDITOR) {
                 cc.engine.off('design-resolution-changed', this._thisOnResized);
             }
@@ -8220,17 +9164,25 @@ window.fairygui = window.fgui;
             }
             if (this == GRoot._inst)
                 GRoot._inst = null;
-        }
-        getTouchPosition(touchId) {
+        };
+        GRoot.prototype.getTouchPosition = function (touchId) {
             return this._inputProcessor.getTouchPosition(touchId);
-        }
-        get touchTarget() {
-            return this._inputProcessor.getTouchTarget();
-        }
-        get inputProcessor() {
-            return this._inputProcessor;
-        }
-        showWindow(win) {
+        };
+        Object.defineProperty(GRoot.prototype, "touchTarget", {
+            get: function () {
+                return this._inputProcessor.getTouchTarget();
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GRoot.prototype, "inputProcessor", {
+            get: function () {
+                return this._inputProcessor;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GRoot.prototype.showWindow = function (win) {
             this.addChild(win);
             win.requestFocus();
             if (win.x > this.width)
@@ -8242,16 +9194,16 @@ window.fairygui = window.fgui;
             else if (win.y + win.height < 0)
                 win.y = 0;
             this.adjustModalLayer();
-        }
-        hideWindow(win) {
+        };
+        GRoot.prototype.hideWindow = function (win) {
             win.hide();
-        }
-        hideWindowImmediately(win) {
+        };
+        GRoot.prototype.hideWindowImmediately = function (win) {
             if (win.parent == this)
                 this.removeChild(win);
             this.adjustModalLayer();
-        }
-        bringToFront(win) {
+        };
+        GRoot.prototype.bringToFront = function (win) {
             var cnt = this.numChildren;
             var i;
             if (this._modalLayer.parent && !win.modal)
@@ -8267,8 +9219,8 @@ window.fairygui = window.fgui;
             }
             if (i >= 0)
                 this.setChildIndex(win, i);
-        }
-        showModalWait(msg) {
+        };
+        GRoot.prototype.showModalWait = function (msg) {
             if (fgui.UIConfig.globalModalWaiting != null) {
                 if (this._modalWaitPane == null)
                     this._modalWaitPane = fgui.UIPackage.createObjectFromURL(fgui.UIConfig.globalModalWaiting);
@@ -8277,12 +9229,12 @@ window.fairygui = window.fgui;
                 this.addChild(this._modalWaitPane);
                 this._modalWaitPane.text = msg;
             }
-        }
-        closeModalWait() {
+        };
+        GRoot.prototype.closeModalWait = function () {
             if (this._modalWaitPane && this._modalWaitPane.parent)
                 this.removeChild(this._modalWaitPane);
-        }
-        closeAllExceptModals() {
+        };
+        GRoot.prototype.closeAllExceptModals = function () {
             var arr = this._children.slice();
             var cnt = arr.length;
             for (var i = 0; i < cnt; i++) {
@@ -8290,8 +9242,8 @@ window.fairygui = window.fgui;
                 if ((g instanceof fgui.Window) && !g.modal)
                     g.hide();
             }
-        }
-        closeAllWindows() {
+        };
+        GRoot.prototype.closeAllWindows = function () {
             var arr = this._children.slice();
             var cnt = arr.length;
             for (var i = 0; i < cnt; i++) {
@@ -8299,8 +9251,8 @@ window.fairygui = window.fgui;
                 if (g instanceof fgui.Window)
                     g.hide();
             }
-        }
-        getTopWindow() {
+        };
+        GRoot.prototype.getTopWindow = function () {
             var cnt = this.numChildren;
             for (var i = cnt - 1; i >= 0; i--) {
                 var g = this.getChildAt(i);
@@ -8309,22 +9261,34 @@ window.fairygui = window.fgui;
                 }
             }
             return null;
-        }
-        get modalLayer() {
-            return this._modalLayer;
-        }
-        get hasModalWindow() {
-            return this._modalLayer.parent != null;
-        }
-        get modalWaiting() {
-            return this._modalWaitPane && this._modalWaitPane.node.activeInHierarchy;
-        }
-        getPopupPosition(popup, target, dir, result) {
-            let pos = result || new cc.Vec2();
+        };
+        Object.defineProperty(GRoot.prototype, "modalLayer", {
+            get: function () {
+                return this._modalLayer;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GRoot.prototype, "hasModalWindow", {
+            get: function () {
+                return this._modalLayer.parent != null;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GRoot.prototype, "modalWaiting", {
+            get: function () {
+                return this._modalWaitPane && this._modalWaitPane.node.activeInHierarchy;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GRoot.prototype.getPopupPosition = function (popup, target, dir, result) {
+            var pos = result || new cc.Vec2();
             var sizeW = 0, sizeH = 0;
             if (target) {
                 pos = target.localToGlobal();
-                let pos2 = target.localToGlobal(target.width, target.height);
+                var pos2 = target.localToGlobal(target.width, target.height);
                 sizeW = pos2.x - pos.x;
                 sizeH = pos2.y - pos.y;
             }
@@ -8344,8 +9308,8 @@ window.fairygui = window.fgui;
                 }
             }
             return pos;
-        }
-        showPopup(popup, target, dir) {
+        };
+        GRoot.prototype.showPopup = function (popup, target, dir) {
             if (this._popupStack.length > 0) {
                 var k = this._popupStack.indexOf(popup);
                 if (k != -1) {
@@ -8368,15 +9332,15 @@ window.fairygui = window.fgui;
             }
             this.addChild(popup);
             this.adjustModalLayer();
-            let pt = this.getPopupPosition(popup, target, dir);
+            var pt = this.getPopupPosition(popup, target, dir);
             popup.setPosition(pt.x, pt.y);
-        }
-        togglePopup(popup, target, dir) {
+        };
+        GRoot.prototype.togglePopup = function (popup, target, dir) {
             if (this._justClosedPopups.indexOf(popup) != -1)
                 return;
             this.showPopup(popup, target, dir);
-        }
-        hidePopup(popup) {
+        };
+        GRoot.prototype.hidePopup = function (popup) {
             if (popup) {
                 var k = this._popupStack.indexOf(popup);
                 if (k != -1) {
@@ -8390,19 +9354,23 @@ window.fairygui = window.fgui;
                     this.closePopup(this._popupStack[i]);
                 this._popupStack.length = 0;
             }
-        }
-        get hasAnyPopup() {
-            return this._popupStack.length != 0;
-        }
-        closePopup(target) {
+        };
+        Object.defineProperty(GRoot.prototype, "hasAnyPopup", {
+            get: function () {
+                return this._popupStack.length != 0;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GRoot.prototype.closePopup = function (target) {
             if (target.parent) {
                 if (target instanceof fgui.Window)
                     target.hide();
                 else
                     this.removeChild(target);
             }
-        }
-        showTooltips(msg) {
+        };
+        GRoot.prototype.showTooltips = function (msg) {
             if (this._defaultTooltipWin == null) {
                 var resourceURL = fgui.UIConfig.tooltipsWin;
                 if (!resourceURL) {
@@ -8413,11 +9381,11 @@ window.fairygui = window.fgui;
             }
             this._defaultTooltipWin.text = msg;
             this.showTooltipsWin(this._defaultTooltipWin);
-        }
-        showTooltipsWin(tooltipWin) {
+        };
+        GRoot.prototype.showTooltipsWin = function (tooltipWin) {
             this.hideTooltips();
             this._tooltipWin = tooltipWin;
-            let pt = this.getTouchPosition();
+            var pt = this.getTouchPosition();
             pt.x += 10;
             pt.y += 20;
             this.globalToLocal(pt.x, pt.y, pt);
@@ -8433,26 +9401,30 @@ window.fairygui = window.fgui;
             }
             this._tooltipWin.setPosition(pt.x, pt.y);
             this.addChild(this._tooltipWin);
-        }
-        hideTooltips() {
+        };
+        GRoot.prototype.hideTooltips = function () {
             if (this._tooltipWin) {
                 if (this._tooltipWin.parent)
                     this.removeChild(this._tooltipWin);
                 this._tooltipWin = null;
             }
-        }
-        get volumeScale() {
-            return this._volumeScale;
-        }
-        set volumeScale(value) {
-            this._volumeScale = value;
-        }
-        playOneShotSound(clip, volumeScale) {
+        };
+        Object.defineProperty(GRoot.prototype, "volumeScale", {
+            get: function () {
+                return this._volumeScale;
+            },
+            set: function (value) {
+                this._volumeScale = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GRoot.prototype.playOneShotSound = function (clip, volumeScale) {
             if (volumeScale === undefined)
                 volumeScale = 1;
             cc.audioEngine.play(clip, false, this._volumeScale * volumeScale);
-        }
-        adjustModalLayer() {
+        };
+        GRoot.prototype.adjustModalLayer = function () {
             var cnt = this.numChildren;
             if (this._modalWaitPane && this._modalWaitPane.parent)
                 this.setChildIndex(this._modalWaitPane, cnt - 1);
@@ -8468,17 +9440,17 @@ window.fairygui = window.fgui;
             }
             if (this._modalLayer.parent)
                 this.removeChild(this._modalLayer);
-        }
-        onTouchBegin_1(evt) {
+        };
+        GRoot.prototype.onTouchBegin_1 = function (evt) {
             if (this._tooltipWin)
                 this.hideTooltips();
             this._justClosedPopups.length = 0;
             if (this._popupStack.length > 0) {
-                let mc = evt.initiator;
+                var mc = evt.initiator;
                 while (mc && mc != this) {
-                    let pindex = this._popupStack.indexOf(mc);
+                    var pindex = this._popupStack.indexOf(mc);
                     if (pindex != -1) {
-                        for (let i = this._popupStack.length - 1; i > pindex; i--) {
+                        for (var i = this._popupStack.length - 1; i > pindex; i--) {
                             var popup = this._popupStack.pop();
                             this.closePopup(popup);
                             this._justClosedPopups.push(popup);
@@ -8487,29 +9459,29 @@ window.fairygui = window.fgui;
                     }
                     mc = mc.findParent();
                 }
-                let cnt = this._popupStack.length;
-                for (let i = cnt - 1; i >= 0; i--) {
+                var cnt = this._popupStack.length;
+                for (var i = cnt - 1; i >= 0; i--) {
                     popup = this._popupStack[i];
                     this.closePopup(popup);
                     this._justClosedPopups.push(popup);
                 }
                 this._popupStack.length = 0;
             }
-        }
-        onWinResize() {
-            let size = cc.view.getCanvasSize();
+        };
+        GRoot.prototype.onWinResize = function () {
+            var size = cc.view.getCanvasSize();
             size.width /= cc.view.getScaleX();
             size.height /= cc.view.getScaleY();
-            let pos = cc.view.getViewportRect().origin;
+            var pos = cc.view.getViewportRect().origin;
             pos.x = pos.x / cc.view.getScaleX();
             pos.y = pos.y / cc.view.getScaleY();
             this.setSize(size.width, size.height);
             this._node.setPosition(-pos.x, this._height - pos.y);
             this.updateContentScaleLevel();
-        }
-        handlePositionChanged() {
-        }
-        updateContentScaleLevel() {
+        };
+        GRoot.prototype.handlePositionChanged = function () {
+        };
+        GRoot.prototype.updateContentScaleLevel = function () {
             var ss = Math.max(cc.view.getScaleX(), cc.view.getScaleY());
             if (ss >= 3.5)
                 GRoot.contentScaleLevel = 3;
@@ -8519,25 +9491,28 @@ window.fairygui = window.fgui;
                 GRoot.contentScaleLevel = 1;
             else
                 GRoot.contentScaleLevel = 0;
-        }
-    }
-    GRoot.contentScaleLevel = 0;
+        };
+        GRoot.contentScaleLevel = 0;
+        return GRoot;
+    }(fgui.GComponent));
     fgui.GRoot = GRoot;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GScrollBar extends fgui.GComponent {
-        constructor() {
-            super();
-            this._node.name = "GScrollBar";
-            this._dragOffset = new cc.Vec2();
-            this._scrollPerc = 0;
+    var GScrollBar = (function (_super) {
+        __extends(GScrollBar, _super);
+        function GScrollBar() {
+            var _this = _super.call(this) || this;
+            _this._node.name = "GScrollBar";
+            _this._dragOffset = new cc.Vec2();
+            _this._scrollPerc = 0;
+            return _this;
         }
-        setScrollPane(target, vertical) {
+        GScrollBar.prototype.setScrollPane = function (target, vertical) {
             this._target = target;
             this._vertical = vertical;
-        }
-        setDisplayPerc(value) {
+        };
+        GScrollBar.prototype.setDisplayPerc = function (value) {
             if (this._vertical) {
                 if (!this._fixedGripSize)
                     this._grip.height = Math.floor(value * this._bar.height);
@@ -8549,24 +9524,32 @@ window.fairygui = window.fgui;
                 this._grip.x = this._bar.x + (this._bar.width - this._grip.width) * this._scrollPerc;
             }
             this._grip.visible = value != 0 && value != 1;
-        }
-        setScrollPerc(val) {
+        };
+        GScrollBar.prototype.setScrollPerc = function (val) {
             this._scrollPerc = val;
             if (this._vertical)
                 this._grip.y = this._bar.y + (this._bar.height - this._grip.height) * this._scrollPerc;
             else
                 this._grip.x = this._bar.x + (this._bar.width - this._grip.width) * this._scrollPerc;
-        }
-        get minSize() {
-            if (this._vertical)
-                return (this._arrowButton1 ? this._arrowButton1.height : 0) + (this._arrowButton2 ? this._arrowButton2.height : 0);
-            else
-                return (this._arrowButton1 ? this._arrowButton1.width : 0) + (this._arrowButton2 ? this._arrowButton2.width : 0);
-        }
-        get gripDragging() {
-            return this._gripDragging;
-        }
-        constructExtension(buffer) {
+        };
+        Object.defineProperty(GScrollBar.prototype, "minSize", {
+            get: function () {
+                if (this._vertical)
+                    return (this._arrowButton1 ? this._arrowButton1.height : 0) + (this._arrowButton2 ? this._arrowButton2.height : 0);
+                else
+                    return (this._arrowButton1 ? this._arrowButton1.width : 0) + (this._arrowButton2 ? this._arrowButton2.width : 0);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GScrollBar.prototype, "gripDragging", {
+            get: function () {
+                return this._gripDragging;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GScrollBar.prototype.constructExtension = function (buffer) {
             buffer.seek(0, 6);
             this._fixedGripSize = buffer.readBool();
             this._grip = this.getChild("grip");
@@ -8589,8 +9572,8 @@ window.fairygui = window.fgui;
             if (this._arrowButton2)
                 this._arrowButton2.on(fgui.Event.TOUCH_BEGIN, this.onClickArrow2, this);
             this.on(fgui.Event.TOUCH_BEGIN, this.onBarTouchBegin, this);
-        }
-        onGripTouchDown(evt) {
+        };
+        GScrollBar.prototype.onGripTouchDown = function (evt) {
             evt.stopPropagation();
             evt.captureTouch();
             this._gripDragging = true;
@@ -8598,8 +9581,8 @@ window.fairygui = window.fgui;
             this.globalToLocal(evt.pos.x, evt.pos.y, this._dragOffset);
             this._dragOffset.x -= this._grip.x;
             this._dragOffset.y -= this._grip.y;
-        }
-        onGripTouchMove(evt) {
+        };
+        GScrollBar.prototype.onGripTouchMove = function (evt) {
             if (!this.onStage)
                 return;
             var pt = this.globalToLocal(evt.pos.x, evt.pos.y, s_vec2);
@@ -8611,28 +9594,28 @@ window.fairygui = window.fgui;
                 var curX = pt.x - this._dragOffset.x;
                 this._target.setPercX((curX - this._bar.x) / (this._bar.width - this._grip.width), false);
             }
-        }
-        onGripTouchEnd(evt) {
+        };
+        GScrollBar.prototype.onGripTouchEnd = function (evt) {
             if (!this.onStage)
                 return;
             this._gripDragging = false;
             this._target.updateScrollBarVisible();
-        }
-        onClickArrow1(evt) {
+        };
+        GScrollBar.prototype.onClickArrow1 = function (evt) {
             evt.stopPropagation();
             if (this._vertical)
                 this._target.scrollUp();
             else
                 this._target.scrollLeft();
-        }
-        onClickArrow2(evt) {
+        };
+        GScrollBar.prototype.onClickArrow2 = function (evt) {
             evt.stopPropagation();
             if (this._vertical)
                 this._target.scrollDown();
             else
                 this._target.scrollRight();
-        }
-        onBarTouchBegin(evt) {
+        };
+        GScrollBar.prototype.onBarTouchBegin = function (evt) {
             var pt = this._grip.globalToLocal(evt.pos.x, evt.pos.y, s_vec2);
             if (this._vertical) {
                 if (pt.y < 0)
@@ -8646,80 +9629,103 @@ window.fairygui = window.fgui;
                 else
                     this._target.scrollRight(4);
             }
-        }
-    }
+        };
+        return GScrollBar;
+    }(fgui.GComponent));
     fgui.GScrollBar = GScrollBar;
     var s_vec2 = new cc.Vec2();
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GSlider extends fgui.GComponent {
-        constructor() {
-            super();
-            this._min = 0;
-            this._max = 0;
-            this._value = 0;
-            this._barMaxWidth = 0;
-            this._barMaxHeight = 0;
-            this._barMaxWidthDelta = 0;
-            this._barMaxHeightDelta = 0;
-            this._clickPercent = 0;
-            this._barStartX = 0;
-            this._barStartY = 0;
-            this.changeOnClick = true;
-            this.canDrag = true;
-            this._node.name = "GSlider";
-            this._titleType = fgui.ProgressTitleType.Percent;
-            this._value = 50;
-            this._max = 100;
-            this._clickPos = new cc.Vec2();
+    var GSlider = (function (_super) {
+        __extends(GSlider, _super);
+        function GSlider() {
+            var _this = _super.call(this) || this;
+            _this._min = 0;
+            _this._max = 0;
+            _this._value = 0;
+            _this._barMaxWidth = 0;
+            _this._barMaxHeight = 0;
+            _this._barMaxWidthDelta = 0;
+            _this._barMaxHeightDelta = 0;
+            _this._clickPercent = 0;
+            _this._barStartX = 0;
+            _this._barStartY = 0;
+            _this.changeOnClick = true;
+            _this.canDrag = true;
+            _this._node.name = "GSlider";
+            _this._titleType = fgui.ProgressTitleType.Percent;
+            _this._value = 50;
+            _this._max = 100;
+            _this._clickPos = new cc.Vec2();
+            return _this;
         }
-        get titleType() {
-            return this._titleType;
-        }
-        set titleType(value) {
-            this._titleType = value;
-        }
-        get wholeNumbers() {
-            return this._wholeNumbers;
-        }
-        set wholeNumbers(value) {
-            if (this._wholeNumbers != value) {
-                this._wholeNumbers = value;
-                this.update();
-            }
-        }
-        get min() {
-            return this._min;
-        }
-        set min(value) {
-            if (this._min != value) {
-                this._min = value;
-                this.update();
-            }
-        }
-        get max() {
-            return this._max;
-        }
-        set max(value) {
-            if (this._max != value) {
-                this._max = value;
-                this.update();
-            }
-        }
-        get value() {
-            return this._value;
-        }
-        set value(value) {
-            if (this._value != value) {
-                this._value = value;
-                this.update();
-            }
-        }
-        update() {
+        Object.defineProperty(GSlider.prototype, "titleType", {
+            get: function () {
+                return this._titleType;
+            },
+            set: function (value) {
+                this._titleType = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GSlider.prototype, "wholeNumbers", {
+            get: function () {
+                return this._wholeNumbers;
+            },
+            set: function (value) {
+                if (this._wholeNumbers != value) {
+                    this._wholeNumbers = value;
+                    this.update();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GSlider.prototype, "min", {
+            get: function () {
+                return this._min;
+            },
+            set: function (value) {
+                if (this._min != value) {
+                    this._min = value;
+                    this.update();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GSlider.prototype, "max", {
+            get: function () {
+                return this._max;
+            },
+            set: function (value) {
+                if (this._max != value) {
+                    this._max = value;
+                    this.update();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GSlider.prototype, "value", {
+            get: function () {
+                return this._value;
+            },
+            set: function (value) {
+                if (this._value != value) {
+                    this._value = value;
+                    this.update();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GSlider.prototype.update = function () {
             this.updateWithPercent((this._value - this._min) / (this._max - this._min));
-        }
-        updateWithPercent(percent, manual) {
+        };
+        GSlider.prototype.updateWithPercent = function (percent, manual) {
             percent = fgui.ToolSet.clamp01(percent);
             if (manual) {
                 var newValue = fgui.ToolSet.clamp(this._min + (this._max - this._min) * percent, this._min, this._max);
@@ -8766,8 +9772,8 @@ window.fairygui = window.fgui;
                     this._barObjectV.y = this._barStartY + (fullHeight - this._barObjectV.height);
                 }
             }
-        }
-        constructExtension(buffer) {
+        };
+        GSlider.prototype.constructExtension = function (buffer) {
             buffer.seek(0, 6);
             this._titleType = buffer.readByte();
             this._reverse = buffer.readBool();
@@ -8794,18 +9800,18 @@ window.fairygui = window.fgui;
                 this._gripObject.on(fgui.Event.TOUCH_MOVE, this.onGripTouchMove, this);
             }
             this._node.on(fgui.Event.TOUCH_BEGIN, this.onBarTouchBegin, this);
-        }
-        handleSizeChanged() {
-            super.handleSizeChanged();
+        };
+        GSlider.prototype.handleSizeChanged = function () {
+            _super.prototype.handleSizeChanged.call(this);
             if (this._barObjectH)
                 this._barMaxWidth = this.width - this._barMaxWidthDelta;
             if (this._barObjectV)
                 this._barMaxHeight = this.height - this._barMaxHeightDelta;
             if (!this._underConstruct)
                 this.update();
-        }
-        setup_afterAdd(buffer, beginPos) {
-            super.setup_afterAdd(buffer, beginPos);
+        };
+        GSlider.prototype.setup_afterAdd = function (buffer, beginPos) {
+            _super.prototype.setup_afterAdd.call(this, buffer, beginPos);
             if (!buffer.seek(beginPos, 6)) {
                 this.update();
                 return;
@@ -8819,15 +9825,15 @@ window.fairygui = window.fgui;
             if (buffer.version >= 2)
                 this._min = buffer.readInt();
             this.update();
-        }
-        onGripTouchBegin(evt) {
+        };
+        GSlider.prototype.onGripTouchBegin = function (evt) {
             this.canDrag = true;
             evt.stopPropagation();
             evt.captureTouch();
             this._clickPos = this.globalToLocal(evt.pos.x, evt.pos.y);
             this._clickPercent = fgui.ToolSet.clamp01((this._value - this._min) / (this._max - this._min));
-        }
-        onGripTouchMove(evt) {
+        };
+        GSlider.prototype.onGripTouchMove = function (evt) {
             if (!this.canDrag) {
                 return;
             }
@@ -8844,8 +9850,8 @@ window.fairygui = window.fgui;
             else
                 percent = this._clickPercent + deltaY / this._barMaxHeight;
             this.updateWithPercent(percent, true);
-        }
-        onBarTouchBegin(evt) {
+        };
+        GSlider.prototype.onBarTouchBegin = function (evt) {
             if (!this.changeOnClick)
                 return;
             var pt = this._gripObject.globalToLocal(evt.pos.x, evt.pos.y, s_vec2);
@@ -8860,138 +9866,173 @@ window.fairygui = window.fgui;
             else
                 percent += delta;
             this.updateWithPercent(percent, true);
-        }
-    }
+        };
+        return GSlider;
+    }(fgui.GComponent));
     fgui.GSlider = GSlider;
     var s_vec2 = new cc.Vec2();
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GTextInput extends fgui.GTextField {
-        constructor() {
-            super();
-            this._node.name = "GTextInput";
-            this._touchDisabled = false;
+    var GTextInput = (function (_super) {
+        __extends(GTextInput, _super);
+        function GTextInput() {
+            var _this = _super.call(this) || this;
+            _this._node.name = "GTextInput";
+            _this._touchDisabled = false;
+            return _this;
         }
-        createRenderer() {
+        GTextInput.prototype.createRenderer = function () {
             this._editBox = this._node.addComponent(MyEditBox);
             this._editBox.maxLength = -1;
             this._editBox["_updateTextLabel"]();
             this._node.on('text-changed', this.onTextChanged, this);
             this.on(fgui.Event.TOUCH_END, this.onTouchEnd1, this);
             this.autoSize = fgui.AutoSizeType.None;
-        }
-        set editable(val) {
-            this._editBox.enabled = val;
-        }
-        get editable() {
-            return this._editBox.enabled;
-        }
-        set maxLength(val) {
-            if (val == 0)
-                val = -1;
-            this._editBox.maxLength = val;
-        }
-        get maxLength() {
-            return this._editBox.maxLength;
-        }
-        set promptText(val) {
-            this._promptText = val;
-            let newCreate = !this._editBox.placeholderLabel;
-            this._editBox["_updatePlaceholderLabel"]();
-            if (newCreate)
-                this.assignFont(this._editBox.placeholderLabel, this._realFont);
-            this._editBox.placeholderLabel.string = fgui.UBBParser.inst.parse(this._promptText, true);
-            if (fgui.UBBParser.inst.lastColor) {
-                let c = this._editBox.placeholderLabel.node.color;
-                if (!c)
-                    c = new cc.Color();
-                c.fromHEX(fgui.UBBParser.inst.lastColor);
-                this.assignFontColor(this._editBox.placeholderLabel, c);
-            }
-            else
-                this.assignFontColor(this._editBox.placeholderLabel, this._color);
-            if (fgui.UBBParser.inst.lastSize)
-                this._editBox.placeholderLabel.fontSize = parseInt(fgui.UBBParser.inst.lastSize);
-            else
-                this._editBox.placeholderLabel.fontSize = this._fontSize;
-        }
-        get promptText() {
-            return this._promptText;
-        }
-        set restrict(value) {
-        }
-        get restrict() {
-            return "";
-        }
-        get password() {
-            return this._editBox.inputFlag == cc.EditBox.InputFlag.PASSWORD;
-            ;
-        }
-        set password(val) {
-            this._editBox.inputFlag = val ? cc.EditBox.InputFlag.PASSWORD : cc.EditBox.InputFlag.DEFAULT;
-        }
-        get align() {
-            return this._editBox.textLabel.horizontalAlign;
-        }
-        set align(value) {
-            this._editBox.textLabel.horizontalAlign = value;
-            if (this._editBox.placeholderLabel) {
-                this._editBox.placeholderLabel.horizontalAlign = value;
-            }
-        }
-        get verticalAlign() {
-            return this._editBox.textLabel.verticalAlign;
-        }
-        set verticalAlign(value) {
-            this._editBox.textLabel.verticalAlign = value;
-            if (this._editBox.placeholderLabel) {
-                this._editBox.placeholderLabel.verticalAlign = value;
-            }
-        }
-        get singleLine() {
-            return this._editBox.inputMode != cc.EditBox.InputMode.ANY;
-        }
-        set singleLine(value) {
-            this._editBox.inputMode = value ? cc.EditBox.InputMode.SINGLE_LINE : cc.EditBox.InputMode.ANY;
-        }
-        requestFocus() {
+        };
+        Object.defineProperty(GTextInput.prototype, "editable", {
+            get: function () {
+                return this._editBox.enabled;
+            },
+            set: function (val) {
+                this._editBox.enabled = val;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextInput.prototype, "maxLength", {
+            get: function () {
+                return this._editBox.maxLength;
+            },
+            set: function (val) {
+                if (val == 0)
+                    val = -1;
+                this._editBox.maxLength = val;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextInput.prototype, "promptText", {
+            get: function () {
+                return this._promptText;
+            },
+            set: function (val) {
+                this._promptText = val;
+                var newCreate = !this._editBox.placeholderLabel;
+                this._editBox["_updatePlaceholderLabel"]();
+                if (newCreate)
+                    this.assignFont(this._editBox.placeholderLabel, this._realFont);
+                this._editBox.placeholderLabel.string = fgui.UBBParser.inst.parse(this._promptText, true);
+                if (fgui.UBBParser.inst.lastColor) {
+                    var c = this._editBox.placeholderLabel.node.color;
+                    if (!c)
+                        c = new cc.Color();
+                    c.fromHEX(fgui.UBBParser.inst.lastColor);
+                    this.assignFontColor(this._editBox.placeholderLabel, c);
+                }
+                else
+                    this.assignFontColor(this._editBox.placeholderLabel, this._color);
+                if (fgui.UBBParser.inst.lastSize)
+                    this._editBox.placeholderLabel.fontSize = parseInt(fgui.UBBParser.inst.lastSize);
+                else
+                    this._editBox.placeholderLabel.fontSize = this._fontSize;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextInput.prototype, "restrict", {
+            get: function () {
+                return "";
+            },
+            set: function (value) {
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextInput.prototype, "password", {
+            get: function () {
+                return this._editBox.inputFlag == cc.EditBox.InputFlag.PASSWORD;
+                ;
+            },
+            set: function (val) {
+                this._editBox.inputFlag = val ? cc.EditBox.InputFlag.PASSWORD : cc.EditBox.InputFlag.DEFAULT;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextInput.prototype, "align", {
+            get: function () {
+                return this._editBox.textLabel.horizontalAlign;
+            },
+            set: function (value) {
+                this._editBox.textLabel.horizontalAlign = value;
+                if (this._editBox.placeholderLabel) {
+                    this._editBox.placeholderLabel.horizontalAlign = value;
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextInput.prototype, "verticalAlign", {
+            get: function () {
+                return this._editBox.textLabel.verticalAlign;
+            },
+            set: function (value) {
+                this._editBox.textLabel.verticalAlign = value;
+                if (this._editBox.placeholderLabel) {
+                    this._editBox.placeholderLabel.verticalAlign = value;
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTextInput.prototype, "singleLine", {
+            get: function () {
+                return this._editBox.inputMode != cc.EditBox.InputMode.ANY;
+            },
+            set: function (value) {
+                this._editBox.inputMode = value ? cc.EditBox.InputMode.SINGLE_LINE : cc.EditBox.InputMode.ANY;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GTextInput.prototype.requestFocus = function () {
             this._editBox.focus();
-        }
-        markSizeChanged() {
-        }
-        updateText() {
+        };
+        GTextInput.prototype.markSizeChanged = function () {
+        };
+        GTextInput.prototype.updateText = function () {
             var text2 = this._text;
             if (this._templateVars)
                 text2 = this.parseTemplate(text2);
             if (this._ubbEnabled)
                 text2 = fgui.UBBParser.inst.parse(fgui.ToolSet.encodeHTML(text2), true);
             this._editBox.string = text2;
-        }
-        updateFont() {
+        };
+        GTextInput.prototype.updateFont = function () {
             this.assignFont(this._editBox.textLabel, this._realFont);
             if (this._editBox.placeholderLabel)
                 this.assignFont(this._editBox.placeholderLabel, this._realFont);
-        }
-        updateFontColor() {
+        };
+        GTextInput.prototype.updateFontColor = function () {
             this.assignFontColor(this._editBox.textLabel, this._color);
-        }
-        updateFontSize() {
+        };
+        GTextInput.prototype.updateFontSize = function () {
             this._editBox.textLabel.fontSize = this._fontSize;
             this._editBox.textLabel.lineHeight = this._fontSize + this._leading;
             if (this._editBox.placeholderLabel)
                 this._editBox.placeholderLabel.fontSize = this._editBox.textLabel.fontSize;
-        }
-        updateOverflow() {
-        }
-        onTextChanged() {
+        };
+        GTextInput.prototype.updateOverflow = function () {
+        };
+        GTextInput.prototype.onTextChanged = function () {
             this._text = this._editBox.string;
-        }
-        onTouchEnd1(evt) {
+        };
+        GTextInput.prototype.onTouchEnd1 = function (evt) {
             this._editBox.openKeyboard(evt.touch);
-        }
-        setup_beforeAdd(buffer, beginPos) {
-            super.setup_beforeAdd(buffer, beginPos);
+        };
+        GTextInput.prototype.setup_beforeAdd = function (buffer, beginPos) {
+            _super.prototype.setup_beforeAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 4);
             var str = buffer.readS();
             if (str != null)
@@ -9008,70 +10049,90 @@ window.fairygui = window.fgui;
             if (buffer.readBool())
                 this.password = true;
             if (this._editBox.placeholderLabel) {
-                let hAlign = this._editBox.textLabel.horizontalAlign;
+                var hAlign = this._editBox.textLabel.horizontalAlign;
                 this._editBox.placeholderLabel.horizontalAlign = hAlign;
-                let vAlign = this._editBox.textLabel.verticalAlign;
+                var vAlign = this._editBox.textLabel.verticalAlign;
                 this._editBox.placeholderLabel.verticalAlign = vAlign;
             }
-        }
-    }
+        };
+        return GTextInput;
+    }(fgui.GTextField));
     fgui.GTextInput = GTextInput;
-    class MyEditBox extends cc.EditBox {
-        _registerEvent() {
+    var MyEditBox = (function (_super) {
+        __extends(MyEditBox, _super);
+        function MyEditBox() {
+            return _super !== null && _super.apply(this, arguments) || this;
         }
-        _syncSize() {
-            let size = this.node.getContentSize();
-            let impl = this["_impl"];
+        MyEditBox.prototype._registerEvent = function () {
+        };
+        MyEditBox.prototype._syncSize = function () {
+            var size = this.node.getContentSize();
+            var impl = this["_impl"];
             impl.setSize(size.width, size.height);
             if (this.textLabel)
                 this.textLabel.node.setContentSize(size.width, size.height);
             if (this.placeholderLabel)
                 this.placeholderLabel.node.setContentSize(size.width, size.height);
-        }
-        openKeyboard(touch) {
-            let impl = this["_impl"];
+        };
+        MyEditBox.prototype.openKeyboard = function (touch) {
+            var impl = this["_impl"];
             if (impl) {
                 impl.beginEditing();
             }
-        }
-    }
+        };
+        return MyEditBox;
+    }(cc.EditBox));
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GTree extends fgui.GList {
-        constructor() {
-            super();
-            this._indent = 15;
-            this._rootNode = new fgui.GTreeNode(true);
-            this._rootNode._setTree(this);
-            this._rootNode.expanded = true;
+    var GTree = (function (_super) {
+        __extends(GTree, _super);
+        function GTree() {
+            var _this = _super.call(this) || this;
+            _this._indent = 15;
+            _this._rootNode = new fgui.GTreeNode(true);
+            _this._rootNode._setTree(_this);
+            _this._rootNode.expanded = true;
+            return _this;
         }
-        get rootNode() {
-            return this._rootNode;
-        }
-        get indent() {
-            return this._indent;
-        }
-        set indent(value) {
-            this._indent = value;
-        }
-        get clickToExpand() {
-            return this._clickToExpand;
-        }
-        set clickToExpand(value) {
-            this._clickToExpand = value;
-        }
-        getSelectedNode() {
+        Object.defineProperty(GTree.prototype, "rootNode", {
+            get: function () {
+                return this._rootNode;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTree.prototype, "indent", {
+            get: function () {
+                return this._indent;
+            },
+            set: function (value) {
+                this._indent = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTree.prototype, "clickToExpand", {
+            get: function () {
+                return this._clickToExpand;
+            },
+            set: function (value) {
+                this._clickToExpand = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GTree.prototype.getSelectedNode = function () {
             if (this.selectedIndex != -1)
                 return this.getChildAt(this.selectedIndex)._treeNode;
             else
                 return null;
-        }
-        getSelectedNodes(result) {
+        };
+        GTree.prototype.getSelectedNodes = function (result) {
             if (!result)
                 result = new Array();
             s_list.length = 0;
-            super.getSelection(s_list);
+            _super.prototype.getSelection.call(this, s_list);
             var cnt = s_list.length;
             var ret = new Array();
             for (var i = 0; i < cnt; i++) {
@@ -9079,8 +10140,8 @@ window.fairygui = window.fgui;
                 ret.push(node);
             }
             return ret;
-        }
-        selectNode(node, scrollItToView) {
+        };
+        GTree.prototype.selectNode = function (node, scrollItToView) {
             var parentNode = node.parent;
             while (parentNode && parentNode != this._rootNode) {
                 parentNode.expanded = true;
@@ -9089,13 +10150,13 @@ window.fairygui = window.fgui;
             if (!node._cell)
                 return;
             this.addSelection(this.getChildIndex(node._cell), scrollItToView);
-        }
-        unselectNode(node) {
+        };
+        GTree.prototype.unselectNode = function (node) {
             if (!node._cell)
                 return;
             this.removeSelection(this.getChildIndex(node._cell));
-        }
-        expandAll(folderNode) {
+        };
+        GTree.prototype.expandAll = function (folderNode) {
             if (!folderNode)
                 folderNode = this._rootNode;
             folderNode.expanded = true;
@@ -9105,8 +10166,8 @@ window.fairygui = window.fgui;
                 if (node.isFolder)
                     this.expandAll(node);
             }
-        }
-        collapseAll(folderNode) {
+        };
+        GTree.prototype.collapseAll = function (folderNode) {
             if (!folderNode)
                 folderNode = this._rootNode;
             if (folderNode != this._rootNode)
@@ -9117,8 +10178,8 @@ window.fairygui = window.fgui;
                 if (node.isFolder)
                     this.collapseAll(node);
             }
-        }
-        createCell(node) {
+        };
+        GTree.prototype.createCell = function (node) {
             var child = this.getFromPool(node._resURL);
             if (!(child instanceof fgui.GComponent))
                 throw new Error("cannot create tree node object.");
@@ -9140,8 +10201,8 @@ window.fairygui = window.fgui;
                 node._cell.on(fgui.Event.TOUCH_BEGIN, this.__cellMouseDown, this);
             if (this.treeNodeRender)
                 this.treeNodeRender(node, child);
-        }
-        _afterInserted(node) {
+        };
+        GTree.prototype._afterInserted = function (node) {
             if (!node._cell)
                 this.createCell(node);
             var index = this.getInsertIndexForNode(node);
@@ -9150,8 +10211,8 @@ window.fairygui = window.fgui;
                 this.treeNodeRender(node, node._cell);
             if (node.isFolder && node.expanded)
                 this.checkChildren(node, index);
-        }
-        getInsertIndexForNode(node) {
+        };
+        GTree.prototype.getInsertIndexForNode = function (node) {
             var prevNode = node.getPrevSibling();
             if (prevNode == null)
                 prevNode = node.parent;
@@ -9165,11 +10226,11 @@ window.fairygui = window.fgui;
                 insertIndex++;
             }
             return insertIndex;
-        }
-        _afterRemoved(node) {
+        };
+        GTree.prototype._afterRemoved = function (node) {
             this.removeNode(node);
-        }
-        _afterExpanded(node) {
+        };
+        GTree.prototype._afterExpanded = function (node) {
             if (node == this._rootNode) {
                 this.checkChildren(this._rootNode, 0);
                 return;
@@ -9185,8 +10246,8 @@ window.fairygui = window.fgui;
                 cc.selectedIndex = 1;
             if (node._cell.parent)
                 this.checkChildren(node, this.getChildIndex(node._cell));
-        }
-        _afterCollapsed(node) {
+        };
+        GTree.prototype._afterCollapsed = function (node) {
             if (node == this._rootNode) {
                 this.checkChildren(this._rootNode, 0);
                 return;
@@ -9202,8 +10263,8 @@ window.fairygui = window.fgui;
                 cc.selectedIndex = 0;
             if (node._cell.parent)
                 this.hideFolderNode(node);
-        }
-        _afterMoved(node) {
+        };
+        GTree.prototype._afterMoved = function (node) {
             var startIndex = this.getChildIndex(node._cell);
             var endIndex;
             if (node.isFolder)
@@ -9226,8 +10287,8 @@ window.fairygui = window.fgui;
                     this.setChildIndex(obj, insertIndex);
                 }
             }
-        }
-        getFolderEndIndex(startIndex, level) {
+        };
+        GTree.prototype.getFolderEndIndex = function (startIndex, level) {
             var cnt = this.numChildren;
             for (var i = startIndex + 1; i < cnt; i++) {
                 var node = this.getChildAt(i)._treeNode;
@@ -9235,8 +10296,8 @@ window.fairygui = window.fgui;
                     return i;
             }
             return cnt;
-        }
-        checkChildren(folderNode, index) {
+        };
+        GTree.prototype.checkChildren = function (folderNode, index) {
             var cnt = folderNode.numChildren;
             for (var i = 0; i < cnt; i++) {
                 index++;
@@ -9249,8 +10310,8 @@ window.fairygui = window.fgui;
                     index = this.checkChildren(node, index);
             }
             return index;
-        }
-        hideFolderNode(folderNode) {
+        };
+        GTree.prototype.hideFolderNode = function (folderNode) {
             var cnt = folderNode.numChildren;
             for (var i = 0; i < cnt; i++) {
                 var node = folderNode.getChildAt(i);
@@ -9259,8 +10320,8 @@ window.fairygui = window.fgui;
                 if (node.isFolder && node.expanded)
                     this.hideFolderNode(node);
             }
-        }
-        removeNode(node) {
+        };
+        GTree.prototype.removeNode = function (node) {
             if (node._cell) {
                 if (node._cell.parent)
                     this.removeChild(node._cell);
@@ -9275,16 +10336,16 @@ window.fairygui = window.fgui;
                     this.removeNode(node2);
                 }
             }
-        }
-        __cellMouseDown(evt) {
+        };
+        GTree.prototype.__cellMouseDown = function (evt) {
             var node = fgui.GObject.cast(evt.currentTarget)._treeNode;
             this._expandedStatusInEvt = node.expanded;
-        }
-        __expandedStateChanged(cc) {
+        };
+        GTree.prototype.__expandedStateChanged = function (cc) {
             var node = cc.parent._treeNode;
             node.expanded = cc.selectedIndex == 1;
-        }
-        dispatchItemEvent(item, evt) {
+        };
+        GTree.prototype.dispatchItemEvent = function (item, evt) {
             if (this._clickToExpand != 0) {
                 var node = item._treeNode;
                 if (node && this._expandedStatusInEvt == node.expanded) {
@@ -9294,15 +10355,15 @@ window.fairygui = window.fgui;
                         node.expanded = !node.expanded;
                 }
             }
-            super.dispatchItemEvent(item, evt);
-        }
-        setup_beforeAdd(buffer, beginPos) {
-            super.setup_beforeAdd(buffer, beginPos);
+            _super.prototype.dispatchItemEvent.call(this, item, evt);
+        };
+        GTree.prototype.setup_beforeAdd = function (buffer, beginPos) {
+            _super.prototype.setup_beforeAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 9);
             this._indent = buffer.readInt();
             this._clickToExpand = buffer.readByte();
-        }
-        readItems(buffer) {
+        };
+        GTree.prototype.readItems = function (buffer) {
             var cnt;
             var i;
             var nextPos;
@@ -9345,76 +10406,105 @@ window.fairygui = window.fgui;
                 this.setupItem(buffer, node.cell);
                 buffer.position = nextPos;
             }
-        }
-    }
+        };
+        return GTree;
+    }(fgui.GList));
     fgui.GTree = GTree;
     var s_list = new Array();
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GTreeNode {
-        constructor(hasChild, resURL) {
+    var GTreeNode = (function () {
+        function GTreeNode(hasChild, resURL) {
             this._level = 0;
             this._resURL = resURL;
             if (hasChild)
                 this._children = new Array();
         }
-        set expanded(value) {
-            if (this._children == null)
-                return;
-            if (this._expanded != value) {
-                this._expanded = value;
-                if (this._tree) {
-                    if (this._expanded)
-                        this._tree._afterExpanded(this);
-                    else
-                        this._tree._afterCollapsed(this);
+        Object.defineProperty(GTreeNode.prototype, "expanded", {
+            get: function () {
+                return this._expanded;
+            },
+            set: function (value) {
+                if (this._children == null)
+                    return;
+                if (this._expanded != value) {
+                    this._expanded = value;
+                    if (this._tree) {
+                        if (this._expanded)
+                            this._tree._afterExpanded(this);
+                        else
+                            this._tree._afterCollapsed(this);
+                    }
                 }
-            }
-        }
-        get expanded() {
-            return this._expanded;
-        }
-        get isFolder() {
-            return this._children != null;
-        }
-        get parent() {
-            return this._parent;
-        }
-        get text() {
-            if (this._cell)
-                return this._cell.text;
-            else
-                return null;
-        }
-        set text(value) {
-            if (this._cell)
-                this._cell.text = value;
-        }
-        get icon() {
-            if (this._cell)
-                return this._cell.icon;
-            else
-                return null;
-        }
-        set icon(value) {
-            if (this._cell)
-                this._cell.icon = value;
-        }
-        get cell() {
-            return this._cell;
-        }
-        get level() {
-            return this._level;
-        }
-        _setLevel(value) {
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTreeNode.prototype, "isFolder", {
+            get: function () {
+                return this._children != null;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTreeNode.prototype, "parent", {
+            get: function () {
+                return this._parent;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTreeNode.prototype, "text", {
+            get: function () {
+                if (this._cell)
+                    return this._cell.text;
+                else
+                    return null;
+            },
+            set: function (value) {
+                if (this._cell)
+                    this._cell.text = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTreeNode.prototype, "icon", {
+            get: function () {
+                if (this._cell)
+                    return this._cell.icon;
+                else
+                    return null;
+            },
+            set: function (value) {
+                if (this._cell)
+                    this._cell.icon = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTreeNode.prototype, "cell", {
+            get: function () {
+                return this._cell;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTreeNode.prototype, "level", {
+            get: function () {
+                return this._level;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GTreeNode.prototype._setLevel = function (value) {
             this._level = value;
-        }
-        addChild(child) {
+        };
+        GTreeNode.prototype.addChild = function (child) {
             this.addChildAt(child, this._children.length);
             return child;
-        }
-        addChildAt(child, index) {
+        };
+        GTreeNode.prototype.addChildAt = function (child, index) {
             if (!child)
                 throw new Error("child is null");
             var numChildren = this._children.length;
@@ -9441,15 +10531,15 @@ window.fairygui = window.fgui;
             else {
                 throw new RangeError("Invalid child index");
             }
-        }
-        removeChild(child) {
+        };
+        GTreeNode.prototype.removeChild = function (child) {
             var childIndex = this._children.indexOf(child);
             if (childIndex != -1) {
                 this.removeChildAt(childIndex);
             }
             return child;
-        }
-        removeChildAt(index) {
+        };
+        GTreeNode.prototype.removeChildAt = function (index) {
             if (index >= 0 && index < this.numChildren) {
                 var child = this._children[index];
                 this._children.splice(index, 1);
@@ -9463,8 +10553,8 @@ window.fairygui = window.fgui;
             else {
                 throw "Invalid child index";
             }
-        }
-        removeChildren(beginIndex, endIndex) {
+        };
+        GTreeNode.prototype.removeChildren = function (beginIndex, endIndex) {
             beginIndex = beginIndex || 0;
             if (endIndex == null)
                 endIndex = -1;
@@ -9472,33 +10562,33 @@ window.fairygui = window.fgui;
                 endIndex = this.numChildren - 1;
             for (var i = beginIndex; i <= endIndex; ++i)
                 this.removeChildAt(beginIndex);
-        }
-        getChildAt(index) {
+        };
+        GTreeNode.prototype.getChildAt = function (index) {
             if (index >= 0 && index < this.numChildren)
                 return this._children[index];
             else
                 throw "Invalid child index";
-        }
-        getChildIndex(child) {
+        };
+        GTreeNode.prototype.getChildIndex = function (child) {
             return this._children.indexOf(child);
-        }
-        getPrevSibling() {
+        };
+        GTreeNode.prototype.getPrevSibling = function () {
             if (this._parent == null)
                 return null;
             var i = this._parent._children.indexOf(this);
             if (i <= 0)
                 return null;
             return this._parent._children[i - 1];
-        }
-        getNextSibling() {
+        };
+        GTreeNode.prototype.getNextSibling = function () {
             if (this._parent == null)
                 return null;
             var i = this._parent._children.indexOf(this);
             if (i < 0 || i >= this._parent._children.length - 1)
                 return null;
             return this._parent._children[i + 1];
-        }
-        setChildIndex(child, index) {
+        };
+        GTreeNode.prototype.setChildIndex = function (child, index) {
             var oldIndex = this._children.indexOf(child);
             if (oldIndex == -1)
                 throw "Not a child of this container";
@@ -9513,34 +10603,42 @@ window.fairygui = window.fgui;
             this._children.splice(index, 0, child);
             if (this._tree && this == this._tree.rootNode || this._cell && this._cell.parent && this._expanded)
                 this._tree._afterMoved(child);
-        }
-        swapChildren(child1, child2) {
+        };
+        GTreeNode.prototype.swapChildren = function (child1, child2) {
             var index1 = this._children.indexOf(child1);
             var index2 = this._children.indexOf(child2);
             if (index1 == -1 || index2 == -1)
                 throw "Not a child of this container";
             this.swapChildrenAt(index1, index2);
-        }
-        swapChildrenAt(index1, index2) {
+        };
+        GTreeNode.prototype.swapChildrenAt = function (index1, index2) {
             var child1 = this._children[index1];
             var child2 = this._children[index2];
             this.setChildIndex(child1, index2);
             this.setChildIndex(child2, index1);
-        }
-        get numChildren() {
-            return this._children.length;
-        }
-        expandToRoot() {
+        };
+        Object.defineProperty(GTreeNode.prototype, "numChildren", {
+            get: function () {
+                return this._children.length;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GTreeNode.prototype.expandToRoot = function () {
             var p = this;
             while (p) {
                 p.expanded = true;
                 p = p.parent;
             }
-        }
-        get tree() {
-            return this._tree;
-        }
-        _setTree(value) {
+        };
+        Object.defineProperty(GTreeNode.prototype, "tree", {
+            get: function () {
+                return this._tree;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GTreeNode.prototype._setTree = function (value) {
             this._tree = value;
             if (this._tree && this._tree.treeNodeWillExpand && this._expanded)
                 this._tree.treeNodeWillExpand(this, true);
@@ -9552,67 +10650,70 @@ window.fairygui = window.fgui;
                     node._setTree(value);
                 }
             }
-        }
-    }
+        };
+        return GTreeNode;
+    }());
     fgui.GTreeNode = GTreeNode;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class Margin {
-        constructor() {
+    var Margin = (function () {
+        function Margin() {
             this.left = 0;
             this.right = 0;
             this.top = 0;
             this.bottom = 0;
         }
-        copy(source) {
+        Margin.prototype.copy = function (source) {
             this.top = source.top;
             this.bottom = source.bottom;
             this.left = source.left;
             this.right = source.right;
-        }
-        isNone() {
+        };
+        Margin.prototype.isNone = function () {
             return this.left == 0 && this.right == 0 && this.top == 0 && this.bottom == 0;
-        }
-    }
+        };
+        return Margin;
+    }());
     fgui.Margin = Margin;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class PackageItem {
-        constructor() {
+    var PackageItem = (function () {
+        function PackageItem() {
             this.width = 0;
             this.height = 0;
         }
-        load() {
+        PackageItem.prototype.load = function () {
             return this.owner.getItemAsset(this);
-        }
-        getBranch() {
+        };
+        PackageItem.prototype.getBranch = function () {
             if (this.branches && this.owner._branchIndex != -1) {
                 var itemId = this.branches[this.owner._branchIndex];
                 if (itemId)
                     return this.owner.getItemById(itemId);
             }
             return this;
-        }
-        getHighResolution() {
+        };
+        PackageItem.prototype.getHighResolution = function () {
             if (this.highResolution && fgui.GRoot.contentScaleLevel > 0) {
                 var itemId = this.highResolution[fgui.GRoot.contentScaleLevel - 1];
                 if (itemId)
                     return this.owner.getItemById(itemId);
             }
             return this;
-        }
-        toString() {
+        };
+        PackageItem.prototype.toString = function () {
             return this.name;
-        }
-    }
+        };
+        return PackageItem;
+    }());
     fgui.PackageItem = PackageItem;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class PopupMenu {
-        constructor(url) {
+    var PopupMenu = (function () {
+        function PopupMenu(url) {
             if (!url) {
                 url = fgui.UIConfig.popupMenu;
                 if (!url)
@@ -9627,10 +10728,10 @@ window.fairygui = window.fgui;
             this._contentPane.addRelation(this._list, fgui.RelationType.Height);
             this._list.on(fgui.Event.CLICK_ITEM, this.onClickItem, this);
         }
-        dispose() {
+        PopupMenu.prototype.dispose = function () {
             this._contentPane.dispose();
-        }
-        addItem(caption, callback) {
+        };
+        PopupMenu.prototype.addItem = function (caption, callback) {
             var item = this._list.addItemFromPool();
             item.title = caption;
             item.data = callback;
@@ -9639,8 +10740,8 @@ window.fairygui = window.fgui;
             if (c)
                 c.selectedIndex = 0;
             return item;
-        }
-        addItemAt(caption, index, callback) {
+        };
+        PopupMenu.prototype.addItemAt = function (caption, index, callback) {
             var item = this._list.getFromPool();
             this._list.addChildAt(item, index);
             item.title = caption;
@@ -9650,32 +10751,32 @@ window.fairygui = window.fgui;
             if (c)
                 c.selectedIndex = 0;
             return item;
-        }
-        addSeperator() {
+        };
+        PopupMenu.prototype.addSeperator = function () {
             if (fgui.UIConfig.popupMenu_seperator == null)
                 throw "UIConfig.popupMenu_seperator not defined";
             this.list.addItemFromPool(fgui.UIConfig.popupMenu_seperator);
-        }
-        getItemName(index) {
+        };
+        PopupMenu.prototype.getItemName = function (index) {
             var item = this._list.getChildAt(index);
             return item.name;
-        }
-        setItemText(name, caption) {
+        };
+        PopupMenu.prototype.setItemText = function (name, caption) {
             var item = this._list.getChild(name);
             item.title = caption;
-        }
-        setItemVisible(name, visible) {
+        };
+        PopupMenu.prototype.setItemVisible = function (name, visible) {
             var item = this._list.getChild(name);
             if (item.visible != visible) {
                 item.visible = visible;
                 this._list.setBoundsChangedFlag();
             }
-        }
-        setItemGrayed(name, grayed) {
+        };
+        PopupMenu.prototype.setItemGrayed = function (name, grayed) {
             var item = this._list.getChild(name);
             item.grayed = grayed;
-        }
-        setItemCheckable(name, checkable) {
+        };
+        PopupMenu.prototype.setItemCheckable = function (name, checkable) {
             var item = this._list.getChild(name);
             var c = item.getController("checked");
             if (c) {
@@ -9686,22 +10787,22 @@ window.fairygui = window.fgui;
                 else
                     c.selectedIndex = 0;
             }
-        }
-        setItemChecked(name, checked) {
+        };
+        PopupMenu.prototype.setItemChecked = function (name, checked) {
             var item = this._list.getChild(name);
             var c = item.getController("checked");
             if (c)
                 c.selectedIndex = checked ? 2 : 1;
-        }
-        isItemChecked(name) {
+        };
+        PopupMenu.prototype.isItemChecked = function (name) {
             var item = this._list.getChild(name);
             var c = item.getController("checked");
             if (c)
                 return c.selectedIndex == 2;
             else
                 return false;
-        }
-        removeItem(name) {
+        };
+        PopupMenu.prototype.removeItem = function (name) {
             var item = this._list.getChild(name);
             if (item) {
                 var index = this._list.getChildIndex(item);
@@ -9710,30 +10811,43 @@ window.fairygui = window.fgui;
             }
             else
                 return false;
-        }
-        clearItems() {
+        };
+        PopupMenu.prototype.clearItems = function () {
             this._list.removeChildrenToPool();
-        }
-        get itemCount() {
-            return this._list.numChildren;
-        }
-        get contentPane() {
-            return this._contentPane;
-        }
-        get list() {
-            return this._list;
-        }
-        show(target = null, dir) {
+        };
+        Object.defineProperty(PopupMenu.prototype, "itemCount", {
+            get: function () {
+                return this._list.numChildren;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(PopupMenu.prototype, "contentPane", {
+            get: function () {
+                return this._contentPane;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(PopupMenu.prototype, "list", {
+            get: function () {
+                return this._list;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        PopupMenu.prototype.show = function (target, dir) {
+            if (target === void 0) { target = null; }
             var r = target != null ? target.root : fgui.GRoot.inst;
             r.showPopup(this.contentPane, (target instanceof fgui.GRoot) ? null : target, dir);
-        }
-        onClickItem(item, evt) {
-            let _this = this;
+        };
+        PopupMenu.prototype.onClickItem = function (item, evt) {
+            var _this = this;
             this._list._partner.callLater(function (dt) {
                 _this.onClickItem2(item, evt);
             }, 0.1);
-        }
-        onClickItem2(item, evt) {
+        };
+        PopupMenu.prototype.onClickItem2 = function (item, evt) {
             if (!(item instanceof fgui.GButton))
                 return;
             if (item.grayed) {
@@ -9751,37 +10865,46 @@ window.fairygui = window.fgui;
             r.hidePopup(this.contentPane);
             if (item.data instanceof Function)
                 item.data(item, evt);
-        }
-        onDisplay() {
+        };
+        PopupMenu.prototype.onDisplay = function () {
             this._list.selectedIndex = -1;
             this._list.resizeToFit(100000, 10);
-        }
-    }
+        };
+        return PopupMenu;
+    }());
     fgui.PopupMenu = PopupMenu;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class RelationItem {
-        constructor(owner) {
+    var RelationItem = (function () {
+        function RelationItem(owner) {
             this._owner = owner;
             this._defs = new Array();
         }
-        get owner() {
-            return this._owner;
-        }
-        set target(value) {
-            if (this._target != value) {
-                if (this._target)
-                    this.releaseRefTarget(this._target);
-                this._target = value;
-                if (this._target)
-                    this.addRefTarget(this._target);
-            }
-        }
-        get target() {
-            return this._target;
-        }
-        add(relationType, usePercent) {
+        Object.defineProperty(RelationItem.prototype, "owner", {
+            get: function () {
+                return this._owner;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(RelationItem.prototype, "target", {
+            get: function () {
+                return this._target;
+            },
+            set: function (value) {
+                if (this._target != value) {
+                    if (this._target)
+                        this.releaseRefTarget(this._target);
+                    this._target = value;
+                    if (this._target)
+                        this.addRefTarget(this._target);
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        RelationItem.prototype.add = function (relationType, usePercent) {
             if (relationType == fgui.RelationType.Size) {
                 this.add(fgui.RelationType.Width, usePercent);
                 this.add(fgui.RelationType.Height, usePercent);
@@ -9794,8 +10917,8 @@ window.fairygui = window.fgui;
                     return;
             }
             this.internalAdd(relationType, usePercent);
-        }
-        internalAdd(relationType, usePercent) {
+        };
+        RelationItem.prototype.internalAdd = function (relationType, usePercent) {
             if (relationType == fgui.RelationType.Size) {
                 this.internalAdd(fgui.RelationType.Width, usePercent);
                 this.internalAdd(fgui.RelationType.Height, usePercent);
@@ -9806,8 +10929,8 @@ window.fairygui = window.fgui;
             info.type = relationType;
             info.axis = (relationType <= fgui.RelationType.Right_Right || relationType == fgui.RelationType.Width || relationType >= fgui.RelationType.LeftExt_Left && relationType <= fgui.RelationType.RightExt_Right) ? 0 : 1;
             this._defs.push(info);
-        }
-        remove(relationType) {
+        };
+        RelationItem.prototype.remove = function (relationType) {
             if (relationType == fgui.RelationType.Size) {
                 this.remove(fgui.RelationType.Width);
                 this.remove(fgui.RelationType.Height);
@@ -9820,8 +10943,8 @@ window.fairygui = window.fgui;
                     break;
                 }
             }
-        }
-        copyFrom(source) {
+        };
+        RelationItem.prototype.copyFrom = function (source) {
             this.target = source.target;
             this._defs.length = 0;
             var length = source._defs.length;
@@ -9831,17 +10954,21 @@ window.fairygui = window.fgui;
                 info2.copyFrom(info);
                 this._defs.push(info2);
             }
-        }
-        dispose() {
+        };
+        RelationItem.prototype.dispose = function () {
             if (this._target) {
                 this.releaseRefTarget(this._target);
                 this._target = null;
             }
-        }
-        get isEmpty() {
-            return this._defs.length == 0;
-        }
-        applyOnSelfResized(dWidth, dHeight, applyPivot) {
+        };
+        Object.defineProperty(RelationItem.prototype, "isEmpty", {
+            get: function () {
+                return this._defs.length == 0;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        RelationItem.prototype.applyOnSelfResized = function (dWidth, dHeight, applyPivot) {
             var ox = this._owner.x;
             var oy = this._owner.y;
             var length = this._defs.length;
@@ -9879,8 +11006,8 @@ window.fairygui = window.fgui;
                     }
                 }
             }
-        }
-        applyOnXYChanged(info, dx, dy) {
+        };
+        RelationItem.prototype.applyOnXYChanged = function (info, dx, dy) {
             var tmp;
             switch (info.type) {
                 case fgui.RelationType.Left_Left:
@@ -9945,8 +11072,8 @@ window.fairygui = window.fgui;
                         this._owner.height = this._owner._rawHeight + dy;
                     break;
             }
-        }
-        applyOnSizeChanged(info) {
+        };
+        RelationItem.prototype.applyOnSizeChanged = function (info) {
             var pos = 0, pivot = 0, delta = 0;
             var v, tmp;
             if (info.axis == 0) {
@@ -10213,8 +11340,8 @@ window.fairygui = window.fgui;
                     }
                     break;
             }
-        }
-        addRefTarget(target) {
+        };
+        RelationItem.prototype.addRefTarget = function (target) {
             if (target != this._owner.parent)
                 target.on(fgui.Event.XY_CHANGED, this.__targetXYChanged, this);
             target.on(fgui.Event.SIZE_CHANGED, this.__targetSizeChanged, this);
@@ -10223,15 +11350,15 @@ window.fairygui = window.fgui;
             this._targetY = this._target.y;
             this._targetWidth = this._target._width;
             this._targetHeight = this._target._height;
-        }
-        releaseRefTarget(target) {
+        };
+        RelationItem.prototype.releaseRefTarget = function (target) {
             if (!target.node)
                 return;
             target.off(fgui.Event.XY_CHANGED, this.__targetXYChanged, this);
             target.off(fgui.Event.SIZE_CHANGED, this.__targetSizeChanged, this);
             target.off(fgui.Event.SIZE_DELAY_CHANGE, this.__targetSizeWillChange, this);
-        }
-        __targetXYChanged(evt) {
+        };
+        RelationItem.prototype.__targetXYChanged = function (evt) {
             if (this._owner.relations.handling != null || this._owner.group != null && this._owner.group._updating) {
                 this._targetX = this._target.x;
                 this._targetY = this._target.y;
@@ -10263,8 +11390,8 @@ window.fairygui = window.fgui;
                 }
             }
             this._owner.relations.handling = null;
-        }
-        __targetSizeChanged(evt) {
+        };
+        RelationItem.prototype.__targetSizeChanged = function (evt) {
             if (this._owner.relations.handling != null)
                 return;
             this._owner.relations.handling = this._target;
@@ -10298,31 +11425,33 @@ window.fairygui = window.fgui;
                 this._owner.updateGearFromRelations(2, ow, oh);
             }
             this._owner.relations.handling = null;
-        }
-        __targetSizeWillChange(evt) {
+        };
+        RelationItem.prototype.__targetSizeWillChange = function (evt) {
             this._owner.relations.sizeDirty = true;
-        }
-    }
+        };
+        return RelationItem;
+    }());
     fgui.RelationItem = RelationItem;
-    class RelationDef {
-        constructor() {
+    var RelationDef = (function () {
+        function RelationDef() {
         }
-        copyFrom(source) {
+        RelationDef.prototype.copyFrom = function (source) {
             this.percent = source.percent;
             this.type = source.type;
             this.axis = source.axis;
-        }
-    }
+        };
+        return RelationDef;
+    }());
     fgui.RelationDef = RelationDef;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class Relations {
-        constructor(owner) {
+    var Relations = (function () {
+        function Relations(owner) {
             this._owner = owner;
             this._items = new Array();
         }
-        add(target, relationType, usePercent) {
+        Relations.prototype.add = function (target, relationType, usePercent) {
             var length = this._items.length;
             for (var i = 0; i < length; i++) {
                 var item = this._items[i];
@@ -10335,8 +11464,8 @@ window.fairygui = window.fgui;
             newItem.target = target;
             newItem.add(relationType, usePercent);
             this._items.push(newItem);
-        }
-        remove(target, relationType) {
+        };
+        Relations.prototype.remove = function (target, relationType) {
             relationType = relationType || 0;
             var cnt = this._items.length;
             var i = 0;
@@ -10355,8 +11484,8 @@ window.fairygui = window.fgui;
                 else
                     i++;
             }
-        }
-        contains(target) {
+        };
+        Relations.prototype.contains = function (target) {
             var length = this._items.length;
             for (var i = 0; i < length; i++) {
                 var item = this._items[i];
@@ -10364,8 +11493,8 @@ window.fairygui = window.fgui;
                     return true;
             }
             return false;
-        }
-        clearFor(target) {
+        };
+        Relations.prototype.clearFor = function (target) {
             var cnt = this._items.length;
             var i = 0;
             while (i < cnt) {
@@ -10378,16 +11507,16 @@ window.fairygui = window.fgui;
                 else
                     i++;
             }
-        }
-        clearAll() {
+        };
+        Relations.prototype.clearAll = function () {
             var length = this._items.length;
             for (var i = 0; i < length; i++) {
                 var item = this._items[i];
                 item.dispose();
             }
             this._items.length = 0;
-        }
-        copyFrom(source) {
+        };
+        Relations.prototype.copyFrom = function (source) {
             this.clearAll();
             var arr = source._items;
             var length = arr.length;
@@ -10397,11 +11526,11 @@ window.fairygui = window.fgui;
                 item.copyFrom(ri);
                 this._items.push(item);
             }
-        }
-        dispose() {
+        };
+        Relations.prototype.dispose = function () {
             this.clearAll();
-        }
-        onOwnerSizeChanged(dWidth, dHeight, applyPivot) {
+        };
+        Relations.prototype.onOwnerSizeChanged = function (dWidth, dHeight, applyPivot) {
             if (this._items.length == 0)
                 return;
             var length = this._items.length;
@@ -10409,8 +11538,8 @@ window.fairygui = window.fgui;
                 var item = this._items[i];
                 item.applyOnSelfResized(dWidth, dHeight, applyPivot);
             }
-        }
-        ensureRelationsSizeCorrect() {
+        };
+        Relations.prototype.ensureRelationsSizeCorrect = function () {
             if (this._items.length == 0)
                 return;
             this.sizeDirty = false;
@@ -10419,11 +11548,15 @@ window.fairygui = window.fgui;
                 var item = this._items[i];
                 item.target.ensureSizeCorrect();
             }
-        }
-        get empty() {
-            return this._items.length == 0;
-        }
-        setup(buffer, parentToChild) {
+        };
+        Object.defineProperty(Relations.prototype, "empty", {
+            get: function () {
+                return this._items.length == 0;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Relations.prototype.setup = function (buffer, parentToChild) {
             var cnt = buffer.readByte();
             var target;
             for (var i = 0; i < cnt; i++) {
@@ -10444,19 +11577,22 @@ window.fairygui = window.fgui;
                     newItem.internalAdd(rt, usePercent);
                 }
             }
-        }
-    }
+        };
+        return Relations;
+    }());
     fgui.Relations = Relations;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class ScrollPane extends cc.Component {
-        constructor() {
-            super(...arguments);
-            this._aniFlag = 0;
+    var ScrollPane = (function (_super) {
+        __extends(ScrollPane, _super);
+        function ScrollPane() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._aniFlag = 0;
+            return _this;
         }
-        setup(buffer) {
-            const o = this._owner = (this.node["$gobj"]);
+        ScrollPane.prototype.setup = function (buffer) {
+            var o = this._owner = (this.node["$gobj"]);
             this._maskContainer = new cc.Node("ScrollPane");
             this._maskContainer.setAnchorPoint(0, 1);
             this._maskContainer.parent = o.node;
@@ -10582,8 +11718,8 @@ window.fairygui = window.fgui;
             }
             this._refreshBarAxis = (this._scrollType == fgui.ScrollType.Both || this._scrollType == fgui.ScrollType.Vertical) ? "y" : "x";
             this.setSize(o.width, o.height);
-        }
-        onDestroy() {
+        };
+        ScrollPane.prototype.onDestroy = function () {
             delete this._pageController;
             if (this._hzScrollBar)
                 this._hzScrollBar.dispose();
@@ -10593,9 +11729,9 @@ window.fairygui = window.fgui;
                 this._header.dispose();
             if (this._footer)
                 this._footer.dispose();
-        }
-        hitTest(pt, globalPt) {
-            let target;
+        };
+        ScrollPane.prototype.hitTest = function (pt, globalPt) {
+            var target;
             if (this._vtScrollBar) {
                 target = this._vtScrollBar.hitTest(globalPt);
                 if (target)
@@ -10621,97 +11757,161 @@ window.fairygui = window.fgui;
                 return this._owner;
             else
                 return null;
-        }
-        get owner() {
-            return this._owner;
-        }
-        get hzScrollBar() {
-            return this._hzScrollBar;
-        }
-        get vtScrollBar() {
-            return this._vtScrollBar;
-        }
-        get header() {
-            return this._header;
-        }
-        get footer() {
-            return this._footer;
-        }
-        get bouncebackEffect() {
-            return this._bouncebackEffect;
-        }
-        set bouncebackEffect(sc) {
-            this._bouncebackEffect = sc;
-        }
-        get touchEffect() {
-            return this._touchEffect;
-        }
-        set touchEffect(sc) {
-            this._touchEffect = sc;
-        }
-        set scrollStep(val) {
-            this._scrollStep = val;
-            if (this._scrollStep == 0)
-                this._scrollStep = fgui.UIConfig.defaultScrollStep;
-            this._mouseWheelStep = this._scrollStep * 2;
-        }
-        get decelerationRate() {
-            return this._decelerationRate;
-        }
-        set decelerationRate(val) {
-            this._decelerationRate = val;
-        }
-        get scrollStep() {
-            return this._scrollStep;
-        }
-        get snapToItem() {
-            return this._snapToItem;
-        }
-        set snapToItem(value) {
-            this._snapToItem = value;
-        }
-        get snappingPolicy() {
-            return this._snappingPolicy;
-        }
-        set snappingPolicy(value) {
-            this._snappingPolicy = value;
-        }
-        get mouseWheelEnabled() {
-            return this._mouseWheelEnabled;
-        }
-        set mouseWheelEnabled(value) {
-            this._mouseWheelEnabled = value;
-        }
-        get isDragged() {
-            return this._dragged;
-        }
-        get percX() {
-            return this._overlapSize.x == 0 ? 0 : this._xPos / this._overlapSize.x;
-        }
-        set percX(value) {
-            this.setPercX(value, false);
-        }
-        setPercX(value, ani) {
+        };
+        Object.defineProperty(ScrollPane.prototype, "owner", {
+            get: function () {
+                return this._owner;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "hzScrollBar", {
+            get: function () {
+                return this._hzScrollBar;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "vtScrollBar", {
+            get: function () {
+                return this._vtScrollBar;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "header", {
+            get: function () {
+                return this._header;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "footer", {
+            get: function () {
+                return this._footer;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "bouncebackEffect", {
+            get: function () {
+                return this._bouncebackEffect;
+            },
+            set: function (sc) {
+                this._bouncebackEffect = sc;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "touchEffect", {
+            get: function () {
+                return this._touchEffect;
+            },
+            set: function (sc) {
+                this._touchEffect = sc;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "scrollStep", {
+            get: function () {
+                return this._scrollStep;
+            },
+            set: function (val) {
+                this._scrollStep = val;
+                if (this._scrollStep == 0)
+                    this._scrollStep = fgui.UIConfig.defaultScrollStep;
+                this._mouseWheelStep = this._scrollStep * 2;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "decelerationRate", {
+            get: function () {
+                return this._decelerationRate;
+            },
+            set: function (val) {
+                this._decelerationRate = val;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "snapToItem", {
+            get: function () {
+                return this._snapToItem;
+            },
+            set: function (value) {
+                this._snapToItem = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "snappingPolicy", {
+            get: function () {
+                return this._snappingPolicy;
+            },
+            set: function (value) {
+                this._snappingPolicy = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "mouseWheelEnabled", {
+            get: function () {
+                return this._mouseWheelEnabled;
+            },
+            set: function (value) {
+                this._mouseWheelEnabled = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "isDragged", {
+            get: function () {
+                return this._dragged;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "percX", {
+            get: function () {
+                return this._overlapSize.x == 0 ? 0 : this._xPos / this._overlapSize.x;
+            },
+            set: function (value) {
+                this.setPercX(value, false);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        ScrollPane.prototype.setPercX = function (value, ani) {
             this._owner.ensureBoundsCorrect();
             this.setPosX(this._overlapSize.x * fgui.ToolSet.clamp01(value), ani);
-        }
-        get percY() {
-            return this._overlapSize.y == 0 ? 0 : this._yPos / this._overlapSize.y;
-        }
-        set percY(value) {
-            this.setPercY(value, false);
-        }
-        setPercY(value, ani) {
+        };
+        Object.defineProperty(ScrollPane.prototype, "percY", {
+            get: function () {
+                return this._overlapSize.y == 0 ? 0 : this._yPos / this._overlapSize.y;
+            },
+            set: function (value) {
+                this.setPercY(value, false);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        ScrollPane.prototype.setPercY = function (value, ani) {
             this._owner.ensureBoundsCorrect();
             this.setPosY(this._overlapSize.y * fgui.ToolSet.clamp01(value), ani);
-        }
-        get posX() {
-            return this._xPos;
-        }
-        set posX(value) {
-            this.setPosX(value, false);
-        }
-        setPosX(value, ani) {
+        };
+        Object.defineProperty(ScrollPane.prototype, "posX", {
+            get: function () {
+                return this._xPos;
+            },
+            set: function (value) {
+                this.setPosX(value, false);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        ScrollPane.prototype.setPosX = function (value, ani) {
             this._owner.ensureBoundsCorrect();
             if (this._loop == 1)
                 value = this.loopCheckingNewPos(value, "x");
@@ -10720,14 +11920,18 @@ window.fairygui = window.fgui;
                 this._xPos = value;
                 this.posChanged(ani);
             }
-        }
-        get posY() {
-            return this._yPos;
-        }
-        set posY(value) {
-            this.setPosY(value, false);
-        }
-        setPosY(value, ani) {
+        };
+        Object.defineProperty(ScrollPane.prototype, "posY", {
+            get: function () {
+                return this._yPos;
+            },
+            set: function (value) {
+                this.setPosY(value, false);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        ScrollPane.prototype.setPosY = function (value, ani) {
             this._owner.ensureBoundsCorrect();
             if (this._loop == 1)
                 value = this.loopCheckingNewPos(value, "y");
@@ -10736,92 +11940,136 @@ window.fairygui = window.fgui;
                 this._yPos = value;
                 this.posChanged(ani);
             }
-        }
-        get contentWidth() {
-            return this._contentSize.x;
-        }
-        get contentHeight() {
-            return this._contentSize.y;
-        }
-        get viewWidth() {
-            return this._viewSize.x;
-        }
-        set viewWidth(value) {
-            value = value + this._owner.margin.left + this._owner.margin.right;
-            if (this._vtScrollBar && !this._floating)
-                value += this._vtScrollBar.width;
-            this._owner.width = value;
-        }
-        get viewHeight() {
-            return this._viewSize.y;
-        }
-        set viewHeight(value) {
-            value = value + this._owner.margin.top + this._owner.margin.bottom;
-            if (this._hzScrollBar && !this._floating)
-                value += this._hzScrollBar.height;
-            this._owner.height = value;
-        }
-        get currentPageX() {
-            if (!this._pageMode)
-                return 0;
-            var page = Math.floor(this._xPos / this._pageSize.x);
-            if (this._xPos - page * this._pageSize.x > this._pageSize.x * 0.5)
-                page++;
-            return page;
-        }
-        set currentPageX(value) {
-            this.setCurrentPageX(value, false);
-        }
-        get currentPageY() {
-            if (!this._pageMode)
-                return 0;
-            var page = Math.floor(this._yPos / this._pageSize.y);
-            if (this._yPos - page * this._pageSize.y > this._pageSize.y * 0.5)
-                page++;
-            return page;
-        }
-        set currentPageY(value) {
-            this.setCurrentPageY(value, false);
-        }
-        setCurrentPageX(value, ani) {
+        };
+        Object.defineProperty(ScrollPane.prototype, "contentWidth", {
+            get: function () {
+                return this._contentSize.x;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "contentHeight", {
+            get: function () {
+                return this._contentSize.y;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "viewWidth", {
+            get: function () {
+                return this._viewSize.x;
+            },
+            set: function (value) {
+                value = value + this._owner.margin.left + this._owner.margin.right;
+                if (this._vtScrollBar && !this._floating)
+                    value += this._vtScrollBar.width;
+                this._owner.width = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "viewHeight", {
+            get: function () {
+                return this._viewSize.y;
+            },
+            set: function (value) {
+                value = value + this._owner.margin.top + this._owner.margin.bottom;
+                if (this._hzScrollBar && !this._floating)
+                    value += this._hzScrollBar.height;
+                this._owner.height = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "currentPageX", {
+            get: function () {
+                if (!this._pageMode)
+                    return 0;
+                var page = Math.floor(this._xPos / this._pageSize.x);
+                if (this._xPos - page * this._pageSize.x > this._pageSize.x * 0.5)
+                    page++;
+                return page;
+            },
+            set: function (value) {
+                this.setCurrentPageX(value, false);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "currentPageY", {
+            get: function () {
+                if (!this._pageMode)
+                    return 0;
+                var page = Math.floor(this._yPos / this._pageSize.y);
+                if (this._yPos - page * this._pageSize.y > this._pageSize.y * 0.5)
+                    page++;
+                return page;
+            },
+            set: function (value) {
+                this.setCurrentPageY(value, false);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        ScrollPane.prototype.setCurrentPageX = function (value, ani) {
             if (!this._pageMode)
                 return;
             this._owner.ensureBoundsCorrect();
             if (this._overlapSize.x > 0)
                 this.setPosX(value * this._pageSize.x, ani);
-        }
-        setCurrentPageY(value, ani) {
+        };
+        ScrollPane.prototype.setCurrentPageY = function (value, ani) {
             if (!this._pageMode)
                 return;
             this._owner.ensureBoundsCorrect();
             if (this._overlapSize.y > 0)
                 this.setPosY(value * this._pageSize.y, ani);
-        }
-        get isBottomMost() {
-            return this._yPos == this._overlapSize.y || this._overlapSize.y == 0;
-        }
-        get isRightMost() {
-            return this._xPos == this._overlapSize.x || this._overlapSize.x == 0;
-        }
-        get pageController() {
-            return this._pageController;
-        }
-        set pageController(value) {
-            this._pageController = value;
-        }
-        get scrollingPosX() {
-            return fgui.ToolSet.clamp(-this._container.x, 0, this._overlapSize.x);
-        }
-        get scrollingPosY() {
-            return fgui.ToolSet.clamp(-(-this._container.y), 0, this._overlapSize.y);
-        }
-        scrollTop(ani) {
+        };
+        Object.defineProperty(ScrollPane.prototype, "isBottomMost", {
+            get: function () {
+                return this._yPos == this._overlapSize.y || this._overlapSize.y == 0;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "isRightMost", {
+            get: function () {
+                return this._xPos == this._overlapSize.x || this._overlapSize.x == 0;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "pageController", {
+            get: function () {
+                return this._pageController;
+            },
+            set: function (value) {
+                this._pageController = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "scrollingPosX", {
+            get: function () {
+                return fgui.ToolSet.clamp(-this._container.x, 0, this._overlapSize.x);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "scrollingPosY", {
+            get: function () {
+                return fgui.ToolSet.clamp(-(-this._container.y), 0, this._overlapSize.y);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        ScrollPane.prototype.scrollTop = function (ani) {
             this.setPercY(0, ani);
-        }
-        scrollBottom(ani) {
+        };
+        ScrollPane.prototype.scrollBottom = function (ani) {
             this.setPercY(1, ani);
-        }
-        scrollUp(ratio, ani) {
+        };
+        ScrollPane.prototype.scrollUp = function (ratio, ani) {
             if (ratio == undefined)
                 ratio = 1;
             if (this._pageMode)
@@ -10829,32 +12077,32 @@ window.fairygui = window.fgui;
             else
                 this.setPosY(this._yPos - this._scrollStep * ratio, ani);
             ;
-        }
-        scrollDown(ratio, ani) {
+        };
+        ScrollPane.prototype.scrollDown = function (ratio, ani) {
             if (ratio == undefined)
                 ratio = 1;
             if (this._pageMode)
                 this.setPosY(this._yPos + this._pageSize.y * ratio, ani);
             else
                 this.setPosY(this._yPos + this._scrollStep * ratio, ani);
-        }
-        scrollLeft(ratio, ani) {
+        };
+        ScrollPane.prototype.scrollLeft = function (ratio, ani) {
             if (ratio == undefined)
                 ratio = 1;
             if (this._pageMode)
                 this.setPosX(this._xPos - this._pageSize.x * ratio, ani);
             else
                 this.setPosX(this._xPos - this._scrollStep * ratio, ani);
-        }
-        scrollRight(ratio, ani) {
+        };
+        ScrollPane.prototype.scrollRight = function (ratio, ani) {
             if (ratio == undefined)
                 ratio = 1;
             if (this._pageMode)
                 this.setPosX(this._xPos + this._pageSize.x * ratio, ani);
             else
                 this.setPosX(this._xPos + this._scrollStep * ratio, ani);
-        }
-        scrollToView(target, ani, setFirst) {
+        };
+        ScrollPane.prototype.scrollToView = function (target, ani, setFirst) {
             this._owner.ensureBoundsCorrect();
             if (this._needRefresh)
                 this.refresh();
@@ -10910,8 +12158,8 @@ window.fairygui = window.fgui;
             }
             if (!ani && this._needRefresh)
                 this.refresh();
-        }
-        isChildInView(obj) {
+        };
+        ScrollPane.prototype.isChildInView = function (obj) {
             if (this._overlapSize.y > 0) {
                 var dist = obj.y + (-this._container.y);
                 if (dist < -obj.height || dist > this._viewSize.y)
@@ -10923,19 +12171,19 @@ window.fairygui = window.fgui;
                     return false;
             }
             return true;
-        }
-        cancelDragging() {
+        };
+        ScrollPane.prototype.cancelDragging = function () {
             if (ScrollPane.draggingPane == this)
                 ScrollPane.draggingPane = null;
             _gestureFlag = 0;
             this._dragged = false;
-        }
-        lockHeader(size) {
+        };
+        ScrollPane.prototype.lockHeader = function (size) {
             if (this._headerLockedSize == size)
                 return;
-            let cx = this._container.x;
-            let cy = -this._container.y;
-            let cr = this._refreshBarAxis == "x" ? cx : cy;
+            var cx = this._container.x;
+            var cy = -this._container.y;
+            var cr = this._refreshBarAxis == "x" ? cx : cy;
             this._headerLockedSize = size;
             if (!this._refreshEventDispatching && cr >= 0) {
                 this._tweenStart.x = cx;
@@ -10945,13 +12193,13 @@ window.fairygui = window.fgui;
                 this._tweenDuration.x = this._tweenDuration.y = TWEEN_TIME_DEFAULT;
                 this.startTween(2);
             }
-        }
-        lockFooter(size) {
+        };
+        ScrollPane.prototype.lockFooter = function (size) {
             if (this._footerLockedSize == size)
                 return;
-            let cx = this._container.x;
-            let cy = -this._container.y;
-            let cr = this._refreshBarAxis == "x" ? cx : cy;
+            var cx = this._container.x;
+            var cy = -this._container.y;
+            var cr = this._refreshBarAxis == "x" ? cx : cy;
             this._footerLockedSize = size;
             if (!this._refreshEventDispatching && cr <= -this._overlapSize[this._refreshBarAxis]) {
                 this._tweenStart.x = cx;
@@ -10966,20 +12214,20 @@ window.fairygui = window.fgui;
                 this._tweenDuration.x = this._tweenDuration.y = TWEEN_TIME_DEFAULT;
                 this.startTween(2);
             }
-        }
-        onOwnerSizeChanged() {
+        };
+        ScrollPane.prototype.onOwnerSizeChanged = function () {
             this.setSize(this._owner.width, this._owner.height);
             this.posChanged(false);
-        }
-        handleControllerChanged(c) {
+        };
+        ScrollPane.prototype.handleControllerChanged = function (c) {
             if (this._pageController == c) {
                 if (this._scrollType == fgui.ScrollType.Horizontal)
                     this.setCurrentPageX(c.selectedIndex, true);
                 else
                     this.setCurrentPageY(c.selectedIndex, true);
             }
-        }
-        updatePageController() {
+        };
+        ScrollPane.prototype.updatePageController = function () {
             if (this._pageController && !this._pageController.changing) {
                 var index;
                 if (this._scrollType == fgui.ScrollType.Horizontal)
@@ -10993,12 +12241,12 @@ window.fairygui = window.fgui;
                     this._pageController = c;
                 }
             }
-        }
-        adjustMaskContainer() {
+        };
+        ScrollPane.prototype.adjustMaskContainer = function () {
             var mx = 0;
             if (this._displayOnLeft && this._vtScrollBar && !this._floating)
                 mx = this._vtScrollBar.width;
-            const o = this._owner;
+            var o = this._owner;
             if (this._dontClipMargin)
                 this._maskContainer.setAnchorPoint((o.margin.left + o._alignOffset.x) / o.width, 1 - (o.margin.top + o._alignOffset.y) / o.height);
             else
@@ -11007,8 +12255,8 @@ window.fairygui = window.fgui;
                 this._maskContainer.setPosition(mx + o._alignOffset.x, -o._alignOffset.y);
             else
                 this._maskContainer.setPosition(o._pivotCorrectX + mx + o._alignOffset.x, o._pivotCorrectY - o._alignOffset.y);
-        }
-        setSize(aWidth, aHeight) {
+        };
+        ScrollPane.prototype.setSize = function (aWidth, aHeight) {
             if (this._hzScrollBar) {
                 this._hzScrollBar.y = aHeight - this._hzScrollBar.height;
                 if (this._vtScrollBar) {
@@ -11046,8 +12294,8 @@ window.fairygui = window.fgui;
             this._pageSize.y = this._viewSize.y;
             this.adjustMaskContainer();
             this.handleSizeChanged();
-        }
-        setContentSize(aWidth, aHeight) {
+        };
+        ScrollPane.prototype.setContentSize = function (aWidth, aHeight) {
             if (this._contentSize.x == aWidth && this._contentSize.y == aHeight)
                 return;
             this._contentSize.x = aWidth;
@@ -11055,8 +12303,8 @@ window.fairygui = window.fgui;
             this.handleSizeChanged();
             if (this._snapToItem && this._snappingPolicy != 0 && this._xPos == 0 && this._yPos == 0)
                 this.posChanged(false);
-        }
-        changeContentSizeOnScrolling(deltaWidth, deltaHeight, deltaPosX, deltaPosY) {
+        };
+        ScrollPane.prototype.changeContentSizeOnScrolling = function (deltaWidth, deltaHeight, deltaPosX, deltaPosY) {
             var isRightmost = this._xPos == this._overlapSize.x;
             var isBottom = this._yPos == this._overlapSize.y;
             this._contentSize.x += deltaWidth;
@@ -11108,8 +12356,8 @@ window.fairygui = window.fgui;
             }
             if (this._pageMode)
                 this.updatePageController();
-        }
-        handleSizeChanged() {
+        };
+        ScrollPane.prototype.handleSizeChanged = function () {
             if (this._displayInDemand) {
                 this._vScrollNone = this._contentSize.y <= this._viewSize.y;
                 this._hScrollNone = this._contentSize.x <= this._viewSize.x;
@@ -11180,8 +12428,8 @@ window.fairygui = window.fgui;
             this.updateScrollBarPos();
             if (this._pageMode)
                 this.updatePageController();
-        }
-        posChanged(ani) {
+        };
+        ScrollPane.prototype.posChanged = function (ani) {
             if (this._aniFlag == 0)
                 this._aniFlag = ani ? 1 : -1;
             else if (this._aniFlag == 1 && !ani)
@@ -11189,8 +12437,8 @@ window.fairygui = window.fgui;
             this._needRefresh = true;
             if (!cc.director.getScheduler().isScheduled(this.refresh, this))
                 this.scheduleOnce(this.refresh);
-        }
-        refresh(dt) {
+        };
+        ScrollPane.prototype.refresh = function (dt) {
             this._needRefresh = false;
             this.unschedule(this.refresh);
             if (this._pageMode || this._snapToItem) {
@@ -11209,8 +12457,8 @@ window.fairygui = window.fgui;
             }
             this.updateScrollBarPos();
             this._aniFlag = 0;
-        }
-        refresh2() {
+        };
+        ScrollPane.prototype.refresh2 = function () {
             if (this._aniFlag == 1 && !this._dragged) {
                 var posX;
                 var posY;
@@ -11247,8 +12495,8 @@ window.fairygui = window.fgui;
             }
             if (this._pageMode)
                 this.updatePageController();
-        }
-        onTouchBegin(evt) {
+        };
+        ScrollPane.prototype.onTouchBegin = function (evt) {
             if (!this._touchEffect)
                 return;
             evt.captureTouch();
@@ -11270,8 +12518,8 @@ window.fairygui = window.fgui;
             ;
             this._velocityScale = 1;
             this._lastMoveTime = fgui.ToolSet.getTime();
-        }
-        onTouchMove(evt) {
+        };
+        ScrollPane.prototype.onTouchMove = function (evt) {
             if (!cc.isValid(this._owner.node))
                 return;
             if (!this._touchEffect)
@@ -11415,8 +12663,8 @@ window.fairygui = window.fgui;
             if (this._pageMode)
                 this.updatePageController();
             this._owner.node.emit(fgui.Event.SCROLL), this._owner;
-        }
-        onTouchEnd(evt) {
+        };
+        ScrollPane.prototype.onTouchEnd = function (evt) {
             if (ScrollPane.draggingPane == this)
                 ScrollPane.draggingPane = null;
             _gestureFlag = 0;
@@ -11505,19 +12753,19 @@ window.fairygui = window.fgui;
                 }
             }
             this.startTween(2);
-        }
-        onRollOver() {
+        };
+        ScrollPane.prototype.onRollOver = function () {
             this._hover = true;
             this.updateScrollBarVisible();
-        }
-        onRollOut() {
+        };
+        ScrollPane.prototype.onRollOut = function () {
             this._hover = false;
             this.updateScrollBarVisible();
-        }
-        onMouseWheel(evt) {
+        };
+        ScrollPane.prototype.onMouseWheel = function (evt) {
             if (!this._mouseWheelEnabled)
                 return;
-            let delta = evt.mouseWheelDelta > 0 ? -1 : 1;
+            var delta = evt.mouseWheelDelta > 0 ? -1 : 1;
             if (this._overlapSize.x > 0 && this._overlapSize.y == 0) {
                 if (this._pageMode)
                     this.setPosX(this._xPos + this._pageSize.x * delta, false);
@@ -11530,15 +12778,15 @@ window.fairygui = window.fgui;
                 else
                     this.setPosY(this._yPos + this._mouseWheelStep * delta, false);
             }
-        }
-        updateScrollBarPos() {
+        };
+        ScrollPane.prototype.updateScrollBarPos = function () {
             if (this._vtScrollBar)
                 this._vtScrollBar.setScrollPerc(this._overlapSize.y == 0 ? 0 : fgui.ToolSet.clamp(this._container.y, 0, this._overlapSize.y) / this._overlapSize.y);
             if (this._hzScrollBar)
                 this._hzScrollBar.setScrollPerc(this._overlapSize.x == 0 ? 0 : fgui.ToolSet.clamp(-this._container.x, 0, this._overlapSize.x) / this._overlapSize.x);
             this.checkRefreshBar();
-        }
-        updateScrollBarVisible() {
+        };
+        ScrollPane.prototype.updateScrollBarVisible = function () {
             if (this._vtScrollBar) {
                 if (this._viewSize.y <= this._vtScrollBar.minSize || this._vScrollNone)
                     this._vtScrollBar.node.active = false;
@@ -11551,8 +12799,8 @@ window.fairygui = window.fgui;
                 else
                     this.updateScrollBarVisible2(this._hzScrollBar);
             }
-        }
-        updateScrollBarVisible2(bar) {
+        };
+        ScrollPane.prototype.updateScrollBarVisible2 = function (bar) {
             if (this._scrollBarDisplayAuto)
                 fgui.GTween.kill(bar, false, "alpha");
             if (this._scrollBarDisplayAuto && !this._hover && this._tweening == 0 && !this._dragged && !bar.gripDragging) {
@@ -11563,16 +12811,16 @@ window.fairygui = window.fgui;
                 bar.alpha = 1;
                 bar.node.active = true;
             }
-        }
-        __barTweenComplete(tweener) {
+        };
+        ScrollPane.prototype.__barTweenComplete = function (tweener) {
             var bar = (tweener.target);
             bar.alpha = 1;
             bar.node.active = false;
-        }
-        getLoopPartSize(division, axis) {
+        };
+        ScrollPane.prototype.getLoopPartSize = function (division, axis) {
             return (this._contentSize[axis] + (axis == "x" ? this._owner.columnGap : this._owner.lineGap)) / division;
-        }
-        loopCheckingCurrent() {
+        };
+        ScrollPane.prototype.loopCheckingCurrent = function () {
             var changed = false;
             if (this._loop == 1 && this._overlapSize.x > 0) {
                 if (this._xPos < 0.001) {
@@ -11598,14 +12846,14 @@ window.fairygui = window.fgui;
                 this._container.setPosition(Math.floor(-this._xPos), -Math.floor(-this._yPos));
             }
             return changed;
-        }
-        loopCheckingTarget(endPos) {
+        };
+        ScrollPane.prototype.loopCheckingTarget = function (endPos) {
             if (this._loop == 1)
                 this.loopCheckingTarget2(endPos, "x");
             if (this._loop == 2)
                 this.loopCheckingTarget2(endPos, "y");
-        }
-        loopCheckingTarget2(endPos, axis) {
+        };
+        ScrollPane.prototype.loopCheckingTarget2 = function (endPos, axis) {
             var halfSize;
             var tmp;
             if (endPos[axis] > 0) {
@@ -11624,8 +12872,8 @@ window.fairygui = window.fgui;
                     this._tweenStart[axis] = tmp;
                 }
             }
-        }
-        loopCheckingNewPos(value, axis) {
+        };
+        ScrollPane.prototype.loopCheckingNewPos = function (value, axis) {
             if (this._overlapSize[axis] == 0)
                 return value;
             var pos = axis == "x" ? this._xPos : this._yPos;
@@ -11656,19 +12904,19 @@ window.fairygui = window.fgui;
                     this._container.y = Math.floor(pos);
             }
             return value;
-        }
-        alignPosition(pos, inertialScrolling) {
-            let ax = 0, ay = 0;
+        };
+        ScrollPane.prototype.alignPosition = function (pos, inertialScrolling) {
+            var ax = 0, ay = 0;
             if (this._snappingPolicy == 1) {
                 if (this._owner.numChildren > 0) {
-                    let obj = this._owner.getChildAt(0);
+                    var obj = this._owner.getChildAt(0);
                     ax = Math.floor(this._viewSize.x * 0.5 - obj.width * 0.5);
                     ay = Math.floor(this._viewSize.y * 0.5 - obj.height * 0.5);
                 }
             }
             else if (this._snappingPolicy == 2) {
                 if (this._owner.numChildren > 0) {
-                    let obj = this._owner.getChildAt(0);
+                    var obj = this._owner.getChildAt(0);
                     ax = Math.floor(this._viewSize.x - obj.width);
                     ay = Math.floor(this._viewSize.y - obj.height);
                 }
@@ -11688,8 +12936,8 @@ window.fairygui = window.fgui;
             }
             pos.x += ax;
             pos.y += ay;
-        }
-        alignByPage(pos, axis, inertialScrolling) {
+        };
+        ScrollPane.prototype.alignByPage = function (pos, axis, inertialScrolling) {
             var page;
             if (pos > 0)
                 page = 0;
@@ -11731,12 +12979,12 @@ window.fairygui = window.fgui;
                 }
             }
             return pos;
-        }
-        updateTargetAndDuration(orignPos, resultPos) {
+        };
+        ScrollPane.prototype.updateTargetAndDuration = function (orignPos, resultPos) {
             resultPos.x = this.updateTargetAndDuration2(orignPos.x, "x");
             resultPos.y = this.updateTargetAndDuration2(orignPos.y, "y");
-        }
-        updateTargetAndDuration2(pos, axis) {
+        };
+        ScrollPane.prototype.updateTargetAndDuration2 = function (pos, axis) {
             var v = this._velocity[axis];
             var duration = 0;
             if (pos > 0)
@@ -11772,21 +13020,21 @@ window.fairygui = window.fgui;
                 duration = TWEEN_TIME_DEFAULT;
             this._tweenDuration[axis] = duration;
             return pos;
-        }
-        fixDuration(axis, oldChange) {
+        };
+        ScrollPane.prototype.fixDuration = function (axis, oldChange) {
             if (this._tweenChange[axis] == 0 || Math.abs(this._tweenChange[axis]) >= Math.abs(oldChange))
                 return;
             var newDuration = Math.abs(this._tweenChange[axis] / oldChange) * this._tweenDuration[axis];
             if (newDuration < TWEEN_TIME_DEFAULT)
                 newDuration = TWEEN_TIME_DEFAULT;
             this._tweenDuration[axis] = newDuration;
-        }
-        startTween(type) {
+        };
+        ScrollPane.prototype.startTween = function (type) {
             this._tweenTime.set(cc.Vec2.ZERO);
             this._tweening = type;
             this.updateScrollBarVisible();
-        }
-        killTween() {
+        };
+        ScrollPane.prototype.killTween = function () {
             if (this._tweening == 1) {
                 this._container.setPosition(this._tweenStart.x + this._tweenChange.x, -(this._tweenStart.y + this._tweenChange.y));
                 this._owner.node.emit(fgui.Event.SCROLL, this._owner);
@@ -11794,8 +13042,8 @@ window.fairygui = window.fgui;
             this._tweening = 0;
             this.updateScrollBarVisible();
             this._owner.node.emit(fgui.Event.SCROLL_END, this._owner);
-        }
-        checkRefreshBar() {
+        };
+        ScrollPane.prototype.checkRefreshBar = function () {
             if (this._header == null && this._footer == null)
                 return;
             var pos = (this._refreshBarAxis == "x" ? this._container.x : (-this._container.y));
@@ -11836,8 +13084,8 @@ window.fairygui = window.fgui;
                     this._footer.node.active = false;
                 }
             }
-        }
-        update(dt) {
+        };
+        ScrollPane.prototype.update = function (dt) {
             if (this._tweening == 0)
                 return;
             var nx = this.runTween("x", dt);
@@ -11864,8 +13112,8 @@ window.fairygui = window.fgui;
                 this._owner.node.emit(fgui.Event.SCROLL, this._owner);
             }
             return true;
-        }
-        runTween(axis, dt) {
+        };
+        ScrollPane.prototype.runTween = function (axis, dt) {
             var newValue;
             if (this._tweenChange[axis] != 0) {
                 this._tweenTime[axis] += dt;
@@ -11919,13 +13167,14 @@ window.fairygui = window.fgui;
             else
                 newValue = (axis == "x" ? this._container.x : (-this._container.y));
             return newValue;
-        }
-    }
+        };
+        return ScrollPane;
+    }(cc.Component));
     fgui.ScrollPane = ScrollPane;
     var _gestureFlag = 0;
-    const TWEEN_TIME_GO = 0.5;
-    const TWEEN_TIME_DEFAULT = 0.3;
-    const PULL_RATIO = 0.5;
+    var TWEEN_TIME_GO = 0.5;
+    var TWEEN_TIME_DEFAULT = 0.3;
+    var PULL_RATIO = 0.5;
     var s_vec2 = new cc.Vec2();
     var s_rect = new cc.Rect();
     var sEndPos = new cc.Vec2();
@@ -11936,8 +13185,8 @@ window.fairygui = window.fgui;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class Transition {
-        constructor(owner) {
+    var Transition = (function () {
+        function Transition(owner) {
             this._ownerBaseX = 0;
             this._ownerBaseY = 0;
             this._totalTimes = 0;
@@ -11952,16 +13201,16 @@ window.fairygui = window.fgui;
             this._owner = owner;
             this._items = new Array();
         }
-        play(onComplete, times, delay, startTime, endTime) {
+        Transition.prototype.play = function (onComplete, times, delay, startTime, endTime) {
             this._play(onComplete, times, delay, startTime, endTime, false);
-        }
-        playReverse(onComplete, times, delay) {
+        };
+        Transition.prototype.playReverse = function (onComplete, times, delay) {
             this._play(onComplete, times, delay, 0, -1, true);
-        }
-        changePlayTimes(value) {
+        };
+        Transition.prototype.changePlayTimes = function (value) {
             this._totalTimes = value;
-        }
-        setAutoPlay(value, times, delay) {
+        };
+        Transition.prototype.setAutoPlay = function (value, times, delay) {
             if (times == undefined)
                 times = -1;
             if (delay == undefined)
@@ -11979,8 +13228,8 @@ window.fairygui = window.fgui;
                         this.stop(false, true);
                 }
             }
-        }
-        _play(onComplete, times, delay, startTime, endTime, reversed) {
+        };
+        Transition.prototype._play = function (onComplete, times, delay, startTime, endTime, reversed) {
             if (times == undefined)
                 times = 1;
             if (delay == undefined)
@@ -12039,8 +13288,8 @@ window.fairygui = window.fgui;
                 this.onDelayedPlay();
             else
                 fgui.GTween.delayedCall(delay).setTarget(this).onComplete(this.onDelayedPlay, this);
-        }
-        stop(setToComplete, processCallback) {
+        };
+        Transition.prototype.stop = function (setToComplete, processCallback) {
             if (setToComplete == undefined)
                 setToComplete = true;
             if (!this._playing)
@@ -12071,8 +13320,8 @@ window.fairygui = window.fgui;
             if (processCallback && func != null) {
                 func();
             }
-        }
-        stopItem(item, setToComplete) {
+        };
+        Transition.prototype.stopItem = function (item, setToComplete) {
             if (item.displayLockToken != 0) {
                 item.target.releaseDisplayLock(item.displayLockToken);
                 item.displayLockToken = 0;
@@ -12091,8 +13340,8 @@ window.fairygui = window.fgui;
                 if (trans)
                     trans.stop(setToComplete, false);
             }
-        }
-        setPaused(paused) {
+        };
+        Transition.prototype.setPaused = function (paused) {
             if (!this._playing || this._paused == paused)
                 return;
             this._paused = paused;
@@ -12119,8 +13368,8 @@ window.fairygui = window.fgui;
                 if (item.tweener)
                     item.tweener.setPaused(paused);
             }
-        }
-        dispose() {
+        };
+        Transition.prototype.dispose = function () {
             if (this._playing)
                 fgui.GTween.kill(this);
             var cnt = this._items.length;
@@ -12138,11 +13387,19 @@ window.fairygui = window.fgui;
             this._items.length = 0;
             this._playing = false;
             this._onComplete = null;
-        }
-        get playing() {
-            return this._playing;
-        }
-        setValue(label, ...args) {
+        };
+        Object.defineProperty(Transition.prototype, "playing", {
+            get: function () {
+                return this._playing;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Transition.prototype.setValue = function (label) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
             var cnt = this._items.length;
             var value;
             for (var i = 0; i < cnt; i++) {
@@ -12213,8 +13470,8 @@ window.fairygui = window.fgui;
                         break;
                 }
             }
-        }
-        setHook(label, callback) {
+        };
+        Transition.prototype.setHook = function (label, callback) {
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
@@ -12227,8 +13484,8 @@ window.fairygui = window.fgui;
                     break;
                 }
             }
-        }
-        clearHooks() {
+        };
+        Transition.prototype.clearHooks = function () {
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
@@ -12236,8 +13493,8 @@ window.fairygui = window.fgui;
                 if (item.tweenConfig)
                     item.tweenConfig.endHook = null;
             }
-        }
-        setTarget(label, newTarget) {
+        };
+        Transition.prototype.setTarget = function (label, newTarget) {
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
@@ -12246,16 +13503,16 @@ window.fairygui = window.fgui;
                     item.target = null;
                 }
             }
-        }
-        setDuration(label, value) {
+        };
+        Transition.prototype.setDuration = function (label, value) {
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
                 if (item.tweenConfig && item.label == label)
                     item.tweenConfig.duration = value;
             }
-        }
-        getLabelTime(label) {
+        };
+        Transition.prototype.getLabelTime = function (label) {
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
@@ -12265,32 +13522,36 @@ window.fairygui = window.fgui;
                     return item.time + item.tweenConfig.duration;
             }
             return Number.NaN;
-        }
-        get timeScale() {
-            return this._timeScale;
-        }
-        set timeScale(value) {
-            if (this._timeScale != value) {
-                this._timeScale = value;
-                if (this._playing) {
-                    var cnt = this._items.length;
-                    for (var i = 0; i < cnt; i++) {
-                        var item = this._items[i];
-                        if (item.tweener)
-                            item.tweener.setTimeScale(value);
-                        else if (item.type == ActionType.Transition) {
-                            if (item.value.trans)
-                                item.value.trans.timeScale = value;
-                        }
-                        else if (item.type == ActionType.Animation) {
-                            if (item.target)
-                                item.target.setProp(fgui.ObjectPropID.TimeScale, value);
+        };
+        Object.defineProperty(Transition.prototype, "timeScale", {
+            get: function () {
+                return this._timeScale;
+            },
+            set: function (value) {
+                if (this._timeScale != value) {
+                    this._timeScale = value;
+                    if (this._playing) {
+                        var cnt = this._items.length;
+                        for (var i = 0; i < cnt; i++) {
+                            var item = this._items[i];
+                            if (item.tweener)
+                                item.tweener.setTimeScale(value);
+                            else if (item.type == ActionType.Transition) {
+                                if (item.value.trans)
+                                    item.value.trans.timeScale = value;
+                            }
+                            else if (item.type == ActionType.Animation) {
+                                if (item.target)
+                                    item.target.setProp(fgui.ObjectPropID.TimeScale, value);
+                            }
                         }
                     }
                 }
-            }
-        }
-        updateFromRelations(targetId, dx, dy) {
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Transition.prototype.updateFromRelations = function (targetId, dx, dy) {
             var cnt = this._items.length;
             if (cnt == 0)
                 return;
@@ -12309,16 +13570,16 @@ window.fairygui = window.fgui;
                     }
                 }
             }
-        }
-        onEnable() {
+        };
+        Transition.prototype.onEnable = function () {
             if (this._autoPlay && !this._playing)
                 this.play(null, this._autoPlayTimes, this._autoPlayDelay);
-        }
-        onDisable() {
+        };
+        Transition.prototype.onDisable = function () {
             if ((this._options & OPTION_AUTO_STOP_DISABLED) == 0)
                 this.stop((this._options & OPTION_AUTO_STOP_AT_END) != 0 ? true : false, false);
-        }
-        onDelayedPlay() {
+        };
+        Transition.prototype.onDelayedPlay = function () {
             this.internalPlay();
             this._playing = this._totalTasks > 0;
             if (this._playing) {
@@ -12336,8 +13597,8 @@ window.fairygui = window.fgui;
                 this._onComplete = null;
                 func();
             }
-        }
-        internalPlay() {
+        };
+        Transition.prototype.internalPlay = function () {
             this._ownerBaseX = this._owner.x;
             this._ownerBaseY = this._owner.y;
             this._totalTasks = 1;
@@ -12369,8 +13630,8 @@ window.fairygui = window.fgui;
             if (needSkipAnimations)
                 this.skipAnimations();
             this._totalTasks--;
-        }
-        playItem(item) {
+        };
+        Transition.prototype.playItem = function (item) {
             var time;
             if (item.tweenConfig) {
                 if (this._reversed)
@@ -12457,8 +13718,8 @@ window.fairygui = window.fgui;
             }
             if (item.tweener)
                 item.tweener.seek(this._startTime);
-        }
-        skipAnimations() {
+        };
+        Transition.prototype.skipAnimations = function () {
             var frame;
             var playStartTime;
             var playTotalTime;
@@ -12511,16 +13772,16 @@ window.fairygui = window.fgui;
                 if (playTotalTime > 0)
                     target.setProp(fgui.ObjectPropID.DeltaTime, playTotalTime);
             }
-        }
-        onDelayedPlayItem(tweener) {
+        };
+        Transition.prototype.onDelayedPlayItem = function (tweener) {
             var item = tweener.target;
             item.tweener = null;
             this._totalTasks--;
             this.applyValue(item);
             this.callHook(item, false);
             this.checkAllComplete();
-        }
-        onTweenStart(tweener) {
+        };
+        Transition.prototype.onTweenStart = function (tweener) {
             var item = tweener.target;
             if (item.type == ActionType.XY || item.type == ActionType.Size) {
                 var startValue;
@@ -12579,8 +13840,8 @@ window.fairygui = window.fgui;
                 }
             }
             this.callHook(item, false);
-        }
-        onTweenUpdate(tweener) {
+        };
+        Transition.prototype.onTweenUpdate = function (tweener) {
             var item = tweener.target;
             switch (item.type) {
                 case ActionType.XY:
@@ -12613,20 +13874,20 @@ window.fairygui = window.fgui;
                     break;
             }
             this.applyValue(item);
-        }
-        onTweenComplete(tweener) {
+        };
+        Transition.prototype.onTweenComplete = function (tweener) {
             var item = tweener.target;
             item.tweener = null;
             this._totalTasks--;
             if (tweener.allCompleted)
                 this.callHook(item, true);
             this.checkAllComplete();
-        }
-        onPlayTransCompleted(item) {
+        };
+        Transition.prototype.onPlayTransCompleted = function (item) {
             this._totalTasks--;
             this.checkAllComplete();
-        }
-        callHook(item, tweenEnd) {
+        };
+        Transition.prototype.callHook = function (item, tweenEnd) {
             if (tweenEnd) {
                 if (item.tweenConfig && item.tweenConfig.endHook != null)
                     item.tweenConfig.endHook(item.label);
@@ -12635,8 +13896,8 @@ window.fairygui = window.fgui;
                 if (item.time >= this._startTime && item.hook != null)
                     item.hook(item.label);
             }
-        }
-        checkAllComplete() {
+        };
+        Transition.prototype.checkAllComplete = function () {
             if (this._playing && this._totalTasks == 0) {
                 if (this._totalTimes < 0) {
                     this.internalPlay();
@@ -12668,8 +13929,8 @@ window.fairygui = window.fgui;
                     }
                 }
             }
-        }
-        applyValue(item) {
+        };
+        Transition.prototype.applyValue = function (item) {
             item.target._gearLocked = true;
             var value = item.value;
             switch (item.type) {
@@ -12724,9 +13985,9 @@ window.fairygui = window.fgui;
                     item.target.setSkew(value.f1, value.f2);
                     break;
                 case ActionType.Color:
-                    let color = item.target.getProp(fgui.ObjectPropID.Color);
+                    var color = item.target.getProp(fgui.ObjectPropID.Color);
                     if (color instanceof cc.Color) {
-                        let i = Math.floor(value.f1);
+                        var i = Math.floor(value.f1);
                         color.setR((i >> 16) & 0xFF).setG((i >> 8) & 0xFF).setB(i & 0xFF);
                         item.target.setProp(fgui.ObjectPropID.Color, color);
                     }
@@ -12782,8 +14043,8 @@ window.fairygui = window.fgui;
                     break;
             }
             item.target._gearLocked = false;
-        }
-        setup(buffer) {
+        };
+        Transition.prototype.setup = function (buffer) {
             this.name = buffer.readS();
             this._options = buffer.readInt();
             this._autoPlay = buffer.readBool();
@@ -12848,8 +14109,8 @@ window.fairygui = window.fgui;
                 }
                 buffer.position = curPos + dataLen;
             }
-        }
-        decodeValue(item, buffer, value) {
+        };
+        Transition.prototype.decodeValue = function (item, buffer, value) {
             switch (item.type) {
                 case ActionType.XY:
                 case ActionType.Size:
@@ -12871,7 +14132,7 @@ window.fairygui = window.fgui;
                     value.f2 = buffer.readFloat();
                     break;
                 case ActionType.Color:
-                    let color = buffer.readColor();
+                    var color = buffer.readColor();
                     value.f1 = (color.getR() << 16) + (color.getG() << 8) + color.getB();
                     break;
                 case ActionType.Animation:
@@ -12904,13 +14165,14 @@ window.fairygui = window.fgui;
                     value.text = buffer.readS();
                     break;
             }
-        }
-    }
+        };
+        return Transition;
+    }());
     fgui.Transition = Transition;
-    const OPTION_IGNORE_DISPLAY_CONTROLLER = 1;
-    const OPTION_AUTO_STOP_DISABLED = 2;
-    const OPTION_AUTO_STOP_AT_END = 4;
-    let ActionType;
+    var OPTION_IGNORE_DISPLAY_CONTROLLER = 1;
+    var OPTION_AUTO_STOP_DISABLED = 2;
+    var OPTION_AUTO_STOP_AT_END = 4;
+    var ActionType;
     (function (ActionType) {
         ActionType[ActionType["XY"] = 0] = "XY";
         ActionType[ActionType["Size"] = 1] = "Size";
@@ -12930,26 +14192,30 @@ window.fairygui = window.fgui;
         ActionType[ActionType["Icon"] = 15] = "Icon";
         ActionType[ActionType["Unknown"] = 16] = "Unknown";
     })(ActionType || (ActionType = {}));
-    class Item {
-        constructor(type) {
+    var Item = (function () {
+        function Item(type) {
             this.type = type;
             this.value = {};
             this.displayLockToken = 0;
         }
-    }
-    class TweenConfig {
-        constructor() {
+        return Item;
+    }());
+    var TweenConfig = (function () {
+        function TweenConfig() {
             this.easeType = fgui.EaseType.QuadOut;
             this.startValue = { b1: true, b2: true };
             this.endValue = { b1: true, b2: true };
         }
-    }
+        return TweenConfig;
+    }());
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class TranslationHelper {
-        static loadFromXML(source) {
-            let strings = {};
+    var TranslationHelper = (function () {
+        function TranslationHelper() {
+        }
+        TranslationHelper.loadFromXML = function (source) {
+            var strings = {};
             TranslationHelper.strings = strings;
             var xml = new cc["SAXParser"]().parse(source).documentElement;
             var nodes = xml.childNodes;
@@ -12972,8 +14238,8 @@ window.fairygui = window.fgui;
                     col[key3] = text;
                 }
             }
-        }
-        static translateComponent(item) {
+        };
+        TranslationHelper.translateComponent = function (item) {
             if (TranslationHelper.strings == null)
                 return;
             var compStrings = TranslationHelper.strings[item.owner.id + item.id];
@@ -13140,38 +14406,40 @@ window.fairygui = window.fgui;
                 }
                 buffer.position = curPos + dataLen;
             }
-        }
-    }
+        };
+        return TranslationHelper;
+    }());
     fgui.TranslationHelper = TranslationHelper;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class UIConfig {
-        constructor() {
+    var UIConfig = (function () {
+        function UIConfig() {
         }
-    }
-    UIConfig.defaultFont = "Arial";
-    UIConfig.modalLayerColor = new cc.Color(0x33, 0x33, 0x33, 0x33);
-    UIConfig.buttonSoundVolumeScale = 1;
-    UIConfig.defaultScrollStep = 25;
-    UIConfig.defaultScrollDecelerationRate = 0.967;
-    UIConfig.defaultScrollBarDisplay = fgui.ScrollBarDisplayType.Visible;
-    UIConfig.defaultScrollTouchEffect = true;
-    UIConfig.defaultScrollBounceEffect = true;
-    UIConfig.defaultComboBoxVisibleItemCount = 10;
-    UIConfig.touchScrollSensitivity = 20;
-    UIConfig.touchDragSensitivity = 10;
-    UIConfig.clickDragSensitivity = 2;
-    UIConfig.bringWindowToFrontOnClick = true;
-    UIConfig.frameTimeForAsyncUIConstruction = 0.002;
-    UIConfig.linkUnderline = true;
-    UIConfig.defaultUIGroup = "UI";
+        UIConfig.defaultFont = "Arial";
+        UIConfig.modalLayerColor = new cc.Color(0x33, 0x33, 0x33, 0x33);
+        UIConfig.buttonSoundVolumeScale = 1;
+        UIConfig.defaultScrollStep = 25;
+        UIConfig.defaultScrollDecelerationRate = 0.967;
+        UIConfig.defaultScrollBarDisplay = fgui.ScrollBarDisplayType.Visible;
+        UIConfig.defaultScrollTouchEffect = true;
+        UIConfig.defaultScrollBounceEffect = true;
+        UIConfig.defaultComboBoxVisibleItemCount = 10;
+        UIConfig.touchScrollSensitivity = 20;
+        UIConfig.touchDragSensitivity = 10;
+        UIConfig.clickDragSensitivity = 2;
+        UIConfig.bringWindowToFrontOnClick = true;
+        UIConfig.frameTimeForAsyncUIConstruction = 0.002;
+        UIConfig.linkUnderline = true;
+        UIConfig.defaultUIGroup = "UI";
+        return UIConfig;
+    }());
     fgui.UIConfig = UIConfig;
     function addLoadHandler(ext) {
     }
     fgui.addLoadHandler = addLoadHandler;
     ;
-    let _fontRegistry = {};
+    var _fontRegistry = {};
     function registerFont(name, font) {
         if (font instanceof cc.Font)
             _fontRegistry[name] = font;
@@ -13187,28 +14455,28 @@ window.fairygui = window.fgui;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class UIObjectFactory {
-        constructor() {
+    var UIObjectFactory = (function () {
+        function UIObjectFactory() {
         }
-        static setExtension(url, type) {
+        UIObjectFactory.setExtension = function (url, type) {
             if (url == null)
                 throw new Error("Invaild url: " + url);
             var pi = fgui.UIPackage.getItemByURL(url);
             if (pi)
                 pi.extensionType = type;
             UIObjectFactory.extensions[url] = type;
-        }
-        static setLoaderExtension(type) {
+        };
+        UIObjectFactory.setLoaderExtension = function (type) {
             UIObjectFactory.loaderType = type;
-        }
-        static resolveExtension(pi) {
+        };
+        UIObjectFactory.resolveExtension = function (pi) {
             var extensionType = UIObjectFactory.extensions["ui://" + pi.owner.id + pi.id];
             if (!extensionType)
                 extensionType = UIObjectFactory.extensions["ui://" + pi.owner.name + "/" + pi.name];
             if (extensionType)
                 pi.extensionType = extensionType;
-        }
-        static newObject(type, userClass) {
+        };
+        UIObjectFactory.newObject = function (type, userClass) {
             var obj;
             UIObjectFactory.counter++;
             if (typeof type === 'number') {
@@ -13271,16 +14539,18 @@ window.fairygui = window.fgui;
                     obj.packageItem = type;
             }
             return obj;
-        }
-    }
-    UIObjectFactory.counter = 0;
-    UIObjectFactory.extensions = {};
+        };
+        UIObjectFactory.counter = 0;
+        UIObjectFactory.extensions = {};
+        return UIObjectFactory;
+    }());
     fgui.UIObjectFactory = UIObjectFactory;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class UIPackage {
-        constructor() {
+    var _a;
+    var UIPackage = (function () {
+        function UIPackage() {
             this._items = [];
             this._itemsById = {};
             this._itemsByName = {};
@@ -13289,35 +14559,39 @@ window.fairygui = window.fgui;
             this._branches = [];
             this._branchIndex = -1;
         }
-        static get branch() {
-            return UIPackage._branch;
-        }
-        static set branch(value) {
-            UIPackage._branch = value;
-            for (var pkgId in UIPackage._instById) {
-                var pkg = UIPackage._instById[pkgId];
-                if (pkg._branches) {
-                    pkg._branchIndex = pkg._branches.indexOf(value);
+        Object.defineProperty(UIPackage, "branch", {
+            get: function () {
+                return UIPackage._branch;
+            },
+            set: function (value) {
+                UIPackage._branch = value;
+                for (var pkgId in UIPackage._instById) {
+                    var pkg = UIPackage._instById[pkgId];
+                    if (pkg._branches) {
+                        pkg._branchIndex = pkg._branches.indexOf(value);
+                    }
                 }
-            }
-        }
-        static getVar(key) {
+            },
+            enumerable: false,
+            configurable: true
+        });
+        UIPackage.getVar = function (key) {
             return UIPackage._vars[key];
-        }
-        static setVar(key, value) {
+        };
+        UIPackage.setVar = function (key, value) {
             UIPackage._vars[key] = value;
-        }
-        static getById(id) {
+        };
+        UIPackage.getById = function (id) {
             return UIPackage._instById[id];
-        }
-        static getByName(name) {
+        };
+        UIPackage.getByName = function (name) {
             return UIPackage._instByName[name];
-        }
-        static addPackage(path) {
-            let pkg = UIPackage._instById[path];
+        };
+        UIPackage.addPackage = function (path) {
+            var pkg = UIPackage._instById[path];
             if (pkg)
                 return pkg;
-            let asset = cc.resources.get(path, cc.BufferAsset);
+            var asset = cc.resources.get(path, cc.BufferAsset);
             if (!asset)
                 throw "Resource '" + path + "' not ready";
             if (!asset._buffer)
@@ -13329,12 +14603,16 @@ window.fairygui = window.fgui;
             UIPackage._instByName[pkg.name] = pkg;
             UIPackage._instById[pkg._path] = pkg;
             return pkg;
-        }
-        static loadPackage(...args) {
-            let path;
-            let onProgress;
-            let onComplete;
-            let bundle;
+        };
+        UIPackage.loadPackage = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+            var path;
+            var onProgress;
+            var onComplete;
+            var bundle;
             if (args[0] instanceof cc.AssetManager.Bundle) {
                 bundle = args[0];
                 path = args[1];
@@ -13361,23 +14639,23 @@ window.fairygui = window.fgui;
                         onComplete(err, null);
                     return;
                 }
-                let pkg = new UIPackage();
+                var pkg = new UIPackage();
                 pkg._bundle = bundle;
                 pkg.loadPackage(new fgui.ByteBuffer(asset._buffer), path);
-                let cnt = pkg._items.length;
-                let urls = [];
-                let types = [];
+                var cnt = pkg._items.length;
+                var urls = [];
+                var types = [];
                 for (var i = 0; i < cnt; i++) {
                     var pi = pkg._items[i];
                     if (pi.type == fgui.PackageItemType.Atlas || pi.type == fgui.PackageItemType.Sound) {
-                        let assetType = ItemTypeToAssetType[pi.type];
+                        var assetType = ItemTypeToAssetType[pi.type];
                         urls.push(pi.file);
                         types.push(assetType);
                     }
                 }
-                let total = urls.length;
-                let lastErr;
-                let taskComplete = (err) => {
+                var total = urls.length;
+                var lastErr;
+                var taskComplete = function (err) {
                     total--;
                     if (err)
                         lastErr = err;
@@ -13391,15 +14669,15 @@ window.fairygui = window.fgui;
                     }
                 };
                 if (total > 0) {
-                    urls.forEach((url, index) => {
+                    urls.forEach(function (url, index) {
                         bundle.load(url, types[index], onProgress, taskComplete);
                     });
                 }
                 else
                     taskComplete();
             });
-        }
-        static removePackage(packageIdOrName) {
+        };
+        UIPackage.removePackage = function (packageIdOrName) {
             var pkg = UIPackage._instById[packageIdOrName];
             if (!pkg)
                 pkg = UIPackage._instByName[packageIdOrName];
@@ -13410,22 +14688,22 @@ window.fairygui = window.fgui;
             delete UIPackage._instByName[pkg.name];
             if (pkg._path)
                 delete UIPackage._instById[pkg._path];
-        }
-        static createObject(pkgName, resName, userClass) {
+        };
+        UIPackage.createObject = function (pkgName, resName, userClass) {
             var pkg = UIPackage.getByName(pkgName);
             if (pkg)
                 return pkg.createObject(resName, userClass);
             else
                 return null;
-        }
-        static createObjectFromURL(url, userClass) {
+        };
+        UIPackage.createObjectFromURL = function (url, userClass) {
             var pi = UIPackage.getItemByURL(url);
             if (pi)
                 return pi.owner.internalCreateObject(pi, userClass);
             else
                 return null;
-        }
-        static getItemURL(pkgName, resName) {
+        };
+        UIPackage.getItemURL = function (pkgName, resName) {
             var pkg = UIPackage.getByName(pkgName);
             if (!pkg)
                 return null;
@@ -13433,8 +14711,8 @@ window.fairygui = window.fgui;
             if (!pi)
                 return null;
             return "ui://" + pkg.id + pi.id;
-        }
-        static getItemByURL(url) {
+        };
+        UIPackage.getItemByURL = function (url) {
             var pos1 = url.indexOf("//");
             if (pos1 == -1)
                 return null;
@@ -13458,8 +14736,8 @@ window.fairygui = window.fgui;
                 }
             }
             return null;
-        }
-        static normalizeURL(url) {
+        };
+        UIPackage.normalizeURL = function (url) {
             if (url == null)
                 return null;
             var pos1 = url.indexOf("//");
@@ -13471,11 +14749,11 @@ window.fairygui = window.fgui;
             var pkgName = url.substr(pos1 + 2, pos2 - pos1 - 2);
             var srcName = url.substr(pos2 + 1);
             return UIPackage.getItemURL(pkgName, srcName);
-        }
-        static setStringsSource(source) {
+        };
+        UIPackage.setStringsSource = function (source) {
             fgui.TranslationHelper.loadFromXML(source);
-        }
-        loadPackage(buffer, path) {
+        };
+        UIPackage.prototype.loadPackage = function (buffer, path) {
             if (buffer.readUint() != 0x46475549)
                 throw "FairyGUI: old package format found in '" + path + "'";
             this._path = path;
@@ -13500,8 +14778,8 @@ window.fairygui = window.fgui;
             if (buffer.seek(indexTablePos, 5)) {
                 cnt = buffer.readInt();
                 for (i = 0; i < cnt; i++) {
-                    let index = buffer.readUshort();
-                    let len = buffer.readInt();
+                    var index = buffer.readUshort();
+                    var len = buffer.readInt();
                     stringTable[index] = buffer.readString(len);
                 }
             }
@@ -13520,8 +14798,8 @@ window.fairygui = window.fgui;
             }
             buffer.seek(indexTablePos, 1);
             var pi;
-            let pos = path.lastIndexOf('/');
-            let shortPath = pos == -1 ? "" : path.substr(0, pos + 1);
+            var pos = path.lastIndexOf('/');
+            var shortPath = pos == -1 ? "" : path.substr(0, pos + 1);
             path = path + "_";
             cnt = buffer.readShort();
             for (i = 0; i < cnt; i++) {
@@ -13623,7 +14901,7 @@ window.fairygui = window.fgui;
                 nextPos += buffer.position;
                 var itemId = buffer.readS();
                 pi = this._itemsById[buffer.readS()];
-                let rect = new cc.Rect();
+                var rect = new cc.Rect();
                 rect.x = buffer.readInt();
                 rect.y = buffer.readInt();
                 rect.width = buffer.readInt();
@@ -13654,35 +14932,51 @@ window.fairygui = window.fgui;
                     buffer.position = nextPos;
                 }
             }
-        }
-        dispose() {
+        };
+        UIPackage.prototype.dispose = function () {
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var pi = this._items[i];
                 if (pi.asset)
                     cc.assetManager.releaseAsset(pi.asset);
             }
-        }
-        get id() {
-            return this._id;
-        }
-        get name() {
-            return this._name;
-        }
-        get path() {
-            return this._path;
-        }
-        get dependencies() {
-            return this._dependencies;
-        }
-        createObject(resName, userClass) {
+        };
+        Object.defineProperty(UIPackage.prototype, "id", {
+            get: function () {
+                return this._id;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(UIPackage.prototype, "name", {
+            get: function () {
+                return this._name;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(UIPackage.prototype, "path", {
+            get: function () {
+                return this._path;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(UIPackage.prototype, "dependencies", {
+            get: function () {
+                return this._dependencies;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        UIPackage.prototype.createObject = function (resName, userClass) {
             var pi = this._itemsByName[resName];
             if (pi)
                 return this.internalCreateObject(pi, userClass);
             else
                 return null;
-        }
-        internalCreateObject(item, userClass) {
+        };
+        UIPackage.prototype.internalCreateObject = function (item, userClass) {
             var g = fgui.UIObjectFactory.newObject(item, userClass);
             if (g == null)
                 return null;
@@ -13690,30 +14984,30 @@ window.fairygui = window.fgui;
             g.constructFromResource();
             UIPackage._constructing--;
             return g;
-        }
-        getItemById(itemId) {
+        };
+        UIPackage.prototype.getItemById = function (itemId) {
             return this._itemsById[itemId];
-        }
-        getItemByName(resName) {
+        };
+        UIPackage.prototype.getItemByName = function (resName) {
             return this._itemsByName[resName];
-        }
-        getItemAssetByName(resName) {
+        };
+        UIPackage.prototype.getItemAssetByName = function (resName) {
             var pi = this._itemsByName[resName];
             if (pi == null) {
                 throw "Resource not found -" + resName;
             }
             return this.getItemAsset(pi);
-        }
-        getItemAsset(item) {
+        };
+        UIPackage.prototype.getItemAsset = function (item) {
             switch (item.type) {
                 case fgui.PackageItemType.Image:
                     if (!item.decoded) {
                         item.decoded = true;
                         var sprite = this._sprites[item.id];
                         if (sprite) {
-                            let atlasTexture = this.getItemAsset(sprite.atlas);
+                            var atlasTexture = this.getItemAsset(sprite.atlas);
                             if (atlasTexture) {
-                                let sf = new cc.SpriteFrame(atlasTexture, sprite.rect, sprite.rotated, new cc.Vec2(sprite.offset.x - (sprite.originalSize.width - sprite.rect.width) / 2, -(sprite.offset.y - (sprite.originalSize.height - sprite.rect.height) / 2)), sprite.originalSize);
+                                var sf = new cc.SpriteFrame(atlasTexture, sprite.rect, sprite.rotated, new cc.Vec2(sprite.offset.x - (sprite.originalSize.width - sprite.rect.width) / 2, -(sprite.offset.y - (sprite.originalSize.height - sprite.rect.height) / 2)), sprite.originalSize);
                                 if (item.scale9Grid) {
                                     sf.insetLeft = item.scale9Grid.x;
                                     sf.insetTop = item.scale9Grid.y;
@@ -13750,8 +15044,8 @@ window.fairygui = window.fgui;
                     break;
             }
             return item.asset;
-        }
-        getItemAssetAsync(item, onComplete) {
+        };
+        UIPackage.prototype.getItemAssetAsync = function (item, onComplete) {
             if (item.decoded) {
                 onComplete(null, item);
                 return;
@@ -13774,15 +15068,15 @@ window.fairygui = window.fgui;
                     onComplete(null, item);
                     break;
             }
-        }
-        loadAllAssets() {
+        };
+        UIPackage.prototype.loadAllAssets = function () {
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var pi = this._items[i];
                 this.getItemAsset(pi);
             }
-        }
-        loadMovieClip(item) {
+        };
+        UIPackage.prototype.loadMovieClip = function (item) {
             var buffer = item.rawData;
             buffer.seek(0, 0);
             item.interval = buffer.readInt() / 1000;
@@ -13796,26 +15090,26 @@ window.fairygui = window.fgui;
             for (var i = 0; i < frameCount; i++) {
                 var nextPos = buffer.readShort();
                 nextPos += buffer.position;
-                let rect = new cc.Rect();
+                var rect = new cc.Rect();
                 rect.x = buffer.readInt();
                 rect.y = buffer.readInt();
                 rect.width = buffer.readInt();
                 rect.height = buffer.readInt();
-                let addDelay = buffer.readInt() / 1000;
-                let frame = { rect: rect, addDelay: addDelay };
+                var addDelay = buffer.readInt() / 1000;
+                var frame = { rect: rect, addDelay: addDelay };
                 spriteId = buffer.readS();
                 if (spriteId != null && (sprite = this._sprites[spriteId]) != null) {
-                    let atlasTexture = this.getItemAsset(sprite.atlas);
+                    var atlasTexture = this.getItemAsset(sprite.atlas);
                     if (atlasTexture) {
-                        let sx = item.width / frame.rect.width;
+                        var sx = item.width / frame.rect.width;
                         frame.texture = new cc.SpriteFrame(atlasTexture, sprite.rect, sprite.rotated, new cc.Vec2(frame.rect.x - (item.width - frame.rect.width) / 2, -(frame.rect.y - (item.height - frame.rect.height) / 2)), new cc.Size(item.width, item.height));
                     }
                 }
                 item.frames[i] = frame;
                 buffer.position = nextPos;
             }
-        }
-        loadFont(item) {
+        };
+        UIPackage.prototype.loadFont = function (item) {
             var font = new cc.LabelAtlas();
             item.asset = font;
             font._fntConfig = {
@@ -13824,17 +15118,17 @@ window.fairygui = window.fgui;
                 kerningDict: {},
                 fontDefDictionary: {}
             };
-            let dict = font._fntConfig.fontDefDictionary;
+            var dict = font._fntConfig.fontDefDictionary;
             var buffer = item.rawData;
             buffer.seek(0, 0);
-            let ttf = buffer.readBool();
-            let canTint = buffer.readBool();
-            let resizable = buffer.readBool();
+            var ttf = buffer.readBool();
+            var canTint = buffer.readBool();
+            var resizable = buffer.readBool();
             buffer.readBool();
-            let fontSize = buffer.readInt();
+            var fontSize = buffer.readInt();
             var xadvance = buffer.readInt();
             var lineHeight = buffer.readInt();
-            let mainTexture;
+            var mainTexture;
             var mainSprite = this._sprites[item.id];
             if (mainSprite)
                 mainTexture = (this.getItemAsset(mainSprite.atlas));
@@ -13847,7 +15141,7 @@ window.fairygui = window.fgui;
                 bg = {};
                 var ch = buffer.readUshort();
                 dict[ch] = bg;
-                let rect = new cc.Rect();
+                var rect = new cc.Rect();
                 bg.rect = rect;
                 var img = buffer.readS();
                 rect.x = buffer.readInt();
@@ -13869,7 +15163,7 @@ window.fairygui = window.fgui;
                     rect.y += mainSprite.rect.y;
                 }
                 else {
-                    let sprite = this._sprites[img];
+                    var sprite = this._sprites[img];
                     if (sprite) {
                         rect.set(sprite.rect);
                         bg.xOffset += sprite.offset.x;
@@ -13895,169 +15189,205 @@ window.fairygui = window.fgui;
             font._fntConfig.commonHeight = lineHeight == 0 ? fontSize : lineHeight;
             font._fntConfig.resizable = resizable;
             font._fntConfig.canTint = canTint;
-            let spriteFrame = new cc.SpriteFrame();
+            var spriteFrame = new cc.SpriteFrame();
             spriteFrame.setTexture(mainTexture);
             font.spriteFrame = spriteFrame;
             font.onLoad();
-        }
-        loadSpine(item) {
-            this._bundle.load(item.file, sp.SkeletonData, (err, asset) => {
+        };
+        UIPackage.prototype.loadSpine = function (item) {
+            this._bundle.load(item.file, sp.SkeletonData, function (err, asset) {
                 item.decoded = true;
                 item.asset = asset;
-                let arr = item.loading;
+                var arr = item.loading;
                 delete item.loading;
-                arr.forEach(e => e(err, item));
+                arr.forEach(function (e) { return e(err, item); });
             });
-        }
-        loadDragonBones(item) {
-            this._bundle.load(item.file, dragonBones.DragonBonesAsset, (err, asset) => {
+        };
+        UIPackage.prototype.loadDragonBones = function (item) {
+            var _this = this;
+            this._bundle.load(item.file, dragonBones.DragonBonesAsset, function (err, asset) {
                 if (err) {
                     item.decoded = true;
-                    let arr = item.loading;
+                    var arr = item.loading;
                     delete item.loading;
-                    arr.forEach(e => e(err, item));
+                    arr.forEach(function (e) { return e(err, item); });
                     return;
                 }
                 item.asset = asset;
-                let atlasFile = item.file.replace("_ske", "_tex");
-                let pos = atlasFile.lastIndexOf('.');
+                var atlasFile = item.file.replace("_ske", "_tex");
+                var pos = atlasFile.lastIndexOf('.');
                 if (pos != -1)
                     atlasFile = atlasFile.substr(0, pos + 1) + "json";
-                this._bundle.load(atlasFile, dragonBones.DragonBonesAtlasAsset, (err, asset) => {
+                _this._bundle.load(atlasFile, dragonBones.DragonBonesAtlasAsset, function (err, asset) {
                     item.decoded = true;
                     item.atlasAsset = asset;
-                    let arr = item.loading;
+                    var arr = item.loading;
                     delete item.loading;
-                    arr.forEach(e => e(err, item));
+                    arr.forEach(function (e) { return e(err, item); });
                 });
             });
-        }
-    }
-    UIPackage._constructing = 0;
-    UIPackage._instById = {};
-    UIPackage._instByName = {};
-    UIPackage._branch = "";
-    UIPackage._vars = {};
+        };
+        UIPackage._constructing = 0;
+        UIPackage._instById = {};
+        UIPackage._instByName = {};
+        UIPackage._branch = "";
+        UIPackage._vars = {};
+        return UIPackage;
+    }());
     fgui.UIPackage = UIPackage;
-    const ItemTypeToAssetType = {
-        [fgui.PackageItemType.Atlas]: cc.Texture2D,
-        [fgui.PackageItemType.Sound]: cc.AudioClip
-    };
+    var ItemTypeToAssetType = (_a = {},
+        _a[fgui.PackageItemType.Atlas] = cc.Texture2D,
+        _a[fgui.PackageItemType.Sound] = cc.AudioClip,
+        _a);
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class Window extends fgui.GComponent {
-        constructor() {
-            super();
-            this._requestingCmd = 0;
-            this._uiSources = new Array();
-            this.bringToFontOnClick = fgui.UIConfig.bringWindowToFrontOnClick;
-            this._node.on(fgui.Event.TOUCH_BEGIN, this.onTouchBegin_1, this, true);
+    var Window = (function (_super) {
+        __extends(Window, _super);
+        function Window() {
+            var _this = _super.call(this) || this;
+            _this._requestingCmd = 0;
+            _this._uiSources = new Array();
+            _this.bringToFontOnClick = fgui.UIConfig.bringWindowToFrontOnClick;
+            _this._node.on(fgui.Event.TOUCH_BEGIN, _this.onTouchBegin_1, _this, true);
+            return _this;
         }
-        addUISource(source) {
+        Window.prototype.addUISource = function (source) {
             this._uiSources.push(source);
-        }
-        set contentPane(val) {
-            if (this._contentPane != val) {
-                if (this._contentPane)
-                    this.removeChild(this._contentPane);
-                this._contentPane = val;
-                if (this._contentPane) {
-                    this.addChild(this._contentPane);
-                    this.setSize(this._contentPane.width, this._contentPane.height);
-                    this._contentPane.addRelation(this, fgui.RelationType.Size);
-                    this._frame = (this._contentPane.getChild("frame"));
-                    if (this._frame) {
-                        this.closeButton = this._frame.getChild("closeButton");
-                        this.dragArea = this._frame.getChild("dragArea");
-                        this.contentArea = this._frame.getChild("contentArea");
+        };
+        Object.defineProperty(Window.prototype, "contentPane", {
+            get: function () {
+                return this._contentPane;
+            },
+            set: function (val) {
+                if (this._contentPane != val) {
+                    if (this._contentPane)
+                        this.removeChild(this._contentPane);
+                    this._contentPane = val;
+                    if (this._contentPane) {
+                        this.addChild(this._contentPane);
+                        this.setSize(this._contentPane.width, this._contentPane.height);
+                        this._contentPane.addRelation(this, fgui.RelationType.Size);
+                        this._frame = (this._contentPane.getChild("frame"));
+                        if (this._frame) {
+                            this.closeButton = this._frame.getChild("closeButton");
+                            this.dragArea = this._frame.getChild("dragArea");
+                            this.contentArea = this._frame.getChild("contentArea");
+                        }
                     }
                 }
-            }
-        }
-        get contentPane() {
-            return this._contentPane;
-        }
-        get frame() {
-            return this._frame;
-        }
-        get closeButton() {
-            return this._closeButton;
-        }
-        set closeButton(value) {
-            if (this._closeButton)
-                this._closeButton.offClick(this.closeEventHandler, this);
-            this._closeButton = value;
-            if (this._closeButton)
-                this._closeButton.onClick(this.closeEventHandler, this);
-        }
-        get dragArea() {
-            return this._dragArea;
-        }
-        set dragArea(value) {
-            if (this._dragArea != value) {
-                if (this._dragArea) {
-                    this._dragArea.draggable = false;
-                    this._dragArea.off(fgui.Event.DRAG_START, this.onDragStart_1, this);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Window.prototype, "frame", {
+            get: function () {
+                return this._frame;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Window.prototype, "closeButton", {
+            get: function () {
+                return this._closeButton;
+            },
+            set: function (value) {
+                if (this._closeButton)
+                    this._closeButton.offClick(this.closeEventHandler, this);
+                this._closeButton = value;
+                if (this._closeButton)
+                    this._closeButton.onClick(this.closeEventHandler, this);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Window.prototype, "dragArea", {
+            get: function () {
+                return this._dragArea;
+            },
+            set: function (value) {
+                if (this._dragArea != value) {
+                    if (this._dragArea) {
+                        this._dragArea.draggable = false;
+                        this._dragArea.off(fgui.Event.DRAG_START, this.onDragStart_1, this);
+                    }
+                    this._dragArea = value;
+                    if (this._dragArea) {
+                        this._dragArea.draggable = true;
+                        this._dragArea.on(fgui.Event.DRAG_START, this.onDragStart_1, this);
+                    }
                 }
-                this._dragArea = value;
-                if (this._dragArea) {
-                    this._dragArea.draggable = true;
-                    this._dragArea.on(fgui.Event.DRAG_START, this.onDragStart_1, this);
-                }
-            }
-        }
-        get contentArea() {
-            return this._contentArea;
-        }
-        set contentArea(value) {
-            this._contentArea = value;
-        }
-        show() {
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Window.prototype, "contentArea", {
+            get: function () {
+                return this._contentArea;
+            },
+            set: function (value) {
+                this._contentArea = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Window.prototype.show = function () {
             fgui.GRoot.inst.showWindow(this);
-        }
-        showOn(root) {
+        };
+        Window.prototype.showOn = function (root) {
             root.showWindow(this);
-        }
-        hide() {
+        };
+        Window.prototype.hide = function () {
             if (this.isShowing)
                 this.doHideAnimation();
-        }
-        hideImmediately() {
+        };
+        Window.prototype.hideImmediately = function () {
             var r = (this.parent instanceof fgui.GRoot) ? this.parent : null;
             if (!r)
                 r = fgui.GRoot.inst;
             r.hideWindowImmediately(this);
-        }
-        centerOn(r, restraint) {
+        };
+        Window.prototype.centerOn = function (r, restraint) {
             this.setPosition(Math.round((r.width - this.width) / 2), Math.round((r.height - this.height) / 2));
             if (restraint) {
                 this.addRelation(r, fgui.RelationType.Center_Center);
                 this.addRelation(r, fgui.RelationType.Middle_Middle);
             }
-        }
-        toggleStatus() {
+        };
+        Window.prototype.toggleStatus = function () {
             if (this.isTop)
                 this.hide();
             else
                 this.show();
-        }
-        get isShowing() {
-            return this.parent != null;
-        }
-        get isTop() {
-            return this.parent && this.parent.getChildIndex(this) == this.parent.numChildren - 1;
-        }
-        get modal() {
-            return this._modal;
-        }
-        set modal(val) {
-            this._modal = val;
-        }
-        bringToFront() {
+        };
+        Object.defineProperty(Window.prototype, "isShowing", {
+            get: function () {
+                return this.parent != null;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Window.prototype, "isTop", {
+            get: function () {
+                return this.parent && this.parent.getChildIndex(this) == this.parent.numChildren - 1;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Window.prototype, "modal", {
+            get: function () {
+                return this._modal;
+            },
+            set: function (val) {
+                this._modal = val;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Window.prototype.bringToFront = function () {
             this.root.bringToFront(this);
-        }
-        showModalWait(requestingCmd) {
+        };
+        Window.prototype.showModalWait = function (requestingCmd) {
             if (requestingCmd != null)
                 this._requestingCmd = requestingCmd;
             if (fgui.UIConfig.windowModalWaiting) {
@@ -14066,8 +15396,8 @@ window.fairygui = window.fgui;
                 this.layoutModalWaitPane();
                 this.addChild(this._modalWaitPane);
             }
-        }
-        layoutModalWaitPane() {
+        };
+        Window.prototype.layoutModalWaitPane = function () {
             if (this._contentArea) {
                 var pt = this._frame.localToGlobal();
                 pt = this.globalToLocal(pt.x, pt.y, pt);
@@ -14076,8 +15406,8 @@ window.fairygui = window.fgui;
             }
             else
                 this._modalWaitPane.setSize(this.width, this.height);
-        }
-        closeModalWait(requestingCmd) {
+        };
+        Window.prototype.closeModalWait = function (requestingCmd) {
             if (requestingCmd != null) {
                 if (this._requestingCmd != requestingCmd)
                     return false;
@@ -14086,11 +15416,15 @@ window.fairygui = window.fgui;
             if (this._modalWaitPane && this._modalWaitPane.parent)
                 this.removeChild(this._modalWaitPane);
             return true;
-        }
-        get modalWaiting() {
-            return this._modalWaitPane && this._modalWaitPane.parent != null;
-        }
-        init() {
+        };
+        Object.defineProperty(Window.prototype, "modalWaiting", {
+            get: function () {
+                return this._modalWaitPane && this._modalWaitPane.parent != null;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Window.prototype.init = function () {
             if (this._inited || this._loading)
                 return;
             if (this._uiSources.length > 0) {
@@ -14108,20 +15442,20 @@ window.fairygui = window.fgui;
             }
             else
                 this._init();
-        }
-        onInit() {
-        }
-        onShown() {
-        }
-        onHide() {
-        }
-        doShowAnimation() {
+        };
+        Window.prototype.onInit = function () {
+        };
+        Window.prototype.onShown = function () {
+        };
+        Window.prototype.onHide = function () {
+        };
+        Window.prototype.doShowAnimation = function () {
             this.onShown();
-        }
-        doHideAnimation() {
+        };
+        Window.prototype.doHideAnimation = function () {
             this.hideImmediately();
-        }
-        __uiLoadComplete() {
+        };
+        Window.prototype.__uiLoadComplete = function () {
             var cnt = this._uiSources.length;
             for (var i = 0; i < cnt; i++) {
                 var lib = this._uiSources[i];
@@ -14130,51 +15464,52 @@ window.fairygui = window.fgui;
             }
             this._loading = false;
             this._init();
-        }
-        _init() {
+        };
+        Window.prototype._init = function () {
             this._inited = true;
             this.onInit();
             if (this.isShowing)
                 this.doShowAnimation();
-        }
-        dispose() {
+        };
+        Window.prototype.dispose = function () {
             if (this.parent)
                 this.hideImmediately();
-            super.dispose();
-        }
-        closeEventHandler(evt) {
+            _super.prototype.dispose.call(this);
+        };
+        Window.prototype.closeEventHandler = function (evt) {
             this.hide();
-        }
-        onEnable() {
-            super.onEnable();
+        };
+        Window.prototype.onEnable = function () {
+            _super.prototype.onEnable.call(this);
             if (!this._inited)
                 this.init();
             else
                 this.doShowAnimation();
-        }
-        onDisable() {
-            super.onDisable();
+        };
+        Window.prototype.onDisable = function () {
+            _super.prototype.onDisable.call(this);
             this.closeModalWait();
             this.onHide();
-        }
-        onTouchBegin_1(evt) {
+        };
+        Window.prototype.onTouchBegin_1 = function (evt) {
             if (this.isShowing && this.bringToFontOnClick)
                 this.bringToFront();
-        }
-        onDragStart_1(evt) {
+        };
+        Window.prototype.onDragStart_1 = function (evt) {
             var original = fgui.GObject.cast(evt.currentTarget);
             original.stopDrag();
             this.startDrag(evt.touchId);
-        }
-    }
+        };
+        return Window;
+    }(fgui.GComponent));
     fgui.Window = Window;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class ControllerAction {
-        constructor() {
+    var ControllerAction = (function () {
+        function ControllerAction() {
         }
-        static createAction(type) {
+        ControllerAction.createAction = function (type) {
             switch (type) {
                 case 0:
                     return new fgui.PlayTransitionAction();
@@ -14182,19 +15517,19 @@ window.fairygui = window.fgui;
                     return new fgui.ChangePageAction();
             }
             return null;
-        }
-        run(controller, prevPage, curPage) {
+        };
+        ControllerAction.prototype.run = function (controller, prevPage, curPage) {
             if ((this.fromPage == null || this.fromPage.length == 0 || this.fromPage.indexOf(prevPage) != -1)
                 && (this.toPage == null || this.toPage.length == 0 || this.toPage.indexOf(curPage) != -1))
                 this.enter(controller);
             else
                 this.leave(controller);
-        }
-        enter(controller) {
-        }
-        leave(controller) {
-        }
-        setup(buffer) {
+        };
+        ControllerAction.prototype.enter = function (controller) {
+        };
+        ControllerAction.prototype.leave = function (controller) {
+        };
+        ControllerAction.prototype.setup = function (buffer) {
             var cnt;
             var i;
             cnt = buffer.readShort();
@@ -14205,17 +15540,19 @@ window.fairygui = window.fgui;
             this.toPage = [];
             for (i = 0; i < cnt; i++)
                 this.toPage[i] = buffer.readS();
-        }
-    }
+        };
+        return ControllerAction;
+    }());
     fgui.ControllerAction = ControllerAction;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class ChangePageAction extends fgui.ControllerAction {
-        constructor() {
-            super();
+    var ChangePageAction = (function (_super) {
+        __extends(ChangePageAction, _super);
+        function ChangePageAction() {
+            return _super.call(this) || this;
         }
-        enter(controller) {
+        ChangePageAction.prototype.enter = function (controller) {
             if (!this.controllerName)
                 return;
             var gcom;
@@ -14241,26 +15578,29 @@ window.fairygui = window.fgui;
                         cc.selectedPageId = this.targetPage;
                 }
             }
-        }
-        setup(buffer) {
-            super.setup(buffer);
+        };
+        ChangePageAction.prototype.setup = function (buffer) {
+            _super.prototype.setup.call(this, buffer);
             this.objectId = buffer.readS();
             this.controllerName = buffer.readS();
             this.targetPage = buffer.readS();
-        }
-    }
+        };
+        return ChangePageAction;
+    }(fgui.ControllerAction));
     fgui.ChangePageAction = ChangePageAction;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class PlayTransitionAction extends fgui.ControllerAction {
-        constructor() {
-            super();
-            this.playTimes = 1;
-            this.delay = 0;
-            this.stopOnExit = false;
+    var PlayTransitionAction = (function (_super) {
+        __extends(PlayTransitionAction, _super);
+        function PlayTransitionAction() {
+            var _this = _super.call(this) || this;
+            _this.playTimes = 1;
+            _this.delay = 0;
+            _this.stopOnExit = false;
+            return _this;
         }
-        enter(controller) {
+        PlayTransitionAction.prototype.enter = function (controller) {
             var trans = controller.parent.getTransition(this.transitionName);
             if (trans) {
                 if (this._currentTransition && this._currentTransition.playing)
@@ -14269,26 +15609,27 @@ window.fairygui = window.fgui;
                     trans.play(null, this.playTimes, this.delay);
                 this._currentTransition = trans;
             }
-        }
-        leave(controller) {
+        };
+        PlayTransitionAction.prototype.leave = function (controller) {
             if (this.stopOnExit && this._currentTransition) {
                 this._currentTransition.stop();
                 this._currentTransition = null;
             }
-        }
-        setup(buffer) {
-            super.setup(buffer);
+        };
+        PlayTransitionAction.prototype.setup = function (buffer) {
+            _super.prototype.setup.call(this, buffer);
             this.transitionName = buffer.readS();
             this.playTimes = buffer.readInt();
             this.delay = buffer.readFloat();
             this.stopOnExit = buffer.readBool();
-        }
-    }
+        };
+        return PlayTransitionAction;
+    }(fgui.ControllerAction));
     fgui.PlayTransitionAction = PlayTransitionAction;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    let BlendMode;
+    var BlendMode;
     (function (BlendMode) {
         BlendMode[BlendMode["Normal"] = 0] = "Normal";
         BlendMode[BlendMode["None"] = 1] = "None";
@@ -14303,22 +15644,25 @@ window.fairygui = window.fgui;
         BlendMode[BlendMode["Custom2"] = 10] = "Custom2";
         BlendMode[BlendMode["Custom3"] = 11] = "Custom3";
     })(BlendMode = fgui.BlendMode || (fgui.BlendMode = {}));
-    class BlendModeUtils {
-        static apply(node, blendMode) {
-            let f = factors[blendMode];
-            let renderers = node.getComponentsInChildren(cc.RenderComponent);
-            renderers.forEach(element => {
+    var BlendModeUtils = (function () {
+        function BlendModeUtils() {
+        }
+        BlendModeUtils.apply = function (node, blendMode) {
+            var f = factors[blendMode];
+            var renderers = node.getComponentsInChildren(cc.RenderComponent);
+            renderers.forEach(function (element) {
                 element.srcBlendFactor = f[0];
                 element.dstBlendFactor = f[1];
             });
-        }
-        static override(blendMode, srcFactor, dstFactor) {
+        };
+        BlendModeUtils.override = function (blendMode, srcFactor, dstFactor) {
             factors[blendMode][0] = srcFactor;
             factors[blendMode][1] = dstFactor;
-        }
-    }
+        };
+        return BlendModeUtils;
+    }());
     fgui.BlendModeUtils = BlendModeUtils;
-    const factors = [
+    var factors = [
         [cc.macro.SRC_ALPHA, cc.macro.ONE_MINUS_SRC_ALPHA],
         [cc.macro.ONE, cc.macro.ONE],
         [cc.macro.SRC_ALPHA, cc.macro.ONE],
@@ -14335,85 +15679,107 @@ window.fairygui = window.fgui;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class Image extends cc.Sprite {
-        constructor() {
-            super();
-            this._flip = fgui.FlipType.None;
-            this._fillMethod = fgui.FillMethod.None;
-            this._fillOrigin = fgui.FillOrigin.Left;
-            this._fillAmount = 0;
+    var Image = (function (_super) {
+        __extends(Image, _super);
+        function Image() {
+            var _this = _super.call(this) || this;
+            _this._flip = fgui.FlipType.None;
+            _this._fillMethod = fgui.FillMethod.None;
+            _this._fillOrigin = fgui.FillOrigin.Left;
+            _this._fillAmount = 0;
+            return _this;
         }
-        get flip() {
-            return this._flip;
-        }
-        set flip(value) {
-            if (this._flip != value) {
-                this._flip = value;
-                let sx = 1, sy = 1;
-                if (this._flip == fgui.FlipType.Horizontal || this._flip == fgui.FlipType.Both)
-                    sx = -1;
-                if (this._flip == fgui.FlipType.Vertical || this._flip == fgui.FlipType.Both)
-                    sy = -1;
-                if (sx != 1 || sy != 1)
-                    this.node.setAnchorPoint(0.5, 0.5);
-                this.node.setScale(sx, sy);
-            }
-        }
-        get fillMethod() {
-            return this._fillMethod;
-        }
-        set fillMethod(value) {
-            if (this._fillMethod != value) {
-                this._fillMethod = value;
-                if (this._fillMethod != 0) {
-                    this.type = cc.Sprite.Type.FILLED;
-                    if (this._fillMethod <= 3)
-                        this.fillType = this._fillMethod - 1;
-                    else
-                        this.fillType = cc.Sprite.FillType.RADIAL;
-                    this.fillCenter = new cc.Vec2(0.5, 0.5);
-                    this.setupFill();
+        Object.defineProperty(Image.prototype, "flip", {
+            get: function () {
+                return this._flip;
+            },
+            set: function (value) {
+                if (this._flip != value) {
+                    this._flip = value;
+                    var sx = 1, sy = 1;
+                    if (this._flip == fgui.FlipType.Horizontal || this._flip == fgui.FlipType.Both)
+                        sx = -1;
+                    if (this._flip == fgui.FlipType.Vertical || this._flip == fgui.FlipType.Both)
+                        sy = -1;
+                    if (sx != 1 || sy != 1)
+                        this.node.setAnchorPoint(0.5, 0.5);
+                    this.node.setScale(sx, sy);
                 }
-                else {
-                    this.type = cc.Sprite.Type.SIMPLE;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Image.prototype, "fillMethod", {
+            get: function () {
+                return this._fillMethod;
+            },
+            set: function (value) {
+                if (this._fillMethod != value) {
+                    this._fillMethod = value;
+                    if (this._fillMethod != 0) {
+                        this.type = cc.Sprite.Type.FILLED;
+                        if (this._fillMethod <= 3)
+                            this.fillType = this._fillMethod - 1;
+                        else
+                            this.fillType = cc.Sprite.FillType.RADIAL;
+                        this.fillCenter = new cc.Vec2(0.5, 0.5);
+                        this.setupFill();
+                    }
+                    else {
+                        this.type = cc.Sprite.Type.SIMPLE;
+                    }
                 }
-            }
-        }
-        get fillOrigin() {
-            return this._fillOrigin;
-        }
-        set fillOrigin(value) {
-            if (this._fillOrigin != value) {
-                this._fillOrigin = value;
-                if (this._fillMethod != 0)
-                    this.setupFill();
-            }
-        }
-        get fillClockwise() {
-            return this._fillClockwise;
-        }
-        set fillClockwise(value) {
-            if (this._fillClockwise != value) {
-                this._fillClockwise = value;
-                if (this._fillMethod != 0)
-                    this.setupFill();
-            }
-        }
-        get fillAmount() {
-            return this._fillAmount;
-        }
-        set fillAmount(value) {
-            if (this._fillAmount != value) {
-                this._fillAmount = value;
-                if (this._fillMethod != 0) {
-                    if (this._fillClockwise)
-                        this.fillRange = -this._fillAmount;
-                    else
-                        this.fillRange = this._fillAmount;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Image.prototype, "fillOrigin", {
+            get: function () {
+                return this._fillOrigin;
+            },
+            set: function (value) {
+                if (this._fillOrigin != value) {
+                    this._fillOrigin = value;
+                    if (this._fillMethod != 0)
+                        this.setupFill();
                 }
-            }
-        }
-        setupFill() {
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Image.prototype, "fillClockwise", {
+            get: function () {
+                return this._fillClockwise;
+            },
+            set: function (value) {
+                if (this._fillClockwise != value) {
+                    this._fillClockwise = value;
+                    if (this._fillMethod != 0)
+                        this.setupFill();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Image.prototype, "fillAmount", {
+            get: function () {
+                return this._fillAmount;
+            },
+            set: function (value) {
+                if (this._fillAmount != value) {
+                    this._fillAmount = value;
+                    if (this._fillMethod != 0) {
+                        if (this._fillClockwise)
+                            this.fillRange = -this._fillAmount;
+                        else
+                            this.fillRange = this._fillAmount;
+                    }
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Image.prototype.setupFill = function () {
             if (this._fillMethod == fgui.FillMethod.Horizontal) {
                 this._fillClockwise = this._fillOrigin == fgui.FillOrigin.Right || this._fillOrigin == fgui.FillOrigin.Bottom;
                 this.fillStart = this._fillClockwise ? 1 : 0;
@@ -14438,121 +15804,148 @@ window.fairygui = window.fgui;
                         break;
                 }
             }
-        }
-        get grayed() {
-            return this._grayed;
-        }
-        set grayed(value) {
-            if (this._grayed == value)
-                return;
-            this._grayed = value;
-            let material;
-            if (value) {
-                material = this._graySpriteMaterial;
-                if (!material)
-                    material = cc.Material.getBuiltinMaterial('2d-gray-sprite');
-                material = this._graySpriteMaterial = cc.MaterialVariant.create(material, this);
-            }
-            else {
-                material = this._spriteMaterial;
-                if (!material)
-                    material = cc.Material.getBuiltinMaterial('2d-sprite', this);
-                material = this._spriteMaterial = cc.MaterialVariant.create(material, this);
-            }
-            this.setMaterial(0, material);
-        }
+        };
+        Object.defineProperty(Image.prototype, "grayed", {
+            get: function () {
+                return this._grayed;
+            },
+            set: function (value) {
+                if (this._grayed == value)
+                    return;
+                this._grayed = value;
+                var material;
+                if (value) {
+                    material = this._graySpriteMaterial;
+                    if (!material)
+                        material = cc.Material.getBuiltinMaterial('2d-gray-sprite');
+                    material = this._graySpriteMaterial = cc.MaterialVariant.create(material, this);
+                }
+                else {
+                    material = this._spriteMaterial;
+                    if (!material)
+                        material = cc.Material.getBuiltinMaterial('2d-sprite', this);
+                    material = this._spriteMaterial = cc.MaterialVariant.create(material, this);
+                }
+                this.setMaterial(0, material);
+            },
+            enumerable: false,
+            configurable: true
+        });
         ;
-    }
+        return Image;
+    }(cc.Sprite));
     fgui.Image = Image;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class MovieClip extends fgui.Image {
-        constructor() {
-            super();
-            this.interval = 0;
-            this.repeatDelay = 0;
-            this.timeScale = 1;
-            this._playing = true;
-            this._frameCount = 0;
-            this._frame = 0;
-            this._start = 0;
-            this._end = 0;
-            this._times = 0;
-            this._endAt = 0;
-            this._status = 0;
-            this._smoothing = true;
-            this._frameElapsed = 0;
-            this._reversed = false;
-            this._repeatedCount = 0;
+    var MovieClip = (function (_super) {
+        __extends(MovieClip, _super);
+        function MovieClip() {
+            var _this = _super.call(this) || this;
+            _this.interval = 0;
+            _this.repeatDelay = 0;
+            _this.timeScale = 1;
+            _this._playing = true;
+            _this._frameCount = 0;
+            _this._frame = 0;
+            _this._start = 0;
+            _this._end = 0;
+            _this._times = 0;
+            _this._endAt = 0;
+            _this._status = 0;
+            _this._smoothing = true;
+            _this._frameElapsed = 0;
+            _this._reversed = false;
+            _this._repeatedCount = 0;
+            return _this;
         }
-        get frames() {
-            return this._frames;
-        }
-        set frames(value) {
-            this._frames = value;
-            if (this._frames) {
-                this._frameCount = this._frames.length;
-                if (this._end == -1 || this._end > this._frameCount - 1)
-                    this._end = this._frameCount - 1;
-                if (this._endAt == -1 || this._endAt > this._frameCount - 1)
-                    this._endAt = this._frameCount - 1;
-                if (this._frame < 0 || this._frame > this._frameCount - 1)
-                    this._frame = this._frameCount - 1;
-                this.type = cc.Sprite.Type.SIMPLE;
-                this.drawFrame();
-                this._frameElapsed = 0;
-                this._repeatedCount = 0;
-                this._reversed = false;
-            }
-            else {
-                this._frameCount = 0;
-            }
-        }
-        get frameCount() {
-            return this._frameCount;
-        }
-        get frame() {
-            return this._frame;
-        }
-        set frame(value) {
-            if (this._frame != value) {
-                if (this._frames && value >= this._frameCount)
-                    value = this._frameCount - 1;
-                this._frame = value;
-                this._frameElapsed = 0;
-                this.drawFrame();
-            }
-        }
-        get playing() {
-            return this._playing;
-        }
-        set playing(value) {
-            if (this._playing != value) {
-                this._playing = value;
-            }
-        }
-        get smoothing() {
-            return this._smoothing;
-        }
-        set smoothing(value) {
-            this._smoothing = value;
-        }
-        rewind() {
+        Object.defineProperty(MovieClip.prototype, "frames", {
+            get: function () {
+                return this._frames;
+            },
+            set: function (value) {
+                this._frames = value;
+                if (this._frames) {
+                    this._frameCount = this._frames.length;
+                    if (this._end == -1 || this._end > this._frameCount - 1)
+                        this._end = this._frameCount - 1;
+                    if (this._endAt == -1 || this._endAt > this._frameCount - 1)
+                        this._endAt = this._frameCount - 1;
+                    if (this._frame < 0 || this._frame > this._frameCount - 1)
+                        this._frame = this._frameCount - 1;
+                    this.type = cc.Sprite.Type.SIMPLE;
+                    this.drawFrame();
+                    this._frameElapsed = 0;
+                    this._repeatedCount = 0;
+                    this._reversed = false;
+                }
+                else {
+                    this._frameCount = 0;
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(MovieClip.prototype, "frameCount", {
+            get: function () {
+                return this._frameCount;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(MovieClip.prototype, "frame", {
+            get: function () {
+                return this._frame;
+            },
+            set: function (value) {
+                if (this._frame != value) {
+                    if (this._frames && value >= this._frameCount)
+                        value = this._frameCount - 1;
+                    this._frame = value;
+                    this._frameElapsed = 0;
+                    this.drawFrame();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(MovieClip.prototype, "playing", {
+            get: function () {
+                return this._playing;
+            },
+            set: function (value) {
+                if (this._playing != value) {
+                    this._playing = value;
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(MovieClip.prototype, "smoothing", {
+            get: function () {
+                return this._smoothing;
+            },
+            set: function (value) {
+                this._smoothing = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        MovieClip.prototype.rewind = function () {
             this._frame = 0;
             this._frameElapsed = 0;
             this._reversed = false;
             this._repeatedCount = 0;
             this.drawFrame();
-        }
-        syncStatus(anotherMc) {
+        };
+        MovieClip.prototype.syncStatus = function (anotherMc) {
             this._frame = anotherMc._frame;
             this._frameElapsed = anotherMc._frameElapsed;
             this._reversed = anotherMc._reversed;
             this._repeatedCount = anotherMc._repeatedCount;
             this.drawFrame();
-        }
-        advance(timeInSeconds) {
+        };
+        MovieClip.prototype.advance = function (timeInSeconds) {
             var beginFrame = this._frame;
             var beginReversed = this._reversed;
             var backupTime = timeInSeconds;
@@ -14596,8 +15989,8 @@ window.fairygui = window.fgui;
                 }
             }
             this.drawFrame();
-        }
-        setPlaySettings(start, end, times, endAt, endCallback, callbackObj) {
+        };
+        MovieClip.prototype.setPlaySettings = function (start, end, times, endAt, endCallback, callbackObj) {
             if (start == undefined)
                 start = 0;
             if (end == undefined)
@@ -14618,8 +16011,8 @@ window.fairygui = window.fgui;
             this._callback = endCallback;
             this._callbackObj = callbackObj;
             this.frame = start;
-        }
-        update(dt) {
+        };
+        MovieClip.prototype.update = function (dt) {
             if (!this._playing || this._frameCount == 0 || this._status == 3)
                 return;
             if (this.timeScale != 1)
@@ -14689,41 +16082,52 @@ window.fairygui = window.fgui;
                 }
             }
             this.drawFrame();
-        }
-        drawFrame() {
+        };
+        MovieClip.prototype.drawFrame = function () {
             if (this._frameCount > 0 && this._frame < this._frames.length) {
                 var frame = this._frames[this._frame];
                 this.spriteFrame = frame.texture;
             }
-        }
-    }
+        };
+        return MovieClip;
+    }(fgui.Image));
     fgui.MovieClip = MovieClip;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class Event extends cc.Event {
-        constructor(type, bubbles) {
-            super(type, bubbles);
-            this.pos = new cc.Vec2();
-            this.touchId = 0;
-            this.clickCount = 0;
-            this.button = 0;
-            this.keyModifiers = 0;
-            this.mouseWheelDelta = 0;
+    var Event = (function (_super) {
+        __extends(Event, _super);
+        function Event(type, bubbles) {
+            var _this = _super.call(this, type, bubbles) || this;
+            _this.pos = new cc.Vec2();
+            _this.touchId = 0;
+            _this.clickCount = 0;
+            _this.button = 0;
+            _this.keyModifiers = 0;
+            _this.mouseWheelDelta = 0;
+            return _this;
         }
-        get isShiftDown() {
-            return false;
-        }
-        get isCtrlDown() {
-            return false;
-        }
-        captureTouch() {
-            let obj = fgui.GObject.cast(this.currentTarget);
+        Object.defineProperty(Event.prototype, "isShiftDown", {
+            get: function () {
+                return false;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Event.prototype, "isCtrlDown", {
+            get: function () {
+                return false;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Event.prototype.captureTouch = function () {
+            var obj = fgui.GObject.cast(this.currentTarget);
             if (obj)
                 this._processor.addTouchMonitor(this.touchId, obj);
-        }
-        static _borrow(type, bubbles) {
-            let evt;
+        };
+        Event._borrow = function (type, bubbles) {
+            var evt;
             if (eventPool.length) {
                 evt = eventPool.pop();
                 evt.type = type;
@@ -14733,56 +16137,57 @@ window.fairygui = window.fgui;
                 evt = new Event(type, bubbles);
             }
             return evt;
-        }
-        static _return(evt) {
+        };
+        Event._return = function (evt) {
             evt.initiator = null;
             evt.touch = null;
             evt.unuse();
             eventPool.push(evt);
-        }
-    }
-    Event.TOUCH_BEGIN = "fui_touch_begin";
-    Event.TOUCH_MOVE = "fui_touch_move";
-    Event.TOUCH_END = "fui_touch_end";
-    Event.CLICK = "fui_click";
-    Event.ROLL_OVER = "fui_roll_over";
-    Event.ROLL_OUT = "fui_roll_out";
-    Event.MOUSE_WHEEL = "fui_mouse_wheel";
-    Event.DISPLAY = "fui_display";
-    Event.UNDISPLAY = "fui_undisplay";
-    Event.GEAR_STOP = "fui_gear_stop";
-    Event.LINK = "fui_text_link";
-    Event.Submit = "editing-return";
-    Event.TEXT_CHANGE = "text-changed";
-    Event.STATUS_CHANGED = "fui_status_changed";
-    Event.XY_CHANGED = "fui_xy_changed";
-    Event.SIZE_CHANGED = "fui_size_changed";
-    Event.SIZE_DELAY_CHANGE = "fui_size_delay_change";
-    Event.DRAG_START = "fui_drag_start";
-    Event.DRAG_MOVE = "fui_drag_move";
-    Event.DRAG_END = "fui_drag_end";
-    Event.DROP = "fui_drop";
-    Event.SCROLL = "fui_scroll";
-    Event.SCROLL_END = "fui_scroll_end";
-    Event.PULL_DOWN_RELEASE = "fui_pull_down_release";
-    Event.PULL_UP_RELEASE = "fui_pull_up_release";
-    Event.CLICK_ITEM = "fui_click_item";
+        };
+        Event.TOUCH_BEGIN = "fui_touch_begin";
+        Event.TOUCH_MOVE = "fui_touch_move";
+        Event.TOUCH_END = "fui_touch_end";
+        Event.CLICK = "fui_click";
+        Event.ROLL_OVER = "fui_roll_over";
+        Event.ROLL_OUT = "fui_roll_out";
+        Event.MOUSE_WHEEL = "fui_mouse_wheel";
+        Event.DISPLAY = "fui_display";
+        Event.UNDISPLAY = "fui_undisplay";
+        Event.GEAR_STOP = "fui_gear_stop";
+        Event.LINK = "fui_text_link";
+        Event.Submit = "editing-return";
+        Event.TEXT_CHANGE = "text-changed";
+        Event.STATUS_CHANGED = "fui_status_changed";
+        Event.XY_CHANGED = "fui_xy_changed";
+        Event.SIZE_CHANGED = "fui_size_changed";
+        Event.SIZE_DELAY_CHANGE = "fui_size_delay_change";
+        Event.DRAG_START = "fui_drag_start";
+        Event.DRAG_MOVE = "fui_drag_move";
+        Event.DRAG_END = "fui_drag_end";
+        Event.DROP = "fui_drop";
+        Event.SCROLL = "fui_scroll";
+        Event.SCROLL_END = "fui_scroll_end";
+        Event.PULL_DOWN_RELEASE = "fui_pull_down_release";
+        Event.PULL_UP_RELEASE = "fui_pull_up_release";
+        Event.CLICK_ITEM = "fui_click_item";
+        return Event;
+    }(cc.Event));
     fgui.Event = Event;
     var eventPool = new Array();
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class PixelHitTest {
-        constructor(data, offsetX, offsetY) {
+    var PixelHitTest = (function () {
+        function PixelHitTest(data, offsetX, offsetY) {
             this._data = data;
             this.offsetX = offsetX == undefined ? 0 : offsetX;
             this.offsetY = offsetY == undefined ? 0 : offsetY;
             this.scaleX = 1;
             this.scaleY = 1;
         }
-        hitTest(pt) {
-            let x = Math.floor((pt.x / this.scaleX - this.offsetX) * this._data.scale);
-            let y = Math.floor((pt.y / this.scaleY - this.offsetY) * this._data.scale);
+        PixelHitTest.prototype.hitTest = function (pt) {
+            var x = Math.floor((pt.x / this.scaleX - this.offsetX) * this._data.scale);
+            var y = Math.floor((pt.y / this.scaleY - this.offsetY) * this._data.scale);
             if (x < 0 || y < 0 || x >= this._data.pixelWidth)
                 return false;
             var pos = y * this._data.pixelWidth + x;
@@ -14792,43 +16197,48 @@ window.fairygui = window.fgui;
                 return ((this._data.pixels[pos2] >> pos3) & 0x1) == 1;
             else
                 return false;
-        }
-    }
+        };
+        return PixelHitTest;
+    }());
     fgui.PixelHitTest = PixelHitTest;
-    class PixelHitTestData {
-        constructor(ba) {
+    var PixelHitTestData = (function () {
+        function PixelHitTestData(ba) {
             ba.readInt();
             this.pixelWidth = ba.readInt();
             this.scale = 1 / ba.readByte();
             this.pixels = ba.readBuffer().data;
         }
-    }
+        return PixelHitTestData;
+    }());
     fgui.PixelHitTestData = PixelHitTestData;
-    class ChildHitArea {
-        constructor(child) {
+    var ChildHitArea = (function () {
+        function ChildHitArea(child) {
             this._child = child;
         }
-        hitTest(pt, globalPt) {
+        ChildHitArea.prototype.hitTest = function (pt, globalPt) {
             return this._child.hitTest(globalPt, false) != null;
-        }
-    }
+        };
+        return ChildHitArea;
+    }());
     fgui.ChildHitArea = ChildHitArea;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class InputProcessor extends cc.Component {
-        constructor() {
-            super();
-            this._touches = new Array();
-            this._rollOutChain = new Array();
-            this._rollOverChain = new Array();
-            this._touchPos = new cc.Vec2();
+    var InputProcessor = (function (_super) {
+        __extends(InputProcessor, _super);
+        function InputProcessor() {
+            var _this = _super.call(this) || this;
+            _this._touches = new Array();
+            _this._rollOutChain = new Array();
+            _this._rollOverChain = new Array();
+            _this._touchPos = new cc.Vec2();
+            return _this;
         }
-        onLoad() {
+        InputProcessor.prototype.onLoad = function () {
             this._owner = this.node["$gobj"];
-        }
-        onEnable() {
-            let node = this.node;
+        };
+        InputProcessor.prototype.onEnable = function () {
+            var node = this.node;
             node.on(cc.Node.EventType.TOUCH_START, this.touchBeginHandler, this);
             node.on(cc.Node.EventType.TOUCH_MOVE, this.touchMoveHandler, this);
             node.on(cc.Node.EventType.TOUCH_END, this.touchEndHandler, this);
@@ -14838,9 +16248,9 @@ window.fairygui = window.fgui;
             node.on(cc.Node.EventType.MOUSE_UP, this.mouseUpHandler, this);
             node.on(cc.Node.EventType.MOUSE_WHEEL, this.mouseWheelHandler, this);
             this._touchListener = this.node["_touchListener"];
-        }
-        onDisable() {
-            let node = this.node;
+        };
+        InputProcessor.prototype.onDisable = function () {
+            var node = this.node;
             node.off(cc.Node.EventType.TOUCH_START, this.touchBeginHandler, this);
             node.off(cc.Node.EventType.TOUCH_MOVE, this.touchMoveHandler, this);
             node.off(cc.Node.EventType.TOUCH_END, this.touchEndHandler, this);
@@ -14850,61 +16260,61 @@ window.fairygui = window.fgui;
             node.off(cc.Node.EventType.MOUSE_UP, this.mouseUpHandler, this);
             node.off(cc.Node.EventType.MOUSE_WHEEL, this.mouseWheelHandler, this);
             this._touchListener = null;
-        }
-        getAllTouches(touchIds) {
+        };
+        InputProcessor.prototype.getAllTouches = function (touchIds) {
             touchIds = touchIds || new Array();
-            let cnt = this._touches.length;
-            for (let i = 0; i < cnt; i++) {
-                let ti = this._touches[i];
+            var cnt = this._touches.length;
+            for (var i = 0; i < cnt; i++) {
+                var ti = this._touches[i];
                 if (ti.touchId != -1)
                     touchIds.push(ti.touchId);
             }
             return touchIds;
-        }
-        getTouchPosition(touchId) {
+        };
+        InputProcessor.prototype.getTouchPosition = function (touchId) {
             if (touchId === undefined)
                 touchId = -1;
-            let cnt = this._touches.length;
-            for (let i = 0; i < cnt; i++) {
-                let ti = this._touches[i];
+            var cnt = this._touches.length;
+            for (var i = 0; i < cnt; i++) {
+                var ti = this._touches[i];
                 if (ti.touchId != -1 && (touchId == -1 || ti.touchId == touchId))
                     return ti.pos;
             }
             return cc.Vec2.ZERO;
-        }
-        getTouchTarget() {
-            let cnt = this._touches.length;
-            for (let i = 0; i < cnt; i++) {
-                let ti = this._touches[i];
+        };
+        InputProcessor.prototype.getTouchTarget = function () {
+            var cnt = this._touches.length;
+            for (var i = 0; i < cnt; i++) {
+                var ti = this._touches[i];
                 if (ti.touchId != -1)
                     return ti.target;
             }
             return null;
-        }
-        addTouchMonitor(touchId, target) {
-            let ti = this.getInfo(touchId, false);
+        };
+        InputProcessor.prototype.addTouchMonitor = function (touchId, target) {
+            var ti = this.getInfo(touchId, false);
             if (!ti)
                 return;
-            let index = ti.touchMonitors.indexOf(target);
+            var index = ti.touchMonitors.indexOf(target);
             if (index == -1)
                 ti.touchMonitors.push(target);
-        }
-        removeTouchMonitor(target) {
-            let cnt = this._touches.length;
-            for (let i = 0; i < cnt; i++) {
-                let ti = this._touches[i];
-                let index = ti.touchMonitors.indexOf(target);
+        };
+        InputProcessor.prototype.removeTouchMonitor = function (target) {
+            var cnt = this._touches.length;
+            for (var i = 0; i < cnt; i++) {
+                var ti = this._touches[i];
+                var index = ti.touchMonitors.indexOf(target);
                 if (index != -1)
                     ti.touchMonitors.splice(index, 1);
             }
-        }
-        cancelClick(touchId) {
-            let ti = this.getInfo(touchId, false);
+        };
+        InputProcessor.prototype.cancelClick = function (touchId) {
+            var ti = this.getInfo(touchId, false);
             if (ti)
                 ti.clickCancelled = true;
-        }
-        simulateClick(target) {
-            let evt;
+        };
+        InputProcessor.prototype.simulateClick = function (target) {
+            var evt;
             evt = fgui.Event._borrow(fgui.Event.TOUCH_BEGIN, true);
             evt.initiator = target;
             evt.pos.set(target.localToGlobal());
@@ -14924,27 +16334,27 @@ window.fairygui = window.fgui;
             evt.bubbles = true;
             target.node.dispatchEvent(evt);
             fgui.Event._return(evt);
-        }
-        touchBeginHandler(touch, evt) {
-            let ti = this.updateInfo(touch.getID(), touch.getLocation(), touch);
+        };
+        InputProcessor.prototype.touchBeginHandler = function (touch, evt) {
+            var ti = this.updateInfo(touch.getID(), touch.getLocation(), touch);
             this._touchListener.setSwallowTouches(ti.target != this._owner);
             this.setBegin(ti);
-            let evt2 = this.getEvent(ti, ti.target, fgui.Event.TOUCH_BEGIN, true);
+            var evt2 = this.getEvent(ti, ti.target, fgui.Event.TOUCH_BEGIN, true);
             if (this._captureCallback)
                 this._captureCallback.call(this._owner, evt2);
             ti.target.node.dispatchEvent(evt2);
             this.handleRollOver(ti, ti.target);
             return true;
-        }
-        touchMoveHandler(touch, evt) {
-            let ti = this.updateInfo(touch.getID(), touch.getLocation(), touch);
+        };
+        InputProcessor.prototype.touchMoveHandler = function (touch, evt) {
+            var ti = this.updateInfo(touch.getID(), touch.getLocation(), touch);
             this.handleRollOver(ti, ti.target);
             if (ti.began) {
-                let evt2 = this.getEvent(ti, ti.target, fgui.Event.TOUCH_MOVE, false);
-                let done = false;
-                let cnt = ti.touchMonitors.length;
-                for (let i = 0; i < cnt; i++) {
-                    let mm = ti.touchMonitors[i];
+                var evt2 = this.getEvent(ti, ti.target, fgui.Event.TOUCH_MOVE, false);
+                var done = false;
+                var cnt = ti.touchMonitors.length;
+                for (var i = 0; i < cnt; i++) {
+                    var mm = ti.touchMonitors[i];
                     if (mm.node == null || !mm.node.activeInHierarchy)
                         continue;
                     evt2.unuse();
@@ -14960,14 +16370,14 @@ window.fairygui = window.fgui;
                 }
                 fgui.Event._return(evt2);
             }
-        }
-        touchEndHandler(touch, evt) {
-            let ti = this.updateInfo(touch.getID(), touch.getLocation(), touch);
+        };
+        InputProcessor.prototype.touchEndHandler = function (touch, evt) {
+            var ti = this.updateInfo(touch.getID(), touch.getLocation(), touch);
             this.setEnd(ti);
-            let evt2 = this.getEvent(ti, ti.target, fgui.Event.TOUCH_END, false);
-            let cnt = ti.touchMonitors.length;
-            for (let i = 0; i < cnt; i++) {
-                let mm = ti.touchMonitors[i];
+            var evt2 = this.getEvent(ti, ti.target, fgui.Event.TOUCH_END, false);
+            var cnt = ti.touchMonitors.length;
+            for (var i = 0; i < cnt; i++) {
+                var mm = ti.touchMonitors[i];
                 if (mm == ti.target || mm.node == null || !mm.node.activeInHierarchy
                     || (mm instanceof fgui.GComponent) && mm.isAncestorOf(ti.target))
                     continue;
@@ -14998,13 +16408,13 @@ window.fairygui = window.fgui;
             ti.target = null;
             ti.touchId = -1;
             ti.button = -1;
-        }
-        touchCancelHandler(touch, evt) {
-            let ti = this.updateInfo(touch.getID(), touch.getLocation(), touch);
-            let evt2 = this.getEvent(ti, ti.target, fgui.Event.TOUCH_END, false);
-            let cnt = ti.touchMonitors.length;
-            for (let i = 0; i < cnt; i++) {
-                let mm = ti.touchMonitors[i];
+        };
+        InputProcessor.prototype.touchCancelHandler = function (touch, evt) {
+            var ti = this.updateInfo(touch.getID(), touch.getLocation(), touch);
+            var evt2 = this.getEvent(ti, ti.target, fgui.Event.TOUCH_END, false);
+            var cnt = ti.touchMonitors.length;
+            for (var i = 0; i < cnt; i++) {
+                var mm = ti.touchMonitors[i];
                 if (mm == ti.target || mm.node == null || !mm.node.activeInHierarchy
                     || (mm instanceof fgui.GComponent) && mm.isAncestorOf(ti.target))
                     continue;
@@ -15021,17 +16431,17 @@ window.fairygui = window.fgui;
             ti.target = null;
             ti.touchId = -1;
             ti.button = -1;
-        }
-        mouseDownHandler(evt) {
-            let ti = this.getInfo(0, true);
+        };
+        InputProcessor.prototype.mouseDownHandler = function (evt) {
+            var ti = this.getInfo(0, true);
             ti.button = evt.getButton();
-        }
-        mouseUpHandler(evt) {
-            let ti = this.getInfo(0, true);
+        };
+        InputProcessor.prototype.mouseUpHandler = function (evt) {
+            var ti = this.getInfo(0, true);
             ti.button = evt.getButton();
-        }
-        mouseMoveHandler(evt) {
-            let ti = this.getInfo(0, false);
+        };
+        InputProcessor.prototype.mouseMoveHandler = function (evt) {
+            var ti = this.getInfo(0, false);
             if (ti
                 && Math.abs(ti.pos.x - evt.getLocationX()) < 1
                 && Math.abs(ti.pos.y - (fgui.GRoot.inst.height - evt.getLocationY())) < 1)
@@ -15039,11 +16449,11 @@ window.fairygui = window.fgui;
             ti = this.updateInfo(0, evt.getLocation());
             this.handleRollOver(ti, ti.target);
             if (ti.began) {
-                let evt2 = this.getEvent(ti, ti.target, fgui.Event.TOUCH_MOVE, false);
-                let done = false;
-                let cnt = ti.touchMonitors.length;
-                for (let i = 0; i < cnt; i++) {
-                    let mm = ti.touchMonitors[i];
+                var evt2 = this.getEvent(ti, ti.target, fgui.Event.TOUCH_MOVE, false);
+                var done = false;
+                var cnt = ti.touchMonitors.length;
+                for (var i = 0; i < cnt; i++) {
+                    var mm = ti.touchMonitors[i];
                     if (mm.node == null || !mm.node.activeInHierarchy)
                         continue;
                     evt2.initiator = mm;
@@ -15058,38 +16468,38 @@ window.fairygui = window.fgui;
                 }
                 fgui.Event._return(evt2);
             }
-        }
-        mouseWheelHandler(evt) {
-            let ti = this.updateInfo(0, evt.getLocation());
+        };
+        InputProcessor.prototype.mouseWheelHandler = function (evt) {
+            var ti = this.updateInfo(0, evt.getLocation());
             ti.mouseWheelDelta = Math.max(evt.getScrollX(), evt.getScrollY());
-            let evt2 = this.getEvent(ti, ti.target, fgui.Event.MOUSE_WHEEL, true);
+            var evt2 = this.getEvent(ti, ti.target, fgui.Event.MOUSE_WHEEL, true);
             ti.target.node.dispatchEvent(evt2);
             fgui.Event._return(evt2);
-        }
-        updateInfo(touchId, pos, touch) {
-            let camera = cc.Camera.findCamera(this.node);
+        };
+        InputProcessor.prototype.updateInfo = function (touchId, pos, touch) {
+            var camera = cc.Camera.findCamera(this.node);
             if (camera)
                 camera.getScreenToWorldPoint(pos, this._touchPos);
             else
                 this._touchPos.set(pos);
             this._touchPos.y = fgui.GRoot.inst.height - this._touchPos.y;
-            let target = this._owner.hitTest(this._touchPos);
+            var target = this._owner.hitTest(this._touchPos);
             if (!target)
                 target = this._owner;
-            let ti = this.getInfo(touchId);
+            var ti = this.getInfo(touchId);
             ti.target = target;
             ti.pos.set(this._touchPos);
             ti.button = cc.Event.EventMouse.BUTTON_LEFT;
             ti.touch = touch;
             return ti;
-        }
-        getInfo(touchId, createIfNotExisits) {
+        };
+        InputProcessor.prototype.getInfo = function (touchId, createIfNotExisits) {
             if (createIfNotExisits === undefined)
                 createIfNotExisits = true;
-            let ret = null;
-            let cnt = this._touches.length;
-            for (let i = 0; i < cnt; i++) {
-                let ti = this._touches[i];
+            var ret = null;
+            var cnt = this._touches.length;
+            for (var i = 0; i < cnt; i++) {
+                var ti = this._touches[i];
                 if (ti.touchId == touchId)
                     return ti;
                 else if (ti.touchId == -1)
@@ -15103,22 +16513,22 @@ window.fairygui = window.fgui;
             }
             ret.touchId = touchId;
             return ret;
-        }
-        setBegin(ti) {
+        };
+        InputProcessor.prototype.setBegin = function (ti) {
             ti.began = true;
             ti.clickCancelled = false;
             ti.downPos.set(ti.pos);
             ti.downTargets.length = 0;
-            let obj = ti.target;
+            var obj = ti.target;
             while (obj) {
                 ti.downTargets.push(obj);
                 obj = obj.findParent();
             }
-        }
-        setEnd(ti) {
+        };
+        InputProcessor.prototype.setEnd = function (ti) {
             ti.began = false;
-            let now = fgui.ToolSet.getTime();
-            let elapsed = now - ti.lastClickTime;
+            var now = fgui.ToolSet.getTime();
+            var elapsed = now - ti.lastClickTime;
             if (elapsed < 0.45) {
                 if (ti.clickCount == 2)
                     ti.clickCount = 1;
@@ -15128,35 +16538,35 @@ window.fairygui = window.fgui;
             else
                 ti.clickCount = 1;
             ti.lastClickTime = now;
-        }
-        clickTest(ti) {
+        };
+        InputProcessor.prototype.clickTest = function (ti) {
             if (ti.downTargets.length == 0
                 || ti.clickCancelled
                 || Math.abs(ti.pos.x - ti.downPos.x) > 50 || Math.abs(ti.pos.y - ti.downPos.y) > 50)
                 return null;
-            let obj = ti.downTargets[0];
+            var obj = ti.downTargets[0];
             if (obj && obj.node && obj.node.activeInHierarchy)
                 return obj;
             obj = ti.target;
             while (obj) {
-                let index = ti.downTargets.indexOf(obj);
+                var index = ti.downTargets.indexOf(obj);
                 if (index != -1 && obj.node && obj.node.activeInHierarchy)
                     break;
                 obj = obj.findParent();
             }
             return obj;
-        }
-        handleRollOver(ti, target) {
+        };
+        InputProcessor.prototype.handleRollOver = function (ti, target) {
             if (ti.lastRollOver == target)
                 return;
-            let element = ti.lastRollOver;
+            var element = ti.lastRollOver;
             while (element && element.node) {
                 this._rollOutChain.push(element);
                 element = element.findParent();
             }
             element = target;
             while (element && element.node) {
-                let i = this._rollOutChain.indexOf(element);
+                var i = this._rollOutChain.indexOf(element);
                 if (i != -1) {
                     this._rollOutChain.length = i;
                     break;
@@ -15165,29 +16575,29 @@ window.fairygui = window.fgui;
                 element = element.findParent();
             }
             ti.lastRollOver = target;
-            let cnt = this._rollOutChain.length;
-            for (let i = 0; i < cnt; i++) {
+            var cnt = this._rollOutChain.length;
+            for (var i = 0; i < cnt; i++) {
                 element = this._rollOutChain[i];
                 if (element.node && element.node.activeInHierarchy) {
-                    let evt = this.getEvent(ti, element, fgui.Event.ROLL_OUT, false);
+                    var evt = this.getEvent(ti, element, fgui.Event.ROLL_OUT, false);
                     element.node.dispatchEvent(evt);
                     fgui.Event._return(evt);
                 }
             }
             cnt = this._rollOverChain.length;
-            for (let i = 0; i < cnt; i++) {
+            for (var i = 0; i < cnt; i++) {
                 element = this._rollOverChain[i];
                 if (element.node && element.node.activeInHierarchy) {
-                    let evt = this.getEvent(ti, element, fgui.Event.ROLL_OVER, false);
+                    var evt = this.getEvent(ti, element, fgui.Event.ROLL_OVER, false);
                     element.node.dispatchEvent(evt);
                     fgui.Event._return(evt);
                 }
             }
             this._rollOutChain.length = 0;
             this._rollOverChain.length = 0;
-        }
-        getEvent(ti, target, type, bubbles) {
-            let evt = fgui.Event._borrow(type, bubbles);
+        };
+        InputProcessor.prototype.getEvent = function (ti, target, type, bubbles) {
+            var evt = fgui.Event._borrow(type, bubbles);
             evt.initiator = target;
             evt.touch = ti.touch;
             evt.pos.set(ti.pos);
@@ -15197,11 +16607,12 @@ window.fairygui = window.fgui;
             evt.mouseWheelDelta = ti.mouseWheelDelta;
             evt._processor = this;
             return evt;
-        }
-    }
+        };
+        return InputProcessor;
+    }(cc.Component));
     fgui.InputProcessor = InputProcessor;
-    class TouchInfo {
-        constructor() {
+    var TouchInfo = (function () {
+        function TouchInfo() {
             this.pos = new cc.Vec2();
             this.touchId = 0;
             this.clickCount = 0;
@@ -15214,45 +16625,54 @@ window.fairygui = window.fgui;
             this.downTargets = new Array();
             this.touchMonitors = new Array();
         }
-    }
+        return TouchInfo;
+    }());
     ;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GearBase {
-        constructor(owner) {
+    var GearBase = (function () {
+        function GearBase(owner) {
             this._owner = owner;
         }
-        static create(owner, index) {
+        GearBase.create = function (owner, index) {
             if (!Classes)
                 Classes = [
                     fgui.GearDisplay, fgui.GearXY, fgui.GearSize, fgui.GearLook, fgui.GearColor,
                     fgui.GearAnimation, fgui.GearText, fgui.GearIcon, fgui.GearDisplay2, fgui.GearFontSize
                 ];
             return new (Classes[index])(owner);
-        }
-        dispose() {
+        };
+        GearBase.prototype.dispose = function () {
             if (this._tweenConfig && this._tweenConfig._tweener) {
                 this._tweenConfig._tweener.kill();
                 this._tweenConfig._tweener = null;
             }
-        }
-        get controller() {
-            return this._controller;
-        }
-        set controller(val) {
-            if (val != this._controller) {
-                this._controller = val;
-                if (this._controller)
-                    this.init();
-            }
-        }
-        get tweenConfig() {
-            if (!this._tweenConfig)
-                this._tweenConfig = new GearTweenConfig();
-            return this._tweenConfig;
-        }
-        setup(buffer) {
+        };
+        Object.defineProperty(GearBase.prototype, "controller", {
+            get: function () {
+                return this._controller;
+            },
+            set: function (val) {
+                if (val != this._controller) {
+                    this._controller = val;
+                    if (this._controller)
+                        this.init();
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GearBase.prototype, "tweenConfig", {
+            get: function () {
+                if (!this._tweenConfig)
+                    this._tweenConfig = new GearTweenConfig();
+                return this._tweenConfig;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GearBase.prototype.setup = function (buffer) {
             this._controller = this._owner.parent.getControllerAt(buffer.readShort());
             this.init();
             var i;
@@ -15297,44 +16717,47 @@ window.fairygui = window.fgui;
                 else if (this instanceof fgui.GearDisplay2)
                     this.condition = buffer.readByte();
             }
-        }
-        updateFromRelations(dx, dy) {
-        }
-        addStatus(pageId, buffer) {
-        }
-        init() {
-        }
-        apply() {
-        }
-        updateState() {
-        }
-    }
+        };
+        GearBase.prototype.updateFromRelations = function (dx, dy) {
+        };
+        GearBase.prototype.addStatus = function (pageId, buffer) {
+        };
+        GearBase.prototype.init = function () {
+        };
+        GearBase.prototype.apply = function () {
+        };
+        GearBase.prototype.updateState = function () {
+        };
+        return GearBase;
+    }());
     fgui.GearBase = GearBase;
     var Classes;
-    class GearTweenConfig {
-        constructor() {
+    var GearTweenConfig = (function () {
+        function GearTweenConfig() {
             this.tween = true;
             this.easeType = fgui.EaseType.QuadOut;
             this.duration = 0.3;
             this.delay = 0;
         }
-    }
+        return GearTweenConfig;
+    }());
     fgui.GearTweenConfig = GearTweenConfig;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GearAnimation extends fgui.GearBase {
-        constructor(owner) {
-            super(owner);
+    var GearAnimation = (function (_super) {
+        __extends(GearAnimation, _super);
+        function GearAnimation(owner) {
+            return _super.call(this, owner) || this;
         }
-        init() {
+        GearAnimation.prototype.init = function () {
             this._default = {
                 playing: this._owner.getProp(fgui.ObjectPropID.Playing),
                 frame: this._owner.getProp(fgui.ObjectPropID.Frame)
             };
             this._storage = {};
-        }
-        addStatus(pageId, buffer) {
+        };
+        GearAnimation.prototype.addStatus = function (pageId, buffer) {
             var gv;
             if (pageId == null)
                 gv = this._default;
@@ -15342,8 +16765,8 @@ window.fairygui = window.fgui;
                 this._storage[pageId] = gv = {};
             gv.playing = buffer.readBool();
             gv.frame = buffer.readInt();
-        }
-        apply() {
+        };
+        GearAnimation.prototype.apply = function () {
             this._owner._gearLocked = true;
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv)
@@ -15351,31 +16774,33 @@ window.fairygui = window.fgui;
             this._owner.setProp(fgui.ObjectPropID.Playing, gv.playing);
             this._owner.setProp(fgui.ObjectPropID.Frame, gv.frame);
             this._owner._gearLocked = false;
-        }
-        updateState() {
+        };
+        GearAnimation.prototype.updateState = function () {
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv)
                 this._storage[this._controller.selectedPageId] = gv = {};
             gv.playing = this._owner.getProp(fgui.ObjectPropID.Playing);
             gv.frame = this._owner.getProp(fgui.ObjectPropID.Frame);
-        }
-    }
+        };
+        return GearAnimation;
+    }(fgui.GearBase));
     fgui.GearAnimation = GearAnimation;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GearColor extends fgui.GearBase {
-        constructor(owner) {
-            super(owner);
+    var GearColor = (function (_super) {
+        __extends(GearColor, _super);
+        function GearColor(owner) {
+            return _super.call(this, owner) || this;
         }
-        init() {
+        GearColor.prototype.init = function () {
             this._default = {
                 color: this._owner.getProp(fgui.ObjectPropID.Color),
                 strokeColor: this._owner.getProp(fgui.ObjectPropID.OutlineColor)
             };
             this._storage = {};
-        }
-        addStatus(pageId, buffer) {
+        };
+        GearColor.prototype.addStatus = function (pageId, buffer) {
             var gv;
             if (pageId == null)
                 gv = this._default;
@@ -15383,8 +16808,8 @@ window.fairygui = window.fgui;
                 this._storage[pageId] = gv = {};
             gv.color = buffer.readColor();
             gv.strokeColor = buffer.readColor();
-        }
-        apply() {
+        };
+        GearColor.prototype.apply = function () {
             this._owner._gearLocked = true;
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv)
@@ -15392,29 +16817,32 @@ window.fairygui = window.fgui;
             this._owner.setProp(fgui.ObjectPropID.Color, gv.color);
             this._owner.setProp(fgui.ObjectPropID.OutlineColor, gv.strokeColor);
             this._owner._gearLocked = false;
-        }
-        updateState() {
+        };
+        GearColor.prototype.updateState = function () {
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv)
                 this._storage[this._controller.selectedPageId] = gv = {};
             gv.color = this._owner.getProp(fgui.ObjectPropID.Color);
             gv.strokeColor = this._owner.getProp(fgui.ObjectPropID.OutlineColor);
-        }
-    }
+        };
+        return GearColor;
+    }(fgui.GearBase));
     fgui.GearColor = GearColor;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GearDisplay extends fgui.GearBase {
-        constructor(owner) {
-            super(owner);
-            this._displayLockToken = 1;
-            this._visible = 0;
+    var GearDisplay = (function (_super) {
+        __extends(GearDisplay, _super);
+        function GearDisplay(owner) {
+            var _this = _super.call(this, owner) || this;
+            _this._displayLockToken = 1;
+            _this._visible = 0;
+            return _this;
         }
-        init() {
+        GearDisplay.prototype.init = function () {
             this.pages = null;
-        }
-        apply() {
+        };
+        GearDisplay.prototype.apply = function () {
             this._displayLockToken++;
             if (this._displayLockToken == 0)
                 this._displayLockToken = 1;
@@ -15423,67 +16851,77 @@ window.fairygui = window.fgui;
                 this._visible = 1;
             else
                 this._visible = 0;
-        }
-        addLock() {
+        };
+        GearDisplay.prototype.addLock = function () {
             this._visible++;
             return this._displayLockToken;
-        }
-        releaseLock(token) {
+        };
+        GearDisplay.prototype.releaseLock = function (token) {
             if (token == this._displayLockToken)
                 this._visible--;
-        }
-        get connected() {
-            return this._controller == null || this._visible > 0;
-        }
-    }
+        };
+        Object.defineProperty(GearDisplay.prototype, "connected", {
+            get: function () {
+                return this._controller == null || this._visible > 0;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        return GearDisplay;
+    }(fgui.GearBase));
     fgui.GearDisplay = GearDisplay;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GearDisplay2 extends fgui.GearBase {
-        constructor(owner) {
-            super(owner);
-            this._visible = 0;
+    var GearDisplay2 = (function (_super) {
+        __extends(GearDisplay2, _super);
+        function GearDisplay2(owner) {
+            var _this = _super.call(this, owner) || this;
+            _this._visible = 0;
+            return _this;
         }
-        init() {
+        GearDisplay2.prototype.init = function () {
             this.pages = null;
-        }
-        apply() {
+        };
+        GearDisplay2.prototype.apply = function () {
             if (this.pages == null || this.pages.length == 0
                 || this.pages.indexOf(this._controller.selectedPageId) != -1)
                 this._visible = 1;
             else
                 this._visible = 0;
-        }
-        evaluate(connected) {
+        };
+        GearDisplay2.prototype.evaluate = function (connected) {
             var v = this._controller == null || this._visible > 0;
             if (this.condition == 0)
                 v = v && connected;
             else
                 v = v || connected;
             return v;
-        }
-    }
+        };
+        return GearDisplay2;
+    }(fgui.GearBase));
     fgui.GearDisplay2 = GearDisplay2;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GearFontSize extends fgui.GearBase {
-        constructor(owner) {
-            super(owner);
-            this._default = 0;
+    var GearFontSize = (function (_super) {
+        __extends(GearFontSize, _super);
+        function GearFontSize(owner) {
+            var _this = _super.call(this, owner) || this;
+            _this._default = 0;
+            return _this;
         }
-        init() {
+        GearFontSize.prototype.init = function () {
             this._default = this._owner.getProp(fgui.ObjectPropID.FontSize);
             this._storage = {};
-        }
-        addStatus(pageId, buffer) {
+        };
+        GearFontSize.prototype.addStatus = function (pageId, buffer) {
             if (pageId == null)
                 this._default = buffer.readInt();
             else
                 this._storage[pageId] = buffer.readInt();
-        }
-        apply() {
+        };
+        GearFontSize.prototype.apply = function () {
             this._owner._gearLocked = true;
             var data = this._storage[this._controller.selectedPageId];
             if (data != undefined)
@@ -15491,30 +16929,32 @@ window.fairygui = window.fgui;
             else
                 this._owner.setProp(fgui.ObjectPropID.FontSize, this._default);
             this._owner._gearLocked = false;
-        }
-        updateState() {
+        };
+        GearFontSize.prototype.updateState = function () {
             this._storage[this._controller.selectedPageId] = this._owner.getProp(fgui.ObjectPropID.FontSize);
-        }
-    }
+        };
+        return GearFontSize;
+    }(fgui.GearBase));
     fgui.GearFontSize = GearFontSize;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GearIcon extends fgui.GearBase {
-        constructor(owner) {
-            super(owner);
+    var GearIcon = (function (_super) {
+        __extends(GearIcon, _super);
+        function GearIcon(owner) {
+            return _super.call(this, owner) || this;
         }
-        init() {
+        GearIcon.prototype.init = function () {
             this._default = this._owner.icon;
             this._storage = {};
-        }
-        addStatus(pageId, buffer) {
+        };
+        GearIcon.prototype.addStatus = function (pageId, buffer) {
             if (pageId == null)
                 this._default = buffer.readS();
             else
                 this._storage[pageId] = buffer.readS();
-        }
-        apply() {
+        };
+        GearIcon.prototype.apply = function () {
             this._owner._gearLocked = true;
             var data = this._storage[this._controller.selectedPageId];
             if (data !== undefined)
@@ -15522,20 +16962,22 @@ window.fairygui = window.fgui;
             else
                 this._owner.icon = this._default;
             this._owner._gearLocked = false;
-        }
-        updateState() {
+        };
+        GearIcon.prototype.updateState = function () {
             this._storage[this._controller.selectedPageId] = this._owner.icon;
-        }
-    }
+        };
+        return GearIcon;
+    }(fgui.GearBase));
     fgui.GearIcon = GearIcon;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GearLook extends fgui.GearBase {
-        constructor(owner) {
-            super(owner);
+    var GearLook = (function (_super) {
+        __extends(GearLook, _super);
+        function GearLook(owner) {
+            return _super.call(this, owner) || this;
         }
-        init() {
+        GearLook.prototype.init = function () {
             this._default = {
                 alpha: this._owner.alpha,
                 rotation: this._owner.rotation,
@@ -15543,8 +16985,8 @@ window.fairygui = window.fgui;
                 touchable: this._owner.touchable
             };
             this._storage = {};
-        }
-        addStatus(pageId, buffer) {
+        };
+        GearLook.prototype.addStatus = function (pageId, buffer) {
             var gv;
             if (pageId == null)
                 gv = this._default;
@@ -15554,8 +16996,8 @@ window.fairygui = window.fgui;
             gv.rotation = buffer.readFloat();
             gv.grayed = buffer.readBool();
             gv.touchable = buffer.readBool();
-        }
-        apply() {
+        };
+        GearLook.prototype.apply = function () {
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv)
                 gv = this._default;
@@ -15594,8 +17036,8 @@ window.fairygui = window.fgui;
                 this._owner.rotation = gv.rotation;
                 this._owner._gearLocked = false;
             }
-        }
-        __tweenUpdate(tweener) {
+        };
+        GearLook.prototype.__tweenUpdate = function (tweener) {
             var flag = tweener.userData;
             this._owner._gearLocked = true;
             if ((flag & 1) != 0)
@@ -15603,15 +17045,15 @@ window.fairygui = window.fgui;
             if ((flag & 2) != 0)
                 this._owner.rotation = tweener.value.y;
             this._owner._gearLocked = false;
-        }
-        __tweenComplete() {
+        };
+        GearLook.prototype.__tweenComplete = function () {
             if (this._tweenConfig._displayLockToken != 0) {
                 this._owner.releaseDisplayLock(this._tweenConfig._displayLockToken);
                 this._tweenConfig._displayLockToken = 0;
             }
             this._tweenConfig._tweener = null;
-        }
-        updateState() {
+        };
+        GearLook.prototype.updateState = function () {
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv)
                 this._storage[this._controller.selectedPageId] = gv = {};
@@ -15619,17 +17061,19 @@ window.fairygui = window.fgui;
             gv.rotation = this._owner.rotation;
             gv.grayed = this._owner.grayed;
             gv.touchable = this._owner.touchable;
-        }
-    }
+        };
+        return GearLook;
+    }(fgui.GearBase));
     fgui.GearLook = GearLook;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GearSize extends fgui.GearBase {
-        constructor(owner) {
-            super(owner);
+    var GearSize = (function (_super) {
+        __extends(GearSize, _super);
+        function GearSize(owner) {
+            return _super.call(this, owner) || this;
         }
-        init() {
+        GearSize.prototype.init = function () {
             this._default = {
                 width: this._owner.width,
                 height: this._owner.height,
@@ -15637,8 +17081,8 @@ window.fairygui = window.fgui;
                 scaleY: this._owner.scaleY
             };
             this._storage = {};
-        }
-        addStatus(pageId, buffer) {
+        };
+        GearSize.prototype.addStatus = function (pageId, buffer) {
             var gv;
             if (pageId == null)
                 gv = this._default;
@@ -15648,8 +17092,8 @@ window.fairygui = window.fgui;
             gv.height = buffer.readInt();
             gv.scaleX = buffer.readFloat();
             gv.scaleY = buffer.readFloat();
-        }
-        apply() {
+        };
+        GearSize.prototype.apply = function () {
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv)
                 gv = this._default;
@@ -15683,8 +17127,8 @@ window.fairygui = window.fgui;
                 this._owner.setScale(gv.scaleX, gv.scaleY);
                 this._owner._gearLocked = false;
             }
-        }
-        __tweenUpdate(tweener) {
+        };
+        GearSize.prototype.__tweenUpdate = function (tweener) {
             var flag = tweener.userData;
             this._owner._gearLocked = true;
             if ((flag & 1) != 0)
@@ -15692,15 +17136,15 @@ window.fairygui = window.fgui;
             if ((flag & 2) != 0)
                 this._owner.setScale(tweener.value.z, tweener.value.w);
             this._owner._gearLocked = false;
-        }
-        __tweenComplete() {
+        };
+        GearSize.prototype.__tweenComplete = function () {
             if (this._tweenConfig._displayLockToken != 0) {
                 this._owner.releaseDisplayLock(this._tweenConfig._displayLockToken);
                 this._tweenConfig._displayLockToken = 0;
             }
             this._tweenConfig._tweener = null;
-        }
-        updateState() {
+        };
+        GearSize.prototype.updateState = function () {
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv)
                 this._storage[this._controller.selectedPageId] = gv = {};
@@ -15708,8 +17152,8 @@ window.fairygui = window.fgui;
             gv.height = this._owner.height;
             gv.scaleX = this._owner.scaleX;
             gv.scaleY = this._owner.scaleY;
-        }
-        updateFromRelations(dx, dy) {
+        };
+        GearSize.prototype.updateFromRelations = function (dx, dy) {
             if (this._controller == null || this._storage == null)
                 return;
             for (var key in this._storage) {
@@ -15720,27 +17164,29 @@ window.fairygui = window.fgui;
             this._default.width += dx;
             this._default.height += dy;
             this.updateState();
-        }
-    }
+        };
+        return GearSize;
+    }(fgui.GearBase));
     fgui.GearSize = GearSize;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GearText extends fgui.GearBase {
-        constructor(owner) {
-            super(owner);
+    var GearText = (function (_super) {
+        __extends(GearText, _super);
+        function GearText(owner) {
+            return _super.call(this, owner) || this;
         }
-        init() {
+        GearText.prototype.init = function () {
             this._default = this._owner.text;
             this._storage = {};
-        }
-        addStatus(pageId, buffer) {
+        };
+        GearText.prototype.addStatus = function (pageId, buffer) {
             if (pageId == null)
                 this._default = buffer.readS();
             else
                 this._storage[pageId] = buffer.readS();
-        }
-        apply() {
+        };
+        GearText.prototype.apply = function () {
             this._owner._gearLocked = true;
             var data = this._storage[this._controller.selectedPageId];
             if (data !== undefined)
@@ -15748,20 +17194,22 @@ window.fairygui = window.fgui;
             else
                 this._owner.text = this._default;
             this._owner._gearLocked = false;
-        }
-        updateState() {
+        };
+        GearText.prototype.updateState = function () {
             this._storage[this._controller.selectedPageId] = this._owner.text;
-        }
-    }
+        };
+        return GearText;
+    }(fgui.GearBase));
     fgui.GearText = GearText;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GearXY extends fgui.GearBase {
-        constructor(owner) {
-            super(owner);
+    var GearXY = (function (_super) {
+        __extends(GearXY, _super);
+        function GearXY(owner) {
+            return _super.call(this, owner) || this;
         }
-        init() {
+        GearXY.prototype.init = function () {
             this._default = {
                 x: this._owner.x,
                 y: this._owner.y,
@@ -15769,8 +17217,8 @@ window.fairygui = window.fgui;
                 py: this._owner.y / this._owner.parent.height
             };
             this._storage = {};
-        }
-        addStatus(pageId, buffer) {
+        };
+        GearXY.prototype.addStatus = function (pageId, buffer) {
             var gv;
             if (pageId == null)
                 gv = this._default;
@@ -15778,8 +17226,8 @@ window.fairygui = window.fgui;
                 this._storage[pageId] = gv = {};
             gv.x = buffer.readInt();
             gv.y = buffer.readInt();
-        }
-        addExtStatus(pageId, buffer) {
+        };
+        GearXY.prototype.addExtStatus = function (pageId, buffer) {
             var gv;
             if (pageId == null)
                 gv = this._default;
@@ -15787,8 +17235,8 @@ window.fairygui = window.fgui;
                 gv = this._storage[pageId];
             gv.px = buffer.readFloat();
             gv.py = buffer.readFloat();
-        }
-        apply() {
+        };
+        GearXY.prototype.apply = function () {
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv)
                 gv = this._default;
@@ -15829,20 +17277,20 @@ window.fairygui = window.fgui;
                 this._owner.setPosition(ex, ey);
                 this._owner._gearLocked = false;
             }
-        }
-        __tweenUpdate(tweener) {
+        };
+        GearXY.prototype.__tweenUpdate = function (tweener) {
             this._owner._gearLocked = true;
             this._owner.setPosition(tweener.value.x, tweener.value.y);
             this._owner._gearLocked = false;
-        }
-        __tweenComplete() {
+        };
+        GearXY.prototype.__tweenComplete = function () {
             if (this._tweenConfig._displayLockToken != 0) {
                 this._owner.releaseDisplayLock(this._tweenConfig._displayLockToken);
                 this._tweenConfig._displayLockToken = 0;
             }
             this._tweenConfig._tweener = null;
-        }
-        updateState() {
+        };
+        GearXY.prototype.updateState = function () {
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv)
                 this._storage[this._controller.selectedPageId] = gv = {};
@@ -15850,8 +17298,8 @@ window.fairygui = window.fgui;
             gv.y = this._owner.y;
             gv.px = this._owner.x / this._owner.parent.width;
             gv.py = this._owner.y / this._owner.parent.height;
-        }
-        updateFromRelations(dx, dy) {
+        };
+        GearXY.prototype.updateFromRelations = function (dx, dy) {
             if (this._controller == null || this._storage == null || this.positionsInPercent)
                 return;
             for (var key in this._storage) {
@@ -15862,14 +17310,15 @@ window.fairygui = window.fgui;
             this._default.x += dx;
             this._default.y += dy;
             this.updateState();
-        }
-    }
+        };
+        return GearXY;
+    }(fgui.GearBase));
     fgui.GearXY = GearXY;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    const _PiOver2 = Math.PI * 0.5;
-    const _TwoPi = Math.PI * 2;
+    var _PiOver2 = Math.PI * 0.5;
+    var _TwoPi = Math.PI * 2;
     function evaluateEase(easeType, time, duration, overshootOrAmplitude, period) {
         switch (easeType) {
             case fgui.EaseType.Linear:
@@ -16024,53 +17473,60 @@ window.fairygui = window.fgui;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class EaseType {
-    }
-    EaseType.Linear = 0;
-    EaseType.SineIn = 1;
-    EaseType.SineOut = 2;
-    EaseType.SineInOut = 3;
-    EaseType.QuadIn = 4;
-    EaseType.QuadOut = 5;
-    EaseType.QuadInOut = 6;
-    EaseType.CubicIn = 7;
-    EaseType.CubicOut = 8;
-    EaseType.CubicInOut = 9;
-    EaseType.QuartIn = 10;
-    EaseType.QuartOut = 11;
-    EaseType.QuartInOut = 12;
-    EaseType.QuintIn = 13;
-    EaseType.QuintOut = 14;
-    EaseType.QuintInOut = 15;
-    EaseType.ExpoIn = 16;
-    EaseType.ExpoOut = 17;
-    EaseType.ExpoInOut = 18;
-    EaseType.CircIn = 19;
-    EaseType.CircOut = 20;
-    EaseType.CircInOut = 21;
-    EaseType.ElasticIn = 22;
-    EaseType.ElasticOut = 23;
-    EaseType.ElasticInOut = 24;
-    EaseType.BackIn = 25;
-    EaseType.BackOut = 26;
-    EaseType.BackInOut = 27;
-    EaseType.BounceIn = 28;
-    EaseType.BounceOut = 29;
-    EaseType.BounceInOut = 30;
-    EaseType.Custom = 31;
+    var EaseType = (function () {
+        function EaseType() {
+        }
+        EaseType.Linear = 0;
+        EaseType.SineIn = 1;
+        EaseType.SineOut = 2;
+        EaseType.SineInOut = 3;
+        EaseType.QuadIn = 4;
+        EaseType.QuadOut = 5;
+        EaseType.QuadInOut = 6;
+        EaseType.CubicIn = 7;
+        EaseType.CubicOut = 8;
+        EaseType.CubicInOut = 9;
+        EaseType.QuartIn = 10;
+        EaseType.QuartOut = 11;
+        EaseType.QuartInOut = 12;
+        EaseType.QuintIn = 13;
+        EaseType.QuintOut = 14;
+        EaseType.QuintInOut = 15;
+        EaseType.ExpoIn = 16;
+        EaseType.ExpoOut = 17;
+        EaseType.ExpoInOut = 18;
+        EaseType.CircIn = 19;
+        EaseType.CircOut = 20;
+        EaseType.CircInOut = 21;
+        EaseType.ElasticIn = 22;
+        EaseType.ElasticOut = 23;
+        EaseType.ElasticInOut = 24;
+        EaseType.BackIn = 25;
+        EaseType.BackOut = 26;
+        EaseType.BackInOut = 27;
+        EaseType.BounceIn = 28;
+        EaseType.BounceOut = 29;
+        EaseType.BounceInOut = 30;
+        EaseType.Custom = 31;
+        return EaseType;
+    }());
     fgui.EaseType = EaseType;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GPath {
-        constructor() {
+    var GPath = (function () {
+        function GPath() {
             this._segments = new Array();
             this._points = new Array();
         }
-        get length() {
-            return this._fullLength;
-        }
-        create(pt1, pt2, pt3, pt4) {
+        Object.defineProperty(GPath.prototype, "length", {
+            get: function () {
+                return this._fullLength;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GPath.prototype.create = function (pt1, pt2, pt3, pt4) {
             var points;
             if (Array.isArray(pt1))
                 points = pt1;
@@ -16134,8 +17590,8 @@ window.fairygui = window.fgui;
             }
             if (splinePoints.length > 1)
                 this.createSplineSegment();
-        }
-        createSplineSegment() {
+        };
+        GPath.prototype.createSplineSegment = function () {
             var splinePoints = s_points;
             var cnt = splinePoints.length;
             splinePoints.splice(0, 0, splinePoints[0]);
@@ -16154,12 +17610,12 @@ window.fairygui = window.fgui;
             this._fullLength += seg.length;
             this._segments.push(seg);
             splinePoints.length = 0;
-        }
-        clear() {
+        };
+        GPath.prototype.clear = function () {
             this._segments.length = 0;
             this._points.length = 0;
-        }
-        getPointAt(t, result) {
+        };
+        GPath.prototype.getPointAt = function (t, result) {
             if (!result)
                 result = new cc.Vec2();
             else
@@ -16200,19 +17656,23 @@ window.fairygui = window.fgui;
                 }
             }
             return result;
-        }
-        get segmentCount() {
-            return this._segments.length;
-        }
-        getAnchorsInSegment(segmentIndex, points) {
+        };
+        Object.defineProperty(GPath.prototype, "segmentCount", {
+            get: function () {
+                return this._segments.length;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GPath.prototype.getAnchorsInSegment = function (segmentIndex, points) {
             if (points == null)
                 points = new Array();
             var seg = this._segments[segmentIndex];
             for (var i = 0; i < seg.ptCount; i++)
                 points.push(new cc.Vec2(this._points[seg.ptStart + i].x, this._points[seg.ptStart + i].y));
             return points;
-        }
-        getPointsInSegment(segmentIndex, t0, t1, points, ts, pointDensity) {
+        };
+        GPath.prototype.getPointsInSegment = function (segmentIndex, t0, t1, points, ts, pointDensity) {
             if (points == null)
                 points = new Array();
             if (!pointDensity || isNaN(pointDensity))
@@ -16245,8 +17705,8 @@ window.fairygui = window.fgui;
             if (ts != null)
                 ts.push(t1);
             return points;
-        }
-        getAllPoints(points, ts, pointDensity) {
+        };
+        GPath.prototype.getAllPoints = function (points, ts, pointDensity) {
             if (points == null)
                 points = new Array();
             if (!pointDensity || isNaN(pointDensity))
@@ -16255,8 +17715,8 @@ window.fairygui = window.fgui;
             for (var i = 0; i < cnt; i++)
                 this.getPointsInSegment(i, 0, 1, points, ts, pointDensity);
             return points;
-        }
-        onCRSplineCurve(ptStart, ptCount, t, result) {
+        };
+        GPath.prototype.onCRSplineCurve = function (ptStart, ptCount, t, result) {
             var adjustedIndex = Math.floor(t * (ptCount - 4)) + ptStart;
             var p0x = this._points[adjustedIndex].x;
             var p0y = this._points[adjustedIndex].y;
@@ -16274,8 +17734,8 @@ window.fairygui = window.fgui;
             result.x = p0x * t0 + p1x * t1 + p2x * t2 + p3x * t3;
             result.y = p0y * t0 + p1y * t1 + p2y * t2 + p3y * t3;
             return result;
-        }
-        onBezierCurve(ptStart, ptCount, t, result) {
+        };
+        GPath.prototype.onBezierCurve = function (ptStart, ptCount, t, result) {
             var t2 = 1 - t;
             var p0x = this._points[ptStart].x;
             var p0y = this._points[ptStart].y;
@@ -16294,22 +17754,23 @@ window.fairygui = window.fgui;
                 result.y = t2 * t2 * p0y + 2 * t2 * t * cp0y + t * t * p1y;
             }
             return result;
-        }
-    }
+        };
+        return GPath;
+    }());
     fgui.GPath = GPath;
     var s_points = new Array();
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    let CurveType;
+    var CurveType;
     (function (CurveType) {
         CurveType[CurveType["CRSpline"] = 0] = "CRSpline";
         CurveType[CurveType["Bezier"] = 1] = "Bezier";
         CurveType[CurveType["CubicBezier"] = 2] = "CubicBezier";
         CurveType[CurveType["Straight"] = 3] = "Straight";
     })(CurveType = fgui.CurveType || (fgui.CurveType = {}));
-    class GPathPoint {
-        constructor() {
+    var GPathPoint = (function () {
+        function GPathPoint() {
             this.x = 0;
             this.y = 0;
             this.control1_x = 0;
@@ -16318,7 +17779,10 @@ window.fairygui = window.fgui;
             this.control2_y = 0;
             this.curveType = 0;
         }
-        static newPoint(x = 0, y = 0, curveType = 0) {
+        GPathPoint.newPoint = function (x, y, curveType) {
+            if (x === void 0) { x = 0; }
+            if (y === void 0) { y = 0; }
+            if (curveType === void 0) { curveType = 0; }
             var pt = new GPathPoint();
             pt.x = x;
             pt.y = y;
@@ -16328,8 +17792,12 @@ window.fairygui = window.fgui;
             pt.control2_y = 0;
             pt.curveType = curveType;
             return pt;
-        }
-        static newBezierPoint(x = 0, y = 0, control1_x = 0, control1_y = 0) {
+        };
+        GPathPoint.newBezierPoint = function (x, y, control1_x, control1_y) {
+            if (x === void 0) { x = 0; }
+            if (y === void 0) { y = 0; }
+            if (control1_x === void 0) { control1_x = 0; }
+            if (control1_y === void 0) { control1_y = 0; }
             var pt = new GPathPoint();
             pt.x = x;
             pt.y = y;
@@ -16339,8 +17807,14 @@ window.fairygui = window.fgui;
             pt.control2_y = 0;
             pt.curveType = CurveType.Bezier;
             return pt;
-        }
-        static newCubicBezierPoint(x = 0, y = 0, control1_x = 0, control1_y = 0, control2_x = 0, control2_y = 0) {
+        };
+        GPathPoint.newCubicBezierPoint = function (x, y, control1_x, control1_y, control2_x, control2_y) {
+            if (x === void 0) { x = 0; }
+            if (y === void 0) { y = 0; }
+            if (control1_x === void 0) { control1_x = 0; }
+            if (control1_y === void 0) { control1_y = 0; }
+            if (control2_x === void 0) { control2_x = 0; }
+            if (control2_y === void 0) { control2_y = 0; }
             var pt = new GPathPoint();
             pt.x = x;
             pt.y = y;
@@ -16350,8 +17824,8 @@ window.fairygui = window.fgui;
             pt.control2_y = control2_y;
             pt.curveType = CurveType.CubicBezier;
             return pt;
-        }
-        clone() {
+        };
+        GPathPoint.prototype.clone = function () {
             var ret = new GPathPoint();
             ret.x = this.x;
             ret.y = this.y;
@@ -16361,104 +17835,120 @@ window.fairygui = window.fgui;
             ret.control2_y = this.control2_y;
             ret.curveType = this.curveType;
             return ret;
-        }
-    }
+        };
+        return GPathPoint;
+    }());
     fgui.GPathPoint = GPathPoint;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GTween {
-        static to(start, end, duration) {
+    var GTween = (function () {
+        function GTween() {
+        }
+        GTween.to = function (start, end, duration) {
             return fgui.TweenManager.createTween()._to(start, end, duration);
-        }
-        static to2(start, start2, end, end2, duration) {
+        };
+        GTween.to2 = function (start, start2, end, end2, duration) {
             return fgui.TweenManager.createTween()._to2(start, start2, end, end2, duration);
-        }
-        static to3(start, start2, start3, end, end2, end3, duration) {
+        };
+        GTween.to3 = function (start, start2, start3, end, end2, end3, duration) {
             return fgui.TweenManager.createTween()._to3(start, start2, start3, end, end2, end3, duration);
-        }
-        static to4(start, start2, start3, start4, end, end2, end3, end4, duration) {
+        };
+        GTween.to4 = function (start, start2, start3, start4, end, end2, end3, end4, duration) {
             return fgui.TweenManager.createTween()._to4(start, start2, start3, start4, end, end2, end3, end4, duration);
-        }
-        static toColor(start, end, duration) {
+        };
+        GTween.toColor = function (start, end, duration) {
             return fgui.TweenManager.createTween()._toColor(start, end, duration);
-        }
-        static delayedCall(delay) {
+        };
+        GTween.delayedCall = function (delay) {
             return fgui.TweenManager.createTween().setDelay(delay);
-        }
-        static shake(startX, startY, amplitude, duration) {
+        };
+        GTween.shake = function (startX, startY, amplitude, duration) {
             return fgui.TweenManager.createTween()._shake(startX, startY, amplitude, duration);
-        }
-        static isTweening(target, propType) {
+        };
+        GTween.isTweening = function (target, propType) {
             return fgui.TweenManager.isTweening(target, propType);
-        }
-        static kill(target, complete, propType) {
+        };
+        GTween.kill = function (target, complete, propType) {
             fgui.TweenManager.killTweens(target, complete, propType);
-        }
-        static getTween(target, propType) {
+        };
+        GTween.getTween = function (target, propType) {
             return fgui.TweenManager.getTween(target, propType);
-        }
-    }
-    GTween.catchCallbackExceptions = true;
+        };
+        GTween.catchCallbackExceptions = true;
+        return GTween;
+    }());
     fgui.GTween = GTween;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class GTweener {
-        constructor() {
+    var GTweener = (function () {
+        function GTweener() {
             this._startValue = new fgui.TweenValue();
             this._endValue = new fgui.TweenValue();
             this._value = new fgui.TweenValue();
             this._deltaValue = new fgui.TweenValue();
             this._reset();
         }
-        setDelay(value) {
+        GTweener.prototype.setDelay = function (value) {
             this._delay = value;
             return this;
-        }
-        get delay() {
-            return this._delay;
-        }
-        setDuration(value) {
+        };
+        Object.defineProperty(GTweener.prototype, "delay", {
+            get: function () {
+                return this._delay;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GTweener.prototype.setDuration = function (value) {
             this._duration = value;
             return this;
-        }
-        get duration() {
-            return this._duration;
-        }
-        setBreakpoint(value) {
+        };
+        Object.defineProperty(GTweener.prototype, "duration", {
+            get: function () {
+                return this._duration;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GTweener.prototype.setBreakpoint = function (value) {
             this._breakpoint = value;
             return this;
-        }
-        setEase(value) {
+        };
+        GTweener.prototype.setEase = function (value) {
             this._easeType = value;
             return this;
-        }
-        setEasePeriod(value) {
+        };
+        GTweener.prototype.setEasePeriod = function (value) {
             this._easePeriod = value;
             return this;
-        }
-        setEaseOvershootOrAmplitude(value) {
+        };
+        GTweener.prototype.setEaseOvershootOrAmplitude = function (value) {
             this._easeOvershootOrAmplitude = value;
             return this;
-        }
-        setRepeat(repeat, yoyo) {
+        };
+        GTweener.prototype.setRepeat = function (repeat, yoyo) {
             this._repeat = repeat;
             this._yoyo = yoyo;
             return this;
-        }
-        get repeat() {
-            return this._repeat;
-        }
-        setTimeScale(value) {
+        };
+        Object.defineProperty(GTweener.prototype, "repeat", {
+            get: function () {
+                return this._repeat;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GTweener.prototype.setTimeScale = function (value) {
             this._timeScale = value;
             return this;
-        }
-        setSnapping(value) {
+        };
+        GTweener.prototype.setSnapping = function (value) {
             this._snapping = value;
             return this;
-        }
-        setTarget(value, propType) {
+        };
+        GTweener.prototype.setTarget = function (value, propType) {
             this._target = value;
             this._propType = propType;
             if (value instanceof fgui.GObject)
@@ -16466,62 +17956,98 @@ window.fairygui = window.fgui;
             else if (value instanceof cc.Node)
                 this._node = value;
             return this;
-        }
-        get target() {
-            return this._target;
-        }
-        setPath(value) {
+        };
+        Object.defineProperty(GTweener.prototype, "target", {
+            get: function () {
+                return this._target;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GTweener.prototype.setPath = function (value) {
             this._path = value;
             return this;
-        }
-        setUserData(value) {
+        };
+        GTweener.prototype.setUserData = function (value) {
             this._userData = value;
             return this;
-        }
-        get userData() {
-            return this._userData;
-        }
-        onUpdate(callback, target) {
+        };
+        Object.defineProperty(GTweener.prototype, "userData", {
+            get: function () {
+                return this._userData;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GTweener.prototype.onUpdate = function (callback, target) {
             this._onUpdate = callback;
             this._onUpdateCaller = target;
             return this;
-        }
-        onStart(callback, target) {
+        };
+        GTweener.prototype.onStart = function (callback, target) {
             this._onStart = callback;
             this._onStartCaller = target;
             return this;
-        }
-        onComplete(callback, target) {
+        };
+        GTweener.prototype.onComplete = function (callback, target) {
             this._onComplete = callback;
             this._onCompleteCaller = target;
             return this;
-        }
-        get startValue() {
-            return this._startValue;
-        }
-        get endValue() {
-            return this._endValue;
-        }
-        get value() {
-            return this._value;
-        }
-        get deltaValue() {
-            return this._deltaValue;
-        }
-        get normalizedTime() {
-            return this._normalizedTime;
-        }
-        get completed() {
-            return this._ended != 0;
-        }
-        get allCompleted() {
-            return this._ended == 1;
-        }
-        setPaused(paused) {
+        };
+        Object.defineProperty(GTweener.prototype, "startValue", {
+            get: function () {
+                return this._startValue;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTweener.prototype, "endValue", {
+            get: function () {
+                return this._endValue;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTweener.prototype, "value", {
+            get: function () {
+                return this._value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTweener.prototype, "deltaValue", {
+            get: function () {
+                return this._deltaValue;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTweener.prototype, "normalizedTime", {
+            get: function () {
+                return this._normalizedTime;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTweener.prototype, "completed", {
+            get: function () {
+                return this._ended != 0;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(GTweener.prototype, "allCompleted", {
+            get: function () {
+                return this._ended == 1;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        GTweener.prototype.setPaused = function (paused) {
             this._paused = paused;
             return this;
-        }
-        seek(time) {
+        };
+        GTweener.prototype.seek = function (time) {
             if (this._killed)
                 return;
             this._elapsedTime = time;
@@ -16532,8 +18058,8 @@ window.fairygui = window.fgui;
                     return;
             }
             this.update();
-        }
-        kill(complete) {
+        };
+        GTweener.prototype.kill = function (complete) {
             if (this._killed)
                 return;
             if (complete) {
@@ -16549,15 +18075,15 @@ window.fairygui = window.fgui;
                 this.callCompleteCallback();
             }
             this._killed = true;
-        }
-        _to(start, end, duration) {
+        };
+        GTweener.prototype._to = function (start, end, duration) {
             this._valueSize = 1;
             this._startValue.x = start;
             this._endValue.x = end;
             this._duration = duration;
             return this;
-        }
-        _to2(start, start2, end, end2, duration) {
+        };
+        GTweener.prototype._to2 = function (start, start2, end, end2, duration) {
             this._valueSize = 2;
             this._startValue.x = start;
             this._endValue.x = end;
@@ -16565,8 +18091,8 @@ window.fairygui = window.fgui;
             this._endValue.y = end2;
             this._duration = duration;
             return this;
-        }
-        _to3(start, start2, start3, end, end2, end3, duration) {
+        };
+        GTweener.prototype._to3 = function (start, start2, start3, end, end2, end3, duration) {
             this._valueSize = 3;
             this._startValue.x = start;
             this._endValue.x = end;
@@ -16576,8 +18102,8 @@ window.fairygui = window.fgui;
             this._endValue.z = end3;
             this._duration = duration;
             return this;
-        }
-        _to4(start, start2, start3, start4, end, end2, end3, end4, duration) {
+        };
+        GTweener.prototype._to4 = function (start, start2, start3, start4, end, end2, end3, end4, duration) {
             this._valueSize = 4;
             this._startValue.x = start;
             this._endValue.x = end;
@@ -16589,23 +18115,23 @@ window.fairygui = window.fgui;
             this._endValue.w = end4;
             this._duration = duration;
             return this;
-        }
-        _toColor(start, end, duration) {
+        };
+        GTweener.prototype._toColor = function (start, end, duration) {
             this._valueSize = 4;
             this._startValue.color = start;
             this._endValue.color = end;
             this._duration = duration;
             return this;
-        }
-        _shake(startX, startY, amplitude, duration) {
+        };
+        GTweener.prototype._shake = function (startX, startY, amplitude, duration) {
             this._valueSize = 5;
             this._startValue.x = startX;
             this._startValue.y = startY;
             this._startValue.w = amplitude;
             this._duration = duration;
             return this;
-        }
-        _init() {
+        };
+        GTweener.prototype._init = function () {
             this._delay = 0;
             this._duration = 0;
             this._breakpoint = -1;
@@ -16623,8 +18149,8 @@ window.fairygui = window.fgui;
             this._elapsedTime = 0;
             this._normalizedTime = 0;
             this._ended = 0;
-        }
-        _reset() {
+        };
+        GTweener.prototype._reset = function () {
             this._target = null;
             this._propType = null;
             this._userData = null;
@@ -16632,8 +18158,8 @@ window.fairygui = window.fgui;
             this._path = null;
             this._onStart = this._onUpdate = this._onComplete = null;
             this._onStartCaller = this._onUpdateCaller = this._onCompleteCaller = null;
-        }
-        _update(dt) {
+        };
+        GTweener.prototype._update = function (dt) {
             if (this._node && !cc.isValid(this._node)) {
                 this._killed = true;
                 return;
@@ -16655,8 +18181,8 @@ window.fairygui = window.fgui;
                     this._killed = true;
                 }
             }
-        }
-        update() {
+        };
+        GTweener.prototype.update = function () {
             this._ended = 0;
             if (this._valueSize == 0) {
                 if (this._elapsedTime >= this._delay + this._duration)
@@ -16765,8 +18291,8 @@ window.fairygui = window.fgui;
                 }
             }
             this.callUpdateCallback();
-        }
-        callStartCallback() {
+        };
+        GTweener.prototype.callStartCallback = function () {
             if (this._onStart != null) {
                 try {
                     this._onStart.call(this._onStartCaller, this);
@@ -16775,8 +18301,8 @@ window.fairygui = window.fgui;
                     console.log("FairyGUI: error in start callback > " + err);
                 }
             }
-        }
-        callUpdateCallback() {
+        };
+        GTweener.prototype.callUpdateCallback = function () {
             if (this._onUpdate != null) {
                 try {
                     this._onUpdate.call(this._onUpdateCaller, this);
@@ -16785,8 +18311,8 @@ window.fairygui = window.fgui;
                     console.log("FairyGUI: error in update callback > " + err);
                 }
             }
-        }
-        callCompleteCallback() {
+        };
+        GTweener.prototype.callCompleteCallback = function () {
             if (this._onComplete != null) {
                 try {
                     this._onComplete.call(this._onCompleteCaller, this);
@@ -16795,8 +18321,9 @@ window.fairygui = window.fgui;
                     console.log("FairyGUI: error in complete callback > " + err);
                 }
             }
-        }
-    }
+        };
+        return GTweener;
+    }());
     fgui.GTweener = GTweener;
     var s_vec2 = new cc.Vec2();
 })(fgui || (fgui = {}));
@@ -16806,8 +18333,10 @@ window.fairygui = window.fgui;
     var _tweenerPool = new Array();
     var _totalActiveTweens = 0;
     var _root;
-    class TweenManager {
-        static createTween() {
+    var TweenManager = (function () {
+        function TweenManager() {
+        }
+        TweenManager.createTween = function () {
             if (!_root) {
                 _root = new cc.Node("[TweenManager]");
                 cc.game["addPersistRootNode"](_root);
@@ -16825,8 +18354,8 @@ window.fairygui = window.fgui;
             if (_totalActiveTweens == _activeTweens.length)
                 _activeTweens.length = _activeTweens.length + Math.ceil(_activeTweens.length * 0.5);
             return tweener;
-        }
-        static isTweening(target, propType) {
+        };
+        TweenManager.isTweening = function (target, propType) {
             if (target == null)
                 return false;
             var anyType = propType == null || propType == undefined;
@@ -16837,8 +18366,8 @@ window.fairygui = window.fgui;
                     return true;
             }
             return false;
-        }
-        static killTweens(target, completed, propType) {
+        };
+        TweenManager.killTweens = function (target, completed, propType) {
             if (target == null)
                 return false;
             var flag = false;
@@ -16853,8 +18382,8 @@ window.fairygui = window.fgui;
                 }
             }
             return flag;
-        }
-        static getTween(target, propType) {
+        };
+        TweenManager.getTween = function (target, propType) {
             if (target == null)
                 return null;
             var cnt = _totalActiveTweens;
@@ -16867,9 +18396,9 @@ window.fairygui = window.fgui;
                 }
             }
             return null;
-        }
-        static update(dt) {
-            let tweens = _activeTweens;
+        };
+        TweenManager.update = function (dt) {
+            var tweens = _activeTweens;
             var cnt = _totalActiveTweens;
             var freePosStart = -1;
             for (var i = 0; i < cnt; i++) {
@@ -16907,26 +18436,31 @@ window.fairygui = window.fgui;
                 _totalActiveTweens = freePosStart;
             }
             return false;
-        }
-    }
+        };
+        return TweenManager;
+    }());
     fgui.TweenManager = TweenManager;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class TweenValue {
-        constructor() {
+    var TweenValue = (function () {
+        function TweenValue() {
             this.x = this.y = this.z = this.w = 0;
         }
-        get color() {
-            return (this.w << 24) + (this.x << 16) + (this.y << 8) + this.z;
-        }
-        set color(value) {
-            this.x = (value & 0xFF0000) >> 16;
-            this.y = (value & 0x00FF00) >> 8;
-            this.z = (value & 0x0000FF);
-            this.w = (value & 0xFF000000) >> 24;
-        }
-        getField(index) {
+        Object.defineProperty(TweenValue.prototype, "color", {
+            get: function () {
+                return (this.w << 24) + (this.x << 16) + (this.y << 8) + this.z;
+            },
+            set: function (value) {
+                this.x = (value & 0xFF0000) >> 16;
+                this.y = (value & 0x00FF00) >> 8;
+                this.z = (value & 0x0000FF);
+                this.w = (value & 0xFF000000) >> 24;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        TweenValue.prototype.getField = function (index) {
             switch (index) {
                 case 0:
                     return this.x;
@@ -16939,8 +18473,8 @@ window.fairygui = window.fgui;
                 default:
                     throw new Error("Index out of bounds: " + index);
             }
-        }
-        setField(index, value) {
+        };
+        TweenValue.prototype.setField = function (index, value) {
             switch (index) {
                 case 0:
                     this.x = value;
@@ -16957,17 +18491,20 @@ window.fairygui = window.fgui;
                 default:
                     throw new Error("Index out of bounds: " + index);
             }
-        }
-        setZero() {
+        };
+        TweenValue.prototype.setZero = function () {
             this.x = this.y = this.z = this.w = 0;
-        }
-    }
+        };
+        return TweenValue;
+    }());
     fgui.TweenValue = TweenValue;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class ByteBuffer {
-        constructor(buffer, offset = 0, length = -1) {
+    var ByteBuffer = (function () {
+        function ByteBuffer(buffer, offset, length) {
+            if (offset === void 0) { offset = 0; }
+            if (length === void 0) { length = -1; }
             this.version = 0;
             if (length == -1)
                 length = buffer.byteLength - offset;
@@ -16976,71 +18513,79 @@ window.fairygui = window.fgui;
             this._pos = 0;
             this._length = length;
         }
-        get data() {
-            return this._bytes;
-        }
-        get position() {
-            return this._pos;
-        }
-        set position(value) {
-            if (value > this._length)
-                throw "Out of bounds";
-            this._pos = value;
-        }
-        skip(count) {
+        Object.defineProperty(ByteBuffer.prototype, "data", {
+            get: function () {
+                return this._bytes;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(ByteBuffer.prototype, "position", {
+            get: function () {
+                return this._pos;
+            },
+            set: function (value) {
+                if (value > this._length)
+                    throw "Out of bounds";
+                this._pos = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        ByteBuffer.prototype.skip = function (count) {
             this._pos += count;
-        }
-        validate(forward) {
+        };
+        ByteBuffer.prototype.validate = function (forward) {
             if (this._pos + forward > this._length)
                 throw "Out of bounds";
-        }
-        readByte() {
+        };
+        ByteBuffer.prototype.readByte = function () {
             this.validate(1);
             return this._view.getInt8(this._pos++);
-        }
-        readUbyte() {
+        };
+        ByteBuffer.prototype.readUbyte = function () {
             return this._bytes[this._pos++];
-        }
-        readBool() {
+        };
+        ByteBuffer.prototype.readBool = function () {
             return this.readByte() == 1;
-        }
-        readShort() {
+        };
+        ByteBuffer.prototype.readShort = function () {
             this.validate(2);
-            let ret = this._view.getInt16(this._pos, this.littleEndian);
+            var ret = this._view.getInt16(this._pos, this.littleEndian);
             this._pos += 2;
             return ret;
-        }
-        readUshort() {
+        };
+        ByteBuffer.prototype.readUshort = function () {
             this.validate(2);
-            let ret = this._view.getUint16(this._pos, this.littleEndian);
+            var ret = this._view.getUint16(this._pos, this.littleEndian);
             this._pos += 2;
             return ret;
-        }
-        readInt() {
+        };
+        ByteBuffer.prototype.readInt = function () {
             this.validate(4);
-            let ret = this._view.getInt32(this._pos, this.littleEndian);
+            var ret = this._view.getInt32(this._pos, this.littleEndian);
             this._pos += 4;
             return ret;
-        }
-        readUint() {
+        };
+        ByteBuffer.prototype.readUint = function () {
             this.validate(4);
-            let ret = this._view.getUint32(this._pos, this.littleEndian);
+            var ret = this._view.getUint32(this._pos, this.littleEndian);
             this._pos += 4;
             return ret;
-        }
-        readFloat() {
+        };
+        ByteBuffer.prototype.readFloat = function () {
             this.validate(4);
-            let ret = this._view.getFloat32(this._pos, this.littleEndian);
+            var ret = this._view.getFloat32(this._pos, this.littleEndian);
             this._pos += 4;
             return ret;
-        }
-        readString(len) {
+        };
+        ByteBuffer.prototype.readString = function (len) {
             if (len == undefined)
                 len = this.readUshort();
             this.validate(len);
-            let v = "", max = this._pos + len, c = 0, c2 = 0, c3 = 0, f = String.fromCharCode;
-            let u = this._bytes, i = 0;
-            let pos = this._pos;
+            var v = "", max = this._pos + len, c = 0, c2 = 0, c3 = 0, f = String.fromCharCode;
+            var u = this._bytes, i = 0;
+            var pos = this._pos;
             while (pos < max) {
                 c = u[pos++];
                 if (c < 0x80) {
@@ -17064,8 +18609,8 @@ window.fairygui = window.fgui;
             }
             this._pos += len;
             return v;
-        }
-        readS() {
+        };
+        ByteBuffer.prototype.readS = function () {
             var index = this.readUshort();
             if (index == 65534)
                 return null;
@@ -17073,30 +18618,30 @@ window.fairygui = window.fgui;
                 return "";
             else
                 return this.stringTable[index];
-        }
-        readSArray(cnt) {
+        };
+        ByteBuffer.prototype.readSArray = function (cnt) {
             var ret = new Array(cnt);
             for (var i = 0; i < cnt; i++)
                 ret[i] = this.readS();
             return ret;
-        }
-        writeS(value) {
+        };
+        ByteBuffer.prototype.writeS = function (value) {
             var index = this.readUshort();
             if (index != 65534 && index != 65533)
                 this.stringTable[index] = value;
-        }
-        readColor(hasAlpha) {
+        };
+        ByteBuffer.prototype.readColor = function (hasAlpha) {
             var r = this.readUbyte();
             var g = this.readUbyte();
             var b = this.readUbyte();
             var a = this.readUbyte();
             return new cc.Color(r, g, b, (hasAlpha ? a : 255));
-        }
-        readChar() {
+        };
+        ByteBuffer.prototype.readChar = function () {
             var i = this.readUshort();
             return String.fromCharCode(i);
-        }
-        readBuffer() {
+        };
+        ByteBuffer.prototype.readBuffer = function () {
             var count = this.readUint();
             this.validate(count);
             var ba = new ByteBuffer(this._bytes.buffer, this._bytes.byteOffset + this._pos, count);
@@ -17104,8 +18649,8 @@ window.fairygui = window.fgui;
             ba.version = this.version;
             this._pos += count;
             return ba;
-        }
-        seek(indexTablePos, blockIndex) {
+        };
+        ByteBuffer.prototype.seek = function (indexTablePos, blockIndex) {
             var tmp = this._pos;
             this._pos = indexTablePos;
             var segCount = this.readByte();
@@ -17133,37 +18678,38 @@ window.fairygui = window.fgui;
                 this._pos = tmp;
                 return false;
             }
-        }
-    }
+        };
+        return ByteBuffer;
+    }());
     fgui.ByteBuffer = ByteBuffer;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class ColorMatrix {
-        constructor(p_brightness, p_contrast, p_saturation, p_hue) {
+    var ColorMatrix = (function () {
+        function ColorMatrix(p_brightness, p_contrast, p_saturation, p_hue) {
             this.matrix = new Array(LENGTH);
             this.reset();
             if (p_brightness !== undefined || p_contrast !== undefined || p_saturation !== undefined || p_hue !== undefined)
                 this.adjustColor(p_brightness, p_contrast, p_saturation, p_hue);
         }
-        reset() {
+        ColorMatrix.prototype.reset = function () {
             for (var i = 0; i < LENGTH; i++) {
                 this.matrix[i] = IDENTITY_MATRIX[i];
             }
-        }
-        invert() {
+        };
+        ColorMatrix.prototype.invert = function () {
             this.multiplyMatrix([-1, 0, 0, 0, 255,
                 0, -1, 0, 0, 255,
                 0, 0, -1, 0, 255,
                 0, 0, 0, 1, 0]);
-        }
-        adjustColor(p_brightness, p_contrast, p_saturation, p_hue) {
+        };
+        ColorMatrix.prototype.adjustColor = function (p_brightness, p_contrast, p_saturation, p_hue) {
             this.adjustHue(p_hue || 0);
             this.adjustContrast(p_contrast || 0);
             this.adjustBrightness(p_brightness || 0);
             this.adjustSaturation(p_saturation || 0);
-        }
-        adjustBrightness(p_val) {
+        };
+        ColorMatrix.prototype.adjustBrightness = function (p_val) {
             p_val = this.cleanValue(p_val, 1) * 255;
             this.multiplyMatrix([
                 1, 0, 0, 0, p_val,
@@ -17171,8 +18717,8 @@ window.fairygui = window.fgui;
                 0, 0, 1, 0, p_val,
                 0, 0, 0, 1, 0
             ]);
-        }
-        adjustContrast(p_val) {
+        };
+        ColorMatrix.prototype.adjustContrast = function (p_val) {
             p_val = this.cleanValue(p_val, 1);
             var s = p_val + 1;
             var o = 128 * (1 - s);
@@ -17182,8 +18728,8 @@ window.fairygui = window.fgui;
                 0, 0, s, 0, o,
                 0, 0, 0, 1, 0
             ]);
-        }
-        adjustSaturation(p_val) {
+        };
+        ColorMatrix.prototype.adjustSaturation = function (p_val) {
             p_val = this.cleanValue(p_val, 1);
             p_val += 1;
             var invSat = 1 - p_val;
@@ -17196,8 +18742,8 @@ window.fairygui = window.fgui;
                 invLumR, invLumG, (invLumB + p_val), 0, 0,
                 0, 0, 0, 1, 0
             ]);
-        }
-        adjustHue(p_val) {
+        };
+        ColorMatrix.prototype.adjustHue = function (p_val) {
             p_val = this.cleanValue(p_val, 1);
             p_val *= Math.PI;
             var cos = Math.cos(p_val);
@@ -17208,25 +18754,25 @@ window.fairygui = window.fgui;
                 ((LUMA_R + (cos * -(LUMA_R))) + (sin * -((1 - LUMA_R)))), ((LUMA_G + (cos * -(LUMA_G))) + (sin * LUMA_G)), ((LUMA_B + (cos * (1 - LUMA_B))) + (sin * LUMA_B)), 0, 0,
                 0, 0, 0, 1, 0
             ]);
-        }
-        concat(p_matrix) {
+        };
+        ColorMatrix.prototype.concat = function (p_matrix) {
             if (p_matrix.length != LENGTH) {
                 return;
             }
             this.multiplyMatrix(p_matrix);
-        }
-        clone() {
+        };
+        ColorMatrix.prototype.clone = function () {
             var result = new ColorMatrix();
             result.copyMatrix(this.matrix);
             return result;
-        }
-        copyMatrix(p_matrix) {
+        };
+        ColorMatrix.prototype.copyMatrix = function (p_matrix) {
             var l = LENGTH;
             for (var i = 0; i < l; i++) {
                 this.matrix[i] = p_matrix[i];
             }
-        }
-        multiplyMatrix(p_matrix) {
+        };
+        ColorMatrix.prototype.multiplyMatrix = function (p_matrix) {
             var col = [];
             var i = 0;
             for (var y = 0; y < 4; ++y) {
@@ -17240,27 +18786,28 @@ window.fairygui = window.fgui;
                 i += 5;
             }
             this.copyMatrix(col);
-        }
-        cleanValue(p_val, p_limit) {
+        };
+        ColorMatrix.prototype.cleanValue = function (p_val, p_limit) {
             return Math.min(p_limit, Math.max(-p_limit, p_val));
-        }
-    }
+        };
+        return ColorMatrix;
+    }());
     fgui.ColorMatrix = ColorMatrix;
-    const IDENTITY_MATRIX = [
+    var IDENTITY_MATRIX = [
         1, 0, 0, 0, 0,
         0, 1, 0, 0, 0,
         0, 0, 1, 0, 0,
         0, 0, 0, 1, 0
     ];
-    const LENGTH = IDENTITY_MATRIX.length;
-    const LUMA_R = 0.299;
-    const LUMA_G = 0.587;
-    const LUMA_B = 0.114;
+    var LENGTH = IDENTITY_MATRIX.length;
+    var LUMA_R = 0.299;
+    var LUMA_G = 0.587;
+    var LUMA_B = 0.114;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class UBBParser {
-        constructor() {
+    var UBBParser = (function () {
+        function UBBParser() {
             this._readPos = 0;
             this._handlers = {};
             this._handlers["url"] = this.onTag_URL;
@@ -17271,9 +18818,9 @@ window.fairygui = window.fgui;
             this._handlers["color"] = this.onTag_COLOR;
             this._handlers["size"] = this.onTag_SIZE;
         }
-        onTag_URL(tagName, end, attr) {
+        UBBParser.prototype.onTag_URL = function (tagName, end, attr) {
             if (!end) {
-                let ret;
+                var ret = void 0;
                 if (attr != null)
                     ret = "<on click=\"onClickLink\" param=\"" + attr + "\">";
                 else {
@@ -17287,7 +18834,7 @@ window.fairygui = window.fgui;
                 return ret;
             }
             else {
-                let ret = "";
+                var ret = "";
                 if (this.linkColor)
                     ret += "</color>";
                 if (this.linkUnderline)
@@ -17295,8 +18842,8 @@ window.fairygui = window.fgui;
                 ret += "</on>";
                 return ret;
             }
-        }
-        onTag_IMG(tagName, end, attr) {
+        };
+        UBBParser.prototype.onTag_IMG = function (tagName, end, attr) {
             if (!end) {
                 var src = this.getTagText(true);
                 if (!src)
@@ -17305,33 +18852,33 @@ window.fairygui = window.fgui;
             }
             else
                 return null;
-        }
-        onTag_Simple(tagName, end, attr) {
+        };
+        UBBParser.prototype.onTag_Simple = function (tagName, end, attr) {
             return end ? ("</" + tagName + ">") : ("<" + tagName + ">");
-        }
-        onTag_COLOR(tagName, end, attr) {
+        };
+        UBBParser.prototype.onTag_COLOR = function (tagName, end, attr) {
             if (!end) {
                 this.lastColor = attr;
                 return "<color=" + attr + ">";
             }
             else
                 return "</color>";
-        }
-        onTag_FONT(tagName, end, attr) {
+        };
+        UBBParser.prototype.onTag_FONT = function (tagName, end, attr) {
             if (!end)
                 return "<font face=\"" + attr + "\">";
             else
                 return "</font>";
-        }
-        onTag_SIZE(tagName, end, attr) {
+        };
+        UBBParser.prototype.onTag_SIZE = function (tagName, end, attr) {
             if (!end) {
                 this.lastSize = attr;
                 return "<size=" + attr + ">";
             }
             else
                 return "</size>";
-        }
-        getTagText(remove) {
+        };
+        UBBParser.prototype.getTagText = function (remove) {
             var pos1 = this._readPos;
             var pos2;
             var result = "";
@@ -17351,8 +18898,8 @@ window.fairygui = window.fgui;
             if (remove)
                 this._readPos = pos2;
             return result;
-        }
-        parse(text, remove) {
+        };
+        UBBParser.prototype.parse = function (text, remove) {
             this._text = text;
             this.lastColor = null;
             this.lastSize = null;
@@ -17399,15 +18946,18 @@ window.fairygui = window.fgui;
                 result += this._text.substr(pos1);
             this._text = null;
             return result;
-        }
-    }
-    UBBParser.inst = new UBBParser();
+        };
+        UBBParser.inst = new UBBParser();
+        return UBBParser;
+    }());
     fgui.UBBParser = UBBParser;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    class ToolSet {
-        static startsWith(source, str, ignoreCase) {
+    var ToolSet = (function () {
+        function ToolSet() {
+        }
+        ToolSet.startsWith = function (source, str, ignoreCase) {
             if (!source)
                 return false;
             else if (source.length < str.length)
@@ -17419,45 +18969,46 @@ window.fairygui = window.fgui;
                 else
                     return source.toLowerCase() == str.toLowerCase();
             }
-        }
-        static encodeHTML(str) {
+        };
+        ToolSet.encodeHTML = function (str) {
             if (!str)
                 return "";
             else
                 return str.replace(/&/g, "&amp;").replace(/</g, "&lt;")
                     .replace(/>/g, "&gt;").replace(/'/g, "&apos;").replace(/"/g, "&quot;");
-        }
-        static clamp(value, min, max) {
+        };
+        ToolSet.clamp = function (value, min, max) {
             if (value < min)
                 value = min;
             else if (value > max)
                 value = max;
             return value;
-        }
-        static clamp01(value) {
+        };
+        ToolSet.clamp01 = function (value) {
             if (value > 1)
                 value = 1;
             else if (value < 0)
                 value = 0;
             return value;
-        }
-        static lerp(start, end, percent) {
+        };
+        ToolSet.lerp = function (start, end, percent) {
             return (start + percent * (end - start));
-        }
-        static getTime() {
-            let currentTime = new Date();
+        };
+        ToolSet.getTime = function () {
+            var currentTime = new Date();
             return currentTime.getMilliseconds() / 1000;
-        }
-        static toGrayed(c) {
-            let v = c.getR() * 0.299 + c.getG() * 0.587 + c.getB() * 0.114;
+        };
+        ToolSet.toGrayed = function (c) {
+            var v = c.getR() * 0.299 + c.getG() * 0.587 + c.getB() * 0.114;
             return new cc.Color(v, v, v, c.getA());
-        }
-        static repeat(t, length) {
+        };
+        ToolSet.repeat = function (t, length) {
             return t - Math.floor(t / length) * length;
-        }
-        static distance(x1, y1, x2, y2) {
+        };
+        ToolSet.distance = function (x1, y1, x2, y2) {
             return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
-        }
-    }
+        };
+        return ToolSet;
+    }());
     fgui.ToolSet = ToolSet;
 })(fgui || (fgui = {}));

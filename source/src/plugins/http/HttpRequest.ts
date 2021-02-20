@@ -140,7 +140,8 @@ namespace airkit {
          * @private
          * 清除当前请求。
          */
-        protected clear(): void {
+        public clear(): void {
+            super.clear();
             var http: any = this._http;
             http.onerror = http.onabort = http.onprogress = http.onload = null;
         }

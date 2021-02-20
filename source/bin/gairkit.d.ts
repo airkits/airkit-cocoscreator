@@ -347,7 +347,7 @@ declare namespace airkit {
         /**释放数据*/
         release(): void;
         /**开始加载*/
-        loadAll(): Promise<any>;
+        loadAll(url?: string): Promise<any>;
         /**
          * 获取列表，fiter用于过滤,可以有多个值，格式为 [{k:"id",v:this.id},{k:"aaa",v:"bbb"}]
          * @param table
@@ -866,7 +866,7 @@ declare namespace airkit {
          * @private
          * 清除当前请求。
          */
-        protected clear(): void;
+        clear(): void;
         /** 请求的地址。*/
         get url(): string;
         /** 返回的数据。*/
@@ -2566,7 +2566,7 @@ declare namespace airkit {
     class ZipUtils {
         static unzip(ab: ArrayBuffer): Promise<any>;
         static parseZip(ab: ArrayBuffer): Promise<any>;
-        static parseZipFile(jszip: any, filename: string): Promise<any>;
+        static parseZipFile(jszip: any, filename: string): Promise<[string, any]>;
     }
 }
 import ak = airkit;

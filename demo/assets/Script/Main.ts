@@ -1,5 +1,3 @@
-import { Platform, isWX, GetPlatform } from "./game/platform/Platform";
-import { ePlatform } from "./game/platform/PlatfromType";
 import M from './game/gen/M';
 import LoginScene from "./game/module/login/LoginScene";
 import { eSceneType } from './game/common/SceneType';
@@ -9,26 +7,26 @@ import BattleScene from './game/module/battle/BattleScene';
 import HomeScene from './game/module/home/HomeScene';
 import { eDialogUIID } from './game/common/DialogType';
 import { AlertDlg } from './game/module/login/AlertDlg';
-import UIAlert from "./game/gen/ui/Loader/UIAlert";
-import UIAlertDlg from "./game/gen/ui/Loader/UIAlertDlg";
 import { FullScreenLoaderDlg } from "./game/module/system/FullScreenLoaderDlg";
 import { NetLoaderDlg } from "./game/module/system/NetLoaderDlg";
 import { WindowLoaderDlg } from "./game/module/system/WindowLoaderDlg";
 import { NetLoader2Dlg } from './game/module/system/NetLoader2Dlg';
+import { ConfigTable } from "./game/common/ConfigTable";
 const { ccclass, property } = cc._decorator;
 
 @ccclass
 export default class Main extends cc.Component {
-    private _closeButton: fgui.GObject;
-    private _currentDemo: cc.Component;
-
-    onLoad() {
+   
+    onEnable() {
+       
+        console.time && console.time('load_game_cost');
         LoaderBinder.bindAll();
         HomeBinder.bindAll();
+        
         fgui.UIConfig.modalLayerColor = new cc.Color(0x0, 0x0, 0x0, 196);
 
-        fgui.GRoot.create();
-        ak.Framework.Instance.setup(fgui.GRoot.inst, ak.LogLevel.DEBUG, cc.winSize.width, cc.winSize.height);
+       fgui.GRoot.create();
+       ak.Framework.Instance.setup(fgui.GRoot.inst, ak.LogLevel.DEBUG, cc.winSize.width, cc.winSize.height);
         M.register();
         ak.SceneManager.register(eSceneType.LOGIN,LoginScene);
         ak.SceneManager.register(eSceneType.BATTLE, BattleScene);
@@ -38,12 +36,14 @@ export default class Main extends cc.Component {
         ak.LoaderManager.register(ak.eLoaderType.NET_LOADING,"NetLoaderDlg",NetLoaderDlg);
         ak.LoaderManager.register(ak.eLoaderType.WINDOW,"WindowLoaderDlg",WindowLoaderDlg);
         ak.LoaderManager.register(ak.eLoaderType.CUSTOM_1,"NetLoader2Dlg",NetLoader2Dlg);
-        M.preloadModule().then(v=>{
+        ak.ConfigManger.Instance.init(ConfigTable.keys(),"config/config");
+        Promise.all([ M.preloadModule(),ak.ConfigManger.Instance.loadAll()]).then(v=>{
+            console.timeEnd && console.timeEnd('load_game_cost');
             M.login().then(v=>{     
                 v.enterScene();
             })
         })
-        
+
         
       
        
