@@ -190,7 +190,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     device = navigator.platform;
                     version = infoStr;
                 }
-                airkit.Log.info("{0},{1},{2}", system, device, version);
+                airkit.Log.info("%s,%s,%s", system, device, version);
             }
         };
         Framework.instance = null;
@@ -579,7 +579,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             configurable: true
         });
         Color.prototype.toString = function () {
-            return airkit.StringUtils.format("({0}, {1}, {2}, {3})", this.r, this.g, this.b, this.a);
+            return airkit.StringUtils.format("(%d,%d,%d,%d)", this.r, this.g, this.b, this.a);
         };
         return Color;
     }());
@@ -913,7 +913,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             var sign = classDef["objectKey"];
             if (sign == null) {
                 //直接通过classDef.name获取sign,在混淆的情况下会出错
-                airkit.Log.error("static objectKey must set in {0} ", classDef.name);
+                airkit.Log.error("static objectKey must set in %s ", classDef.name);
             }
             var pool = this.poolsMap[sign];
             if (pool == null) {
@@ -962,7 +962,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         ObjectPools.clear = function (sign) {
             var pool = this.poolsMap[sign];
-            airkit.Log.info("max object count {0}", pool.length);
+            airkit.Log.info("max object count %s", pool.length);
             while (pool.length > 0) {
                 var obj = pool.pop();
                 if (obj && obj["dispose"]) {
@@ -1365,7 +1365,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     for (var i = 0; i < list.length; i++) {
                         var template = list[i];
                         _this._dicTemplate.add(list[i].url, template);
-                        airkit.Log.info("Load config {0}", template.url);
+                        airkit.Log.info("Load config %s", template.url);
                         var json_res = JSON.parse(v[template.url]);
                         if (airkit.StringUtils.isNullOrEmpty(template.key)) {
                             _this._dicData.add(template.name, json_res);
@@ -2515,7 +2515,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 (function (airkit) {
     /**
      * 提供简易获取语言包的方式,配合语言导出脚本
-     * @param key LK.xxx  {0},{1}..{n}.表示参数占位符
+     * @param key LK.xxx  %s,%s..%s.表示参数占位符
      * @param args
      */
     function L(key) {
@@ -2599,7 +2599,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     }
                 }
                 else {
-                    airkit.Log.error("no lang package {0} ", lang);
+                    airkit.Log.error("no lang package %s ", lang);
                     reject("no lang package " + lang);
                 }
             });
@@ -2869,7 +2869,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     m = airkit.ClassUtils.getInstance(name);
                     var clas = airkit.ClassUtils.getClass(name);
                     if (m == null) {
-                        airkit.Log.warning("Cant find module {0}", name);
+                        airkit.Log.warning("Cant find module %s", name);
                         reject("Cant find module" + name);
                     }
                     _this.modules.add(name, m);
@@ -2889,7 +2889,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         _this.loadResource(m, clas).then(function (v) {
                             m.setup(null);
                         }).catch(function (e) {
-                            airkit.Log.warning("Load module Resource Failed {0}", name);
+                            airkit.Log.warning("Load module Resource Failed %s", name);
                             reject("Load module Resource Failed " + name);
                         });
                     }
@@ -2923,7 +2923,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
             else {
-                airkit.Log.error("cant find funcName {0} from Module:{1}", funcName, m.name);
+                airkit.Log.error("cant find funcName %s from Module:%s", funcName, m.name);
             }
             return result;
         };
@@ -3023,7 +3023,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             var _this = this;
             return new Promise(function (resolve, reject) {
                 if (Http.currentRequsts > Http.maxRequest) {
-                    airkit.Log.error("reached max request {0}", Http.currentRequsts);
+                    airkit.Log.error("reached max request %s", Http.currentRequsts);
                 }
                 if (Http.currentRequsts < 0)
                     Http.currentRequsts = 0;
@@ -3055,7 +3055,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 var request = new airkit.HttpRequest();
                 request.http.timeout = airkit.HTTP_REQUEST_TIMEOUT;
                 request.http.ontimeout = function () {
-                    airkit.Log.error("request timeout {0}", url);
+                    airkit.Log.error("request timeout %s", url);
                     request.targetOff(request);
                     Http.currentRequsts--;
                     reject("timeout");
@@ -3084,7 +3084,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     resolve(data);
                 });
                 request.once(airkit.Event.ERROR, _this, function (event) {
-                    airkit.Log.error("req:{0} error:{1}", url, event);
+                    airkit.Log.error("req:%s error:%s", url, event);
                     request.targetOff(request);
                     Http.currentRequsts--;
                     reject(event);
@@ -3624,7 +3624,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 //             let clas = ClassUtils.getClass(this._clsName);
 //             let obj = new clas() as WSMessage;
 //             if (!obj.decode(msg, this.mEndian)) {
-//                 Log.error("decode msg faild {0}", msg);
+//                 Log.error("decode msg faild %s", msg);
 //                 return;
 //             }
 //             let hander = this._handers.getValue(obj.getID());
@@ -3647,7 +3647,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 //                         TimerManager.Instance.removeTimer(id);
 //                         resolve(resp);
 //                     });
-//                     Log.info("start request ws {0}", buf);
+//                     Log.info("start request ws %s", buf);
 //                     this.mSocket.send(buf);
 //                 }
 //             });
@@ -4598,7 +4598,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             airkit.EventCenter.off(airkit.EventID.RESIZE, this, this.resize);
         };
         LayerManager.resize = function () {
-            airkit.Log.info("LayerManager Receive Resize {0} {1}", cc.winSize.width, cc.winSize.height);
+            airkit.Log.info("LayerManager Receive Resize %s %s", cc.winSize.width, cc.winSize.height);
             var i;
             var l;
             var w = cc.winSize.width;
@@ -4861,13 +4861,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                                 _this.updateView(view, total, tips);
                             }
                             else {
-                                airkit.Log.error("创建加载类失败 {1}", className_1);
+                                airkit.Log.error("创建加载类失败 %s", className_1);
                             }
                         });
                     }
                 }
                 else {
-                    airkit.Log.error("Must set loadingview first type= {0}", type);
+                    airkit.Log.error("Must set loadingview first type= %s", type);
                 }
             }
             else {
@@ -4962,7 +4962,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 if (asset instanceof cc.Texture2D) {
                     if (asset.width && asset.height && asset["_format"]) {
                         size = asset.width * asset.height * (asset["_native"] === '.jpg' ? 3 : 4) / (1024.0 * 1024.0);
-                        airkit.Log.info("Texture {0} 资源占用内存{1}MB", asset.nativeUrl, size.toFixed(3));
+                        airkit.Log.info("Texture %s 资源占用内存%sMB", asset.nativeUrl, size.toFixed(3));
                         totalMemory += size;
                     }
                 }
@@ -4970,11 +4970,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     if (asset["_originalSize"] && asset["_texture"]) {
                         size = asset["_originalSize"].width * asset["_originalSize"].height * asset["_texture"]._format / 4 / (1024.0 * 1024.0);
                         totalMemory += size;
-                        airkit.Log.info("SpriteFrame {0} 资源占用内存{1}MB", asset.nativeUrl, size.toFixed(3));
+                        airkit.Log.info("SpriteFrame %s 资源占用内存%sMB", asset.nativeUrl, size.toFixed(3));
                     }
                 }
             }
-            airkit.Log.info("资源占用内存{0}MB", totalMemory.toFixed(3));
+            airkit.Log.info("资源占用内存%sMB", totalMemory.toFixed(3));
         };
         /**
          * 异步加载
@@ -5193,7 +5193,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         ResourceManager.prototype.onLoadProgress = function (viewType, total, tips, progress) {
             var cur = airkit.NumberUtils.toInt(Math.floor(progress * total));
-            airkit.Log.debug("[load]进度: current={0} total={1} precent = {2}", cur, total, progress);
+            airkit.Log.debug("[load]进度: current=%s total=%s precent = %s", cur, total, progress);
             if (viewType != airkit.eLoaderType.NONE) {
                 airkit.LoaderManager.Instance.setProgress(viewType, cur, total);
             }
@@ -5234,13 +5234,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     if (proxy) {
                         image.url = proxy;
                     }
-                    airkit.Log.info("imageProxy start load {0} ", res_1);
+                    airkit.Log.info("imageProxy start load %s ", res_1);
                     ResourceManager.Instance.loadRes(res_1)
                         .then(function (v) {
                         image.url = skin;
                         image.alpha = 0.1;
                         airkit.TweenUtils.get(image).to({ alpha: 1.0 }, 0.3);
-                        airkit.Log.info("imageProxy start load done {0} ", res_1);
+                        airkit.Log.info("imageProxy start load done %s ", res_1);
                     })
                         .catch(function (e) { return airkit.Log.error(e); });
                 }
@@ -5369,7 +5369,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             airkit.EventCenter.off(airkit.EventID.RESIZE, this, this.resize);
         };
         SceneManager.prototype.resize = function () {
-            airkit.Log.info("SceneManager Receive Resize {0} {1}", cc.winSize.width, cc.winSize.height);
+            airkit.Log.info("SceneManager Receive Resize %s %s", cc.winSize.width, cc.winSize.height);
             if (this._curScene) {
                 this._curScene.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
                 var func = this._curScene["resize"];
@@ -5412,7 +5412,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         //  ResourceManager.Instance.dump();
                     }
                     else {
-                        airkit.Log.error("加载场景失败 {1}", sceneName);
+                        airkit.Log.error("加载场景失败 %s", sceneName);
                     }
                 });
             }
@@ -5547,7 +5547,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     }
                     if (findObj) {
                         findObj.setVisible(true);
-                        airkit.Log.info("添加重复uiid {0}", uiid);
+                        airkit.Log.info("添加重复uiid %s", uiid);
                         resolve(findObj);
                         return;
                     }
@@ -5599,7 +5599,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     }
                     if (findObj) {
                         findObj.setVisible(true);
-                        airkit.Log.info("添加重复uiid {0}", uiid);
+                        airkit.Log.info("添加重复uiid %s", uiid);
                         resolve(findObj);
                         return;
                     }
@@ -5667,7 +5667,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (airkit.StringUtils.isNullOrEmpty(uiid))
                 return;
             return new Promise(function (resolve, reject) {
-                airkit.Log.info("close panel {0} {1}", uiid, vid);
+                airkit.Log.info("close panel %s %s", uiid, vid);
                 for (var i = _this._cacheViews.length - 1; i >= 0; i--) {
                     var obj = _this._cacheViews[i];
                     if (obj.UIID == uiid && obj.viewID == vid) {
@@ -6109,7 +6109,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             var info = this._readyUIs.dequeue();
             var viewID = airkit.genViewIDSeq();
             this._currentUIs.push([info[0], viewID]);
-            airkit.Log.info("dialog queue {0} {1}", info[0], viewID);
+            airkit.Log.info("dialog queue %s %s", info[0], viewID);
             if (this._type == airkit.eUIType.POPUP) {
                 UIManager.Instance.popup(info[0], info[1]).then(function (v) {
                     if (v) {
@@ -7203,7 +7203,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
             else {
-                airkit.Log.error("cant find funcName {0} from Module:{1}", funcName, obj.name);
+                airkit.Log.error("cant find funcName %s from Module:%s", funcName, obj.name);
             }
             return result;
         };
@@ -7308,7 +7308,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             return f;
         };
         DateUtils.formatTime = function (time, format) {
-            if (format === void 0) { format = "{0}:{1}:{2}"; }
+            if (format === void 0) { format = "%s:%s:%s"; }
             var s = Math.max(0, time);
             var h = Math.floor((s / 3600) % 24);
             var m = Math.floor((s / 60) % 60);
@@ -7316,11 +7316,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             return airkit.StringUtils.format(format, h < 10 ? "0" + h : h, m < 10 ? "0" + m : m, s < 10 ? "0" + s : s);
         };
         DateUtils.format2Time = function (time) {
-            var format = "{0}:{1}";
+            var format = "%s:%s";
             var s = Math.max(0, time);
             var d = Math.floor(s / 24 / 3600);
             if (d > 0) {
-                return airkit.StringUtils.format("{0}天", d);
+                return airkit.StringUtils.format("%s天", d);
             }
             var h = Math.floor((s / 3600) % 24);
             var m = Math.floor((s / 60) % 60);
@@ -7337,11 +7337,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             }
         };
         DateUtils.format2Time2 = function (time) {
-            var format = "{0}:{1}";
+            var format = "%s:%s";
             var s = Math.max(0, time);
             var d = Math.floor(s / 24 / 3600);
             if (d > 0) {
-                return airkit.StringUtils.format("{0}天", d);
+                return airkit.StringUtils.format("%s天", d);
             }
             var h = Math.floor((s / 3600) % 24);
             var m = Math.floor((s / 60) % 60);
@@ -8335,22 +8335,33 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         /**
          * 格式化字符串
-         * @param str 需要格式化的字符串，【"杰卫，这里有{0}个苹果，和{1}个香蕉！", 5,10】
+         * @param str 需要格式化的字符串，【"杰卫，这里有%s个苹果，和%s个香蕉！", 5,10】
          * @param args 参数列表
          */
-        StringUtils.format = function (str) {
+        StringUtils.format2 = function (str) {
             var args = [];
             for (var _i = 1; _i < arguments.length; _i++) {
                 args[_i - 1] = arguments[_i];
             }
             for (var i = 0; i < args.length; i++) {
-                str = str.replace(new RegExp("\\{" + i + "\\}", "gm"), args[i]);
+                str = str.replace(new RegExp("\\{" + i + "\\}", "gm"), (typeof args[i] === "object") ? JSON.stringify(args[i], null, 4) : args[i]);
             }
             return str;
         };
+        StringUtils.format = function (str) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            var seq = 0;
+            str = str.replace(/(%s|%d|%o|%%)/g, function (match) {
+                return match === '%%' ? '%' : "{" + seq++ + "}";
+            });
+            return this.format2.apply(this, __spreadArrays([str], args));
+        };
         StringUtils.formatWithDic = function (str, dic) {
             for (var key in dic) {
-                str = str.replace(new RegExp("\\{" + key + "\\}", "gm"), dic[key]);
+                str = str.replace(new RegExp("\\{" + key + "\\}", "gm"), (typeof dic[key] === "object") ? JSON.stringify(dic[key], null, 4) : dic[key]);
             }
             return str;
         };
@@ -8748,7 +8759,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                                 resultDic[results[i][0]] = results[i][1];
                             }
                             else {
-                                airkit.Log.info("解析zip file:{0} error", results[i][0]);
+                                airkit.Log.info("解析zip file:%s error", results[i][0]);
                             }
                         }
                         reqs = null;

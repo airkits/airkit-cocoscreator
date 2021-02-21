@@ -61,7 +61,7 @@ namespace airkit {
         static request(url: string, method: string, reqType: eHttpRequestType, header: any[], data?: any, responseType?: string): Promise<any> {
             return new Promise((resolve, reject) => {
                 if (Http.currentRequsts > Http.maxRequest) {
-                    Log.error("reached max request {0}", Http.currentRequsts);
+                    Log.error("reached max request %s", Http.currentRequsts);
                 }
                 if (Http.currentRequsts < 0) Http.currentRequsts = 0;
                 Http.currentRequsts++;
@@ -91,7 +91,7 @@ namespace airkit {
                 var request: HttpRequest = new HttpRequest();
                 request.http.timeout = HTTP_REQUEST_TIMEOUT;
                 request.http.ontimeout = function () {
-                    Log.error("request timeout {0}", url);
+                    Log.error("request timeout %s", url);
                     request.targetOff(request);
                     Http.currentRequsts--;
                     reject("timeout");
@@ -121,7 +121,7 @@ namespace airkit {
                     resolve(data);
                 });
                 request.once(Event.ERROR, this, function (event: Event): void {
-                    Log.error("req:{0} error:{1}", url, event);
+                    Log.error("req:%s error:%s", url, event);
                     request.targetOff(request);
 
                     Http.currentRequsts--;

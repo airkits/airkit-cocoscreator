@@ -151,19 +151,26 @@ namespace airkit {
     }
     /**
      * 格式化字符串
-     * @param str 需要格式化的字符串，【"杰卫，这里有{0}个苹果，和{1}个香蕉！", 5,10】
+     * @param str 需要格式化的字符串，【"杰卫，这里有%s个苹果，和%s个香蕉！", 5,10】
      * @param args 参数列表
      */
-    public static format(str: string, ...args): string {
+    public static format2(str: string, ...args): string {
       for (let i = 0; i < args.length; i++) {
-        str = str.replace(new RegExp("\\{" + i + "\\}", "gm"), args[i]);
+        str = str.replace(new RegExp("\\{" + i + "\\}", "gm"), (typeof args[i] === "object") ?  JSON.stringify(args[i],null,4): args[i]);
       }
       return str;
     }
 
+    public static format(str:string, ...args):string {
+      let seq = 0;
+      str = str.replace(/(%s|%d|%o|%%)/g, (match: string) => {
+          return match === '%%' ? '%' : `{${seq++}}`
+      });
+      return this.format2(str,...args);
+    }
     public static formatWithDic(str: string, dic): string {
       for (let key in dic) {
-        str = str.replace(new RegExp("\\{" + key + "\\}", "gm"), dic[key]);
+        str = str.replace(new RegExp("\\{" + key + "\\}", "gm"), (typeof dic[key] === "object") ?  JSON.stringify(dic[key],null,4): dic[key]);
       }
       return str;
     }

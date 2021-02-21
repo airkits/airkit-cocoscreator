@@ -19,7 +19,7 @@ namespace airkit {
       let sign: string = classDef["objectKey"];
       if (sign == null) {
         //直接通过classDef.name获取sign,在混淆的情况下会出错
-        Log.error("static objectKey must set in {0} ", classDef.name);
+        Log.error("static objectKey must set in %s ", classDef.name);
       }
       let pool = this.poolsMap[sign] as Array<any>;
       if (pool == null) {
@@ -68,7 +68,7 @@ namespace airkit {
     }
     public static clear(sign: string) {
       let pool = this.poolsMap[sign] as Array<any>;
-      Log.info("max object count {0}", pool.length);
+      Log.info("max object count %s", pool.length);
       while (pool.length > 0) {
         let obj = pool.pop();
         if (obj && obj["dispose"]) {

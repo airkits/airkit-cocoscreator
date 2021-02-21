@@ -146,7 +146,7 @@ namespace airkit {
           device = navigator.platform;
           version = infoStr;
         }
-        Log.info("{0},{1},{2}", system, device, version);
+        Log.info("%s,%s,%s", system, device, version);
       }
     }
   }

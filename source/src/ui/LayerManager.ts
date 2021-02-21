@@ -168,7 +168,7 @@ namespace airkit {
 
         public static resize(): void {
             Log.info(
-                "LayerManager Receive Resize {0} {1}",
+                "LayerManager Receive Resize %s %s",
                 cc.winSize.width,
                 cc.winSize.height
             );

@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "module": "amd",
-        "lib": [ "dom", "es5", "es2015.promise" ,"ES2015.Core"],
+        "lib": [ "dom", "es5", "es2015.promise" ,"es2015.Core"],
         "target": "es5",
         "skipLibCheck": true,
         "outFile": "./gairkit.js",

@@ -109,7 +109,7 @@
 //             let clas = ClassUtils.getClass(this._clsName);
 //             let obj = new clas() as WSMessage;
 //             if (!obj.decode(msg, this.mEndian)) {
-//                 Log.error("decode msg faild {0}", msg);
+//                 Log.error("decode msg faild %s", msg);
 //                 return;
 //             }
 //             let hander = this._handers.getValue(obj.getID());
@@ -133,7 +133,7 @@
 //                         TimerManager.Instance.removeTimer(id);
 //                         resolve(resp);
 //                     });
-//                     Log.info("start request ws {0}", buf);
+//                     Log.info("start request ws %s", buf);
 //                     this.mSocket.send(buf);
 //                 }
 //             });

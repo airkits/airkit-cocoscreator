@@ -35,7 +35,7 @@ namespace airkit {
                     let clas = ClassUtils.getClass(name);
 
                     if (m == null) {
-                        Log.warning("Cant find module {0}", name);
+                        Log.warning("Cant find module %s", name);
                         reject("Cant find module" + name);
                     }
 
@@ -56,7 +56,7 @@ namespace airkit {
                         this.loadResource(m, clas).then(v=>{
                             m.setup(null);
                         }).catch(e=>{
-                            Log.warning("Load module Resource Failed {0}", name);
+                            Log.warning("Load module Resource Failed %s", name);
                             reject("Load module Resource Failed " + name);
                         })
                     }else{
@@ -86,7 +86,7 @@ namespace airkit {
                     result = func.apply(m);
                 }
             } else {
-                Log.error("cant find funcName {0} from Module:{1}", funcName, m.name);
+                Log.error("cant find funcName %s from Module:%s", funcName, m.name);
             }
             return result;
         }

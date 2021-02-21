@@ -55,7 +55,7 @@ export class PlatformWechat extends IPlatform {
         // this.myEventer = new Laya.EventDispatcher();
         wx.onShow(function (e: any) {
             // PlatformWechat.showTime = DateUtils.getNowMS()
-            //   console.info("wx onShow {0}", PlatformWechat.showTime)
+            //   console.info("wx onShow %s", PlatformWechat.showTime)
             // EventCenter.dispatchEvent(EventID.ON_SHOW)
             // self.myEventer.event(self.EVENT_ON_WX_SHOW);
             // if (me.id && me.id > 0 && me.id != app.model.NEW_GUEST_ID) {
@@ -79,7 +79,7 @@ export class PlatformWechat extends IPlatform {
         });
         wx.onHide(function () {
             // PlatformWechat.hideTime = DateUtils.getNowMS()
-            // console.info("wx onHide {0}", PlatformWechat.hideTime)
+            // console.info("wx onHide %s", PlatformWechat.hideTime)
             // EventCenter.dispatchEvent(EventID.ON_HIDE)
         });
 

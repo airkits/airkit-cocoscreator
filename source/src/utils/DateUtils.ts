@@ -93,7 +93,7 @@ namespace airkit {
             return f;
         }
 
-        public static formatTime(time: number, format: string = "{0}:{1}:{2}") {
+        public static formatTime(time: number, format: string = "%s:%s:%s") {
             let s = Math.max(0, time);
             let h = Math.floor((s / 3600) % 24);
             let m = Math.floor((s / 60) % 60);
@@ -103,11 +103,11 @@ namespace airkit {
         }
 
         public static format2Time(time: number) {
-            let format: string = "{0}:{1}";
+            let format: string = "%s:%s";
             let s = Math.max(0, time);
             let d = Math.floor(s / 24 / 3600);
             if (d > 0) {
-                return StringUtils.format("{0}天", d);
+                return StringUtils.format("%s天", d);
             }
             let h = Math.floor((s / 3600) % 24);
             let m = Math.floor((s / 60) % 60);
@@ -123,11 +123,11 @@ namespace airkit {
             }
         }
         public static format2Time2(time: number) {
-            let format: string = "{0}:{1}";
+            let format: string = "%s:%s";
             let s = Math.max(0, time);
             let d = Math.floor(s / 24 / 3600);
             if (d > 0) {
-                return StringUtils.format("{0}天", d);
+                return StringUtils.format("%s天", d);
             }
             let h = Math.floor((s / 3600) % 24);
             let m = Math.floor((s / 60) % 60);

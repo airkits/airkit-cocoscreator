@@ -100,7 +100,7 @@ namespace airkit {
                     }
                     if(findObj){
                         findObj.setVisible(true);
-                        Log.info("添加重复uiid {0}",uiid);
+                        Log.info("添加重复uiid %s",uiid);
                         resolve(findObj);
                         return;
                     }
@@ -149,7 +149,7 @@ namespace airkit {
                     }
                     if( findObj){
                         findObj.setVisible(true);
-                        Log.info("添加重复uiid {0}",uiid);
+                        Log.info("添加重复uiid %s",uiid);
                         resolve(findObj);
                         return;
                     }
@@ -214,7 +214,7 @@ namespace airkit {
         public close(uiid:string,vid:number): Promise<any> {
             if(StringUtils.isNullOrEmpty(uiid)) return;
             return new Promise((resolve, reject) => {
-                Log.info("close panel {0} {1}", uiid,vid);
+                Log.info("close panel %s %s", uiid,vid);
                 for(let i=this._cacheViews.length-1;i>=0 ; i--){
                     let obj = this._cacheViews[i];
                     if(obj.UIID == uiid && obj.viewID == vid){
@@ -676,7 +676,7 @@ namespace airkit {
             let info: [string, ShowParams] = this._readyUIs.dequeue();            
             let viewID = genViewIDSeq();
             this._currentUIs.push([info[0],viewID]);
-            Log.info("dialog queue {0} {1}",info[0],viewID);
+            Log.info("dialog queue %s %s",info[0],viewID);
             if(this._type == eUIType.POPUP){
                 UIManager.Instance.popup(info[0], info[1]).then(v=>{
                     if(v){

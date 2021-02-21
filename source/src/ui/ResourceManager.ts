@@ -47,19 +47,19 @@ namespace airkit {
                 if (asset instanceof cc.Texture2D) {
                     if (asset.width && asset.height && asset["_format"]) {
                         size = asset.width * asset.height * (asset["_native"] === '.jpg' ? 3 : 4) / (1024.0 * 1024.0);
-                        Log.info("Texture {0} 资源占用内存{1}MB",asset.nativeUrl,size.toFixed(3));
+                        Log.info("Texture %s 资源占用内存%sMB",asset.nativeUrl,size.toFixed(3));
                         totalMemory += size;
                     }
                 }else if (asset instanceof cc.SpriteFrame) {
                     if (asset["_originalSize"] && asset["_texture"]) {
                         size = asset["_originalSize"].width * asset["_originalSize"].height * asset["_texture"]._format / 4/ (1024.0 * 1024.0);
                         totalMemory += size;
-                        Log.info("SpriteFrame {0} 资源占用内存{1}MB",asset.nativeUrl,size.toFixed(3));
+                        Log.info("SpriteFrame %s 资源占用内存%sMB",asset.nativeUrl,size.toFixed(3));
                     }
 
                 }
             }
-            Log.info("资源占用内存{0}MB",totalMemory.toFixed(3));
+            Log.info("资源占用内存%sMB",totalMemory.toFixed(3));
         }
         /**
          * 异步加载
@@ -328,7 +328,7 @@ namespace airkit {
             let cur: number = NumberUtils.toInt(Math.floor(progress * total));
 
             Log.debug(
-                "[load]进度: current={0} total={1} precent = {2}",
+                "[load]进度: current=%s total=%s precent = %s",
                 cur,
                 total,
                 progress
@@ -382,14 +382,14 @@ namespace airkit {
                         image.url = proxy;
                     }
 
-                    Log.info("imageProxy start load {0} ", res);
+                    Log.info("imageProxy start load %s ", res);
 
                     ResourceManager.Instance.loadRes(res)
                         .then((v) => {
                             image.url = skin;
                             image.alpha = 0.1;
                             TweenUtils.get(image).to({ alpha: 1.0 }, 0.3);
-                            Log.info("imageProxy start load done {0} ", res);
+                            Log.info("imageProxy start load done %s ", res);
                         })
                         .catch((e) => Log.error(e));
                 }

@@ -70,7 +70,7 @@ namespace airkit {
 
         private resize(): void {
             Log.info(
-                "SceneManager Receive Resize {0} {1}",
+                "SceneManager Receive Resize %s %s",
                 cc.winSize.width,
                 cc.winSize.height
             );
@@ -120,7 +120,7 @@ namespace airkit {
                         this.enterScene(sceneName,clas,args);
                       //  ResourceManager.Instance.dump();
                     }else{
-                        Log.error("加载场景失败 {1}",sceneName);
+                        Log.error("加载场景失败 %s",sceneName);
                     }
                 });
             }

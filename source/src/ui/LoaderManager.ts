@@ -125,12 +125,12 @@ namespace airkit {
                 this._dicLoadView.add(type, view);
                 this.updateView(view, total, tips);
               }else{
-                  Log.error("创建加载类失败 {1}",className);
+                  Log.error("创建加载类失败 %s",className);
               }
             });
           }
         } else {
-          Log.error("Must set loadingview first type= {0}", type);
+          Log.error("Must set loadingview first type= %s", type);
         }
       } else {
         this.updateView(view, total, tips);

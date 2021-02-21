@@ -51,7 +51,7 @@ namespace airkit {
               for (let i = 0; i < list.length; i++) {
                 let template = list[i];
                 this._dicTemplate.add(list[i].url, template);
-                Log.info("Load config {0}", template.url);
+                Log.info("Load config %s", template.url);
                 let json_res = JSON.parse(v[template.url]);
                 if (StringUtils.isNullOrEmpty(template.key)) {
                   this._dicData.add(template.name, json_res);

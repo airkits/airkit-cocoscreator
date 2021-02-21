@@ -12,7 +12,7 @@
 namespace airkit {
   /**
    * 提供简易获取语言包的方式,配合语言导出脚本
-   * @param key LK.xxx  {0},{1}..{n}.表示参数占位符
+   * @param key LK.xxx  %s,%s..%s.表示参数占位符
    * @param args
    */
   export function L(key: string, ...args): string {
@@ -90,7 +90,7 @@ namespace airkit {
             resolve(lang);
           }
         } else {
-          Log.error("no lang package {0} ", lang);
+          Log.error("no lang package %s ", lang);
           reject("no lang package " + lang);
         }
       });

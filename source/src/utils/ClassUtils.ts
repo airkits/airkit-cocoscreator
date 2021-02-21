@@ -85,7 +85,7 @@ namespace airkit {
                     result = func.apply(obj, args);
                 }
             } else {
-                Log.error("cant find funcName {0} from Module:{1}", funcName, obj.name);
+                Log.error("cant find funcName %s from Module:%s", funcName, obj.name);
             }
             return result;
         }

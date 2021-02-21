@@ -23,7 +23,7 @@ namespace airkit {
                             if(results[i] && results[i][1] != null){
                                 resultDic[results[i][0]] = results[i][1];
                             }else{
-                                Log.info("解析zip file:{0} error",results[i][0]);
+                                Log.info("解析zip file:%s error",results[i][0]);
                             }
                         }
                         reqs= null;

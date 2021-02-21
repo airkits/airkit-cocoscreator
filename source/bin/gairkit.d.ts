@@ -636,7 +636,7 @@ declare namespace airkit {
 declare namespace airkit {
     /**
      * 提供简易获取语言包的方式,配合语言导出脚本
-     * @param key LK.xxx  {0},{1}..{n}.表示参数占位符
+     * @param key LK.xxx  %s,%s..%s.表示参数占位符
      * @param args
      */
     function L(key: string, ...args: any[]): string;
@@ -2446,9 +2446,10 @@ declare namespace airkit {
         static hourFormat(seconds: number): string;
         /**
          * 格式化字符串
-         * @param str 需要格式化的字符串，【"杰卫，这里有{0}个苹果，和{1}个香蕉！", 5,10】
+         * @param str 需要格式化的字符串，【"杰卫，这里有%s个苹果，和%s个香蕉！", 5,10】
          * @param args 参数列表
          */
+        static format2(str: string, ...args: any[]): string;
         static format(str: string, ...args: any[]): string;
         static formatWithDic(str: string, dic: any): string;
         /**

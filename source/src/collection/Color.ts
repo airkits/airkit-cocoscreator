@@ -138,7 +138,7 @@ namespace airkit {
 
     public toString(): string {
       return StringUtils.format(
-        "({0}, {1}, {2}, {3})",
+        "(%d,%d,%d,%d)",
         this.r,
         this.g,
         this.b,
