@@ -1,6 +1,8 @@
 import { exit } from 'process';
 import * as XLSX from 'xlsx';
 import { writeJSONData } from './write_file';
+import { saveAs } from 'file-saver'
+import JSZip = require("../node_modules/JSZip")
 //const { read, utils: { sheet_to_json } } = XLSX;
 
 // export function readFirstSheet(data: any, options: XLSX.ParsingOptions): any[][] {
@@ -93,5 +95,12 @@ confList.forEach(element => {
         console.log(data);
         writeJSONData(element[1], "data/client", data.Client);
         writeJSONData(element[1], "data/server", data.Server);
+
     }
 });
+
+var zip = new JSZip();
+zip.file("hello.txt", "Hello[p my)6cxsw2q");
+zip.generateAsync({type : "uint8array"}).then(content => { // 生成二进制流
+    saveAs(content, 'zip/images.zip') // 利用file-saver保存文件
+})

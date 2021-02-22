@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseTable = exports.parseConfig = exports.isEmptyDic = exports.eDataType = exports.eCodeType = void 0;
 const XLSX = require("xlsx");
 const write_file_1 = require("./write_file");
+const file_saver_1 = require("file-saver");
+const JSZip = require("../node_modules/JSZip");
 var eCodeType;
 (function (eCodeType) {
     eCodeType["BOTH"] = "both";
@@ -26,7 +28,6 @@ exports.isEmptyDic = isEmptyDic;
 function parseConfig(wb) {
     let sheetName = "导出配置";
     let list = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1 });
-    //let len = list.length;
     list.shift();
     return list;
 }
@@ -84,4 +85,9 @@ confList.forEach(element => {
         write_file_1.writeJSONData(element[1], "data/client", data.Client);
         write_file_1.writeJSONData(element[1], "data/server", data.Server);
     }
+});
+var zip = new JSZip();
+zip.file("hello.txt", "Hello[p my)6cxsw2q");
+zip.generateAsync({ type: "uint8array" }).then(content => {
+    file_saver_1.saveAs(content, 'zip/images.zip'); // 利用file-saver保存文件
 });
