@@ -15,7 +15,6 @@ export class NetLoaderDlg extends ak.LoaderDialog {
         super.setup(type);
         this.center();
         this.modal = true;
-        fgui.GRoot.inst.modalLayer.alpha = 0;
     }
     protected doHideAnimation(): void {
        

@@ -154,4 +154,14 @@ namespace airkit {
         }
         return false;
     }
+
+    //设置graphics图像alpha值
+    export function graphAlpha(g:fgui.GGraph,alpha:number):void {
+        let gp = g.node.getComponent(cc.Graphics);
+        let color = g.color;
+        color.a = alpha * 255;
+        gp.fillColor = color;
+        gp.stroke();
+        gp.fill();
+    }
 }

@@ -1156,8 +1156,6 @@ declare namespace airkit {
             result: eDlgResult;
             data: any;
         }): void;
-        modalShowAnimation(dt?: number): void;
-        modalHideAnimation(dt?: number): void;
         protected doShowAnimation(): void;
         protected doHideAnimation(): void;
         /**关闭*/
@@ -2557,6 +2555,7 @@ declare namespace airkit {
      */
     function checkNullOrNil(x: any): boolean;
     function checkEmptyDic(x: any): boolean;
+    function graphAlpha(g: fgui.GGraph, alpha: number): void;
 }
 declare namespace airkit {
     /**

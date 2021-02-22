@@ -4254,17 +4254,6 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this._resultData = data;
             this.doHideAnimation();
         };
-        Dialog.prototype.modalShowAnimation = function (dt) {
-            if (dt === void 0) { dt = 0.3; }
-            var layer = fgui.GRoot.inst.modalLayer;
-            layer.alpha = 0;
-            airkit.TweenUtils.get(layer).to({ alpha: 1.0 }, dt, fgui.EaseType.SineIn);
-        };
-        Dialog.prototype.modalHideAnimation = function (dt) {
-            if (dt === void 0) { dt = 0.3; }
-            var layer = fgui.GRoot.inst.modalLayer;
-            airkit.TweenUtils.get(layer).to({ alpha: 0.0 }, dt, fgui.EaseType.SineOut);
-        };
         Dialog.prototype.doShowAnimation = function () {
             this.onShown();
         };
@@ -8730,6 +8719,16 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         return false;
     }
     airkit.checkEmptyDic = checkEmptyDic;
+    //设置graphics图像alpha值
+    function graphAlpha(g, alpha) {
+        var gp = g.node.getComponent(cc.Graphics);
+        var color = g.color;
+        color.a = alpha * 255;
+        gp.fillColor = color;
+        gp.stroke();
+        gp.fill();
+    }
+    airkit.graphAlpha = graphAlpha;
 })(airkit || (airkit = {}));
 // import { SDictionary } from "../collection/Dictionary";
 // import { Log } from "../log/Log";

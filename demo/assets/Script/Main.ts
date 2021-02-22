@@ -17,8 +17,9 @@ const { ccclass, property } = cc._decorator;
 @ccclass
 export default class Main extends cc.Component {
    
-    onEnable() {
-       
+   
+    onLoad() {
+        console.log("onLoad")
         console.time && console.time('load_game_cost');
         LoaderBinder.bindAll();
         HomeBinder.bindAll();
