@@ -18,6 +18,8 @@ namespace airkit {
       return this.instance;
     }
 
+
+
     /**初始化数据*/
     public init(keys: any, zipPath: string = null): void {
       if (zipPath != null) ConfigManger.zipUrl = zipPath;
@@ -51,11 +53,11 @@ namespace airkit {
       //return DataProvider.Instance.load(this._listTables)
     }
     /**
-     * 获取列表，fiter用于过滤,可以有多个值，格式为 [{k:"id",v:this.id},{k:"aaa",v:"bbb"}]
+     * 获取列表，fiter用于过滤,可以有多个值，格式为 [["id",this.id],["aaa","bbb"]]
      * @param table
      * @param filter 目前只实现了绝对值匹配
      */
-    public getList(table: string, filter?: Array<any>): Array<any> {
+    public query(table: string, filter?: Array<any>): Array<any> {
       let dic = DataProvider.Instance.getConfig(table);
       if (dic == null) return [];
       if (filter == null) filter = [];
@@ -64,8 +66,8 @@ namespace airkit {
         let val = dic[key];
         let flag = true;
         for (let j = 0; j < filter.length; j++) {
-          let k = filter[j]["k"];
-          let v = filter[j]["v"];
+          let k = filter[j][0];
+          let v = filter[j][1];
           if (val[k] != v) {
             flag = false;
             break;
@@ -77,7 +79,7 @@ namespace airkit {
       }
       return result;
     }
-    public getInfo(table: string, key: any): any {
+    public getInfo(table: string, key:string|string[]): any {
       let info = DataProvider.Instance.getInfo(table, key);
       return info;
     }
@@ -96,4 +98,21 @@ namespace airkit {
       return this._listTables;
     }
   }
+
+  
+  //通过主键获取配置信息
+  export function getCInfo<TValue>(table:string,key:string|string[]): TValue {
+    return <TValue>ConfigManger.Instance.getInfo(table,key);
+  }
+  //通过查询键获取列表，query:[[k,v],[k,v]]
+  export function getCList<TValue>(table:string,query:Array<[string,number|string]>):Array<TValue>{
+      return ConfigManger.Instance.query(table,query);
+  }
+  //通过查询键获取单个信息，query:[[k,v],[k,v]]
+  export function queryCInfo<TValue>(table:string,query:Array<[string,number|string]>): TValue{
+      let list = getCList<TValue>(table,query);
+      if( list == null) return null;
+      return <TValue>list[0];
+  }
+
 }

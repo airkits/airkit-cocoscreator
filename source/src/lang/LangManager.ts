@@ -76,7 +76,7 @@ namespace airkit {
           resolve(lang);
           return;
         }
-        let data = ConfigManger.Instance.getList(this._curLang);
+        let data = ConfigManger.Instance.query(this._curLang);
         // for (let i = 0; i < this._listTables.length; i++) {
         //     if (this._listTables[i].name == lang) {
         //         data = this._listTables[i]

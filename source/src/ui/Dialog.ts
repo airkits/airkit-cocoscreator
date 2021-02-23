@@ -123,7 +123,19 @@ namespace airkit {
         public isDestory(): boolean {
             return this._destory;
         }
-      
+
+        public modalShowAnimation(dt:number = 0.3):void {
+            let layer = fgui.GRoot.inst.modalLayer;
+            layer.alpha = 0;
+            TweenUtils.get(layer).to({alpha:1.0},dt,fgui.EaseType.SineIn)
+           
+        }
+        public modalHideAnimation(dt:number = 0.3):void {
+            let layer = fgui.GRoot.inst.modalLayer;
+            TweenUtils.get(layer).to({alpha:0.0},dt,fgui.EaseType.SineOut)
+
+        }
+
        
         /**是否可见*/
         public setVisible(bVisible: boolean): void {
@@ -303,5 +315,10 @@ namespace airkit {
             return true;
         }
     
+
+        public hideImmediately():void {
+            super.hideImmediately();
+            fgui.GRoot.inst.modalLayer.alpha = 1.0;
+        }
     }
 }

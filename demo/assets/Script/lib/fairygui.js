@@ -9125,10 +9125,7 @@ window.__extends = (this && this.__extends) || (function () {
             _this._volumeScale = 1;
             _this._popupStack = new Array();
             _this._justClosedPopups = new Array();
-            _this._modalLayer = new fgui.GGraph();
-            _this._modalLayer.setSize(_this.width, _this.height);
-            _this._modalLayer.drawRect(0, cc.Color.TRANSPARENT, fgui.UIConfig.modalLayerColor);
-            _this._modalLayer.addRelation(_this, fgui.RelationType.Size);
+            _this._modalLayer = _this.createModalLayer();
             _this._thisOnResized = _this.onWinResize.bind(_this);
             _this._inputProcessor = _this.node.addComponent(fgui.InputProcessor);
             _this._inputProcessor._captureCallback = _this.onTouchBegin_1;
@@ -9154,6 +9151,17 @@ window.__extends = (this && this.__extends) || (function () {
             GRoot._inst = new GRoot();
             GRoot._inst.node.parent = cc.director.getScene();
             return GRoot._inst;
+        };
+        GRoot.prototype.createModalLayer = function () {
+            var layer = new fgui.GComponent();
+            layer.setSize(this.width, this.height);
+            var graph = new fgui.GGraph();
+            graph.setSize(this.width, this.height);
+            graph.drawRect(0, cc.Color.TRANSPARENT, fgui.UIConfig.modalLayerColor);
+            graph.addRelation(this, fgui.RelationType.Size);
+            layer.addChild(graph);
+            layer.addRelation(this, fgui.RelationType.Size);
+            return layer;
         };
         GRoot.prototype.onDestroy = function () {
             if (CC_EDITOR) {

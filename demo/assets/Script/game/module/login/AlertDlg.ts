@@ -32,6 +32,7 @@ export class AlertDlg extends ak.Dialog {
     protected doShowAnimation(): void {
         this.setScale(0, 0);
         this.setPivot(0.5,0.5);
+        this.modalShowAnimation(0.3);
         fgui.GTween.to2(0.1, 0.1, 1, 1, 0.3)
             .setTarget(this, this.setScale)
             .setEase(fgui.EaseType.SineIn)
@@ -39,9 +40,12 @@ export class AlertDlg extends ak.Dialog {
     }
 
     protected doHideAnimation(): void {
+        this.modalHideAnimation(0.3);
+
         fgui.GTween.to2(1, 1, 0, 0, 0.3)
             .setTarget(this, this.setScale)
             .setEase(fgui.EaseType.SineOut)
             .onComplete(this.hideImmediately, this);
     }
+    
 }

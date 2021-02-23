@@ -46,7 +46,7 @@ namespace airkit {
     public loadZip(url: string, list: ConfigItem[]): Promise<any> {
       return  ResourceManager.Instance.loadRes(url, cc.BufferAsset).then((v) => {
           let ab = ResourceManager.Instance.getRes(url);
-          ZipUtils.unzip((<cc.BufferAsset>ab)["_buffer"])
+         return ZipUtils.unzip((<cc.BufferAsset>ab)["_buffer"])
             .then((v) => {
               for (let i = 0; i < list.length; i++) {
                 let template = list[i];
@@ -146,7 +146,7 @@ namespace airkit {
     }
 
     /**返回一行*/
-    public getInfo(table: string, key: any): any {
+    public getInfo(table: string, key:string|string[]): any {
       let data = this._dicData.getValue(table);
       if (data) {
         let isArrayKey = Array.isArray(key);

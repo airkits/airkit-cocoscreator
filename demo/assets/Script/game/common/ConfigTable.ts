@@ -20,9 +20,9 @@ export class ConfigTable {
 
     public static keys(): any {
         let c = {}
-        c[LangPacks.ZH_CN] = "id"
-        c[LangPacks.EN_US] = "id"
-        c[LangPacks.ZH_TW] = "id"
+        // c[LangPacks.ZH_CN] = "id"
+        // c[LangPacks.EN_US] = "id"
+        // c[LangPacks.ZH_TW] = "id"
         c[this.EQUIP_UPGRADE] = "id"
         c[this.GUEST] = ["guest_id", "level"]
         c[this.FOOD] = "id"

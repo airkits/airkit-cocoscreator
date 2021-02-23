@@ -1,6 +1,12 @@
 /// <reference path="collection/Singleton.ts" />
 
 namespace airkit {
+
+  //fixed modallayer 透明度
+  export function fixedModalLayer(url:string):void {
+    let loader = fgui.GRoot.inst.modalLayer.getChildAt(0) as fgui.GLoader;
+    loader.url = url;
+  }
   /**
    * 框架管理器
    * @author ankye
@@ -151,3 +157,23 @@ namespace airkit {
     }
   }
 }
+
+// patch modal layer
+(function () {
+  let _proto: any;
+  /* patch String Object */
+  _proto = fgui.GRoot.prototype;
+
+  _proto.createModalLayer = function():fgui.GComponent {
+           
+      let layer = new fgui.GComponent();
+      layer.setSize(this.width, this.height);
+      let loader =  new fgui.GLoader();
+      loader.setSize(this.width, this.height);
+      loader.addRelation(this, fgui.RelationType.Size);
+      loader.fill = fgui.LoaderFillType.ScaleFree;
+      layer.addChild(loader);
+      layer.addRelation(this, fgui.RelationType.Size);
+      return layer;
+  }
+})();

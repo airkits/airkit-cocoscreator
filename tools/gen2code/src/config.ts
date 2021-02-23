@@ -2,8 +2,8 @@
 import path = require("path")
 
 export const WORKSPACE = "../../../demo";
-export const APP_DIR = "assets/Script/app";
-export const GEN_CODE_DIR = "assets/Script/app/gen";
+export const APP_DIR = "assets/Script/game";
+export const GEN_CODE_DIR = "assets/Script/game/gen";
 
 export function getFilePath(filename) {
     let outPath = path.join(__dirname, filename)

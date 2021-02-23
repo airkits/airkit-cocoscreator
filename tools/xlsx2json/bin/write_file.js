@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.writeStringData = exports.writeCfgJSONData = exports.writeJSONData = void 0;
+exports.saveZip = exports.walkSync = exports.writeStringData = exports.writeCfgJSONData = exports.writeJSONData = void 0;
 const path = require("path");
 const fs = require("fs");
 /**
@@ -51,3 +51,46 @@ function writeStringData(fname, directory, data, suffix) {
     return null;
 }
 exports.writeStringData = writeStringData;
+function walkSync(dir, needDir, recursive, out) {
+    let files = fs.readdirSync(dir);
+    files.forEach(function (file) {
+        var filepath = path.join(dir, file);
+        let stats = fs.statSync(filepath);
+        if (stats.isDirectory()) {
+            if (recursive)
+                walkSync(filepath, needDir, recursive, out);
+            if (needDir) {
+                out.push([filepath, file]);
+            }
+        }
+        else if (stats.isFile()) {
+            if (!needDir) {
+                out.push([filepath, file]);
+            }
+        }
+    });
+}
+exports.walkSync = walkSync;
+function saveZip(zip, dist) {
+    // 压缩
+    zip.generateAsync({
+        // 压缩类型选择nodebuffer，在回调函数中会返回zip压缩包的Buffer的值，再利用fs保存至本地
+        type: "nodebuffer",
+        // 压缩算法
+        compression: "DEFLATE",
+        compressionOptions: {
+            level: 9
+        }
+    }).then(function (content) {
+        // 写入磁盘
+        fs.writeFile(dist, content, function (err) {
+            if (!err) {
+                // 是否删除源文件
+            }
+            else {
+                console.log(dist + '压缩失败');
+            }
+        });
+    });
+}
+exports.saveZip = saveZip;

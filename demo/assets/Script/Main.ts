@@ -12,6 +12,8 @@ import { NetLoaderDlg } from "./game/module/system/NetLoaderDlg";
 import { WindowLoaderDlg } from "./game/module/system/WindowLoaderDlg";
 import { NetLoader2Dlg } from './game/module/system/NetLoader2Dlg';
 import { ConfigTable } from "./game/common/ConfigTable";
+import { CTask } from './game/gen/data/Config';
+import UIMaskBg2 from './game/gen/ui/Loader/UIMaskBg2';
 const { ccclass, property } = cc._decorator;
 
 @ccclass
@@ -41,7 +43,11 @@ export default class Main extends cc.Component {
         Promise.all([ M.preloadModule(),ak.ConfigManger.Instance.loadAll()]).then(v=>{
             console.timeEnd && console.timeEnd('load_game_cost');
             M.login().then(v=>{     
+                ak.fixedModalLayer("ui://Loader/mask_bg");
                 v.enterScene();
+
+                let result = ak.queryCInfo<CTask>(ConfigTable.TASK,[["id","1620000"]])
+                console.log(result);
             })
         })
 
@@ -97,3 +103,8 @@ export default class Main extends cc.Component {
 
     start() { }
 }
+
+
+
+
+

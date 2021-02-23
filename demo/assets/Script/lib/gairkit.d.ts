@@ -11,6 +11,7 @@ declare namespace airkit {
     }
 }
 declare namespace airkit {
+    function fixedModalLayer(url: string): void;
     /**
      * 框架管理器
      * @author ankye
@@ -349,15 +350,18 @@ declare namespace airkit {
         /**开始加载*/
         loadAll(url?: string): Promise<any>;
         /**
-         * 获取列表，fiter用于过滤,可以有多个值，格式为 [{k:"id",v:this.id},{k:"aaa",v:"bbb"}]
+         * 获取列表，fiter用于过滤,可以有多个值，格式为 [["id",this.id],["aaa","bbb"]]
          * @param table
          * @param filter 目前只实现了绝对值匹配
          */
-        getList(table: string, filter?: Array<any>): Array<any>;
-        getInfo(table: string, key: any): any;
+        query(table: string, filter?: Array<any>): Array<any>;
+        getInfo(table: string, key: string | string[]): any;
         /**定义需要前期加载的资源*/
         get listTables(): Array<ConfigItem>;
     }
+    function getCInfo<TValue>(table: string, key: string | string[]): TValue;
+    function getCList<TValue>(table: string, query: Array<[string, number | string]>): Array<TValue>;
+    function queryCInfo<TValue>(table: string, query: Array<[string, number | string]>): TValue;
 }
 declare namespace airkit {
     /**
@@ -381,7 +385,7 @@ declare namespace airkit {
         /**返回表*/
         getConfig(table: string): any;
         /**返回一行*/
-        getInfo(table: string, key: any): any;
+        getInfo(table: string, key: string | string[]): any;
         private getRes;
         private onLoadComplete;
     }
@@ -1161,6 +1165,8 @@ declare namespace airkit {
         /**关闭*/
         dispose(): void;
         isDestory(): boolean;
+        modalShowAnimation(dt?: number): void;
+        modalHideAnimation(dt?: number): void;
         /**是否可见*/
         setVisible(bVisible: boolean): void;
         /**初始化，和onDestroy是一对*/
@@ -1210,6 +1216,7 @@ declare namespace airkit {
             [index: string]: {};
         }): Array<Res>;
         onClose(): boolean;
+        hideImmediately(): void;
     }
 }
 /**

@@ -57,7 +57,7 @@ export default class LoginScene extends UILoginScene{
        
       // ak.UIManager.show(eDialogUIID.ALERT);
      //  ak.UIManager.show(eDialogUIID.ALERT);
-      ak.UIManager.show(eDialogUIID.ALERT,{clickMaskClose:false}).then(v=>{
+      ak.UIManager.showQ(eDialogUIID.ALERT,{clickMaskClose:false}).then(v=>{
         if(v){  
             console.log("showQ dlg ="+v.viewID);
             v.wait().then(result=>{
@@ -66,7 +66,7 @@ export default class LoginScene extends UILoginScene{
             });
         }
       });
-       ak.UIManager.show(eDialogUIID.ALERT,{clickMaskClose:true}).then(v=>{
+       ak.UIManager.showQ(eDialogUIID.ALERT,{clickMaskClose:true}).then(v=>{
         if(v){  
             console.log("showQ dlg ="+v.viewID);
             v.wait().then(result=>{

@@ -1,10 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseTable = exports.parseConfig = exports.isEmptyDic = exports.eDataType = exports.eCodeType = void 0;
+exports.parseConfigTable = exports.parseConfig = exports.isEmptyDic = exports.eDataType = exports.eCodeType = void 0;
 const XLSX = require("xlsx");
 const write_file_1 = require("./write_file");
-const file_saver_1 = require("file-saver");
-const JSZip = require("../node_modules/JSZip");
+const JSZip = require("jszip");
+const fs = require("fs");
+const config_1 = require("./config");
+const parse_1 = require("./parse");
 var eCodeType;
 (function (eCodeType) {
     eCodeType["BOTH"] = "both";
@@ -32,13 +34,14 @@ function parseConfig(wb) {
     return list;
 }
 exports.parseConfig = parseConfig;
-function parseTable(wb, sheetName) {
+function parseConfigTable(wb, sheetName) {
     let list = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1 });
     if (list && list.length < 5) {
         console.error("table " + sheetName + "format error!");
         return null;
     }
     let types = list[1];
+    let names = list[2];
     let sides = list[3];
     let headers = list[4];
     let client = [];
@@ -46,6 +49,8 @@ function parseTable(wb, sheetName) {
     let side = null;
     let header = null;
     let type = null;
+    let ct = {};
+    let st = {};
     for (let i = 5; i < list.length; i++) {
         let row = list[i];
         let cellLen = row.length;
@@ -61,9 +66,11 @@ function parseTable(wb, sheetName) {
             let value = type == eDataType.INT ? +row[j] : row[j] + "";
             if (side == eCodeType.BOTH || side == eCodeType.CLIENT) {
                 cData[header] = value;
+                ct[header] = [type == eDataType.INT ? "number" : "string", names[j]];
             }
             if (side == eCodeType.BOTH || side == eCodeType.SERVER) {
                 sData[header] = value;
+                st[header] = [type == eDataType.INT ? "number" : "string", names[j]];
             }
         }
         if (!isEmptyDic(cData)) {
@@ -73,21 +80,37 @@ function parseTable(wb, sheetName) {
             server.push(sData);
         }
     }
-    return { Client: client, Server: server };
+    return { Client: client, Server: server, CT: ct, ST: st };
 }
-exports.parseTable = parseTable;
+exports.parseConfigTable = parseConfigTable;
 let wb = XLSX.readFile("excel/config.xlsx");
 let confList = parseConfig(wb);
+var zip = new JSZip();
+var interfaceContent = "";
 confList.forEach(element => {
     if (+element[2] == 1) {
-        let data = parseTable(wb, element[0]);
-        console.log(data);
-        write_file_1.writeJSONData(element[1], "data/client", data.Client);
-        write_file_1.writeJSONData(element[1], "data/server", data.Server);
+        let data = parseConfigTable(wb, element[0]);
+        console.log(element);
+        if (data.Client && data.Client.length > 0) {
+            write_file_1.writeJSONData(element[1], "data/client", data.Client);
+            zip.file(element[1] + ".json", JSON.stringify(data.Client));
+            let name = element[1].charAt(0).toUpperCase() + parse_1.toHump(element[1].slice(1));
+            interfaceContent += `//${element[0]}\nexport interface C${name} {\n`;
+            for (let k in data.CT) {
+                interfaceContent += `    ${k} : ${data.CT[k][0]} ;// ${data.CT[k][1]}\n`;
+            }
+            interfaceContent += "}; \n";
+        }
+        if (data.Server && data.Server.length > 0)
+            write_file_1.writeJSONData(element[1], "data/server", data.Server);
     }
 });
-var zip = new JSZip();
-zip.file("hello.txt", "Hello[p my)6cxsw2q");
-zip.generateAsync({ type: "uint8array" }).then(content => {
-    file_saver_1.saveAs(content, 'zip/images.zip'); // 利用file-saver保存文件
+fs.writeFileSync(config_1.codeDir("config.ts"), interfaceContent);
+wb = XLSX.readFile("excel/lang.xlsx");
+confList = parseConfig(wb);
+confList.forEach(element => {
+    if (+element[2] == 1) {
+        console.log(element);
+    }
 });
+write_file_1.saveZip(zip, config_1.distDir("config1.bin"));

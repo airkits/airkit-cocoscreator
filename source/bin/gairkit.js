@@ -54,6 +54,12 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 /// <reference path="collection/Singleton.ts" />
 
 (function (airkit) {
+    //fixed modallayer 透明度
+    function fixedModalLayer(url) {
+        var loader = fgui.GRoot.inst.modalLayer.getChildAt(0);
+        loader.url = url;
+    }
+    airkit.fixedModalLayer = fixedModalLayer;
     /**
      * 框架管理器
      * @author ankye
@@ -198,6 +204,23 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }(airkit.Singleton));
     airkit.Framework = Framework;
 })(airkit || (airkit = {}));
+// patch modal layer
+(function () {
+    var _proto;
+    /* patch String Object */
+    _proto = fgui.GRoot.prototype;
+    _proto.createModalLayer = function () {
+        var layer = new fgui.GComponent();
+        layer.setSize(this.width, this.height);
+        var loader = new fgui.GLoader();
+        loader.setSize(this.width, this.height);
+        loader.addRelation(this, fgui.RelationType.Size);
+        loader.fill = fgui.LoaderFillType.ScaleFree;
+        layer.addChild(loader);
+        layer.addRelation(this, fgui.RelationType.Size);
+        return layer;
+    };
+})();
 // // import { Singleton } from "../collection/Singleton";
 // // import { SDictionary, NDictionary } from "../collection/Dictionary";
 // // import { Timer } from "../timer/Timer";
@@ -1250,11 +1273,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             //return DataProvider.Instance.load(this._listTables)
         };
         /**
-         * 获取列表，fiter用于过滤,可以有多个值，格式为 [{k:"id",v:this.id},{k:"aaa",v:"bbb"}]
+         * 获取列表，fiter用于过滤,可以有多个值，格式为 [["id",this.id],["aaa","bbb"]]
          * @param table
          * @param filter 目前只实现了绝对值匹配
          */
-        ConfigManger.prototype.getList = function (table, filter) {
+        ConfigManger.prototype.query = function (table, filter) {
             var dic = airkit.DataProvider.Instance.getConfig(table);
             if (dic == null)
                 return [];
@@ -1265,8 +1288,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 var val = dic[key];
                 var flag = true;
                 for (var j = 0; j < filter.length; j++) {
-                    var k = filter[j]["k"];
-                    var v = filter[j]["v"];
+                    var k = filter[j][0];
+                    var v = filter[j][1];
                     if (val[k] != v) {
                         flag = false;
                         break;
@@ -1303,6 +1326,24 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         return ConfigManger;
     }(airkit.Singleton));
     airkit.ConfigManger = ConfigManger;
+    //通过主键获取配置信息
+    function getCInfo(table, key) {
+        return ConfigManger.Instance.getInfo(table, key);
+    }
+    airkit.getCInfo = getCInfo;
+    //通过查询键获取列表，query:[[k,v],[k,v]]
+    function getCList(table, query) {
+        return ConfigManger.Instance.query(table, query);
+    }
+    airkit.getCList = getCList;
+    //通过查询键获取单个信息，query:[[k,v],[k,v]]
+    function queryCInfo(table, query) {
+        var list = getCList(table, query);
+        if (list == null)
+            return null;
+        return list[0];
+    }
+    airkit.queryCInfo = queryCInfo;
 })(airkit || (airkit = {}));
 // import { assertNullOrNil } from "../utils/Utils";
 // import { StringUtils } from "../utils/StringUtils";
@@ -1360,7 +1401,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             var _this = this;
             return airkit.ResourceManager.Instance.loadRes(url, cc.BufferAsset).then(function (v) {
                 var ab = airkit.ResourceManager.Instance.getRes(url);
-                airkit.ZipUtils.unzip(ab["_buffer"])
+                return airkit.ZipUtils.unzip(ab["_buffer"])
                     .then(function (v) {
                     for (var i = 0; i < list.length; i++) {
                         var template = list[i];
@@ -2584,7 +2625,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     resolve(lang);
                     return;
                 }
-                var data = airkit.ConfigManger.Instance.getList(_this._curLang);
+                var data = airkit.ConfigManger.Instance.query(_this._curLang);
                 // for (let i = 0; i < this._listTables.length; i++) {
                 //     if (this._listTables[i].name == lang) {
                 //         data = this._listTables[i]
@@ -4284,6 +4325,17 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         Dialog.prototype.isDestory = function () {
             return this._destory;
         };
+        Dialog.prototype.modalShowAnimation = function (dt) {
+            if (dt === void 0) { dt = 0.3; }
+            var layer = fgui.GRoot.inst.modalLayer;
+            layer.alpha = 0;
+            airkit.TweenUtils.get(layer).to({ alpha: 1.0 }, dt, fgui.EaseType.SineIn);
+        };
+        Dialog.prototype.modalHideAnimation = function (dt) {
+            if (dt === void 0) { dt = 0.3; }
+            var layer = fgui.GRoot.inst.modalLayer;
+            airkit.TweenUtils.get(layer).to({ alpha: 0.0 }, dt, fgui.EaseType.SineOut);
+        };
         /**是否可见*/
         Dialog.prototype.setVisible = function (bVisible) {
             var old = this.visible;
@@ -4441,6 +4493,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this._isOpen = false;
             airkit.UIManager.Instance.close(this.UIID, this.viewID);
             return true;
+        };
+        Dialog.prototype.hideImmediately = function () {
+            _super.prototype.hideImmediately.call(this);
+            fgui.GRoot.inst.modalLayer.alpha = 1.0;
         };
         return Dialog;
     }(fgui.Window));
