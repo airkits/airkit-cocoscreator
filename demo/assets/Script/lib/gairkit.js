@@ -4231,16 +4231,18 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         Dialog.prototype.isDestory = function () {
             return this._destory;
         };
-        Dialog.prototype.modalShowAnimation = function (dt) {
+        Dialog.prototype.modalShowAnimation = function (dt, alpha) {
             if (dt === void 0) { dt = 0.3; }
+            if (alpha === void 0) { alpha = 1.0; }
             var layer = fgui.GRoot.inst.modalLayer;
             layer.alpha = 0;
-            airkit.TweenUtils.get(layer).to({ alpha: 1.0 }, dt, fgui.EaseType.SineIn);
+            airkit.TweenUtils.get(layer).to({ alpha: alpha }, dt, fgui.EaseType.SineIn);
         };
-        Dialog.prototype.modalHideAnimation = function (dt) {
+        Dialog.prototype.modalHideAnimation = function (dt, alpha) {
             if (dt === void 0) { dt = 0.3; }
+            if (alpha === void 0) { alpha = 0.0; }
             var layer = fgui.GRoot.inst.modalLayer;
-            airkit.TweenUtils.get(layer).to({ alpha: 0.0 }, dt, fgui.EaseType.SineOut);
+            airkit.TweenUtils.get(layer).to({ alpha: alpha }, dt, fgui.EaseType.SineOut);
         };
         /**是否可见*/
         Dialog.prototype.setVisible = function (bVisible) {

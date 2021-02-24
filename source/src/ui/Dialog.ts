@@ -124,15 +124,15 @@ namespace airkit {
             return this._destory;
         }
 
-        public modalShowAnimation(dt:number = 0.3):void {
+        public modalShowAnimation(dt:number = 0.3,alpha:number = 1.0):void {
             let layer = fgui.GRoot.inst.modalLayer;
             layer.alpha = 0;
-            TweenUtils.get(layer).to({alpha:1.0},dt,fgui.EaseType.SineIn)
+            TweenUtils.get(layer).to({alpha:alpha},dt,fgui.EaseType.SineIn)
            
         }
-        public modalHideAnimation(dt:number = 0.3):void {
+        public modalHideAnimation(dt:number = 0.3,alpha:number = 0.0):void {
             let layer = fgui.GRoot.inst.modalLayer;
-            TweenUtils.get(layer).to({alpha:0.0},dt,fgui.EaseType.SineOut)
+            TweenUtils.get(layer).to({alpha:alpha},dt,fgui.EaseType.SineOut)
 
         }
 

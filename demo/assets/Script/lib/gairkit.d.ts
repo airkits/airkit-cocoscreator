@@ -1153,8 +1153,8 @@ declare namespace airkit {
         /**关闭*/
         dispose(): void;
         isDestory(): boolean;
-        modalShowAnimation(dt?: number): void;
-        modalHideAnimation(dt?: number): void;
+        modalShowAnimation(dt?: number, alpha?: number): void;
+        modalHideAnimation(dt?: number, alpha?: number): void;
         /**是否可见*/
         setVisible(bVisible: boolean): void;
         /**初始化，和onDestroy是一对*/

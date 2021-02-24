@@ -106,7 +106,7 @@ export class LoadingGif extends fgui.GComponent {
         if (this._timeCount >= 8)
             this._timeCount = 0
     }
-
+  
     private step1(s: fgui.GComponent): void {
         ak.TweenUtils.get(s).to({ alpha: 0, scaleX: 0.01, scaleY: 0.01 },this._tweenTime , fgui.EaseType.CubicInOut)
     }
@@ -126,97 +126,3 @@ export class LoadingGif extends fgui.GComponent {
 }
 
 
-
-// export enum eShowType {
-//     SHOW_NO_DELAY = 1, //菊花立即出现
-//     SHOW_WITH_DELAY = 2, //菊花延时出现
-// }
-// /**
-//  * 加载UI
-//  */
-// export default class LoadingUI extends ak.LoaderDialog {
-
-//     private _loadCircle: LoadingGif
-//     private _type: eShowType
-//     private _hideTime: number
-
-//     //无背景情况下 200毫秒后出菊花
-//     private _circleShowTime: number = 200
-
-//     private _showTimerID = 0;
-//     private _hideTimerID = 0;
-    
-//     public show(type: eShowType = eShowType.SHOW_WITH_DELAY, hideTime: number = 0): void {
-//         this._type = type
-//         this._hideTime = hideTime
-//         this.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height)
-    
-//         if (!this._loadCircle) {
-//             this._loadCircle = new LoadingGif()
-//             this.addChild(this._loadCircle)
-//         }
-//         if (!this.parent) {
-//             fgui.GRoot.inst.addChild(this)
-//             this.center();
-//         }
-//         this.checkType()
-
-//         this.resize(null)
-//     }
-
-//     private checkType(): void {
-//         this.clearShowTime()
-//         this._loadCircle.visible = false
-
-//         if (this._type == eShowType.SHOW_NO_DELAY) {
-//             this.showLoading()
-//         } else {
-//            this._showTimerID = ak.TimerManager.Instance.addOnce(this._circleShowTime, this, this.showLoading)
-//         }
-//         if (this._hideTime) {
-//            this._hideTimerID = ak.TimerManager.Instance.addOnce(this._hideTime, this, this.hide)
-//         }
-//     }
-
-//     private showLoading(): void {
-//         this._loadCircle.play()
-//     }
-
-
-//     private clearShowTime(): void {
-//         if(this._showTimerID){
-//             ak.TimerManager.Instance.removeTimer(this._showTimerID);
-//             this._showTimerID = 0;
-//         }
-//         if(this._hideTimerID){
-//             ak.TimerManager.Instance.removeTimer(this._hideTimerID);
-//             this._hideTimerID = 0;
-//         }
-
-//     }
-
-//     protected resize(e: any): void {
-//         let width = fgui.GRoot.inst.width
-//         let height = fgui.GRoot.inst.height
-//         this.setSize(width, height)
-//         if (this._bg) {
-//             this._bg.setSize(width, height)
-//         }
-
-//         if (this._loadCircle) {
-//             this._loadCircle.x = width >> 1
-//             this._loadCircle.y = height >> 1
-//         }
-
-//     }
-
-//     public hide(): void {
-//         if (this._loadCircle) {
-//             this._loadCircle.stop()
-//         }
-//         this.clearShowTime()
-//         this.removeFromParent()
-//     }
-
-
-// }

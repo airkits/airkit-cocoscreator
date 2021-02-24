@@ -16,8 +16,14 @@ export class NetLoaderDlg extends ak.LoaderDialog {
         this.center();
         this.modal = true;
     }
+    protected doShowAnimation(): void {
+   
+        this.modalShowAnimation(0.2);
+        super.doShowAnimation();
+    }
+
     protected doHideAnimation(): void {
-       
+        this.modalHideAnimation(0.3,0.2);
         fgui.GTween.to(1, 0, 0.3)
             .setTarget(this, this.alpha)
             .setEase(fgui.EaseType.SineOut)
