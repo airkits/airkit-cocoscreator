@@ -17,6 +17,8 @@
 		"files.exclude": {
 			"**/*.meta": true
 		},
-		"editor.formatOnSave": true
+		"editor.formatOnSave": true,
+		"fileheader.Author": "ankye",
+		"fileheader.LastModifiedBy": "ankye"
 	}
 }

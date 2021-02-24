@@ -2542,16 +2542,6 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.SignalListener = SignalListener;
 })(airkit || (airkit = {}));
-// import { DataProvider } from "../config/DataProvider";
-// import { Log } from "../log/Log";
-// import { EventCenter } from "../event/EventCenter";
-// import { Singleton } from "../collection/Singleton";
-// import { ConfigItem } from "../config/ConfigItem";
-// import { ArrayUtils } from "../utils/ArrayUtils";
-// import { EventID } from "../event/EventID";
-// import { SDictionary } from "../collection/Dictionary";
-// import { StringUtils } from "../utils/StringUtils";
-// import { ConfigManger } from "../config/ConfigManager";
 
 (function (airkit) {
     /**
@@ -2564,10 +2554,12 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         for (var _i = 1; _i < arguments.length; _i++) {
             args[_i - 1] = arguments[_i];
         }
-        var str = LangManager.Instance.getText(LangManager.Instance.curLang, key);
-        if (str == null)
+        var info = airkit.getCInfo(LangManager.lang, key);
+        if (info == null)
             return "unknown key:" + key;
-        return airkit.StringUtils.format.apply(airkit.StringUtils, __spreadArrays([str], args));
+        if (airkit.StringUtils.isNullOrEmpty(info.name))
+            return "";
+        return airkit.StringUtils.format.apply(airkit.StringUtils, __spreadArrays([info.name], args));
     }
     airkit.L = L;
     /**
@@ -2580,107 +2572,21 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         function LangManager() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        Object.defineProperty(LangManager, "Instance", {
-            get: function () {
-                if (!this.instance)
-                    this.instance = new LangManager();
-                return this.instance;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        LangManager.prototype.init = function () {
-            //this._langs = new SDictionary<LangConfig>()
-            //  this._listTables = []
-            this._curLang = null;
-        };
-        // public addLangPack(conf: LangConfig): void {
-        //     // this._listTables.push(new ConfigItem(conf.url, conf.name, "id"))
-        //     this._langs.add(conf.name, conf)
-        // }
-        LangManager.prototype.destory = function () {
-            // if (!this._listTables) return
-            // for (let info of this._listTables) {
-            //     DataProvider.Instance.unload(info.url)
-            // }
-            // ArrayUtils.clear(this._listTables)
-            // this._listTables = null
-            // this._langs.clear()
-        };
-        /**开始加载*/
-        // public loadAll(): void {
-        //     DataProvider.Instance.load(this._listTables)
-        // }
-        // public get listTables(): Array<Config> {
-        //     return this._listTables
-        // }
-        /**
-         * 切换语言
-         * @param type  语言类型
-         */
-        LangManager.prototype.changeLang = function (lang) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                if (lang == _this._curLang) {
-                    resolve(lang);
-                    return;
-                }
-                var data = airkit.ConfigManger.Instance.query(_this._curLang);
-                // for (let i = 0; i < this._listTables.length; i++) {
-                //     if (this._listTables[i].name == lang) {
-                //         data = this._listTables[i]
-                //         break
-                //     }
-                // }
-                if (data) {
-                    if (airkit.DataProvider.Instance.getConfig(lang)) {
-                        _this._curLang = lang;
-                        airkit.EventCenter.dispatchEvent(airkit.EventID.UI_LANG, _this._curLang);
-                        resolve(lang);
-                    }
-                }
-                else {
-                    airkit.Log.error("no lang package %s ", lang);
-                    reject("no lang package " + lang);
-                }
-            });
-        };
-        /**
-         * 获取语言包
-         * @param key     位置
-         */
-        LangManager.prototype.getText = function (lang, key) {
-            var info = airkit.DataProvider.Instance.getInfo(lang, key);
-            if (info) {
-                return info["name"];
+        //设置语言包
+        LangManager.setLang = function (lang) {
+            var data = airkit.ConfigManger.Instance.query(this.lang);
+            if (data == null) {
+                airkit.Log.error("set lang %s failed ", lang);
+                return false;
             }
-            else {
-                airkit.Log.error("cant get lang key", key);
-                return "";
-            }
+            this.lang = lang;
+            airkit.EventCenter.dispatchEvent(airkit.EventID.UI_LANG, this.lang);
+            return true;
         };
-        Object.defineProperty(LangManager.prototype, "curLang", {
-            /**当前语言类型*/
-            get: function () {
-                return this._curLang;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        //public _langs: SDictionary<LangConfig>
-        // private _listTables: Array<ConfigItem>
-        LangManager.instance = null;
+        LangManager.lang = "zh_cn.json"; // 语言包
         return LangManager;
     }(airkit.Singleton));
     airkit.LangManager = LangManager;
-    // export class LangConfig {
-    //     public name: string
-    //     public url: string
-    //     constructor(name: string, url: string) {
-    //         this.name = name
-    //         this.url = url
-    //     }
-    // }
 })(airkit || (airkit = {}));
 // import { StringUtils } from "../utils/StringUtils";
 // import { DateUtils } from "../utils/DateUtils";

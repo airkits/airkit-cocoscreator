@@ -1,4 +1,5 @@
 import { eDialogUIID } from '../../common/DialogType';
+import { LK } from '../../gen/data/LK';
 import M from '../../gen/M';
 import UIAlertDlg from '../../gen/ui/Loader/UIAlertDlg';
 import UILoginScene from '../../gen/ui/Loader/UILoginScene';
@@ -27,7 +28,7 @@ export default class LoginScene extends UILoginScene{
     onEnable(): void {
         super.onEnable();
         airkit.Log.info("login scene onEnable");
-        
+        console.log(ak.L(LK.format_h_m_s,"2011","3",4));
     }
     //先加载资源
     public static res(): Array<ak.Res> {
@@ -99,7 +100,6 @@ export default class LoginScene extends UILoginScene{
     }
 
     public update(dt: number): boolean {
-
 
         return super.update(dt)
     }

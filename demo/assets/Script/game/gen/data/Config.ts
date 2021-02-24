@@ -112,14 +112,6 @@ export interface CGuestAction {
     offline_reward_buff : number ;// 离线收益加成
     min_star : number ;// 开放星级下限
 }; 
-//明星客人刷新概率表
-export interface CAdvGuestCreator {
-    store_id : number ;// 对应店铺
-}; 
-//普通客人刷新概率表
-export interface CGuestCreator {
-    store_id : number ;// 对应店铺
-}; 
 //装饰物技能配置
 export interface CSkill {
     id : number ;// 技能id

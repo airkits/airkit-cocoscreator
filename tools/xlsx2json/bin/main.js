@@ -87,13 +87,15 @@ let wb = XLSX.readFile("excel/config.xlsx");
 let confList = parseConfig(wb);
 var zip = new JSZip();
 var interfaceContent = "";
+let tableDic = {};
 confList.forEach(element => {
-    if (+element[2] == 1) {
+    if (+element[3] == 1) {
         let data = parseConfigTable(wb, element[0]);
         console.log(element);
         if (data.Client && data.Client.length > 0) {
             write_file_1.writeJSONData(element[1], "data/client", data.Client);
             zip.file(element[1] + ".json", JSON.stringify(data.Client));
+            tableDic[element[1]] = { t: 1, n: element[0], key: element[2] };
             let name = element[1].charAt(0).toUpperCase() + parse_1.toHump(element[1].slice(1));
             interfaceContent += `//${element[0]}\nexport interface C${name} {\n`;
             for (let k in data.CT) {
@@ -108,9 +110,44 @@ confList.forEach(element => {
 fs.writeFileSync(config_1.codeDir("config.ts"), interfaceContent);
 wb = XLSX.readFile("excel/lang.xlsx");
 confList = parseConfig(wb);
+let langDefine = "export class LangPacks { \n";
+let langNameDefine = "export class LK { \n";
 confList.forEach(element => {
-    if (+element[2] == 1) {
+    if (+element[3] == 1) {
         console.log(element);
+        let data = parseConfigTable(wb, element[0]);
+        if (data.Client && data.Client.length > 0) {
+            write_file_1.writeJSONData(element[1], "data/client", data.Client);
+            zip.file(element[1] + ".json", JSON.stringify(data.Client));
+            tableDic[element[1]] = { t: 2, n: element[0], key: element[2] };
+            if (element[1] == "zh_cn") {
+                for (let kid in data.Client) {
+                    let key = data.Client[kid]["id"];
+                    let value = data.Client[kid]["name"];
+                    langNameDefine += `\tpublic static readonly ${key} : string = "${key}"; //${value} \n`;
+                }
+            }
+            let name = element[1].charAt(0).toUpperCase() + parse_1.toHump(element[1].slice(1));
+            langDefine += `\t//${element[0]}\n\tpublic static readonly ${element[1].toUpperCase()} :string = "${element[1]}.json"; \n`;
+        }
     }
 });
-write_file_1.saveZip(zip, config_1.distDir("config1.bin"));
+langDefine += "}; \n";
+langNameDefine += "}; \n";
+write_file_1.saveZip(zip, config_1.distDir("config.bin"));
+fs.writeFileSync(config_1.codeDir("LK.ts"), langNameDefine);
+let configTable = `export class ConfigTable {\n`;
+for (let k in tableDic) {
+    if (tableDic[k]["t"] == 2)
+        continue;
+    configTable += `\t//${tableDic[k]["n"]}\n\tpublic static readonly ${k.toUpperCase()}: string = "${k}.json";\n`;
+}
+configTable += "\n\tpublic static keys(): {[key:string]:string|string[]} {\n\t\tlet c = {};\n";
+for (let k in tableDic) {
+    let ns = tableDic[k]["t"] == 1 ? "this" : "LangPacks";
+    let key = tableDic[k]["key"].indexOf(",") > 0 ? `["${tableDic[k]["key"].replace(",", '","')}"]` : `"${tableDic[k]["key"]}"`;
+    configTable += `\t\tc[${ns}.${k.toUpperCase()}] = ${key};\n`;
+}
+configTable += "\t\treturn c;\n\t}\n";
+configTable += "}\n";
+fs.writeFileSync(config_1.codeDir("ConfigTable.ts"), langDefine + "\n" + configTable);

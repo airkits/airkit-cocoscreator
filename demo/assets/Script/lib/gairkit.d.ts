@@ -638,6 +638,10 @@ declare namespace airkit {
     }
 }
 declare namespace airkit {
+    interface CLang {
+        id: string;
+        name: string;
+    }
     /**
      * 提供简易获取语言包的方式,配合语言导出脚本
      * @param key LK.xxx  %s,%s..%s.表示参数占位符
@@ -650,24 +654,8 @@ declare namespace airkit {
      * @time 2017-7-9
      */
     class LangManager extends Singleton {
-        private _curLang;
-        private static instance;
-        static get Instance(): LangManager;
-        init(): void;
-        destory(): void;
-        /**开始加载*/
-        /**
-         * 切换语言
-         * @param type  语言类型
-         */
-        changeLang(lang: string): Promise<any>;
-        /**
-         * 获取语言包
-         * @param key     位置
-         */
-        getText(lang: string, key: string): string;
-        /**当前语言类型*/
-        get curLang(): string;
+        static lang: string;
+        static setLang(lang: string): boolean;
     }
 }
 declare namespace airkit {
