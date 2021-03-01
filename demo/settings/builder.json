@@ -47,7 +47,7 @@
   "zipCompressJs": true,
   "mainCompressionType": "default",
   "mainIsRemote": false,
-  "nativeMd5Cache": true,
+  "nativeMd5Cache": false,
   "android": {
     "REMOTE_SERVER_ROOT": "",
     "packageName": "org.cocos2d.demo"

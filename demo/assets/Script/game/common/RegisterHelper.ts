@@ -59,7 +59,6 @@ export default class RegisterHelper {
         for (let i = 0; i < m.length; i++) {
             airkit.UIManager.register(m[i][0], m[i][1])
         }
-        ak.UIManager.register(eDialogUIID.ALERT,AlertDlg)
     }
 
 

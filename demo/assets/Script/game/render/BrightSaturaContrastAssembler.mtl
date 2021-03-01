@@ -1,0 +1,17 @@
+{
+  "__type__": "cc.Material",
+  "_name": "BrightSaturaContrastAssembler",
+  "_objFlags": 0,
+  "_native": "",
+  "_effectAsset": {
+    "__uuid__": "ec6adcf4-6646-469b-9b09-d536bf0223ac"
+  },
+  "_techniqueIndex": 0,
+  "_techniqueData": {
+    "0": {
+      "defines": {
+        "USE_TEXTURE": true
+      }
+    }
+  }
+}

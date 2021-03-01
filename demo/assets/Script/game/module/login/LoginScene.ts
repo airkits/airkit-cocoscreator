@@ -4,6 +4,7 @@ import M from '../../gen/M';
 import UIAlertDlg from '../../gen/ui/Loader/UIAlertDlg';
 import UILoginScene from '../../gen/ui/Loader/UILoginScene';
 import { AlertDlg } from './AlertDlg';
+import VideoSprite from '../../render/VideoSprite';
 
 
 
@@ -29,6 +30,14 @@ export default class LoginScene extends UILoginScene{
         super.onEnable();
         airkit.Log.info("login scene onEnable");
         console.log(ak.L(LK.format_h_m_s,"2011","3",4));
+        var node = new cc.Node("VideoSprite");
+        var sprite = node.addComponent(VideoSprite);
+        
+        node.parent = this.node;
+
+        let texture = ak.ResourceManager.Instance.getRes("ui/Loader_atlas_mdb81w.png");
+        sprite.spriteFrame = new cc.SpriteFrame(texture);
+
     }
     //先加载资源
     public static res(): Array<ak.Res> {

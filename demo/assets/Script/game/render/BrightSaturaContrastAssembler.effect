@@ -1,0 +1,112 @@
+// Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.  
+
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: vs
+      frag: fs
+      blendState:
+        targets:
+        - blend: true
+      rasterizerState:
+        cullMode: none
+      properties:
+        texture: { value: white }
+        alphaThreshold: { value: 0.5 }
+}%
+
+
+CCProgram vs %{
+  precision highp float;
+
+  #include <cc-global>
+  #include <cc-local>
+
+  in vec3 a_position;
+  in vec4 a_color;
+  out vec4 v_color;
+
+  in float a_brightness;
+  out float v_brightness;
+
+  in float a_saturation;
+  out float v_saturation;
+
+  in float a_constrast;
+  out float v_constrast;
+
+  #if USE_TEXTURE
+  in vec2 a_uv0;
+  out vec2 v_uv0;
+  #endif
+
+
+
+  void main () {
+    vec4 pos = vec4(a_position, 1);
+
+    #if CC_USE_MODEL
+    pos = cc_matViewProj * cc_matWorld * pos;
+    #else
+    pos = cc_matViewProj * pos;
+    #endif
+
+    #if USE_TEXTURE
+    v_uv0 = a_uv0;
+    #endif
+
+    v_color = a_color;
+    v_brightness = a_brightness;
+    v_saturation = a_saturation;
+    v_constrast = a_constrast;
+
+    gl_Position = pos;
+  }
+}%
+
+
+CCProgram fs %{
+  precision highp float;
+  
+  #include <alpha-test>
+  #include <texture>
+
+  in vec4 v_color;
+  in float v_brightness;
+  in float v_saturation;
+  in float v_constrast;
+
+  #if USE_TEXTURE
+  in vec2 v_uv0;
+  uniform sampler2D texture;
+  #endif
+
+  vec3 lerp(vec3 a, vec3 b, float w){
+    return a + w*(b-a);
+  }
+
+  void main () {
+    vec4 o = vec4(1, 1, 1, 1);
+
+    #if USE_TEXTURE
+      CCTexture(texture, v_uv0, o);
+      // apply brightness
+      vec3 finnalColor = o.rgb * v_brightness;
+      // apply saturation
+      float luminance = 0.2125 * o.r + 0.7154 * o.g + 0.0721 * o.b;
+      vec3 luminanceColor = vec3(luminance, luminance, luminance);
+      finnalColor = lerp(luminanceColor, finnalColor, v_saturation);
+      // apply constrast
+      vec3 avgColor = vec3(0.5, 0.5, 0.5);
+      finnalColor = lerp(avgColor, finnalColor, v_constrast);
+
+      o.rgb = finnalColor.rgb;
+    #endif
+
+    o *= v_color;
+
+    ALPHA_TEST(o);
+
+    gl_FragColor = o;
+  }
+}%
