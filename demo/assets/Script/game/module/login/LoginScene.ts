@@ -5,6 +5,7 @@ import UIAlertDlg from '../../gen/ui/Loader/UIAlertDlg';
 import UILoginScene from '../../gen/ui/Loader/UILoginScene';
 import { AlertDlg } from './AlertDlg';
 import VideoSprite from '../../render/VideoSprite';
+import BrightSaturaContrastAssembler from '../../render/BrightSaturaContrastAssembler';
 
 
 
@@ -30,13 +31,30 @@ export default class LoginScene extends UILoginScene{
         super.onEnable();
         airkit.Log.info("login scene onEnable");
         console.log(ak.L(LK.format_h_m_s,"2011","3",4));
-        var node = new cc.Node("VideoSprite");
-        var sprite = node.addComponent(VideoSprite);
-        
-        node.parent = this.node;
+        let node = new cc.Node();
+        const sprite = node.addComponent(VideoSprite);
+        cc.loader.loadRes("material/BrightSaturaContrastAssembler", cc.Material, function(err, res) {
+                var material = cc.MaterialVariant.create(res,sprite);
+                sprite.setMaterial(0, material)
+            })
 
-        let texture = ak.ResourceManager.Instance.getRes("ui/Loader_atlas_mdb81w.png");
-        sprite.spriteFrame = new cc.SpriteFrame(texture);
+       cc.loader.loadRes("ui/Loader_atlas_mdb81w", cc.Asset, function(err, v) {
+        let asset = <cc.Texture2D>cc.loader.getRes("ui/Loader_atlas_mdb81w")
+        sprite.spriteFrame = new cc.SpriteFrame(asset);
+        sprite.brightness = 0.3;
+        sprite.constrast = 0.2;
+    });
+
+       
+        this.node.addChild(node);
+        node.setPosition(300,-300);
+        // let scene = cc.director.getScene();
+        // let comp = scene.getChildByName("girl2");
+        
+        // comp.parent = this.imgBg.node
+        // comp.setPosition(300,500);
+        // console.log(this);
+       
 
     }
     //先加载资源
