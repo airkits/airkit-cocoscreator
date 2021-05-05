@@ -24,8 +24,13 @@ export default class BattleScene extends UIBattleScene{
     onEnable(): void {
         super.onEnable();
         ak.Log.info("Battle scene onEnable");
+        let ws = new airkit.WebSocketEx();
+        ws.initServer("127.0.0.1","12080",null).then((result)=>{
+            ws.request(new ak.PBMsg());
+        }).catch(e=>{
+            console.log("connect failed");
+        })
         
-
     }
     //先加载资源
     public static res(): Array<ak.Res> {

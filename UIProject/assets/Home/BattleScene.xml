@@ -2,12 +2,8 @@
 <component size="750,1334">
   <controller name="ctrl" exported="true" pages="0,empty,1,list" selected="0"/>
   <displayList>
-    <image id="n0_n70m" name="bg" src="n70m9" fileName="images/img_gray_bg.png" xy="0,1" size="750,1334">
+    <image id="n0_n70m" name="bg" src="n70m9" fileName="images/img_gray_bg.png" xy="0,1" size="750,1334" color="#666666">
       <relation target="" sidePair="width-width,height-height"/>
-    </image>
-    <image id="n4_opvz" name="emptyIcon" src="n70md" fileName="images/img_kong.png" xy="196,457">
-      <gearDisplay controller="ctrl" pages="0"/>
-      <relation target="" sidePair="center-center,middle-middle"/>
     </image>
     <list id="n1_n70m" name="list" xy="26,107" size="702,1203" overflow="scroll" lineGap="20">
       <gearDisplay controller="ctrl" pages="1"/>
@@ -22,8 +18,5 @@
     <component id="n2_n70m" name="btnBack" src="y3shl" fileName="ButtonBack.xml" xy="20,19">
       <relation target="" sidePair="left-left,top-top"/>
     </component>
-    <text id="n3_n70m" name="title" xy="82,30" size="239,36" fontSize="36" color="#874803" autoSize="none" text="我的订单&#xA;">
-      <relation target="" sidePair="top-top,left-left"/>
-    </text>
   </displayList>
 </component>

@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component size="750,1334">
-  <controller name="ctrl" exported="true" pages="0,empty,1,list" selected="1"/>
+  <controller name="ctrl" exported="true" pages="0,empty,1,list" selected="0"/>
   <displayList>
-    <graph id="n0_n70m" name="bg" xy="0,1" size="750,1334" type="rect" fillColor="#fff8f8f8">
+    <graph id="n0_n70m" name="bg" xy="0,1" size="750,1334" type="rect" fillColor="#ff006699">
       <relation target="" sidePair="width-width,height-height"/>
     </graph>
-    <image id="n4_opvz" name="emptyIcon" src="n70md" fileName="images/img_kong.png" xy="196,457">
-      <gearDisplay controller="ctrl" pages="0"/>
-      <relation target="" sidePair="center-center,middle-middle"/>
-    </image>
     <list id="n1_n70m" name="list" xy="26,107" size="702,1203" overflow="scroll" lineGap="20">
       <gearDisplay controller="ctrl" pages="1"/>
       <relation target="" sidePair="width-width,height-height,top-top,bottom-bottom"/>
@@ -22,8 +18,5 @@
     <image id="n2_n70m" name="backBtn" src="n70m3" fileName="images/btn_newBack.png" xy="24,23">
       <relation target="" sidePair="left-left,top-top"/>
     </image>
-    <text id="n3_n70m" name="title" xy="82,30" size="239,36" fontSize="36" color="#874803" autoSize="none" text="我的订单&#xA;">
-      <relation target="" sidePair="top-top,left-left"/>
-    </text>
   </displayList>
 </component>

@@ -4,7 +4,19 @@
  * @time 2018-7-3
  */
 namespace airkit {
-    
+    /**
+    * UIManager 弹出ui管理类
+    * example1:
+    * ak.UIManager.showQ(eDialogUIID.ALERT,{clickMaskClose:true}).then(v=>{
+    *   if(v){  
+    *       console.log("showQ dlg ="+v.viewID);
+    *       v.wait().then(result=>{
+    *           console.log("result wait ");
+    *           console.log(result);
+    *       });
+    *  }
+    *});
+     */
     export class UIManager extends Singleton {
         public static cache: SDictionary<any>; 
 

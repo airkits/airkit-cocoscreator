@@ -17,14 +17,14 @@
         "browserify": "^14.3.0",
         "gulp": "^4.0.2",
         "gulp-babel": "^8.0.0",
+        "gulp-inject-string": "^1.1.2",
         "gulp-minify": "^3.1.0",
-        "gulp-typescript": "^3.1.6",
+        "gulp-typescript": "^3.2.4",
         "gulp-uglify": "^3.0.2",
         "tsify": "^3.0.1",
         "typescript": "^3.9.2",
         "vinyl-source-stream": "^1.1.0",
-        "watchify": "^3.9.0",
-        "gulp-inject-string": "^1.1.2"
+        "watchify": "^3.9.0"
     },
     "devDependencies": {
         "gulp-sourcemaps": "^3.0.0"

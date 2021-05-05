@@ -4,14 +4,12 @@ export default class UIHomeDlg extends airkit.BaseView {
 
 	public ctrl:fgui.Controller;
 	public bg:fgui.GGraph;
-	public emptyIcon:fgui.GImage;
 	public list:fgui.GList;
 	public backBtn:fgui.GImage;
-	public title:fgui.GTextField;
 	public static URL:string = "ui://21mnfg0cfqe2j";
 	public static PkgName:string = "Home";
 	public static ResName:string = "HomeDlg";
-	public static ResMap:{ [index: string]: {} } = {"Home":{"Home_atlas0":4}};
+	public static ResMap:{ [index: string]: {} } = {"Home":{"Home_atlas0":3}};
 
 	public static createInstance():UIHomeDlg {
 		return <UIHomeDlg>(fgui.UIPackage.createObject("Home", "HomeDlg"));
@@ -20,9 +18,7 @@ export default class UIHomeDlg extends airkit.BaseView {
 	protected onConstruct():void {
 		this.ctrl = this.getControllerAt(0);
 		this.bg = <fgui.GGraph>(this.getChildAt(0));
-		this.emptyIcon = <fgui.GImage>(this.getChildAt(1));
-		this.list = <fgui.GList>(this.getChildAt(2));
-		this.backBtn = <fgui.GImage>(this.getChildAt(3));
-		this.title = <fgui.GTextField>(this.getChildAt(4));
+		this.list = <fgui.GList>(this.getChildAt(1));
+		this.backBtn = <fgui.GImage>(this.getChildAt(2));
 	}
 }

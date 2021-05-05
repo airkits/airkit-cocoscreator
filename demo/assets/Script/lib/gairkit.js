@@ -3471,150 +3471,178 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.PBMsg = PBMsg;
 })(airkit || (airkit = {}));
-// namespace airkit {
-//     export class SocketStatus {
-//         static SOCKET_CONNECT: string = "1";
-//         static SOCKET_RECONNECT: string = "2";
-//         static SOCKET_START_RECONNECT: string = "3";
-//         static SOCKET_CLOSE: string = "4";
-//         static SOCKET_NOCONNECT: string = "5";
-//         static SOCKET_DATA: string = "6";
-//     }
-//     export enum eSocketMsgType {
-//         // MTRequest request =1
-//         MTRequest = 1,
-//         // MTResponse response = 2
-//         MTResponse = 2,
-//         // MTNotify notify = 3
-//         MTNotify = 3,
-//         // MTBroadcast broadcast = 4
-//         MTBroadcast = 4,
-//     }
-//     export class WebSocketEx extends cc.Node {
-//         private mSocket: WebSocket = null;
-//         private mHost: string;
-//         private mPort: any;
-//         private mEndian: string;
-//         private _needReconnect: boolean = false;
-//         private _maxReconnectCount = 10;
-//         private _reconnectCount: number = 0;
-//         private _connectFlag: boolean;
-//         private _isConnecting: boolean;
-//         private _handers: NDictionary<any>;
-//         private _requestTimeout: number = 10 * 1000; //10s
-//         private _clsName: string;
-//         private _remoteAddress: string;
-//         constructor() {
-//             super();
-//         }
-//         public initServer(host: string, port: any, msgCls: any, endian: string = Byte.BIG_ENDIAN): void {
-//             this.mHost = host;
-//             this.mPort = port;
-//             //ws://192.168.0.127:8080
-//             this._remoteAddress = `ws://${host}:${port}`;
-//             this.mEndian = endian;
-//             this._handers = new NDictionary<any>();
-//             this._clsName = "message";
-//             ClassUtils.regClass(this._clsName, msgCls);
-//             this.connect();
-//         }
-//         public connect(): void {
-//             this.mSocket = new WebSocket(this._remoteAddress);
-//             // this.mSocket.binaryType = this.mEndian;
-//             this.addEvents();
-//             this.mSocket.connect(this._remoteAddress);
-//         }
-//         private addEvents() {
-//             this.mSocket.onSocketOpen = this.onSocketOpen.bind(this);
-//             this.mSocket.onSocketClose = this.onSocketClose.bind(this);
-//             this.mSocket.onSocketError = this.onSocketError.bind(this);
-//             this.mSocket.onReceiveMessage = this.onReceiveMessage.bind(this);
-//         }
-//         private removeEvents(): void {}
-//         private onSocketOpen(event: any = null): void {
-//             this._reconnectCount = 0;
-//             this._isConnecting = true;
-//             if (this._connectFlag && this._needReconnect) {
-//                 this.emit(SocketStatus.SOCKET_RECONNECT);
-//             } else {
-//                 this.emit(SocketStatus.SOCKET_CONNECT);
-//             }
-//             this._connectFlag = true;
-//         }
-//         private onSocketClose(e: any = null): void {
-//             this._isConnecting = false;
-//             if (this._needReconnect) {
-//                 this.emit(SocketStatus.SOCKET_START_RECONNECT);
-//                 this.reconnect();
-//             } else {
-//                 this.emit(SocketStatus.SOCKET_CLOSE);
-//             }
-//         }
-//         private onSocketError(e: any = null): void {
-//             if (this._needReconnect) {
-//                 this.reconnect();
-//             } else {
-//                 this.emit(SocketStatus.SOCKET_NOCONNECT);
-//             }
-//             this._isConnecting = false;
-//         }
-//         private reconnect(): void {
-//             this.closeCurrentSocket();
-//             this._reconnectCount++;
-//             if (this._reconnectCount < this._maxReconnectCount) {
-//                 this.connect();
-//             } else {
-//                 this._reconnectCount = 0;
-//             }
-//         }
-//         private onReceiveMessage(msg: any = null): void {
-//             let clas = ClassUtils.getClass(this._clsName);
-//             let obj = new clas() as WSMessage;
-//             if (!obj.decode(msg, this.mEndian)) {
-//                 Log.error("decode msg faild %s", msg);
-//                 return;
-//             }
-//             let hander = this._handers.getValue(obj.getID());
-//             if (hander) {
-//                 hander(obj);
-//             } else {
-//                 this.emit(SocketStatus.SOCKET_DATA, obj);
-//             }
-//         }
-//         public request(req: WSMessage): Promise<any> {
-//             return new Promise((resolve, reject) => {
-//                 var buf: any = req.encode(this.mEndian);
-//                 let handerID = req.getID();
-//                 if (buf) {
-//                     let id = TimerManager.Instance.addOnce(this._requestTimeout, null, () => {
-//                         this._handers.remove(handerID);
-//                         reject("timeout");
-//                     });
-//                     this._handers.add(handerID, (resp: WSMessage) => {
-//                         TimerManager.Instance.removeTimer(id);
-//                         resolve(resp);
-//                     });
-//                     Log.info("start request ws %s", buf);
-//                     this.mSocket.send(buf);
-//                 }
-//             });
-//         }
-//         public close(): void {
-//             this._connectFlag = false;
-//             this._handers.clear();
-//             this.closeCurrentSocket();
-//         }
-//         private closeCurrentSocket() {
-//             this.removeEvents();
-//             this.mSocket.close();
-//             this.mSocket = null;
-//             this._isConnecting = false;
-//         }
-//         public isConnecting(): boolean {
-//             return this._isConnecting;
-//         }
-//     }
-// }
+
+(function (airkit) {
+    var SocketStatus = /** @class */ (function () {
+        function SocketStatus() {
+        }
+        SocketStatus.SOCKET_CONNECT = "1";
+        SocketStatus.SOCKET_RECONNECT = "2";
+        SocketStatus.SOCKET_START_RECONNECT = "3";
+        SocketStatus.SOCKET_CLOSE = "4";
+        SocketStatus.SOCKET_NOCONNECT = "5";
+        SocketStatus.SOCKET_DATA = "6";
+        return SocketStatus;
+    }());
+    airkit.SocketStatus = SocketStatus;
+    var eSocketMsgType;
+    (function (eSocketMsgType) {
+        // MTRequest request =1
+        eSocketMsgType[eSocketMsgType["MTRequest"] = 1] = "MTRequest";
+        // MTResponse response = 2
+        eSocketMsgType[eSocketMsgType["MTResponse"] = 2] = "MTResponse";
+        // MTNotify notify = 3
+        eSocketMsgType[eSocketMsgType["MTNotify"] = 3] = "MTNotify";
+        // MTBroadcast broadcast = 4
+        eSocketMsgType[eSocketMsgType["MTBroadcast"] = 4] = "MTBroadcast";
+    })(eSocketMsgType = airkit.eSocketMsgType || (airkit.eSocketMsgType = {}));
+    var WebSocketEx = /** @class */ (function (_super) {
+        __extends(WebSocketEx, _super);
+        function WebSocketEx() {
+            var _this = _super.call(this) || this;
+            _this.mSocket = null;
+            _this._needReconnect = false;
+            _this._maxReconnectCount = 10;
+            _this._reconnectCount = 0;
+            _this._requestTimeout = 10 * 1000; //10s
+            return _this;
+        }
+        WebSocketEx.prototype.initServer = function (host, port, msgCls, endian) {
+            if (endian === void 0) { endian = airkit.Byte.BIG_ENDIAN; }
+            this.mHost = host;
+            this.mPort = port;
+            //ws://192.168.0.127:8080
+            this._remoteAddress = "ws://" + host + ":" + port;
+            this.mEndian = endian;
+            this._handers = new airkit.NDictionary();
+            this._clsName = "message";
+            airkit.ClassUtils.regClass(this._clsName, msgCls);
+            return this.connect();
+        };
+        WebSocketEx.prototype.connect = function () {
+            this.mSocket = new WebSocket(this._remoteAddress);
+            // this.mSocket.binaryType = this.mEndian;
+            this.addEvents();
+            return this.wait();
+        };
+        WebSocketEx.prototype.wait = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var cbConnect = function () {
+                    _this.off(SocketStatus.SOCKET_RECONNECT, cbReconnect, _this);
+                    resolve(true);
+                };
+                var cbReconnect = function () {
+                    _this.off(SocketStatus.SOCKET_CONNECT, cbConnect, _this);
+                    reject(false);
+                };
+                _this.once(SocketStatus.SOCKET_RECONNECT, cbReconnect, _this);
+                _this.once(SocketStatus.SOCKET_CONNECT, cbConnect, _this);
+            });
+        };
+        WebSocketEx.prototype.addEvents = function () {
+            this.mSocket.onopen = this.onSocketOpen.bind(this);
+            this.mSocket.onclose = this.onSocketClose.bind(this);
+            this.mSocket.onerror = this.onSocketError.bind(this);
+            this.mSocket.onmessage = this.onReceiveMessage.bind(this);
+        };
+        WebSocketEx.prototype.removeEvents = function () { };
+        WebSocketEx.prototype.onSocketOpen = function (event) {
+            if (event === void 0) { event = null; }
+            this._reconnectCount = 0;
+            this._isConnecting = true;
+            if (this._connectFlag && this._needReconnect) {
+                this.emit(SocketStatus.SOCKET_RECONNECT, this._reconnectCount);
+            }
+            else {
+                this.emit(SocketStatus.SOCKET_CONNECT);
+            }
+            this._connectFlag = true;
+        };
+        WebSocketEx.prototype.onSocketClose = function (e) {
+            if (e === void 0) { e = null; }
+            this._isConnecting = false;
+            if (this._needReconnect) {
+                this.emit(SocketStatus.SOCKET_START_RECONNECT);
+                this.reconnect();
+            }
+            else {
+                this.emit(SocketStatus.SOCKET_CLOSE);
+            }
+        };
+        WebSocketEx.prototype.onSocketError = function (e) {
+            if (e === void 0) { e = null; }
+            if (this._needReconnect) {
+                this.reconnect();
+            }
+            else {
+                this.emit(SocketStatus.SOCKET_NOCONNECT);
+            }
+            this._isConnecting = false;
+        };
+        WebSocketEx.prototype.reconnect = function () {
+            this.closeCurrentSocket();
+            this._reconnectCount++;
+            if (this._reconnectCount < this._maxReconnectCount) {
+                this.connect();
+            }
+            else {
+                this._reconnectCount = 0;
+            }
+        };
+        WebSocketEx.prototype.onReceiveMessage = function (msg) {
+            if (msg === void 0) { msg = null; }
+            var clas = airkit.ClassUtils.getClass(this._clsName);
+            var obj = new clas();
+            if (!obj.decode(msg, this.mEndian)) {
+                airkit.Log.error("decode msg faild %s", msg);
+                return;
+            }
+            var hander = this._handers.getValue(obj.getID());
+            if (hander) {
+                hander(obj);
+            }
+            else {
+                this.emit(SocketStatus.SOCKET_DATA, obj);
+            }
+        };
+        WebSocketEx.prototype.request = function (req) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var buf = req.encode(_this.mEndian);
+                var handerID = req.getID();
+                if (buf) {
+                    var id_1 = airkit.TimerManager.Instance.addOnce(_this._requestTimeout, null, function () {
+                        _this._handers.remove(handerID);
+                        reject("timeout");
+                    });
+                    _this._handers.add(handerID, function (resp) {
+                        airkit.TimerManager.Instance.removeTimer(id_1);
+                        resolve(resp);
+                    });
+                    airkit.Log.info("start request ws %s", buf);
+                    _this.mSocket.send(buf);
+                }
+            });
+        };
+        WebSocketEx.prototype.close = function () {
+            this._connectFlag = false;
+            this._handers.clear();
+            this.closeCurrentSocket();
+        };
+        WebSocketEx.prototype.closeCurrentSocket = function () {
+            this.removeEvents();
+            this.mSocket.close();
+            this.mSocket = null;
+            this._isConnecting = false;
+        };
+        WebSocketEx.prototype.isConnecting = function () {
+            return this._isConnecting;
+        };
+        return WebSocketEx;
+    }(cc.Node));
+    airkit.WebSocketEx = WebSocketEx;
+})(airkit || (airkit = {}));
 /**
  * 本地数据
  * @author ankye
@@ -5400,6 +5428,19 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
  */
 
 (function (airkit) {
+    /**
+    * UIManager 弹出ui管理类
+    * example1:
+    * ak.UIManager.showQ(eDialogUIID.ALERT,{clickMaskClose:true}).then(v=>{
+    *   if(v){
+    *       console.log("showQ dlg ="+v.viewID);
+    *       v.wait().then(result=>{
+    *           console.log("result wait ");
+    *           console.log(result);
+    *       });
+    *  }
+    *});
+     */
     var UIManager = /** @class */ (function (_super) {
         __extends(UIManager, _super);
         function UIManager() {

@@ -925,6 +925,52 @@ declare namespace airkit {
         encode(endian: string): any;
     }
 }
+declare namespace airkit {
+    class SocketStatus {
+        static SOCKET_CONNECT: string;
+        static SOCKET_RECONNECT: string;
+        static SOCKET_START_RECONNECT: string;
+        static SOCKET_CLOSE: string;
+        static SOCKET_NOCONNECT: string;
+        static SOCKET_DATA: string;
+    }
+    enum eSocketMsgType {
+        MTRequest = 1,
+        MTResponse = 2,
+        MTNotify = 3,
+        MTBroadcast = 4
+    }
+    class WebSocketEx extends cc.Node {
+        private mSocket;
+        private mHost;
+        private mPort;
+        private mEndian;
+        private _needReconnect;
+        private _maxReconnectCount;
+        private _reconnectCount;
+        private _connectFlag;
+        private _isConnecting;
+        private _handers;
+        private _requestTimeout;
+        private _clsName;
+        private _remoteAddress;
+        constructor();
+        initServer(host: string, port: any, msgCls: any, endian?: string): Promise<boolean>;
+        connect(): Promise<boolean>;
+        private wait;
+        private addEvents;
+        private removeEvents;
+        private onSocketOpen;
+        private onSocketClose;
+        private onSocketError;
+        private reconnect;
+        private onReceiveMessage;
+        request(req: WSMessage): Promise<any>;
+        close(): void;
+        private closeCurrentSocket;
+        isConnecting(): boolean;
+    }
+}
 /**
  * 本地数据
  * @author ankye
@@ -1469,6 +1515,19 @@ declare namespace airkit {
  * @time 2018-7-3
  */
 declare namespace airkit {
+    /**
+    * UIManager 弹出ui管理类
+    * example1:
+    * ak.UIManager.showQ(eDialogUIID.ALERT,{clickMaskClose:true}).then(v=>{
+    *   if(v){
+    *       console.log("showQ dlg ="+v.viewID);
+    *       v.wait().then(result=>{
+    *           console.log("result wait ");
+    *           console.log(result);
+    *       });
+    *  }
+    *});
+     */
     export class UIManager extends Singleton {
         static cache: SDictionary<any>;
         /**

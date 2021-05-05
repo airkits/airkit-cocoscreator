@@ -27,8 +27,7 @@ export default class Main extends cc.Component {
                 console.log(result);
             })
         })
-        // abc.JSBBridge.getInstance().abcLog(2,'cclog',"print log...");
-        // abc.JSBBridge.hello();
+        
     }
     update(dt:number):void {
         ak.Framework.Instance.update(dt);
