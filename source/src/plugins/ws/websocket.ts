@@ -19,8 +19,6 @@ namespace airkit {
     }
     export class WebSocketEx extends cc.Node {
         private mSocket: WebSocket = null;
-        private mHost: string;
-        private mPort: any;
         private mEndian: string;
 
         private _needReconnect: boolean = false;
@@ -35,12 +33,17 @@ namespace airkit {
         constructor() {
             super();
         }
-
-        public initServer(host: string, port: any, msgCls: any, endian: string = Byte.BIG_ENDIAN): Promise<boolean> {
-            this.mHost = host;
-            this.mPort = port;
+        /**
+         * 
+         * @param address ws://host:port?token=aaaa
+         * @param msgCls 
+         * @param endian 
+         * @returns 
+         */
+        public initServer(address:string, msgCls: any, endian: string = Byte.BIG_ENDIAN): Promise<boolean> {
+          
             //ws://192.168.0.127:8080
-            this._remoteAddress = `ws://${host}:${port}`;
+            this._remoteAddress = address;
             this.mEndian = endian;
             this._handers = new NDictionary<any>();
             this._clsName = "message";
@@ -49,6 +52,7 @@ namespace airkit {
         }
         public connect(): Promise<boolean>{
             this.mSocket = new WebSocket(this._remoteAddress);
+            
             // this.mSocket.binaryType = this.mEndian;
             this.addEvents();
             return this.wait()
@@ -136,6 +140,7 @@ namespace airkit {
             }
         }
 
+        
         public request(req: WSMessage): Promise<any> {
             return new Promise((resolve, reject) => {
                 var buf: any = req.encode(this.mEndian);

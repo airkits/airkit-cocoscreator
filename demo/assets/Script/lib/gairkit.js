@@ -3404,6 +3404,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         JSONMsg.getSeq = function () {
             return JSONMsg.REQ_ID++;
         };
+        JSONMsg.prototype.setData = function (v) {
+            this.data = v;
+        };
         JSONMsg.prototype.decode = function (msg, endian) {
             var str = airkit.bytes2String(msg, endian);
             var m = JSON.parse(str);
@@ -3442,6 +3445,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this.receiveByte = new airkit.Byte();
             this.receiveByte.endian = airkit.Byte.LITTLE_ENDIAN;
         }
+        PBMsg.prototype.setData = function (v) {
+            this.data = v;
+        };
         PBMsg.prototype.getID = function () {
             return this.ID;
         };
@@ -3460,12 +3466,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         PBMsg.prototype.encode = function (endian) {
             var msg = new airkit.Byte();
-            msg.endian = airkit.Byte.LITTLE_ENDIAN;
-            // msg.writeUint16(data.length + 4)
-            // msg.writeUint16(id)
-            // msg.writeArrayBuffer(data)
+            msg.endian = airkit.Byte.BIG_ENDIAN;
+            msg.writeUint32(this.data.byteLength + 4);
+            msg.writeArrayBuffer(this.data);
             msg.pos = 0;
-            return msg;
+            return msg.buffer;
         };
         return PBMsg;
     }());
@@ -3507,12 +3512,17 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             _this._requestTimeout = 10 * 1000; //10s
             return _this;
         }
-        WebSocketEx.prototype.initServer = function (host, port, msgCls, endian) {
+        /**
+         *
+         * @param address ws://host:port?token=aaaa
+         * @param msgCls
+         * @param endian
+         * @returns
+         */
+        WebSocketEx.prototype.initServer = function (address, msgCls, endian) {
             if (endian === void 0) { endian = airkit.Byte.BIG_ENDIAN; }
-            this.mHost = host;
-            this.mPort = port;
             //ws://192.168.0.127:8080
-            this._remoteAddress = "ws://" + host + ":" + port;
+            this._remoteAddress = address;
             this.mEndian = endian;
             this._handers = new airkit.NDictionary();
             this._clsName = "message";

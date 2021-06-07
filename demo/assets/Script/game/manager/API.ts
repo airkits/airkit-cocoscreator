@@ -48,11 +48,11 @@ export class API extends ak.Singleton {
         msg.seq = this.reqID()
         msg.msgType = cs.MessageType.Request;
         msg.UID = uid;
-        msg.cmd = messageID.toString();
+        msg.cmd = "JOIN_ROOM";
         let cls = this.REQUEST_MAP[messageID]
         let bodyBuf = cls.encode(req).finish()
         ak.Log.info("Request Body buffer: %s ", bodyBuf.toString())
-        msg.body = bodyBuf
+        msg.body = {type_url: "./c2s.JoinRoomReq", value: bodyBuf} 
         let buffer = cs.Message.encode(msg).finish() //Uint8Array
         return this.buffer(buffer);
     }

@@ -902,6 +902,7 @@ declare namespace airkit {
     interface WSMessage {
         decode(msg: any, endian: string): boolean;
         encode(endian: string): any;
+        setData(v: ArrayBuffer | string): void;
         getID(): number;
     }
     class JSONMsg implements WSMessage {
@@ -912,6 +913,7 @@ declare namespace airkit {
         msgType: number;
         data: any;
         private static getSeq;
+        setData(v: string): void;
         decode(msg: any, endian: string): boolean;
         encode(endian: string): any;
         getID(): number;
@@ -919,7 +921,9 @@ declare namespace airkit {
     class PBMsg implements WSMessage {
         private receiveByte;
         private ID;
+        private data;
         constructor();
+        setData(v: ArrayBuffer): void;
         getID(): number;
         decode(msg: any, endian: string): boolean;
         encode(endian: string): any;
@@ -942,8 +946,6 @@ declare namespace airkit {
     }
     class WebSocketEx extends cc.Node {
         private mSocket;
-        private mHost;
-        private mPort;
         private mEndian;
         private _needReconnect;
         private _maxReconnectCount;
@@ -955,7 +957,14 @@ declare namespace airkit {
         private _clsName;
         private _remoteAddress;
         constructor();
-        initServer(host: string, port: any, msgCls: any, endian?: string): Promise<boolean>;
+        /**
+         *
+         * @param address ws://host:port?token=aaaa
+         * @param msgCls
+         * @param endian
+         * @returns
+         */
+        initServer(address: string, msgCls: any, endian?: string): Promise<boolean>;
         connect(): Promise<boolean>;
         private wait;
         private addEvents;

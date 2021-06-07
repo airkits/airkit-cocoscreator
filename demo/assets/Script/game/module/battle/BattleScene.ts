@@ -1,7 +1,6 @@
 import M from '../../gen/M';
 import UIBattleScene from '../../gen/ui/Home/UIBattleScene';
 import { API } from '../../manager/API';
-import { PBMsg } from '../../manager/PBMsg';
 
 
 
@@ -27,8 +26,10 @@ export default class BattleScene extends UIBattleScene{
         super.onEnable();
         ak.Log.info("Battle scene onEnable");
         let ws = new airkit.WebSocketEx();
-        ws.initServer("localhost","12080",null).then((result)=>{
-            ws.request(new PBMsg().encode(ak.Byte.LITTLE_ENDIAN,API.packetMessage(111,c2s.MessageCmd.LEAVE_ROOM,{"uid":"111"})));
+        ws.initServer("ws://localhost:12080?UID=1&token=aaaa",null).then((result)=>{
+            let msg = new ak.PBMsg();
+            msg.setData(API.packetMessage(111,c2s.MessageCmd.JOIN_ROOM,{"uid":"111"}));
+            ws.request(msg);
         }).catch(e=>{
             console.log("connect failed");
         })

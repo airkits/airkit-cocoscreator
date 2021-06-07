@@ -2,6 +2,7 @@ namespace airkit {
   export interface WSMessage {
     decode(msg: any, endian: string): boolean;
     encode(endian: string): any;
+    setData(v:ArrayBuffer | string):void ;
     getID(): number;
   }
 
@@ -21,6 +22,10 @@ namespace airkit {
     public data: any;
     private static getSeq(): number {
       return JSONMsg.REQ_ID++;
+    }
+
+    public setData(v:string):void {
+      this.data = v;
     }
     public decode(msg: any, endian: string): boolean {
       let str = bytes2String(msg, endian);
@@ -54,13 +59,17 @@ namespace airkit {
       return this.ID;
     }
   }
-
   export class PBMsg implements WSMessage {
     private receiveByte: Byte;
     private ID: number;
+    private data: ArrayBuffer;
     public constructor() {
       this.receiveByte = new Byte();
       this.receiveByte.endian = Byte.LITTLE_ENDIAN;
+    
+    }
+    public setData(v:ArrayBuffer):void {
+      this.data = v;
     }
     public getID(): number {
       return this.ID;
@@ -82,12 +91,11 @@ namespace airkit {
 
     public encode(endian: string): any {
       let msg: Byte = new Byte();
-      msg.endian = Byte.LITTLE_ENDIAN;
-      // msg.writeUint16(data.length + 4)
-      // msg.writeUint16(id)
-      // msg.writeArrayBuffer(data)
+      msg.endian = Byte.BIG_ENDIAN;
+      msg.writeUint32( this.data.byteLength + 4)
+      msg.writeArrayBuffer(this.data)
       msg.pos = 0;
-      return msg;
+      return msg.buffer;
     }
   }
 }
