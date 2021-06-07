@@ -28,7 +28,10 @@ namespace airkit {
         private _isConnecting: boolean;
         private _handers: NDictionary<any>;
         private _requestTimeout: number = 10 * 1000; //10s
-        private _clsName: string;
+        //消息类
+        private _msgCls: any;
+        //协议类
+        private _protoCls: any;
         private _remoteAddress: string;
         constructor() {
             super();
@@ -40,19 +43,22 @@ namespace airkit {
          * @param endian 
          * @returns 
          */
-        public initServer(address:string, msgCls: any, endian: string = Byte.BIG_ENDIAN): Promise<boolean> {
+        public initServer(address:string, endian: string = Byte.BIG_ENDIAN): Promise<boolean> {
           
             //ws://192.168.0.127:8080
             this._remoteAddress = address;
             this.mEndian = endian;
             this._handers = new NDictionary<any>();
-            this._clsName = "message";
-            ClassUtils.regClass(this._clsName, msgCls);
             return this.connect();
+        }
+        //协议类
+        public setProtoCls(msgCls:any,protoCls?:any):void {
+            this._msgCls = msgCls;
+            this._protoCls = protoCls;
         }
         public connect(): Promise<boolean>{
             this.mSocket = new WebSocket(this._remoteAddress);
-            
+            this.mSocket.binaryType = "arraybuffer";
             // this.mSocket.binaryType = this.mEndian;
             this.addEvents();
             return this.wait()
@@ -125,13 +131,19 @@ namespace airkit {
             }
         }
 
-        private onReceiveMessage(msg: any = null): void {
-            let clas = ClassUtils.getClass(this._clsName);
-            let obj = new clas() as WSMessage;
-            if (!obj.decode(msg, this.mEndian)) {
-                Log.error("decode msg faild %s", msg);
+        private onReceiveMessage(msg: MessageEvent = null): void {
+            if(!msg || !msg.data) return;
+            let obj = new this._msgCls(this._protoCls) as IWSMessage;
+            if(!obj){
                 return;
             }
+            let message = obj.decode(msg.data, this.mEndian);
+
+            if (message == null) {
+                Log.error("decode msg faild %s", msg.data);
+                return;
+            }
+          
             let hander = this._handers.getValue(obj.getID());
             if (hander) {
                 hander(obj);
@@ -141,7 +153,7 @@ namespace airkit {
         }
 
         
-        public request(req: WSMessage): Promise<any> {
+        public request(req: IWSMessage): Promise<any> {
             return new Promise((resolve, reject) => {
                 var buf: any = req.encode(this.mEndian);
                 let handerID = req.getID();
@@ -150,7 +162,7 @@ namespace airkit {
                         this._handers.remove(handerID);
                         reject("timeout");
                     });
-                    this._handers.add(handerID, (resp: WSMessage) => {
+                    this._handers.add(handerID, (resp: IWSMessage) => {
                         TimerManager.Instance.removeTimer(id);
                         resolve(resp);
                     });

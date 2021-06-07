@@ -3399,7 +3399,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     // userdata int
     // payload string
     var JSONMsg = /** @class */ (function () {
-        function JSONMsg() {
+        function JSONMsg(protoCls) {
+            this._protoCls = protoCls;
         }
         JSONMsg.getSeq = function () {
             return JSONMsg.REQ_ID++;
@@ -3416,10 +3417,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 this.msgType = m.msgType;
                 this.ID = m.userdata;
                 this.data = JSON.parse(m.payload);
-                return true;
+                return this.data;
             }
             str = null;
-            return false;
+            return str;
         };
         JSONMsg.prototype.encode = function (endian) {
             this.ID = JSONMsg.getSeq();
@@ -3441,9 +3442,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.JSONMsg = JSONMsg;
     var PBMsg = /** @class */ (function () {
-        function PBMsg() {
+        function PBMsg(protoCls) {
+            this._protoCls = protoCls;
             this.receiveByte = new airkit.Byte();
-            this.receiveByte.endian = airkit.Byte.LITTLE_ENDIAN;
+            this.receiveByte.endian = airkit.Byte.BIG_ENDIAN;
         }
         PBMsg.prototype.setData = function (v) {
             this.data = v;
@@ -3455,14 +3457,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this.receiveByte.clear();
             this.receiveByte.writeArrayBuffer(msg);
             this.receiveByte.pos = 0;
-            var len = this.receiveByte.getInt16();
-            var id = this.receiveByte.getInt16();
-            if (this.receiveByte.bytesAvailable >= len) {
-                var data = new airkit.Byte();
-                data.writeArrayBuffer(this.receiveByte, 4, len);
-                return true;
+            var len = this.receiveByte.getUint32();
+            if (this.receiveByte.bytesAvailable >= len - 4) {
+                if (this._protoCls) {
+                    return this._protoCls.decode(this.receiveByte.getUint8Array(4, len - 4));
+                }
+                return this.receiveByte.getUint8Array(4, len - 4);
             }
-            return false;
+            return null;
         };
         PBMsg.prototype.encode = function (endian) {
             var msg = new airkit.Byte();
@@ -3519,18 +3521,22 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param endian
          * @returns
          */
-        WebSocketEx.prototype.initServer = function (address, msgCls, endian) {
+        WebSocketEx.prototype.initServer = function (address, endian) {
             if (endian === void 0) { endian = airkit.Byte.BIG_ENDIAN; }
             //ws://192.168.0.127:8080
             this._remoteAddress = address;
             this.mEndian = endian;
             this._handers = new airkit.NDictionary();
-            this._clsName = "message";
-            airkit.ClassUtils.regClass(this._clsName, msgCls);
             return this.connect();
+        };
+        //协议类
+        WebSocketEx.prototype.setProtoCls = function (msgCls, protoCls) {
+            this._msgCls = msgCls;
+            this._protoCls = protoCls;
         };
         WebSocketEx.prototype.connect = function () {
             this.mSocket = new WebSocket(this._remoteAddress);
+            this.mSocket.binaryType = "arraybuffer";
             // this.mSocket.binaryType = this.mEndian;
             this.addEvents();
             return this.wait();
@@ -3602,10 +3608,15 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         WebSocketEx.prototype.onReceiveMessage = function (msg) {
             if (msg === void 0) { msg = null; }
-            var clas = airkit.ClassUtils.getClass(this._clsName);
-            var obj = new clas();
-            if (!obj.decode(msg, this.mEndian)) {
-                airkit.Log.error("decode msg faild %s", msg);
+            if (!msg || !msg.data)
+                return;
+            var obj = new this._msgCls(this._protoCls);
+            if (!obj) {
+                return;
+            }
+            var message = obj.decode(msg.data, this.mEndian);
+            if (message == null) {
+                airkit.Log.error("decode msg faild %s", msg.data);
                 return;
             }
             var hander = this._handers.getValue(obj.getID());

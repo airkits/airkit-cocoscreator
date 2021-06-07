@@ -1,6 +1,6 @@
 namespace airkit {
-  export interface WSMessage {
-    decode(msg: any, endian: string): boolean;
+  export interface IWSMessage {
+    decode(msg: any, endian: string): any;
     encode(endian: string): any;
     setData(v:ArrayBuffer | string):void ;
     getID(): number;
@@ -13,13 +13,17 @@ namespace airkit {
   // msgType int
   // userdata int
   // payload string
-  export class JSONMsg implements WSMessage {
+  export class JSONMsg implements IWSMessage {
     private static REQ_ID: number = 1;
     private ID: number;
     public uid: string;
     public cmd: string;
     public msgType: number;
     public data: any;
+    private _protoCls:any;
+    constructor(protoCls:any){
+      this._protoCls = protoCls;
+    }
     private static getSeq(): number {
       return JSONMsg.REQ_ID++;
     }
@@ -27,7 +31,7 @@ namespace airkit {
     public setData(v:string):void {
       this.data = v;
     }
-    public decode(msg: any, endian: string): boolean {
+    public decode(msg: any, endian: string): any {
       let str = bytes2String(msg, endian);
       let m = JSON.parse(str);
       if (m && m.payload) {
@@ -36,10 +40,10 @@ namespace airkit {
         this.msgType = m.msgType;
         this.ID = m.userdata;
         this.data = JSON.parse(m.payload);
-        return true;
+        return this.data;
       }
       str = null;
-      return false;
+      return str;
     }
 
     public encode(endian: string): any {
@@ -59,34 +63,38 @@ namespace airkit {
       return this.ID;
     }
   }
-  export class PBMsg implements WSMessage {
+  export class PBMsg implements IWSMessage {
     private receiveByte: Byte;
     private ID: number;
     private data: ArrayBuffer;
-    public constructor() {
+    private _protoCls:any;
+    public constructor(protoCls:any) {
+      this._protoCls = protoCls;
       this.receiveByte = new Byte();
-      this.receiveByte.endian = Byte.LITTLE_ENDIAN;
+      this.receiveByte.endian = Byte.BIG_ENDIAN;
     
     }
     public setData(v:ArrayBuffer):void {
       this.data = v;
     }
+   
     public getID(): number {
       return this.ID;
     }
-    public decode(msg: any, endian: string): boolean {
+    public decode(msg: any, endian: string): any {
       this.receiveByte.clear();
       this.receiveByte.writeArrayBuffer(msg);
       this.receiveByte.pos = 0;
 
-      var len = this.receiveByte.getInt16();
-      var id = this.receiveByte.getInt16();
-      if (this.receiveByte.bytesAvailable >= len) {
-        let data: Byte = new Byte();
-        data.writeArrayBuffer(this.receiveByte, 4, len);
-        return true;
+      var len = this.receiveByte.getUint32();
+      if (this.receiveByte.bytesAvailable >= len-4) {
+        if(this._protoCls){
+           return this._protoCls.decode(this.receiveByte.getUint8Array(4,len-4));
+        }
+        
+        return this.receiveByte.getUint8Array(4,len-4);
       }
-      return false;
+      return null;
     }
 
     public encode(endian: string): any {

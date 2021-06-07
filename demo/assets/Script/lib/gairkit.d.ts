@@ -899,33 +899,36 @@ declare namespace airkit {
     }
 }
 declare namespace airkit {
-    interface WSMessage {
-        decode(msg: any, endian: string): boolean;
+    interface IWSMessage {
+        decode(msg: any, endian: string): any;
         encode(endian: string): any;
         setData(v: ArrayBuffer | string): void;
         getID(): number;
     }
-    class JSONMsg implements WSMessage {
+    class JSONMsg implements IWSMessage {
         private static REQ_ID;
         private ID;
         uid: string;
         cmd: string;
         msgType: number;
         data: any;
+        private _protoCls;
+        constructor(protoCls: any);
         private static getSeq;
         setData(v: string): void;
-        decode(msg: any, endian: string): boolean;
+        decode(msg: any, endian: string): any;
         encode(endian: string): any;
         getID(): number;
     }
-    class PBMsg implements WSMessage {
+    class PBMsg implements IWSMessage {
         private receiveByte;
         private ID;
         private data;
-        constructor();
+        private _protoCls;
+        constructor(protoCls: any);
         setData(v: ArrayBuffer): void;
         getID(): number;
-        decode(msg: any, endian: string): boolean;
+        decode(msg: any, endian: string): any;
         encode(endian: string): any;
     }
 }
@@ -954,7 +957,8 @@ declare namespace airkit {
         private _isConnecting;
         private _handers;
         private _requestTimeout;
-        private _clsName;
+        private _msgCls;
+        private _protoCls;
         private _remoteAddress;
         constructor();
         /**
@@ -964,7 +968,8 @@ declare namespace airkit {
          * @param endian
          * @returns
          */
-        initServer(address: string, msgCls: any, endian?: string): Promise<boolean>;
+        initServer(address: string, endian?: string): Promise<boolean>;
+        setProtoCls(msgCls: any, protoCls?: any): void;
         connect(): Promise<boolean>;
         private wait;
         private addEvents;
@@ -974,7 +979,7 @@ declare namespace airkit {
         private onSocketError;
         private reconnect;
         private onReceiveMessage;
-        request(req: WSMessage): Promise<any>;
+        request(req: IWSMessage): Promise<any>;
         close(): void;
         private closeCurrentSocket;
         isConnecting(): boolean;
