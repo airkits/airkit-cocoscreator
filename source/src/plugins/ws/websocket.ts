@@ -25,13 +25,11 @@ namespace airkit {
         private _maxReconnectCount = 10;
         private _reconnectCount: number = 0;
         private _connectFlag: boolean;
-        private _isConnecting: boolean;
+        private _isConnected: boolean;
         private _handers: NDictionary<any>;
         private _requestTimeout: number = 10 * 1000; //10s
         //消息类
         private _msgCls: any;
-        //协议类
-        private _protoCls: any;
         private _remoteAddress: string;
         constructor() {
             super();
@@ -43,19 +41,16 @@ namespace airkit {
          * @param endian 
          * @returns 
          */
-        public initServer(address:string, endian: string = Byte.BIG_ENDIAN): Promise<boolean> {
+        public initServer(address:string,msgCls:any, endian: string = Byte.BIG_ENDIAN): Promise<boolean> {
           
             //ws://192.168.0.127:8080
             this._remoteAddress = address;
             this.mEndian = endian;
             this._handers = new NDictionary<any>();
+            this._msgCls = msgCls;
             return this.connect();
         }
-        //协议类
-        public setProtoCls(msgCls:any,protoCls?:any):void {
-            this._msgCls = msgCls;
-            this._protoCls = protoCls;
-        }
+       
         public connect(): Promise<boolean>{
             this.mSocket = new WebSocket(this._remoteAddress);
             this.mSocket.binaryType = "arraybuffer";
@@ -91,7 +86,7 @@ namespace airkit {
 
         private onSocketOpen(event: any = null): void {
             this._reconnectCount = 0;
-            this._isConnecting = true;
+            this._isConnected = true;
             if (this._connectFlag && this._needReconnect) {
                 this.emit(SocketStatus.SOCKET_RECONNECT,this._reconnectCount);
             } else {
@@ -102,7 +97,7 @@ namespace airkit {
         }
 
         private onSocketClose(e: any = null): void {
-            this._isConnecting = false;
+            this._isConnected = false;
 
             if (this._needReconnect) {
                 this.emit(SocketStatus.SOCKET_START_RECONNECT);
@@ -118,9 +113,9 @@ namespace airkit {
             } else {
                 this.emit(SocketStatus.SOCKET_NOCONNECT);
             }
-            this._isConnecting = false;
+            this._isConnected = false;
         }
-
+     
         private reconnect(): void {
             this.closeCurrentSocket();
             this._reconnectCount++;
@@ -133,11 +128,11 @@ namespace airkit {
 
         private onReceiveMessage(msg: MessageEvent = null): void {
             if(!msg || !msg.data) return;
-            let obj = new this._msgCls(this._protoCls) as IWSMessage;
+            let obj = new this._msgCls() as IWSMessage;
             if(!obj){
                 return;
             }
-            let message = obj.decode(msg.data, this.mEndian);
+            let message = obj.unpack(msg.data,this.mEndian);
 
             if (message == null) {
                 Log.error("decode msg faild %s", msg.data);
@@ -153,22 +148,26 @@ namespace airkit {
         }
 
         
-        public request(req: IWSMessage): Promise<any> {
+        public request(req: any): Promise<any> {
+            let that = this;
             return new Promise((resolve, reject) => {
-                var buf: any = req.encode(this.mEndian);
-                let handerID = req.getID();
+                let msg = new that._msgCls();
+                var buf: ArrayBuffer = msg.pack(req,that.mEndian);
+                let handerID = msg.getID();
                 if (buf) {
-                    let id = TimerManager.Instance.addOnce(this._requestTimeout, null, () => {
-                        this._handers.remove(handerID);
+                    let id = TimerManager.Instance.addOnce(that._requestTimeout, null, () => {
+                        that._handers.remove(handerID);
                         reject("timeout");
                     });
-                    this._handers.add(handerID, (resp: IWSMessage) => {
+                    that._handers.add(handerID, (resp: IWSMessage) => {
                         TimerManager.Instance.removeTimer(id);
                         resolve(resp);
                     });
-                    Log.info("start request ws %s", buf);
-                    this.mSocket.send(buf);
+                  //  Log.info("start request ws %s", buf);
+                    that.mSocket.send(buf);
                 }
+            }).catch(e=>{
+                return e;
             });
         }
 
@@ -182,11 +181,11 @@ namespace airkit {
             this.removeEvents();
             this.mSocket.close();
             this.mSocket = null;
-            this._isConnecting = false;
+            this._isConnected = false;
         }
 
-        public isConnecting(): boolean {
-            return this._isConnecting;
+        public isConnected(): boolean {
+            return this._isConnected;
         }
     }
 }

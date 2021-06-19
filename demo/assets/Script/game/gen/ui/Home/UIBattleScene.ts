@@ -8,6 +8,7 @@ export default class UIBattleScene extends airkit.BaseView {
 	public bg:fgui.GImage;
 	public list:fgui.GList;
 	public btnBack:UIButtonBack;
+	public player:fgui.GMovieClip;
 	public static URL:string = "ui://21mnfg0cy3shk";
 	public static PkgName:string = "Home";
 	public static ResName:string = "BattleScene";
@@ -22,5 +23,6 @@ export default class UIBattleScene extends airkit.BaseView {
 		this.bg = <fgui.GImage>(this.getChildAt(0));
 		this.list = <fgui.GList>(this.getChildAt(1));
 		this.btnBack = <UIButtonBack>(this.getChildAt(2));
+		this.player = <fgui.GMovieClip>(this.getChildAt(3));
 	}
 }

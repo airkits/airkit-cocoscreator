@@ -23,6 +23,11 @@
     <component id="fqe2j" name="HomeDlg.xml" path="/" exported="true"/>
     <component id="y3shk" name="BattleScene.xml" path="/" exported="true"/>
     <component id="y3shl" name="ButtonBack.xml" path="/"/>
+    <image id="d59aq" name="zombie2-ipad.png" path="/images/anim/"/>
+    <image id="d59ar" name="zombie3-ipad.png" path="/images/anim/"/>
+    <image id="d59as" name="zombie4-ipad.png" path="/images/anim/"/>
+    <image id="d59at" name="zombie1-ipad.png" path="/images/anim/"/>
+    <movieclip id="d59au" name="Player.jta" path="/anim/" exported="true"/>
   </resources>
   <publish name="Home" path="../demo/assets/resources/ui" packageCount="2" genCode="true"/>
 </packageDescription>

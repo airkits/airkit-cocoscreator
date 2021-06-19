@@ -3391,95 +3391,6 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 })(airkit || (airkit = {}));
 
 (function (airkit) {
-    //header
-    // uid string
-    // cmd string
-    // seq int
-    // msgType int
-    // userdata int
-    // payload string
-    var JSONMsg = /** @class */ (function () {
-        function JSONMsg(protoCls) {
-            this._protoCls = protoCls;
-        }
-        JSONMsg.getSeq = function () {
-            return JSONMsg.REQ_ID++;
-        };
-        JSONMsg.prototype.setData = function (v) {
-            this.data = v;
-        };
-        JSONMsg.prototype.decode = function (msg, endian) {
-            var str = airkit.bytes2String(msg, endian);
-            var m = JSON.parse(str);
-            if (m && m.payload) {
-                this.uid = m.uid;
-                this.cmd = m.cmd;
-                this.msgType = m.msgType;
-                this.ID = m.userdata;
-                this.data = JSON.parse(m.payload);
-                return this.data;
-            }
-            str = null;
-            return str;
-        };
-        JSONMsg.prototype.encode = function (endian) {
-            this.ID = JSONMsg.getSeq();
-            var msg = {
-                uid: this.uid,
-                cmd: this.cmd,
-                msgType: this.msgType,
-                seq: this.ID,
-                userdata: this.ID,
-                payload: JSON.stringify(this.data),
-            };
-            return JSON.stringify(msg);
-        };
-        JSONMsg.prototype.getID = function () {
-            return this.ID;
-        };
-        JSONMsg.REQ_ID = 1;
-        return JSONMsg;
-    }());
-    airkit.JSONMsg = JSONMsg;
-    var PBMsg = /** @class */ (function () {
-        function PBMsg(protoCls) {
-            this._protoCls = protoCls;
-            this.receiveByte = new airkit.Byte();
-            this.receiveByte.endian = airkit.Byte.BIG_ENDIAN;
-        }
-        PBMsg.prototype.setData = function (v) {
-            this.data = v;
-        };
-        PBMsg.prototype.getID = function () {
-            return this.ID;
-        };
-        PBMsg.prototype.decode = function (msg, endian) {
-            this.receiveByte.clear();
-            this.receiveByte.writeArrayBuffer(msg);
-            this.receiveByte.pos = 0;
-            var len = this.receiveByte.getUint32();
-            if (this.receiveByte.bytesAvailable >= len - 4) {
-                if (this._protoCls) {
-                    return this._protoCls.decode(this.receiveByte.getUint8Array(4, len - 4));
-                }
-                return this.receiveByte.getUint8Array(4, len - 4);
-            }
-            return null;
-        };
-        PBMsg.prototype.encode = function (endian) {
-            var msg = new airkit.Byte();
-            msg.endian = airkit.Byte.BIG_ENDIAN;
-            msg.writeUint32(this.data.byteLength + 4);
-            msg.writeArrayBuffer(this.data);
-            msg.pos = 0;
-            return msg.buffer;
-        };
-        return PBMsg;
-    }());
-    airkit.PBMsg = PBMsg;
-})(airkit || (airkit = {}));
-
-(function (airkit) {
     var SocketStatus = /** @class */ (function () {
         function SocketStatus() {
         }
@@ -3521,18 +3432,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param endian
          * @returns
          */
-        WebSocketEx.prototype.initServer = function (address, endian) {
+        WebSocketEx.prototype.initServer = function (address, msgCls, endian) {
             if (endian === void 0) { endian = airkit.Byte.BIG_ENDIAN; }
             //ws://192.168.0.127:8080
             this._remoteAddress = address;
             this.mEndian = endian;
             this._handers = new airkit.NDictionary();
-            return this.connect();
-        };
-        //协议类
-        WebSocketEx.prototype.setProtoCls = function (msgCls, protoCls) {
             this._msgCls = msgCls;
-            this._protoCls = protoCls;
+            return this.connect();
         };
         WebSocketEx.prototype.connect = function () {
             this.mSocket = new WebSocket(this._remoteAddress);
@@ -3566,7 +3473,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         WebSocketEx.prototype.onSocketOpen = function (event) {
             if (event === void 0) { event = null; }
             this._reconnectCount = 0;
-            this._isConnecting = true;
+            this._isConnected = true;
             if (this._connectFlag && this._needReconnect) {
                 this.emit(SocketStatus.SOCKET_RECONNECT, this._reconnectCount);
             }
@@ -3577,7 +3484,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         WebSocketEx.prototype.onSocketClose = function (e) {
             if (e === void 0) { e = null; }
-            this._isConnecting = false;
+            this._isConnected = false;
             if (this._needReconnect) {
                 this.emit(SocketStatus.SOCKET_START_RECONNECT);
                 this.reconnect();
@@ -3594,7 +3501,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             else {
                 this.emit(SocketStatus.SOCKET_NOCONNECT);
             }
-            this._isConnecting = false;
+            this._isConnected = false;
         };
         WebSocketEx.prototype.reconnect = function () {
             this.closeCurrentSocket();
@@ -3610,11 +3517,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (msg === void 0) { msg = null; }
             if (!msg || !msg.data)
                 return;
-            var obj = new this._msgCls(this._protoCls);
+            var obj = new this._msgCls();
             if (!obj) {
                 return;
             }
-            var message = obj.decode(msg.data, this.mEndian);
+            var message = obj.unpack(msg.data, this.mEndian);
             if (message == null) {
                 airkit.Log.error("decode msg faild %s", msg.data);
                 return;
@@ -3628,22 +3535,25 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             }
         };
         WebSocketEx.prototype.request = function (req) {
-            var _this = this;
+            var that = this;
             return new Promise(function (resolve, reject) {
-                var buf = req.encode(_this.mEndian);
-                var handerID = req.getID();
+                var msg = new that._msgCls();
+                var buf = msg.pack(req, that.mEndian);
+                var handerID = msg.getID();
                 if (buf) {
-                    var id_1 = airkit.TimerManager.Instance.addOnce(_this._requestTimeout, null, function () {
-                        _this._handers.remove(handerID);
+                    var id_1 = airkit.TimerManager.Instance.addOnce(that._requestTimeout, null, function () {
+                        that._handers.remove(handerID);
                         reject("timeout");
                     });
-                    _this._handers.add(handerID, function (resp) {
+                    that._handers.add(handerID, function (resp) {
                         airkit.TimerManager.Instance.removeTimer(id_1);
                         resolve(resp);
                     });
-                    airkit.Log.info("start request ws %s", buf);
-                    _this.mSocket.send(buf);
+                    //  Log.info("start request ws %s", buf);
+                    that.mSocket.send(buf);
                 }
+            }).catch(function (e) {
+                return e;
             });
         };
         WebSocketEx.prototype.close = function () {
@@ -3655,10 +3565,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this.removeEvents();
             this.mSocket.close();
             this.mSocket = null;
-            this._isConnecting = false;
+            this._isConnected = false;
         };
-        WebSocketEx.prototype.isConnecting = function () {
-            return this._isConnecting;
+        WebSocketEx.prototype.isConnected = function () {
+            return this._isConnected;
         };
         return WebSocketEx;
     }(cc.Node));

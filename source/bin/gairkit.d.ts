@@ -900,36 +900,9 @@ declare namespace airkit {
 }
 declare namespace airkit {
     interface IWSMessage {
-        decode(msg: any, endian: string): any;
-        encode(endian: string): any;
-        setData(v: ArrayBuffer | string): void;
+        unpack(msg: ArrayBuffer, endian: string): IWSMessage;
+        pack(req: any, endian: string): ArrayBuffer;
         getID(): number;
-    }
-    class JSONMsg implements IWSMessage {
-        private static REQ_ID;
-        private ID;
-        uid: string;
-        cmd: string;
-        msgType: number;
-        data: any;
-        private _protoCls;
-        constructor(protoCls: any);
-        private static getSeq;
-        setData(v: string): void;
-        decode(msg: any, endian: string): any;
-        encode(endian: string): any;
-        getID(): number;
-    }
-    class PBMsg implements IWSMessage {
-        private receiveByte;
-        private ID;
-        private data;
-        private _protoCls;
-        constructor(protoCls: any);
-        setData(v: ArrayBuffer): void;
-        getID(): number;
-        decode(msg: any, endian: string): any;
-        encode(endian: string): any;
     }
 }
 declare namespace airkit {
@@ -954,11 +927,10 @@ declare namespace airkit {
         private _maxReconnectCount;
         private _reconnectCount;
         private _connectFlag;
-        private _isConnecting;
+        private _isConnected;
         private _handers;
         private _requestTimeout;
         private _msgCls;
-        private _protoCls;
         private _remoteAddress;
         constructor();
         /**
@@ -968,8 +940,7 @@ declare namespace airkit {
          * @param endian
          * @returns
          */
-        initServer(address: string, endian?: string): Promise<boolean>;
-        setProtoCls(msgCls: any, protoCls?: any): void;
+        initServer(address: string, msgCls: any, endian?: string): Promise<boolean>;
         connect(): Promise<boolean>;
         private wait;
         private addEvents;
@@ -979,10 +950,10 @@ declare namespace airkit {
         private onSocketError;
         private reconnect;
         private onReceiveMessage;
-        request(req: IWSMessage): Promise<any>;
+        request(req: any): Promise<any>;
         close(): void;
         private closeCurrentSocket;
-        isConnecting(): boolean;
+        isConnected(): boolean;
     }
 }
 /**

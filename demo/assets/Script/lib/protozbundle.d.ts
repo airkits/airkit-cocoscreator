@@ -656,6 +656,7 @@ declare namespace cs {
 
     /** MessageType enum. */
     enum MessageType {
+        None = 0,
         Request = 1,
         Response = 2,
         Notify = 3,
@@ -671,8 +672,8 @@ declare namespace cs {
         /** Message UID */
         UID?: (number|Long|null);
 
-        /** Message cmd */
-        cmd?: (string|null);
+        /** Message msgID */
+        msgID?: (number|null);
 
         /** Message msgType */
         msgType?: (number|null);
@@ -702,8 +703,8 @@ declare namespace cs {
         /** Message UID. */
         public UID: (number|Long);
 
-        /** Message cmd. */
-        public cmd: string;
+        /** Message msgID. */
+        public msgID: number;
 
         /** Message msgType. */
         public msgType: number;

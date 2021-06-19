@@ -1,7 +1,7 @@
 // DO NOT EDIT! This is a generated file. Edit the JSDoc in src/*.js instead and run 'npm run types'.
 
-export as namespace protobuf;
-
+//export as namespace protobuf;
+declare module protobuf {
 /**
  * Provides common type definitions.
  * Can also be used to provide additional google types or your own custom types.
@@ -2692,3 +2692,4 @@ type PoolAllocator = (size: number) => Uint8Array;
  * @returns Buffer slice
  */
 type PoolSlicer = (this: Uint8Array, start: number, end: number) => Uint8Array;
+}

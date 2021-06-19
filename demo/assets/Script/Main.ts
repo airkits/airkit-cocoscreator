@@ -2,7 +2,7 @@ import M from './game/gen/M';
 import { ConfigTable } from "./game/gen/data/ConfigTable";
 import { CTask } from './game/gen/data/Config';
 import RegisterHelper from './game/common/RegisterHelper';
-import { API } from './game/manager/API';
+import { PBMsg } from './game/manager/PBMsg';
 const { ccclass, property } = cc._decorator;
 
 
@@ -16,7 +16,7 @@ export default class Main extends cc.Component {
         
         fgui.UIConfig.modalLayerColor = new cc.Color(0x0, 0x0, 0x0, 196);
         fgui.GRoot.create();
-        API.Instance.init();
+        PBMsg.registerProto();
         ak.Framework.Instance.setup(fgui.GRoot.inst, ak.LogLevel.DEBUG, cc.winSize.width, cc.winSize.height);
         ak.ConfigManger.Instance.init(ConfigTable.keys(),"config/config");
         Promise.all([ M.preloadModule(),ak.ConfigManger.Instance.loadAll()]).then(v=>{
@@ -24,7 +24,6 @@ export default class Main extends cc.Component {
             M.login().then(v=>{     
                 ak.fixedModalLayer("ui://Loader/mask_bg");
                 v.enterScene();
-
                 let result = ak.queryCInfo<CTask>(ConfigTable.TASK,[["id","1620000"]])
                 console.log(result);
             })

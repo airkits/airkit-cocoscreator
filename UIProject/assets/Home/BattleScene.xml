@@ -18,5 +18,6 @@
     <component id="n2_n70m" name="btnBack" src="y3shl" fileName="ButtonBack.xml" xy="20,19">
       <relation target="" sidePair="left-left,top-top"/>
     </component>
+    <movieclip id="n3_d59a" name="player" src="d59au" fileName="anim/Player.jta" xy="77,152"/>
   </displayList>
 </component>

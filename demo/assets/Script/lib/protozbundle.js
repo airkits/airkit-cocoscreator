@@ -1444,6 +1444,7 @@ $root.cs = (function() {
      * MessageType enum.
      * @name cs.MessageType
      * @enum {string}
+     * @property {number} None=0 None value
      * @property {number} Request=1 Request value
      * @property {number} Response=2 Response value
      * @property {number} Notify=3 Notify value
@@ -1451,6 +1452,7 @@ $root.cs = (function() {
      */
     cs.MessageType = (function() {
         var valuesById = {}, values = Object.create(valuesById);
+        values[valuesById[0] = "None"] = 0;
         values[valuesById[1] = "Request"] = 1;
         values[valuesById[2] = "Response"] = 2;
         values[valuesById[3] = "Notify"] = 3;
@@ -1466,7 +1468,7 @@ $root.cs = (function() {
          * @interface IMessage
          * @property {number|null} [ID] Message ID
          * @property {number|Long|null} [UID] Message UID
-         * @property {string|null} [cmd] Message cmd
+         * @property {number|null} [msgID] Message msgID
          * @property {number|null} [msgType] Message msgType
          * @property {number|null} [seq] Message seq
          * @property {Object.<string,Uint8Array>|null} [options] Message options
@@ -1506,12 +1508,12 @@ $root.cs = (function() {
         Message.prototype.UID = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
 
         /**
-         * Message cmd.
-         * @member {string} cmd
+         * Message msgID.
+         * @member {number} msgID
          * @memberof cs.Message
          * @instance
          */
-        Message.prototype.cmd = "";
+        Message.prototype.msgID = 0;
 
         /**
          * Message msgType.
@@ -1573,8 +1575,8 @@ $root.cs = (function() {
                 writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.ID);
             if (message.UID != null && message.hasOwnProperty("UID"))
                 writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.UID);
-            if (message.cmd != null && message.hasOwnProperty("cmd"))
-                writer.uint32(/* id 3, wireType 2 =*/26).string(message.cmd);
+            if (message.msgID != null && message.hasOwnProperty("msgID"))
+                writer.uint32(/* id 3, wireType 0 =*/24).uint32(message.msgID);
             if (message.msgType != null && message.hasOwnProperty("msgType"))
                 writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.msgType);
             if (message.seq != null && message.hasOwnProperty("seq"))
@@ -1625,7 +1627,7 @@ $root.cs = (function() {
                     message.UID = reader.uint64();
                     break;
                 case 3:
-                    message.cmd = reader.string();
+                    message.msgID = reader.uint32();
                     break;
                 case 4:
                     message.msgType = reader.uint32();
@@ -1685,9 +1687,9 @@ $root.cs = (function() {
             if (message.UID != null && message.hasOwnProperty("UID"))
                 if (!$util.isInteger(message.UID) && !(message.UID && $util.isInteger(message.UID.low) && $util.isInteger(message.UID.high)))
                     return "UID: integer|Long expected";
-            if (message.cmd != null && message.hasOwnProperty("cmd"))
-                if (!$util.isString(message.cmd))
-                    return "cmd: string expected";
+            if (message.msgID != null && message.hasOwnProperty("msgID"))
+                if (!$util.isInteger(message.msgID))
+                    return "msgID: integer expected";
             if (message.msgType != null && message.hasOwnProperty("msgType"))
                 if (!$util.isInteger(message.msgType))
                     return "msgType: integer expected";
