@@ -37,6 +37,7 @@
         let list = [
             [c2s.MessageCmd.JOIN_ROOM, c2s.JoinRoomReq, c2s.JoinRoomResp],
             [c2s.MessageCmd.FRAME, c2s.FrameReq, c2s.FrameResp],
+            [c2s.MessageCmd.FRAMES, c2s.FramesNotify,c2s.FramesNotify],
         ]
 
         for (let i = 0; i < list.length; i++) {

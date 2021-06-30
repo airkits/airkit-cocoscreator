@@ -8,8 +8,8 @@ export enum eUserAttr {
 
 
 
-export default class Player extends Model {
-    public id: string //游戏内用户ID
+export class Player extends Model {
+    public id: number //游戏内用户ID
     public updateSignal: airkit.Signal<[eUserAttr, any]>
     private _exp:number;
     private _coin: number;

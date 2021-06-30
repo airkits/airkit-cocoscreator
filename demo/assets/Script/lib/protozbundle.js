@@ -213,7 +213,8 @@ $root.c2s = (function() {
          * Properties of a JoinRoomReq.
          * @memberof c2s
          * @interface IJoinRoomReq
-         * @property {string|null} [uid] JoinRoomReq uid
+         * @property {number|Long|null} [uid] JoinRoomReq uid
+         * @property {number|null} [roomID] JoinRoomReq roomID
          */
 
         /**
@@ -233,11 +234,19 @@ $root.c2s = (function() {
 
         /**
          * JoinRoomReq uid.
-         * @member {string} uid
+         * @member {number|Long} uid
          * @memberof c2s.JoinRoomReq
          * @instance
          */
-        JoinRoomReq.prototype.uid = "";
+        JoinRoomReq.prototype.uid = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+
+        /**
+         * JoinRoomReq roomID.
+         * @member {number} roomID
+         * @memberof c2s.JoinRoomReq
+         * @instance
+         */
+        JoinRoomReq.prototype.roomID = 0;
 
         /**
          * Creates a new JoinRoomReq instance using the specified properties.
@@ -264,7 +273,9 @@ $root.c2s = (function() {
             if (!writer)
                 writer = $Writer.create();
             if (message.uid != null && message.hasOwnProperty("uid"))
-                writer.uint32(/* id 1, wireType 2 =*/10).string(message.uid);
+                writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.uid);
+            if (message.roomID != null && message.hasOwnProperty("roomID"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.roomID);
             return writer;
         };
 
@@ -300,7 +311,10 @@ $root.c2s = (function() {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1:
-                    message.uid = reader.string();
+                    message.uid = reader.uint64();
+                    break;
+                case 2:
+                    message.roomID = reader.int32();
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -338,8 +352,11 @@ $root.c2s = (function() {
             if (typeof message !== "object" || message === null)
                 return "object expected";
             if (message.uid != null && message.hasOwnProperty("uid"))
-                if (!$util.isString(message.uid))
-                    return "uid: string expected";
+                if (!$util.isInteger(message.uid) && !(message.uid && $util.isInteger(message.uid.low) && $util.isInteger(message.uid.high)))
+                    return "uid: integer|Long expected";
+            if (message.roomID != null && message.hasOwnProperty("roomID"))
+                if (!$util.isInteger(message.roomID))
+                    return "roomID: integer expected";
             return null;
         };
 
@@ -353,10 +370,11 @@ $root.c2s = (function() {
          * @memberof c2s
          * @interface IJoinRoomResp
          * @property {c2s.IResult|null} [result] JoinRoomResp result
-         * @property {string|null} [uid] JoinRoomResp uid
+         * @property {number|Long|null} [uid] JoinRoomResp uid
          * @property {number|null} [index] JoinRoomResp index
          * @property {number|null} [seed] JoinRoomResp seed
          * @property {number|null} [frameIndex] JoinRoomResp frameIndex
+         * @property {number|null} [roomID] JoinRoomResp roomID
          * @property {Array.<c2s.IFrame>|null} [frame] JoinRoomResp frame
          */
 
@@ -386,11 +404,11 @@ $root.c2s = (function() {
 
         /**
          * JoinRoomResp uid.
-         * @member {string} uid
+         * @member {number|Long} uid
          * @memberof c2s.JoinRoomResp
          * @instance
          */
-        JoinRoomResp.prototype.uid = "";
+        JoinRoomResp.prototype.uid = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
 
         /**
          * JoinRoomResp index.
@@ -415,6 +433,14 @@ $root.c2s = (function() {
          * @instance
          */
         JoinRoomResp.prototype.frameIndex = 0;
+
+        /**
+         * JoinRoomResp roomID.
+         * @member {number} roomID
+         * @memberof c2s.JoinRoomResp
+         * @instance
+         */
+        JoinRoomResp.prototype.roomID = 0;
 
         /**
          * JoinRoomResp frame.
@@ -451,16 +477,18 @@ $root.c2s = (function() {
             if (message.result != null && message.hasOwnProperty("result"))
                 $root.c2s.Result.encode(message.result, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             if (message.uid != null && message.hasOwnProperty("uid"))
-                writer.uint32(/* id 2, wireType 2 =*/18).string(message.uid);
+                writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.uid);
             if (message.index != null && message.hasOwnProperty("index"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int32(message.index);
             if (message.seed != null && message.hasOwnProperty("seed"))
                 writer.uint32(/* id 4, wireType 0 =*/32).int32(message.seed);
             if (message.frameIndex != null && message.hasOwnProperty("frameIndex"))
                 writer.uint32(/* id 5, wireType 0 =*/40).int32(message.frameIndex);
+            if (message.roomID != null && message.hasOwnProperty("roomID"))
+                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.roomID);
             if (message.frame != null && message.frame.length)
                 for (var i = 0; i < message.frame.length; ++i)
-                    $root.c2s.Frame.encode(message.frame[i], writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
+                    $root.c2s.Frame.encode(message.frame[i], writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
             return writer;
         };
 
@@ -499,7 +527,7 @@ $root.c2s = (function() {
                     message.result = $root.c2s.Result.decode(reader, reader.uint32());
                     break;
                 case 2:
-                    message.uid = reader.string();
+                    message.uid = reader.uint64();
                     break;
                 case 3:
                     message.index = reader.int32();
@@ -511,6 +539,9 @@ $root.c2s = (function() {
                     message.frameIndex = reader.int32();
                     break;
                 case 6:
+                    message.roomID = reader.int32();
+                    break;
+                case 7:
                     if (!(message.frame && message.frame.length))
                         message.frame = [];
                     message.frame.push($root.c2s.Frame.decode(reader, reader.uint32()));
@@ -556,8 +587,8 @@ $root.c2s = (function() {
                     return "result." + error;
             }
             if (message.uid != null && message.hasOwnProperty("uid"))
-                if (!$util.isString(message.uid))
-                    return "uid: string expected";
+                if (!$util.isInteger(message.uid) && !(message.uid && $util.isInteger(message.uid.low) && $util.isInteger(message.uid.high)))
+                    return "uid: integer|Long expected";
             if (message.index != null && message.hasOwnProperty("index"))
                 if (!$util.isInteger(message.index))
                     return "index: integer expected";
@@ -567,6 +598,9 @@ $root.c2s = (function() {
             if (message.frameIndex != null && message.hasOwnProperty("frameIndex"))
                 if (!$util.isInteger(message.frameIndex))
                     return "frameIndex: integer expected";
+            if (message.roomID != null && message.hasOwnProperty("roomID"))
+                if (!$util.isInteger(message.roomID))
+                    return "roomID: integer expected";
             if (message.frame != null && message.hasOwnProperty("frame")) {
                 if (!Array.isArray(message.frame))
                     return "frame: array expected";
@@ -580,6 +614,303 @@ $root.c2s = (function() {
         };
 
         return JoinRoomResp;
+    })();
+
+    c2s.LeaveRoomReq = (function() {
+
+        /**
+         * Properties of a LeaveRoomReq.
+         * @memberof c2s
+         * @interface ILeaveRoomReq
+         * @property {number|Long|null} [uid] LeaveRoomReq uid
+         * @property {number|null} [roomID] LeaveRoomReq roomID
+         */
+
+        /**
+         * Constructs a new LeaveRoomReq.
+         * @memberof c2s
+         * @classdesc Represents a LeaveRoomReq.
+         * @implements ILeaveRoomReq
+         * @constructor
+         * @param {c2s.ILeaveRoomReq=} [properties] Properties to set
+         */
+        function LeaveRoomReq(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * LeaveRoomReq uid.
+         * @member {number|Long} uid
+         * @memberof c2s.LeaveRoomReq
+         * @instance
+         */
+        LeaveRoomReq.prototype.uid = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+
+        /**
+         * LeaveRoomReq roomID.
+         * @member {number} roomID
+         * @memberof c2s.LeaveRoomReq
+         * @instance
+         */
+        LeaveRoomReq.prototype.roomID = 0;
+
+        /**
+         * Creates a new LeaveRoomReq instance using the specified properties.
+         * @function create
+         * @memberof c2s.LeaveRoomReq
+         * @static
+         * @param {c2s.ILeaveRoomReq=} [properties] Properties to set
+         * @returns {c2s.LeaveRoomReq} LeaveRoomReq instance
+         */
+        LeaveRoomReq.create = function create(properties) {
+            return new LeaveRoomReq(properties);
+        };
+
+        /**
+         * Encodes the specified LeaveRoomReq message. Does not implicitly {@link c2s.LeaveRoomReq.verify|verify} messages.
+         * @function encode
+         * @memberof c2s.LeaveRoomReq
+         * @static
+         * @param {c2s.ILeaveRoomReq} message LeaveRoomReq message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        LeaveRoomReq.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.uid != null && message.hasOwnProperty("uid"))
+                writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.uid);
+            if (message.roomID != null && message.hasOwnProperty("roomID"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.roomID);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified LeaveRoomReq message, length delimited. Does not implicitly {@link c2s.LeaveRoomReq.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof c2s.LeaveRoomReq
+         * @static
+         * @param {c2s.ILeaveRoomReq} message LeaveRoomReq message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        LeaveRoomReq.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a LeaveRoomReq message from the specified reader or buffer.
+         * @function decode
+         * @memberof c2s.LeaveRoomReq
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {c2s.LeaveRoomReq} LeaveRoomReq
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        LeaveRoomReq.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.c2s.LeaveRoomReq();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.uid = reader.uint64();
+                    break;
+                case 2:
+                    message.roomID = reader.int32();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a LeaveRoomReq message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof c2s.LeaveRoomReq
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {c2s.LeaveRoomReq} LeaveRoomReq
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        LeaveRoomReq.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a LeaveRoomReq message.
+         * @function verify
+         * @memberof c2s.LeaveRoomReq
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        LeaveRoomReq.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.uid != null && message.hasOwnProperty("uid"))
+                if (!$util.isInteger(message.uid) && !(message.uid && $util.isInteger(message.uid.low) && $util.isInteger(message.uid.high)))
+                    return "uid: integer|Long expected";
+            if (message.roomID != null && message.hasOwnProperty("roomID"))
+                if (!$util.isInteger(message.roomID))
+                    return "roomID: integer expected";
+            return null;
+        };
+
+        return LeaveRoomReq;
+    })();
+
+    c2s.LeaveRoomResp = (function() {
+
+        /**
+         * Properties of a LeaveRoomResp.
+         * @memberof c2s
+         * @interface ILeaveRoomResp
+         * @property {c2s.IResult|null} [result] LeaveRoomResp result
+         */
+
+        /**
+         * Constructs a new LeaveRoomResp.
+         * @memberof c2s
+         * @classdesc Represents a LeaveRoomResp.
+         * @implements ILeaveRoomResp
+         * @constructor
+         * @param {c2s.ILeaveRoomResp=} [properties] Properties to set
+         */
+        function LeaveRoomResp(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * LeaveRoomResp result.
+         * @member {c2s.IResult|null|undefined} result
+         * @memberof c2s.LeaveRoomResp
+         * @instance
+         */
+        LeaveRoomResp.prototype.result = null;
+
+        /**
+         * Creates a new LeaveRoomResp instance using the specified properties.
+         * @function create
+         * @memberof c2s.LeaveRoomResp
+         * @static
+         * @param {c2s.ILeaveRoomResp=} [properties] Properties to set
+         * @returns {c2s.LeaveRoomResp} LeaveRoomResp instance
+         */
+        LeaveRoomResp.create = function create(properties) {
+            return new LeaveRoomResp(properties);
+        };
+
+        /**
+         * Encodes the specified LeaveRoomResp message. Does not implicitly {@link c2s.LeaveRoomResp.verify|verify} messages.
+         * @function encode
+         * @memberof c2s.LeaveRoomResp
+         * @static
+         * @param {c2s.ILeaveRoomResp} message LeaveRoomResp message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        LeaveRoomResp.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.result != null && message.hasOwnProperty("result"))
+                $root.c2s.Result.encode(message.result, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified LeaveRoomResp message, length delimited. Does not implicitly {@link c2s.LeaveRoomResp.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof c2s.LeaveRoomResp
+         * @static
+         * @param {c2s.ILeaveRoomResp} message LeaveRoomResp message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        LeaveRoomResp.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a LeaveRoomResp message from the specified reader or buffer.
+         * @function decode
+         * @memberof c2s.LeaveRoomResp
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {c2s.LeaveRoomResp} LeaveRoomResp
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        LeaveRoomResp.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.c2s.LeaveRoomResp();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.result = $root.c2s.Result.decode(reader, reader.uint32());
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a LeaveRoomResp message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof c2s.LeaveRoomResp
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {c2s.LeaveRoomResp} LeaveRoomResp
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        LeaveRoomResp.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a LeaveRoomResp message.
+         * @function verify
+         * @memberof c2s.LeaveRoomResp
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        LeaveRoomResp.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.result != null && message.hasOwnProperty("result")) {
+                var error = $root.c2s.Result.verify(message.result);
+                if (error)
+                    return "result." + error;
+            }
+            return null;
+        };
+
+        return LeaveRoomResp;
     })();
 
     c2s.Cmd = (function() {
@@ -762,7 +1093,7 @@ $root.c2s = (function() {
          * @memberof c2s
          * @interface IFrame
          * @property {number|null} [frameIndex] Frame frameIndex
-         * @property {string|null} [uid] Frame uid
+         * @property {number|Long|null} [uid] Frame uid
          * @property {number|null} [index] Frame index
          * @property {Array.<c2s.ICmd>|null} [cmds] Frame cmds
          */
@@ -793,11 +1124,11 @@ $root.c2s = (function() {
 
         /**
          * Frame uid.
-         * @member {string} uid
+         * @member {number|Long} uid
          * @memberof c2s.Frame
          * @instance
          */
-        Frame.prototype.uid = "";
+        Frame.prototype.uid = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
 
         /**
          * Frame index.
@@ -842,7 +1173,7 @@ $root.c2s = (function() {
             if (message.frameIndex != null && message.hasOwnProperty("frameIndex"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.frameIndex);
             if (message.uid != null && message.hasOwnProperty("uid"))
-                writer.uint32(/* id 2, wireType 2 =*/18).string(message.uid);
+                writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.uid);
             if (message.index != null && message.hasOwnProperty("index"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int32(message.index);
             if (message.cmds != null && message.cmds.length)
@@ -886,7 +1217,7 @@ $root.c2s = (function() {
                     message.frameIndex = reader.int32();
                     break;
                 case 2:
-                    message.uid = reader.string();
+                    message.uid = reader.uint64();
                     break;
                 case 3:
                     message.index = reader.int32();
@@ -935,8 +1266,8 @@ $root.c2s = (function() {
                 if (!$util.isInteger(message.frameIndex))
                     return "frameIndex: integer expected";
             if (message.uid != null && message.hasOwnProperty("uid"))
-                if (!$util.isString(message.uid))
-                    return "uid: string expected";
+                if (!$util.isInteger(message.uid) && !(message.uid && $util.isInteger(message.uid.low) && $util.isInteger(message.uid.high)))
+                    return "uid: integer|Long expected";
             if (message.index != null && message.hasOwnProperty("index"))
                 if (!$util.isInteger(message.index))
                     return "index: integer expected";
@@ -961,7 +1292,8 @@ $root.c2s = (function() {
          * Properties of a FrameReq.
          * @memberof c2s
          * @interface IFrameReq
-         * @property {Array.<c2s.IFrame>|null} [frame] FrameReq frame
+         * @property {number|null} [roomID] FrameReq roomID
+         * @property {c2s.IFrame|null} [frame] FrameReq frame
          */
 
         /**
@@ -973,7 +1305,6 @@ $root.c2s = (function() {
          * @param {c2s.IFrameReq=} [properties] Properties to set
          */
         function FrameReq(properties) {
-            this.frame = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -981,12 +1312,20 @@ $root.c2s = (function() {
         }
 
         /**
-         * FrameReq frame.
-         * @member {Array.<c2s.IFrame>} frame
+         * FrameReq roomID.
+         * @member {number} roomID
          * @memberof c2s.FrameReq
          * @instance
          */
-        FrameReq.prototype.frame = $util.emptyArray;
+        FrameReq.prototype.roomID = 0;
+
+        /**
+         * FrameReq frame.
+         * @member {c2s.IFrame|null|undefined} frame
+         * @memberof c2s.FrameReq
+         * @instance
+         */
+        FrameReq.prototype.frame = null;
 
         /**
          * Creates a new FrameReq instance using the specified properties.
@@ -1012,9 +1351,10 @@ $root.c2s = (function() {
         FrameReq.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.frame != null && message.frame.length)
-                for (var i = 0; i < message.frame.length; ++i)
-                    $root.c2s.Frame.encode(message.frame[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.roomID != null && message.hasOwnProperty("roomID"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.roomID);
+            if (message.frame != null && message.hasOwnProperty("frame"))
+                $root.c2s.Frame.encode(message.frame, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             return writer;
         };
 
@@ -1050,9 +1390,10 @@ $root.c2s = (function() {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1:
-                    if (!(message.frame && message.frame.length))
-                        message.frame = [];
-                    message.frame.push($root.c2s.Frame.decode(reader, reader.uint32()));
+                    message.roomID = reader.int32();
+                    break;
+                case 2:
+                    message.frame = $root.c2s.Frame.decode(reader, reader.uint32());
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -1089,14 +1430,13 @@ $root.c2s = (function() {
         FrameReq.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (message.roomID != null && message.hasOwnProperty("roomID"))
+                if (!$util.isInteger(message.roomID))
+                    return "roomID: integer expected";
             if (message.frame != null && message.hasOwnProperty("frame")) {
-                if (!Array.isArray(message.frame))
-                    return "frame: array expected";
-                for (var i = 0; i < message.frame.length; ++i) {
-                    var error = $root.c2s.Frame.verify(message.frame[i]);
-                    if (error)
-                        return "frame." + error;
-                }
+                var error = $root.c2s.Frame.verify(message.frame);
+                if (error)
+                    return "frame." + error;
             }
             return null;
         };
@@ -1111,7 +1451,7 @@ $root.c2s = (function() {
          * @memberof c2s
          * @interface IFrameResp
          * @property {c2s.IResult|null} [result] FrameResp result
-         * @property {string|null} [uid] FrameResp uid
+         * @property {number|Long|null} [uid] FrameResp uid
          * @property {number|null} [frameIndex] FrameResp frameIndex
          */
 
@@ -1140,11 +1480,11 @@ $root.c2s = (function() {
 
         /**
          * FrameResp uid.
-         * @member {string} uid
+         * @member {number|Long} uid
          * @memberof c2s.FrameResp
          * @instance
          */
-        FrameResp.prototype.uid = "";
+        FrameResp.prototype.uid = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
 
         /**
          * FrameResp frameIndex.
@@ -1181,7 +1521,7 @@ $root.c2s = (function() {
             if (message.result != null && message.hasOwnProperty("result"))
                 $root.c2s.Result.encode(message.result, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             if (message.uid != null && message.hasOwnProperty("uid"))
-                writer.uint32(/* id 2, wireType 2 =*/18).string(message.uid);
+                writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.uid);
             if (message.frameIndex != null && message.hasOwnProperty("frameIndex"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int32(message.frameIndex);
             return writer;
@@ -1222,7 +1562,7 @@ $root.c2s = (function() {
                     message.result = $root.c2s.Result.decode(reader, reader.uint32());
                     break;
                 case 2:
-                    message.uid = reader.string();
+                    message.uid = reader.uint64();
                     break;
                 case 3:
                     message.frameIndex = reader.int32();
@@ -1268,8 +1608,8 @@ $root.c2s = (function() {
                     return "result." + error;
             }
             if (message.uid != null && message.hasOwnProperty("uid"))
-                if (!$util.isString(message.uid))
-                    return "uid: string expected";
+                if (!$util.isInteger(message.uid) && !(message.uid && $util.isInteger(message.uid.low) && $util.isInteger(message.uid.high)))
+                    return "uid: integer|Long expected";
             if (message.frameIndex != null && message.hasOwnProperty("frameIndex"))
                 if (!$util.isInteger(message.frameIndex))
                     return "frameIndex: integer expected";

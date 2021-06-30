@@ -1,6 +1,7 @@
 import M from '../../gen/M';
 import UIBattleScene from '../../gen/ui/Home/UIBattleScene';
 import { PBMsg, IProtoData } from '../../manager/PBMsg';
+import { me } from '../../model/Player';
 
 
 
@@ -16,7 +17,11 @@ export default class BattleScene extends UIBattleScene{
     private _ws: airkit.WebSocketEx;
     private _frameIndex: number;
     private _tick: number;
-
+    private _isJoinRoom: boolean = false;
+    private _roomID: number = 100;
+    private _seed: number = 0;
+    private _roomIndex: number = -1;
+    private _uid: number = 1111;
     constructor() {
         super()
         this._tick = 0;
@@ -27,13 +32,28 @@ export default class BattleScene extends UIBattleScene{
     
     onEnable(): void {
         super.onEnable();
+        this._uid = me.id;
         ak.Log.info("Battle scene onEnable");
         let ws = new airkit.WebSocketEx();
         this._frameIndex = 1;
-        ws.initServer("ws://localhost:12080?UID=1&token=aaaa",PBMsg).then((result)=>{
+        ws.initServer("ws://192.168.1.152:12080?UID="+this._uid+"&token=aaaa",PBMsg).then((result)=>{
            
-            ws.request({uid:"1111",msgID:c2s.MessageCmd.JOIN_ROOM,typeUrl:"./c2s.JoinRoomReq",body:{uid:"1111"},msgType:cs.MessageType.Request}).then(v=>{
+            ws.request({uid:this._uid,msgID:c2s.MessageCmd.JOIN_ROOM,typeUrl:"./c2s.JoinRoomReq",body:{uid:this._uid,roomID:this._roomID},msgType:cs.MessageType.Request}).then(v=>{
                 console.log(v);
+                if(v && v.body){
+                    let resp = (v.body as c2s.JoinRoomResp);
+                    if(resp.result.code == 0){
+                        this._roomID = resp.roomID;
+                        this._frameIndex = resp.frameIndex;
+                        this._seed = resp.seed;
+                        this._roomIndex = resp.index;
+                        this._isJoinRoom = true;
+                    }else{
+                        console.error(resp.result.msg);
+                        this._ws.close();
+                        this._ws = null;
+                    }
+                }
             });
         }).catch(e=>{
             console.log("connect failed");
@@ -86,19 +106,20 @@ export default class BattleScene extends UIBattleScene{
     public update(dt: number): boolean {
         this._tick++;
         if(this._tick < 3) return;
+
         this._tick = 0;
-        if(this._ws && this._ws.isConnected()){
+        if(this._ws && this._ws.isConnected() && this._isJoinRoom){
             let frame = {
                 frameIndex : this._frameIndex,
-                uid: "1111",
-                index: 1,
+                uid: this._uid,
+                index: this._roomIndex,
                 cmds: ["run"]
             }
             this._frameIndex++;
-            this._ws.request({uid:"1111",msgID:c2s.MessageCmd.FRAME,typeUrl:"./c2s.FrameReq",body:{frame:[frame]},msgType:cs.MessageType.Request}).then(v=>{
+            this._ws.request({uid:this._uid,msgID:c2s.MessageCmd.FRAME,typeUrl:"./c2s.FrameReq",body:{roomID:this._roomID,frame:frame},msgType:cs.MessageType.Request}).then(v=>{
            //     console.log(v);
-                let i = ((v as PBMsg).body as c2s.FrameResp).frameIndex;
-                this.player.setPosition(0, i % 500);
+             //   let i = ((v as PBMsg).body as c2s.FrameResp).frameIndex;
+               // this.player.setPosition(0, i % 500);
             });
         }
         return super.update(dt)

@@ -1,5 +1,6 @@
 import M from '../../gen/M';
 import UIHomeScene from '../../gen/ui/Home/UIHomeScene';
+import { me } from '../../model/Player';
 
 
 
@@ -25,7 +26,7 @@ export default class HomeScene extends UIHomeScene{
     onEnable(): void {
         super.onEnable();
         ak.Log.info("home scene onEnable");
-        
+        this.txtUID.text = ak.MathUtils.randRange_Int(100,500).toString();
 
     }
     //先加载资源
@@ -48,6 +49,7 @@ export default class HomeScene extends UIHomeScene{
   
     }
     public onBtnBattleClick():void {
+        me.id = +this.txtUID.text;
         M.battle().then(v=>{
             v.enterScene();
         })

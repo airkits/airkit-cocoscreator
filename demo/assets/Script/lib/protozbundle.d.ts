@@ -99,7 +99,10 @@ declare namespace c2s {
     interface IJoinRoomReq {
 
         /** JoinRoomReq uid */
-        uid?: (string|null);
+        uid?: (number|Long|null);
+
+        /** JoinRoomReq roomID */
+        roomID?: (number|null);
     }
 
     /** Represents a JoinRoomReq. */
@@ -112,7 +115,10 @@ declare namespace c2s {
         constructor(properties?: c2s.IJoinRoomReq);
 
         /** JoinRoomReq uid. */
-        public uid: string;
+        public uid: (number|Long);
+
+        /** JoinRoomReq roomID. */
+        public roomID: number;
 
         /**
          * Creates a new JoinRoomReq instance using the specified properties.
@@ -171,7 +177,7 @@ declare namespace c2s {
         result?: (c2s.IResult|null);
 
         /** JoinRoomResp uid */
-        uid?: (string|null);
+        uid?: (number|Long|null);
 
         /** JoinRoomResp index */
         index?: (number|null);
@@ -181,6 +187,9 @@ declare namespace c2s {
 
         /** JoinRoomResp frameIndex */
         frameIndex?: (number|null);
+
+        /** JoinRoomResp roomID */
+        roomID?: (number|null);
 
         /** JoinRoomResp frame */
         frame?: (c2s.IFrame[]|null);
@@ -199,7 +208,7 @@ declare namespace c2s {
         public result?: (c2s.IResult|null);
 
         /** JoinRoomResp uid. */
-        public uid: string;
+        public uid: (number|Long);
 
         /** JoinRoomResp index. */
         public index: number;
@@ -209,6 +218,9 @@ declare namespace c2s {
 
         /** JoinRoomResp frameIndex. */
         public frameIndex: number;
+
+        /** JoinRoomResp roomID. */
+        public roomID: number;
 
         /** JoinRoomResp frame. */
         public frame: c2s.IFrame[];
@@ -257,6 +269,150 @@ declare namespace c2s {
 
         /**
          * Verifies a JoinRoomResp message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+    }
+
+    /** Properties of a LeaveRoomReq. */
+    interface ILeaveRoomReq {
+
+        /** LeaveRoomReq uid */
+        uid?: (number|Long|null);
+
+        /** LeaveRoomReq roomID */
+        roomID?: (number|null);
+    }
+
+    /** Represents a LeaveRoomReq. */
+    class LeaveRoomReq implements ILeaveRoomReq {
+
+        /**
+         * Constructs a new LeaveRoomReq.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: c2s.ILeaveRoomReq);
+
+        /** LeaveRoomReq uid. */
+        public uid: (number|Long);
+
+        /** LeaveRoomReq roomID. */
+        public roomID: number;
+
+        /**
+         * Creates a new LeaveRoomReq instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns LeaveRoomReq instance
+         */
+        public static create(properties?: c2s.ILeaveRoomReq): c2s.LeaveRoomReq;
+
+        /**
+         * Encodes the specified LeaveRoomReq message. Does not implicitly {@link c2s.LeaveRoomReq.verify|verify} messages.
+         * @param message LeaveRoomReq message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: c2s.ILeaveRoomReq, writer?: protobuf.Writer): protobuf.Writer;
+
+        /**
+         * Encodes the specified LeaveRoomReq message, length delimited. Does not implicitly {@link c2s.LeaveRoomReq.verify|verify} messages.
+         * @param message LeaveRoomReq message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: c2s.ILeaveRoomReq, writer?: protobuf.Writer): protobuf.Writer;
+
+        /**
+         * Decodes a LeaveRoomReq message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns LeaveRoomReq
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: (protobuf.Reader|Uint8Array), length?: number): c2s.LeaveRoomReq;
+
+        /**
+         * Decodes a LeaveRoomReq message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns LeaveRoomReq
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: (protobuf.Reader|Uint8Array)): c2s.LeaveRoomReq;
+
+        /**
+         * Verifies a LeaveRoomReq message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+    }
+
+    /** Properties of a LeaveRoomResp. */
+    interface ILeaveRoomResp {
+
+        /** LeaveRoomResp result */
+        result?: (c2s.IResult|null);
+    }
+
+    /** Represents a LeaveRoomResp. */
+    class LeaveRoomResp implements ILeaveRoomResp {
+
+        /**
+         * Constructs a new LeaveRoomResp.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: c2s.ILeaveRoomResp);
+
+        /** LeaveRoomResp result. */
+        public result?: (c2s.IResult|null);
+
+        /**
+         * Creates a new LeaveRoomResp instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns LeaveRoomResp instance
+         */
+        public static create(properties?: c2s.ILeaveRoomResp): c2s.LeaveRoomResp;
+
+        /**
+         * Encodes the specified LeaveRoomResp message. Does not implicitly {@link c2s.LeaveRoomResp.verify|verify} messages.
+         * @param message LeaveRoomResp message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: c2s.ILeaveRoomResp, writer?: protobuf.Writer): protobuf.Writer;
+
+        /**
+         * Encodes the specified LeaveRoomResp message, length delimited. Does not implicitly {@link c2s.LeaveRoomResp.verify|verify} messages.
+         * @param message LeaveRoomResp message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: c2s.ILeaveRoomResp, writer?: protobuf.Writer): protobuf.Writer;
+
+        /**
+         * Decodes a LeaveRoomResp message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns LeaveRoomResp
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: (protobuf.Reader|Uint8Array), length?: number): c2s.LeaveRoomResp;
+
+        /**
+         * Decodes a LeaveRoomResp message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns LeaveRoomResp
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: (protobuf.Reader|Uint8Array)): c2s.LeaveRoomResp;
+
+        /**
+         * Verifies a LeaveRoomResp message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
@@ -351,7 +507,7 @@ declare namespace c2s {
         frameIndex?: (number|null);
 
         /** Frame uid */
-        uid?: (string|null);
+        uid?: (number|Long|null);
 
         /** Frame index */
         index?: (number|null);
@@ -373,7 +529,7 @@ declare namespace c2s {
         public frameIndex: number;
 
         /** Frame uid. */
-        public uid: string;
+        public uid: (number|Long);
 
         /** Frame index. */
         public index: number;
@@ -434,8 +590,11 @@ declare namespace c2s {
     /** Properties of a FrameReq. */
     interface IFrameReq {
 
+        /** FrameReq roomID */
+        roomID?: (number|null);
+
         /** FrameReq frame */
-        frame?: (c2s.IFrame[]|null);
+        frame?: (c2s.IFrame|null);
     }
 
     /** Represents a FrameReq. */
@@ -447,8 +606,11 @@ declare namespace c2s {
          */
         constructor(properties?: c2s.IFrameReq);
 
+        /** FrameReq roomID. */
+        public roomID: number;
+
         /** FrameReq frame. */
-        public frame: c2s.IFrame[];
+        public frame?: (c2s.IFrame|null);
 
         /**
          * Creates a new FrameReq instance using the specified properties.
@@ -507,7 +669,7 @@ declare namespace c2s {
         result?: (c2s.IResult|null);
 
         /** FrameResp uid */
-        uid?: (string|null);
+        uid?: (number|Long|null);
 
         /** FrameResp frameIndex */
         frameIndex?: (number|null);
@@ -526,7 +688,7 @@ declare namespace c2s {
         public result?: (c2s.IResult|null);
 
         /** FrameResp uid. */
-        public uid: string;
+        public uid: (number|Long);
 
         /** FrameResp frameIndex. */
         public frameIndex: number;
