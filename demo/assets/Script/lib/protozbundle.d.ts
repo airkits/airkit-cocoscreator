@@ -746,6 +746,9 @@ declare namespace c2s {
     /** Properties of a FramesNotify. */
     interface IFramesNotify {
 
+        /** FramesNotify nextFrame */
+        nextFrame?: (number|null);
+
         /** FramesNotify frame */
         frame?: (c2s.IFrame[]|null);
     }
@@ -758,6 +761,9 @@ declare namespace c2s {
          * @param [properties] Properties to set
          */
         constructor(properties?: c2s.IFramesNotify);
+
+        /** FramesNotify nextFrame. */
+        public nextFrame: number;
 
         /** FramesNotify frame. */
         public frame: c2s.IFrame[];

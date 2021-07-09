@@ -1625,6 +1625,7 @@ $root.c2s = (function() {
          * Properties of a FramesNotify.
          * @memberof c2s
          * @interface IFramesNotify
+         * @property {number|null} [nextFrame] FramesNotify nextFrame
          * @property {Array.<c2s.IFrame>|null} [frame] FramesNotify frame
          */
 
@@ -1643,6 +1644,14 @@ $root.c2s = (function() {
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
+
+        /**
+         * FramesNotify nextFrame.
+         * @member {number} nextFrame
+         * @memberof c2s.FramesNotify
+         * @instance
+         */
+        FramesNotify.prototype.nextFrame = 0;
 
         /**
          * FramesNotify frame.
@@ -1676,9 +1685,11 @@ $root.c2s = (function() {
         FramesNotify.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
+            if (message.nextFrame != null && message.hasOwnProperty("nextFrame"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.nextFrame);
             if (message.frame != null && message.frame.length)
                 for (var i = 0; i < message.frame.length; ++i)
-                    $root.c2s.Frame.encode(message.frame[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                    $root.c2s.Frame.encode(message.frame[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             return writer;
         };
 
@@ -1714,6 +1725,9 @@ $root.c2s = (function() {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1:
+                    message.nextFrame = reader.int32();
+                    break;
+                case 2:
                     if (!(message.frame && message.frame.length))
                         message.frame = [];
                     message.frame.push($root.c2s.Frame.decode(reader, reader.uint32()));
@@ -1753,6 +1767,9 @@ $root.c2s = (function() {
         FramesNotify.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (message.nextFrame != null && message.hasOwnProperty("nextFrame"))
+                if (!$util.isInteger(message.nextFrame))
+                    return "nextFrame: integer expected";
             if (message.frame != null && message.hasOwnProperty("frame")) {
                 if (!Array.isArray(message.frame))
                     return "frame: array expected";
