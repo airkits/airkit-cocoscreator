@@ -37,7 +37,7 @@ export default class BattleScene extends UIBattleScene{
         this._uid = me.id;
         ak.Log.info("Battle scene onEnable");
         let ws = new airkit.WebSocketEx();
-        ws.initServer("ws://192.168.50.137:12080?UID="+this._uid+"&token=aaaa",PBMsg).then((result)=>{
+        ws.initServer("ws://127.0.0.1:12080?UID="+this._uid+"&token=aaaa",PBMsg).then((result)=>{
            
             ws.request({uid:this._uid,msgID:c2s.MessageCmd.JOIN_ROOM,typeUrl:"./c2s.JoinRoomReq",body:{uid:this._uid,roomID:this._roomID},msgType:cs.MessageType.Request}).then(v=>{
                 console.log(v);
