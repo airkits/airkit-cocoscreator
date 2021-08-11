@@ -5,91 +5,91 @@
  */
 namespace airkit {
     /**
-    * UIManager 弹出ui管理类
-    * example1:
-    * ak.UIManager.showQ(eDialogUIID.ALERT,{clickMaskClose:true}).then(v=>{
-    *   if(v){  
-    *       console.log("showQ dlg ="+v.viewID);
-    *       v.wait().then(result=>{
-    *           console.log("result wait ");
-    *           console.log(result);
-    *       });
-    *  }
-    *});
+     * UIManager 弹出ui管理类
+     * example1:
+     * ak.UIManager.showQ(eDialogUIID.ALERT,{clickMaskClose:true}).then(v=>{
+     *   if(v){
+     *       console.log("showQ dlg ="+v.viewID);
+     *       v.wait().then(result=>{
+     *           console.log("result wait ");
+     *           console.log(result);
+     *       });
+     *  }
+     *});
      */
     export class UIManager extends Singleton {
-        public static cache: SDictionary<any>; 
+        public static cache: SDictionary<any>
 
-           /**
+        /**
          * 注册ui类，存放uiname和class的对应关系
          * @param name
          * @param cls
          */
-        public static register(name: string,cls: any ): any {
-            if(!this.cache){
-                this.cache = new SDictionary<any>();
+        public static register(name: string, cls: any): any {
+            if (!this.cache) {
+                this.cache = new SDictionary<any>()
             }
             if (this.cache.containsKey(name)) {
-                Log.error("UIManager::register ui - same id is register:" + name);
-                return;
+                Log.error('UIManager::register ui - same id is register:' + name)
+                return
             }
-            this.cache.add(name,cls);
-            ClassUtils.regClass(name, cls);
+            this.cache.add(name, cls)
+            ClassUtils.regClass(name, cls)
         }
 
-        private _cacheViews: Array<IUIPanel> = null;
-        private _UIQueues: Array<UIQueue> = null;
+        private _cacheViews: Array<IUIPanel> = null
+        private _UIQueues: Array<UIQueue> = null
 
-        private static instance: UIManager = null;
+        private static instance: UIManager = null
         public static get Instance(): UIManager {
-            if (!this.instance) this.instance = new UIManager();
-            return this.instance;
+            if (!this.instance) this.instance = new UIManager()
+            return this.instance
         }
         //弹窗框显示，点击空白非自动关闭
         public static show(uiid: string, params?: ShowParams): Promise<IUIPanel> {
-            return this.Instance.show(uiid,params);
+            return this.Instance.show(uiid, params)
         }
         //弹窗框显示，点击空白自动关闭
-        public static showQ(uiid:string, params?: ShowParams):Promise<IUIPanel> {
-            return this.Instance.showQ(uiid,params);
+        public static showQ(uiid: string, params?: ShowParams): Promise<IUIPanel> {
+            return this.Instance.showQ(uiid, params)
         }
-         //弹窗框显示，点击空白非自动关闭
-         public static popup(uiid: string, params?: ShowParams): Promise<IUIPanel> {
-            return this.Instance.popup(uiid,params);
+        //弹窗框显示，点击空白非自动关闭
+        public static popup(uiid: string, params?: ShowParams): Promise<IUIPanel> {
+            return this.Instance.popup(uiid, params)
         }
         //弹窗框显示，点击空白自动关闭
-        public static popupQ(uiid:string, params?: ShowParams):Promise<IUIPanel> {
-            return this.Instance.popupQ(uiid,params);
+        public static popupQ(uiid: string, params?: ShowParams): Promise<IUIPanel> {
+            return this.Instance.popupQ(uiid, params)
         }
         //关闭所有弹窗
-        public static closeAll():void {
-            UIManager.Instance.getQueue(eUIType.POPUP).clear();
-            UIManager.Instance.getQueue(eUIType.SHOW).clear();
-            UIManager.Instance.closeAll();
+        public static closeAll(): void {
+            UIManager.Instance.getQueue(eUIType.POPUP).clear()
+            UIManager.Instance.getQueue(eUIType.SHOW).clear()
+            UIManager.Instance.closeAll()
         }
         //返回最上面的dialog
-        public static getTopDlg():Dialog {
-            let dlg = fgui.GRoot.inst.getTopWindow();
-            if(dlg) return (dlg as Dialog);
-            return null;
+        public static getTopDlg(): Dialog {
+            let dlg = fgui.GRoot.inst.getTopWindow()
+            if (dlg) return dlg as Dialog
+            return null
         }
 
         constructor() {
-            super();
-            this._cacheViews = new Array<IUIPanel>();
-            this._UIQueues = new Array<UIQueue>();
+            super()
+            this._cacheViews = new Array<IUIPanel>()
+            this._UIQueues = new Array<UIQueue>()
             //预创建2个队列,通常情况下都能满足需求了
-            this._UIQueues[eUIType.SHOW]=new UIQueue(eUIType.SHOW);
-            this._UIQueues[eUIType.POPUP] =new UIQueue(eUIType.POPUP);
+            this._UIQueues[eUIType.SHOW] = new UIQueue(eUIType.SHOW)
+            this._UIQueues[eUIType.POPUP] = new UIQueue(eUIType.POPUP)
         }
-        public getQueue(t:eUIType):UIQueue {
-            return this._UIQueues[t];
+        public getQueue(t: eUIType): UIQueue {
+            return this._UIQueues[t]
         }
         public empty(): boolean {
-            let queue = this.getQueue(eUIType.SHOW);
-            if (!queue.empty()) return false;
-            if (this._cacheViews.length > 0) return false;
-            return true;
+            let queue = this.getQueue(eUIType.SHOW)
+            if (!queue.empty()) return false
+            if (this._cacheViews.length > 0) return false
+            return true
         }
         //～～～～～～～～～～～～～～～～～～～～～～～显示~～～～～～～～～～～～～～～～～～～～～～～～//
         /**
@@ -97,162 +97,161 @@ namespace airkit {
          * @param uiid        界面uiid
          * @param args      参数
          */
-        public show(uiid: string,params?: ShowParams): Promise<IUIPanel> {
+        public show(uiid: string, params?: ShowParams): Promise<IUIPanel> {
             return new Promise<IUIPanel>((resolve, reject) => {
-                params = params || {};
-                if(params.single !== false){
+                params = params || {}
+                if (params.single !== false) {
                     //从缓存中查找
-                    let findObj = null;
-                    for(let i=this._cacheViews.length-1; i>=0; i--){
-                        let obj = this._cacheViews[i];
-                        if(obj && obj.UIID == uiid){
-                            findObj = obj;
-                            break;
+                    let findObj = null
+                    for (let i = this._cacheViews.length - 1; i >= 0; i--) {
+                        let obj = this._cacheViews[i]
+                        if (obj && obj.UIID == uiid) {
+                            findObj = obj
+                            break
                         }
                     }
-                    if(findObj){
-                        findObj.setVisible(true);
-                        Log.info("添加重复uiid %s",uiid);
-                        resolve(findObj);
-                        return;
+                    if (findObj) {
+                        findObj.setVisible(true)
+                        Log.info('添加重复uiid %s', uiid)
+                        resolve(findObj)
+                        return
                     }
                 }
-                if(params.clothOther){
-                    this.closeAll([uiid]);
+                if (params.clothOther) {
+                    this.closeAll([uiid])
                 }
                 //获取数据
-                let clas = UIManager.cache.getValue(uiid);
-                let res = clas.res();
-                if(res == null || (Array.isArray(res) && res.length == 0)){
-                    let ui = this.showUI(eUIType.SHOW,uiid,clas,params);
-                    resolve(ui);
-                }else{
-                    clas.loadResource((v)=>{
-                        if(v){
-                            let ui = this.showUI(eUIType.SHOW,uiid,clas,params);
-                            resolve(ui);
-                        }else{
-                            reject("ui load resource failed");
+                let clas = UIManager.cache.getValue(uiid)
+                let res = clas.res()
+                if (res == null || (Array.isArray(res) && res.length == 0)) {
+                    let ui = this.showUI(eUIType.SHOW, uiid, clas, params)
+                    resolve(ui)
+                } else {
+                    clas.loadResource((v) => {
+                        if (v) {
+                            let ui = this.showUI(eUIType.SHOW, uiid, clas, params)
+                            resolve(ui)
+                        } else {
+                            reject('ui load resource failed')
                         }
-                    });
+                    })
                 }
-            }).catch(e=>{
-                Log.error(e);
-                return null;
-            });
+            }).catch((e) => {
+                Log.error(e)
+                return null
+            })
         }
-         /**
+        /**
          * 显示界面
          * @param uiid        界面uiName
          * @param args      参数
          */
         public popup(uiid: string, params?: ShowParams): Promise<IUIPanel> {
             return new Promise<IUIPanel>((resolve, reject) => {
-                params = params || {};
-                if(params.single !== false ){
+                params = params || {}
+                if (params.single !== false) {
                     //从缓存中查找
-                    let findObj = null;
-                    for(let i=this._cacheViews.length-1; i>=0; i--){
-                        let obj = this._cacheViews[i];
-                        if(obj && obj.UIID == uiid){
-                            findObj = obj;
-                            break;
+                    let findObj = null
+                    for (let i = this._cacheViews.length - 1; i >= 0; i--) {
+                        let obj = this._cacheViews[i]
+                        if (obj && obj.UIID == uiid) {
+                            findObj = obj
+                            break
                         }
                     }
-                    if( findObj){
-                        findObj.setVisible(true);
-                        Log.info("添加重复uiid %s",uiid);
-                        resolve(findObj);
-                        return;
+                    if (findObj) {
+                        findObj.setVisible(true)
+                        Log.info('添加重复uiid %s', uiid)
+                        resolve(findObj)
+                        return
                     }
                 }
-                if(params.clothOther){
-                    this.closeAll([uiid]);
+                if (params.clothOther) {
+                    this.closeAll([uiid])
                 }
                 //获取数据
-                let clas = UIManager.cache.getValue(uiid);
-                let res = clas.res();
-                if(res == null || (Array.isArray(res) && res.length == 0)){
-                    let ui = this.showUI(eUIType.POPUP,uiid,clas,params);
-                    resolve(ui);
-                }else{
-                    clas.loadResource((v)=>{
-                        if(v){
-                            let ui = this.showUI(eUIType.POPUP,uiid,clas,params);
-                            resolve(ui);
-                        }else{
-                            reject("ui load resource failed");
+                let clas = UIManager.cache.getValue(uiid)
+                let res = clas.res()
+                if (res == null || (Array.isArray(res) && res.length == 0)) {
+                    let ui = this.showUI(eUIType.POPUP, uiid, clas, params)
+                    resolve(ui)
+                } else {
+                    clas.loadResource((v) => {
+                        if (v) {
+                            let ui = this.showUI(eUIType.POPUP, uiid, clas, params)
+                            resolve(ui)
+                        } else {
+                            reject('ui load resource failed')
                         }
-                    });
+                    })
                 }
-            }).catch(e=>{
-                Log.error(e);
-                return null;
-            });
+            }).catch((e) => {
+                Log.error(e)
+                return null
+            })
         }
-        protected showUI(type:eUIType,uiid:string,clas:any,params: ShowParams): any {
-            let ui = new clas();
-            assert(ui != null, "UIManager::Show - cannot create ui:" + uiid);
-            ui.UIID = uiid;
-            ui.setup(params.data);
-            if(params.clickMaskClose){
-                ui.setupClickBg();
+        protected showUI(type: eUIType, uiid: string, clas: any, params: ShowParams): any {
+            let ui = new clas()
+            assert(ui != null, 'UIManager::Show - cannot create ui:' + uiid)
+            ui.UIID = uiid
+            ui.setup(params.data)
+            if (params.clickMaskClose) {
+                ui.setupClickBg()
             }
-            if(type == eUIType.POPUP){
-                if(params.target){
-                    fgui.GRoot.inst.showPopup(ui,params.target);
-                }else{
-                    fgui.GRoot.inst.showPopup(ui);
+            if (type == eUIType.POPUP) {
+                if (params.target) {
+                    fgui.GRoot.inst.showPopup(ui, params.target)
+                } else {
+                    fgui.GRoot.inst.showPopup(ui)
                 }
-            }else{
-                ui.show();
+            } else {
+                ui.show()
             }
-            
-            if(params.pos){
-                ui.setPosition(params.pos.x,params.pos.y);
-            }else{
-                ui.center();
+
+            if (params.pos) {
+                ui.setPosition(params.pos.x, params.pos.y)
+            } else {
+                ui.center()
             }
-            
-            this._cacheViews.push(ui);
-            return ui;
+
+            this._cacheViews.push(ui)
+            return ui
         }
 
-      
         /**
          * 关闭界面
          * @param uiid    界面id
          */
-        public close(uiid:string,vid:number): Promise<any> {
-            if(StringUtils.isNullOrEmpty(uiid)) return;
+        public close(uiid: string, vid: number): Promise<any> {
+            if (StringUtils.isNullOrEmpty(uiid)) return
             return new Promise((resolve, reject) => {
-                Log.info("close panel %s %s", uiid,vid);
-                for(let i=this._cacheViews.length-1;i>=0 ; i--){
-                    let obj = this._cacheViews[i];
-                    if(obj.UIID == uiid && obj.viewID == vid){
+                Log.info('close panel %s %s', uiid, vid)
+                for (let i = this._cacheViews.length - 1; i >= 0; i--) {
+                    let obj = this._cacheViews[i]
+                    if (obj.UIID == uiid && obj.viewID == vid) {
                         //切换
-                        let clas = ClassUtils.getClass(uiid);
-                        clas.unres();
-                        this._cacheViews.splice(i,1);
-                        obj.dispose();
-                        resolve(uiid);
-                        return;
+                        let clas = ClassUtils.getClass(uiid)
+                        clas.unres()
+                        this._cacheViews.splice(i, 1)
+                        obj.dispose()
+                        resolve(uiid)
+                        return
                     }
                 }
-            });
+            })
         }
-       
+
         /**
          * 关闭所有界面
          * @param   exclude_list    需要排除关闭的列表
          */
         public closeAll(exclude_list: Array<string> = null): void {
-            for(let i=this._cacheViews.length-1;i>=0 ; i--){
-                let obj = this._cacheViews[i];
-                if (exclude_list && ArrayUtils.containsValue(exclude_list, obj.UIID)){
-                    continue;
+            for (let i = this._cacheViews.length - 1; i >= 0; i--) {
+                let obj = this._cacheViews[i]
+                if (exclude_list && ArrayUtils.containsValue(exclude_list, obj.UIID)) {
+                    continue
                 }
-                UIManager.Instance.close(obj.UIID,obj.viewID);
+                UIManager.Instance.close(obj.UIID, obj.viewID)
             }
         }
 
@@ -262,12 +261,11 @@ namespace airkit {
          * @param params
          */
         public showQ(uiid: string, params?: ShowParams): Promise<IUIPanel> {
-
-            return new Promise<IUIPanel>((resolve,reject)=>{
-                if(!params) params = {};
-                params.resolve = resolve;
-                this.getQueue(eUIType.SHOW).show(uiid, params);
-            });
+            return new Promise<IUIPanel>((resolve, reject) => {
+                if (!params) params = {}
+                params.resolve = resolve
+                this.getQueue(eUIType.SHOW).show(uiid, params)
+            })
         }
         /**
          * popup队列显示
@@ -277,28 +275,26 @@ namespace airkit {
          * @memberof UIManager
          */
         public popupQ(uiid: string, params?: ShowParams): Promise<IUIPanel> {
-            return new Promise<IUIPanel>((resolve,reject)=>{
-                if(!params) params = {};
-                params.resolve = resolve;
-                this.getQueue(eUIType.POPUP).popup(uiid, params);
-            });
-            
+            return new Promise<IUIPanel>((resolve, reject) => {
+                if (!params) params = {}
+                params.resolve = resolve
+                this.getQueue(eUIType.POPUP).popup(uiid, params)
+            })
         }
 
         /**查找界面*/
         public findPanel(uiid: string): IUIPanel {
-            for(let i=this._cacheViews.length-1;i>=0 ; i--){
-                let obj = this._cacheViews[i];
-                if(obj.UIID == uiid){
-                    return obj;
+            for (let i = this._cacheViews.length - 1; i >= 0; i--) {
+                let obj = this._cacheViews[i]
+                if (obj.UIID == uiid) {
+                    return obj
                 }
             }
-            return null;
-       
+            return null
         }
         /**界面是否打开*/
         public isDlgOpen(uiid: string): boolean {
-            return this.findPanel(uiid) != null;
+            return this.findPanel(uiid) != null
         }
     }
     //     //toast
@@ -576,7 +572,7 @@ namespace airkit {
     //     }
     // }
 
-    // /** 
+    // /**
     // 显示弹出框信息
     // @param callback         回调函数
     // @param title            标题，默认是""
@@ -641,14 +637,14 @@ namespace airkit {
 
     class UIQueue {
         /*～～～～～～～～～～～～～～～～～～～～～队列方式显示界面，上一个界面关闭，才会显示下一个界面～～～～～～～～～～～～～～～～～～～～～*/
-        private _currentUIs: Array<[string,number]> = null;
-        private _readyUIs: Queue<[string, any]>;
-        private _type: eUIType;
+        private _currentUIs: Array<[string, number]> = null
+        private _readyUIs: Queue<[string, any]>
+        private _type: eUIType
 
-        constructor(type:eUIType) {
-            this._currentUIs = [];
-            this._type = type;
-            this._readyUIs = new Queue<[string, any]>();
+        constructor(type: eUIType) {
+            this._currentUIs = []
+            this._type = type
+            this._readyUIs = new Queue<[string, any]>()
         }
         /**
          * 直接显示界面,注：
@@ -657,100 +653,95 @@ namespace airkit {
          * @param 	params	创建参数，会在界面onCreate时传入
          */
         public show(uiid: string, params?: ShowParams): void {
-            let info: [string, ShowParams] = [uiid, params];
-            this._readyUIs.enqueue(info);
-            this.checkNextUI();
+            let info: [string, ShowParams] = [uiid, params]
+            this._readyUIs.enqueue(info)
+            this.checkNextUI()
         }
-        public popup(uiid:string,params?: ShowParams):void  {
-            let info:[string,ShowParams] = [uiid,params];
-            this._readyUIs.enqueue(info);
-            this.checkNextUI();
+        public popup(uiid: string, params?: ShowParams): void {
+            let info: [string, ShowParams] = [uiid, params]
+            this._readyUIs.enqueue(info)
+            this.checkNextUI()
         }
         public empty(): boolean {
-            if (this._currentUIs.length > 0 || this._readyUIs.length > 0)
-                return false;
-            return true;
+            if (this._currentUIs.length > 0 || this._readyUIs.length > 0) return false
+            return true
         }
-        public clear():void {
-            this._currentUIs = [];
-            for(let i=0; i<this._readyUIs.length;i++){
-                let info: [string, ShowParams] = this._readyUIs.dequeue();            
-                info[1].resolve && info[1].resolve(null);
+        public clear(): void {
+            this._currentUIs = []
+            for (let i = 0; i < this._readyUIs.length; i++) {
+                let info: [string, ShowParams] = this._readyUIs.dequeue()
+                info[1].resolve && info[1].resolve(null)
             }
-
         }
         /**
          * 判断是否弹出下一个界面
          */
         private checkNextUI(): void {
-            if (this._currentUIs.length > 0 || this._readyUIs.length <= 0) return;
+            if (this._currentUIs.length > 0 || this._readyUIs.length <= 0) return
 
-            let info: [string, ShowParams] = this._readyUIs.dequeue();            
-            let viewID = genViewIDSeq();
-            this._currentUIs.push([info[0],viewID]);
-            Log.info("dialog queue %s %s",info[0],viewID);
-            if(this._type == eUIType.POPUP){
-                UIManager.Instance.popup(info[0], info[1]).then(v=>{
-                    if(v){
-                       v.viewID = viewID;
-                        if(this._currentUIs.length == 1){
-                            this.registerEvent();
+            let info: [string, ShowParams] = this._readyUIs.dequeue()
+            let viewID = genViewIDSeq()
+            this._currentUIs.push([info[0], viewID])
+            Log.info('dialog queue %s %s', info[0], viewID)
+            if (this._type == eUIType.POPUP) {
+                UIManager.Instance.popup(info[0], info[1]).then((v) => {
+                    if (v) {
+                        v.viewID = viewID
+                        if (this._currentUIs.length == 1) {
+                            this.registerEvent()
                         }
-                    }else{
-                        this._currentUIs.splice(this._currentUIs.length-1,1);
+                    } else {
+                        this._currentUIs.splice(this._currentUIs.length - 1, 1)
                     }
-                    if(info[1] && info[1].resolve){
-                        info[1].resolve(v);
-                        info[1].resolve = null;
+                    if (info[1] && info[1].resolve) {
+                        info[1].resolve(v)
+                        info[1].resolve = null
                     }
                 })
-            }else{
-                UIManager.Instance.show(info[0], info[1]).then(v=>{
-                    if(v){
-                       v.viewID = viewID;
-                        if(this._currentUIs.length == 1){
-                            this.registerEvent();
+            } else {
+                UIManager.Instance.show(info[0], info[1]).then((v) => {
+                    if (v) {
+                        v.viewID = viewID
+                        if (this._currentUIs.length == 1) {
+                            this.registerEvent()
                         }
-                    }else{
-                        this._currentUIs.splice(this._currentUIs.length-1,1);
+                    } else {
+                        this._currentUIs.splice(this._currentUIs.length - 1, 1)
                     }
-                    if(info[1] && info[1].resolve){
-                        info[1].resolve(v);
-                        info[1].resolve = null;
+                    if (info[1] && info[1].resolve) {
+                        info[1].resolve(v)
+                        info[1].resolve = null
                     }
                 })
             }
-           
         }
 
-       
-
         private registerEvent(): void {
-            EventCenter.on(EventID.UI_CLOSE, this, this.onUIEvent);
+            EventCenter.on(EventID.UI_CLOSE, this, this.onUIEvent)
         }
 
         private unRegisterEvent(): void {
-            EventCenter.off(EventID.UI_CLOSE, this, this.onUIEvent);
+            EventCenter.off(EventID.UI_CLOSE, this, this.onUIEvent)
         }
         private onUIEvent(args: EventArgs): void {
             switch (args.type) {
                 case EventID.UI_CLOSE:
-                    let id: string = args.get(0);
-                    let viewID:number = args.get(1);
-                    
-                    for(let i=0 ; i< this._currentUIs.length;i++){
-                        if(this._currentUIs[i][0] == id && this._currentUIs[i][1] == viewID){
-                            console.log("close dialog:"+id+" and id:"+viewID);
-                            this._currentUIs.splice(i, 1);
-                            if(this._currentUIs.length == 0){
-                                this.unRegisterEvent();
+                    let id: string = args.get(0)
+                    let viewID: number = args.get(1)
+
+                    for (let i = 0; i < this._currentUIs.length; i++) {
+                        if (this._currentUIs[i][0] == id && this._currentUIs[i][1] == viewID) {
+                            console.log('close dialog:' + id + ' and id:' + viewID)
+                            this._currentUIs.splice(i, 1)
+                            if (this._currentUIs.length == 0) {
+                                this.unRegisterEvent()
                             }
-                            this.checkNextUI();
-                            
-                            break;
+                            this.checkNextUI()
+
+                            break
                         }
                     }
-                    break;
+                    break
             }
         }
     }

@@ -1,3 +1,11 @@
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:02:45
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/log/Log.ts
+ */
 // import { StringUtils } from "../utils/StringUtils";
 // import { DateUtils } from "../utils/DateUtils";
 // import { LogLevel } from "../common/Constant";
@@ -12,7 +20,7 @@ namespace airkit {
         public static LEVEL: LogLevel = LogLevel.INFO
 
         public static format(format, ...args: any[]): string {
-            if (format == null) return "null"
+            if (format == null) return 'null'
             if (StringUtils.isString(format)) {
                 let arr = []
                 for (let i = 0; i < args.length; i++) {
@@ -26,7 +34,7 @@ namespace airkit {
                 let content = StringUtils.format(format, ...arr)
                 return content
             } else {
-                if (typeof format == "object" && format.message) {
+                if (typeof format == 'object' && format.message) {
                     return format.message
                 } else {
                     return JSON.stringify(format, null, 4)
@@ -36,31 +44,31 @@ namespace airkit {
         public static debug(format, ...args: any[]): string {
             if (this.LEVEL < LogLevel.DEBUG) return
             let content = this.format(format, ...args)
-            console.log(DateUtils.currentYMDHMS(), "[debug]", content)
+            console.log(DateUtils.currentYMDHMS(), '[debug]', content)
             return content
         }
         public static info(format, ...args: any[]): string {
             if (this.LEVEL < LogLevel.INFO) return
             let content = this.format(format, ...args)
-            console.log(DateUtils.currentYMDHMS(), "[info]", content)
+            console.log(DateUtils.currentYMDHMS(), '[info]', content)
             return content
         }
         public static warning(format, ...args: any[]): string {
             if (this.LEVEL < LogLevel.WARNING) return
             let content = this.format(format, ...args)
-            console.warn(DateUtils.currentYMDHMS(), "[warn]", content)
+            console.warn(DateUtils.currentYMDHMS(), '[warn]', content)
             return content
         }
         public static error(format, ...args: any[]): string {
             if (this.LEVEL < LogLevel.ERROR) return
             let content = this.format(format, ...args)
-            console.error(DateUtils.currentYMDHMS(), "[error]", content)
+            console.error(DateUtils.currentYMDHMS(), '[error]', content)
             return content
         }
         public static exception(format, ...args: any[]): string {
             if (this.LEVEL < LogLevel.EXCEPTION) return
             let content = this.format(format, ...args)
-            console.exception(DateUtils.currentYMDHMS(), "[exce]", content)
+            console.exception(DateUtils.currentYMDHMS(), '[exce]', content)
             return content
         }
 
@@ -73,7 +81,7 @@ namespace airkit {
                     console.error(error)
                 }
             }
-            console.log(DateUtils.currentYMDHMS(), "[Dump]", value)
+            console.log(DateUtils.currentYMDHMS(), '[Dump]', value)
         }
     }
 }

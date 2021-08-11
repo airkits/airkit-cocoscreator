@@ -1,3 +1,11 @@
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:02:18
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/event/EventCenter.ts
+ */
 // import { EventArgs } from "./EventArgs";
 // import { EventDispatcher } from "./EventDispatcher";
 // import { Singleton } from "../collection/Singleton";
@@ -10,19 +18,19 @@ namespace airkit {
      */
 
     export class EventCenter extends Singleton {
-        private _event: EventDispatcher = null;
-        private _evtArgs: EventArgs = null;
+        private _event: EventDispatcher = null
+        private _evtArgs: EventArgs = null
 
-        private static instance: EventCenter = null;
+        private static instance: EventCenter = null
         public static get Instance(): EventCenter {
-            if (!this.instance) this.instance = new EventCenter();
-            return this.instance;
+            if (!this.instance) this.instance = new EventCenter()
+            return this.instance
         }
 
         constructor() {
-            super();
-            this._event = new EventDispatcher();
-            this._evtArgs = new EventArgs();
+            super()
+            this._event = new EventDispatcher()
+            this._evtArgs = new EventArgs()
         }
 
         /**
@@ -32,25 +40,25 @@ namespace airkit {
          * @param fun       回调函数，注意回调函数的参数是共用一个，所有不要持有引用[let evt = args（不建议这样写）]
          */
         public static on(type: string, caller: any, fun: Function): void {
-            EventCenter.Instance._event.on(type, caller, fun);
+            EventCenter.Instance._event.on(type, caller, fun)
         }
 
         /**
          * 移除监听
          */
         public static off(type: string, caller: any, fun: Function): void {
-            EventCenter.Instance._event.off(type, caller, fun);
+            EventCenter.Instance._event.off(type, caller, fun)
         }
         /**
          * 派发事件
          */
         public static dispatchEvent(type: string, ...args: any[]): void {
-            EventCenter.Instance._evtArgs.init(args);
-            EventCenter.Instance._event.dispatchEvent(type, EventCenter.Instance._evtArgs);
+            EventCenter.Instance._evtArgs.init(args)
+            EventCenter.Instance._event.dispatchEvent(type, EventCenter.Instance._evtArgs)
         }
 
         public static clear(): void {
-            EventCenter.Instance._event.clear();
+            EventCenter.Instance._event.clear()
         }
     }
 }

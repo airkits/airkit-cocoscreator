@@ -4,31 +4,31 @@ namespace airkit {
      * 连续动画
      */
     export class TweenUtils {
-        public static EaseBezier: number = 9999;
+        public static EaseBezier: number = 9999
 
         constructor(target: fgui.GObject) {
-            this._target = target;
-            this.clear();
+            this._target = target
+            this.clear()
         }
 
-        private _target: fgui.GObject;
-        private _steps: any[];
-        private _isPlaying: boolean;
+        private _target: fgui.GObject
+        private _steps: any[]
+        private _isPlaying: boolean
 
-        private _updateFunc: Function;
+        private _updateFunc: Function
 
         public static get(target: fgui.GObject): TweenUtils {
-            return new TweenUtils(target);
+            return new TweenUtils(target)
         }
         public get target(): fgui.GObject {
-            return this._target;
+            return this._target
         }
         public setOnUpdate(callback: Function) {
-            this._updateFunc = callback;
+            this._updateFunc = callback
         }
         public onUpdate(gt: fgui.GTweener) {
             if (this._updateFunc) {
-                this._updateFunc(gt);
+                this._updateFunc(gt)
             }
         }
         /**
@@ -41,67 +41,63 @@ namespace airkit {
          * @param	delay 延迟执行时间。
          */
         public to(props: any, duration: number, ease: number = fgui.EaseType.QuadOut, complete: Handler = null, delay: number = 0): TweenUtils {
-            this._steps.push({ props, duration, ease, complete, delay });
-            this.trigger();
-            return this;
+            this._steps.push({ props, duration, ease, complete, delay })
+            this.trigger()
+            return this
         }
 
         public delay(delay: number): TweenUtils {
-            this._steps.push({ delay });
-            return this;
+            this._steps.push({ delay })
+            return this
         }
 
         private trigger(): void {
             if (!this._isPlaying) {
                 if (this._steps && this._steps.length) {
-                    var step: any = this._steps.shift();
-                    if (step.hasOwnProperty("props")) {
-                        this._isPlaying = true;
+                    var step: any = this._steps.shift()
+                    if (step.hasOwnProperty('props')) {
+                        this._isPlaying = true
                         // Laya.Tween.to(this._target, step.props, step.duration, step.ease, step.complete, step.delay, step.coverBefore, step.autoRecover)
 
-                        if (step.props["x"] != null || step.props["y"] != null) {
-                            let x = step.props["x"] != null ? step.props.x : this._target.x;
-                            let y = step.props["y"] != null ? step.props.y : this._target.y;
-                            fgui.GTween.to2(this._target.x, this._target.y, x, y, step.duration)
-                                .setTarget(this._target, this._target.setPosition)
-                                .setEase(step.ease);
+                        if (step.props['x'] != null || step.props['y'] != null) {
+                            let x = step.props['x'] != null ? step.props.x : this._target.x
+                            let y = step.props['y'] != null ? step.props.y : this._target.y
+                            fgui.GTween.to2(this._target.x, this._target.y, x, y, step.duration).setTarget(this._target, this._target.setPosition).setEase(step.ease)
                         }
-                        if (step.props["scaleX"] != null || step.props["scaleY"] != null) {
-                            let x = step.props["scaleX"] != null ? step.props.scaleX : this._target.scaleX;
-                            let y = step.props["scaleY"] != null ? step.props.scaleY : this._target.scaleY;
-                            fgui.GTween.to2(this._target.scaleX, this._target.scaleY, x, y, step.duration)
-                                .setTarget(this._target, this._target.setScale)
-                                .setEase(step.ease);
+                        if (step.props['scaleX'] != null || step.props['scaleY'] != null) {
+                            let x = step.props['scaleX'] != null ? step.props.scaleX : this._target.scaleX
+                            let y = step.props['scaleY'] != null ? step.props.scaleY : this._target.scaleY
+                            fgui.GTween.to2(this._target.scaleX, this._target.scaleY, x, y, step.duration).setTarget(this._target, this._target.setScale).setEase(step.ease)
                         }
 
-                        if (step.props["rotation"] != null) {
-                            let rotation = step.props["rotation"] != null ? step.props.rotation : this._target.rotation;
-                            fgui.GTween.to(this._target.rotation, rotation, step.duration).setTarget(this._target, "rotation").setEase(step.ease);
+                        if (step.props['rotation'] != null) {
+                            let rotation = step.props['rotation'] != null ? step.props.rotation : this._target.rotation
+                            fgui.GTween.to(this._target.rotation, rotation, step.duration).setTarget(this._target, 'rotation').setEase(step.ease)
                         }
 
-                        if (step.props["alpha"] != null) {
+                        if (step.props['alpha'] != null) {
                             if (step.props.pts) {
                                 fgui.GTween.to(this._target.alpha, step.props.alpha, step.duration)
-                                    .setTarget(this._target, "alpha")
+                                    .setTarget(this._target, 'alpha')
                                     .setEase(step.ease)
                                     .onUpdate((gt: fgui.GTweener) => {
-                                        let point = MathUtils.getPos(step.props.pts, gt.normalizedTime, OrbitType.Curve);
-                                        this._target.setPosition(point.x, point.y);
-                                        this.onUpdate(gt);
-                                    }, null);
+                                        let point = MathUtils.getPos(step.props.pts, gt.normalizedTime, OrbitType.Curve)
+                                        this._target.setPosition(point.x, point.y)
+                                        this.onUpdate(gt)
+                                    }, null)
                             } else {
                                 fgui.GTween.to(this._target.alpha, step.props.alpha, step.duration)
-                                    .setTarget(this._target, "alpha")
+                                    .setTarget(this._target, 'alpha')
                                     .setEase(step.ease)
                                     .onUpdate((gt: fgui.GTweener) => {
-                                        this.onUpdate(gt);
-                                    }, null);
+                                        this.onUpdate(gt)
+                                    }, null)
                             }
                         }
-                        TimerManager.Instance.addOnce((step.duration + step.delay) * 1000, this, this.onStepComplete, [step.complete]);
-                    } else if (step.hasOwnProperty("delay")) {
-                        this._isPlaying = true;
-                        TimerManager.Instance.addOnce(step.delay * 1000, this, this.onStepComplete, [step.complete]);
+                        TimerManager.Instance.addOnce((step.duration + step.delay) * 1000, this, this.onStepComplete, [step.complete])
+                    } else if (step.hasOwnProperty('delay')) {
+                        this._isPlaying = true
+                        TimerManager.Instance.addOnce(step.delay * 1000, this, this.onStepComplete, [step.complete])
                     }
                 }
             }
@@ -109,24 +105,24 @@ namespace airkit {
 
         private onStepComplete(onFunc: any): void {
             if (onFunc) {
-                onFunc.runWith();
+                onFunc.runWith()
             }
-            this._isPlaying = false;
-            this.trigger();
+            this._isPlaying = false
+            this.trigger()
         }
 
         public clear(): void {
-            this._steps = [];
-            this._isPlaying = false;
-            fgui.GTween.kill(this._target);
+            this._steps = []
+            this._isPlaying = false
+            fgui.GTween.kill(this._target)
         }
 
         public static scale(view: fgui.GObject): void {
-            this.get(view).to({ scaleX: 0.8, scaleY: 0.8 }, 0.05, fgui.EaseType.QuadIn).to({ scaleX: 1.0, scaleY: 1.0 }, 0.05, fgui.EaseType.QuadIn);
+            this.get(view).to({ scaleX: 0.8, scaleY: 0.8 }, 0.05, fgui.EaseType.QuadIn).to({ scaleX: 1.0, scaleY: 1.0 }, 0.05, fgui.EaseType.QuadIn)
         }
         public static appear(view: fgui.GObject): void {
-            view.setScale(0, 0);
-            this.get(view).to({ scaleX: 1.2, scaleY: 1.2 }, 0.4, fgui.EaseType.QuadOut).to({ scaleX: 1.0, scaleY: 1.0 }, 0.2, fgui.EaseType.QuadOut);
+            view.setScale(0, 0)
+            this.get(view).to({ scaleX: 1.2, scaleY: 1.2 }, 0.4, fgui.EaseType.QuadOut).to({ scaleX: 1.0, scaleY: 1.0 }, 0.2, fgui.EaseType.QuadOut)
         }
 
         /**

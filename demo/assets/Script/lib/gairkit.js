@@ -20,6 +20,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             r[k] = a[j];
     return r;
 };
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:01:42
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/collection/Singleton.ts
+ */
 //import { Log } from "../log/Log";
 
 (function (airkit) {
@@ -30,15 +38,15 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      */
     var Singleton = /** @class */ (function () {
         function Singleton() {
-            var clazz = this["constructor"];
+            var clazz = this['constructor'];
             //为空时，表示浏览器不支持这样读取构造函数
             if (!clazz) {
-                airkit.Log.warning("浏览器不支持读取构造函数");
+                airkit.Log.warning('浏览器不支持读取构造函数');
                 return;
             }
             // 防止重复实例化
             if (Singleton.classKeys.indexOf(clazz) != -1) {
-                throw new Error(this + " 只允许实例化一次！");
+                throw new Error(this + ' 只允许实例化一次！');
             }
             else {
                 Singleton.classKeys.push(clazz);
@@ -91,7 +99,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (log_level === void 0) { log_level = airkit.LogLevel.INFO; }
             if (design_width === void 0) { design_width = 750; }
             if (design_height === void 0) { design_height = 1334; }
-            if (screen_mode === void 0) { screen_mode = ""; }
+            if (screen_mode === void 0) { screen_mode = ''; }
             if (frame === void 0) { frame = 1; }
             this.printDeviceInfo();
             this._isStopGame = false;
@@ -107,7 +115,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             airkit.DataProvider.Instance.setup();
             // LangManager.Instance.init();
             airkit.SceneManager.Instance.setup();
-            // 
+            //
             // cc.director.getScheduler().scheduleUpdate(this, 0, false);
         };
         Framework.prototype.destroy = function () {
@@ -126,6 +134,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * 游戏主循环
          */
         Framework.prototype.update = function (dt) {
+            //dt是秒，强制转换成毫秒
             if (!this._isStopGame) {
                 var dtMs = dt * 1000;
                 this.preTick(dtMs);
@@ -167,20 +176,20 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         Framework.prototype.printDeviceInfo = function () {
             if (navigator) {
                 var agentStr = navigator.userAgent;
-                var start = agentStr.indexOf("(");
-                var end = agentStr.indexOf(")");
+                var start = agentStr.indexOf('(');
+                var end = agentStr.indexOf(')');
                 if (start < 0 || end < 0 || end < start) {
                     return;
                 }
                 var infoStr = agentStr.substring(start + 1, end);
                 airkit.Log.info(infoStr);
                 var device = void 0, system = void 0, version = void 0;
-                var infos = infoStr.split(";");
+                var infos = infoStr.split(';');
                 if (infos.length == 3) {
                     //如果是三个的话， 可能是android的， 那么第三个是设备号
                     device = infos[2];
                     //第二个是系统号和版本
-                    var system_info = infos[1].split(" ");
+                    var system_info = infos[1].split(' ');
                     if (system_info.length >= 2) {
                         system = system_info[1];
                         version = system_info[2];
@@ -196,7 +205,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     device = navigator.platform;
                     version = infoStr;
                 }
-                airkit.Log.info("%s,%s,%s", system, device, version);
+                airkit.Log.info('%s,%s,%s', system, device, version);
             }
         };
         Framework.instance = null;
@@ -205,6 +214,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     airkit.Framework = Framework;
 })(airkit || (airkit = {}));
 // patch modal layer
+;
 (function () {
     var _proto;
     /* patch String Object */
@@ -501,10 +511,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             return this;
         };
         Color.prototype.equals = function (other) {
-            return (this.r == other.r &&
-                this.g == other.g &&
-                this.b == other.b &&
-                this.a == other.a);
+            return this.r == other.r && this.g == other.g && this.b == other.b && this.a == other.a;
         };
         Color.lerp = function (from, to, t) {
             t = airkit.MathUtils.clamp(t, 0, 1);
@@ -602,7 +609,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             configurable: true
         });
         Color.prototype.toString = function () {
-            return airkit.StringUtils.format("(%d,%d,%d,%d)", this.r, this.g, this.b, this.a);
+            return airkit.StringUtils.format('(%d,%d,%d,%d)', this.r, this.g, this.b, this.a);
         };
         return Color;
     }());
@@ -625,7 +632,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         }
         NDictionary.prototype.add = function (key, value) {
             if (this.containsKey(key)) {
-                airkit.Log.warning("NDictionary already containsKey ", key.toString());
+                airkit.Log.warning('NDictionary already containsKey ', key.toString());
                 return false;
             }
             this._dic[key] = value;
@@ -751,6 +758,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.SDictionary = SDictionary;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:01:28
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/collection/DoubleArray.ts
+ */
 //import { ArrayUtils } from "../utils/ArrayUtils";
 
 (function (airkit) {
@@ -818,7 +833,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         /**将节点插入到第index位置之前*/
         LinkList.prototype.insert = function (index, t) {
             if (this._size < 1 || index >= this._size)
-                airkit.Log.exception("没有可插入的点或者索引溢出了");
+                airkit.Log.exception('没有可插入的点或者索引溢出了');
             if (index == 0)
                 this.append(this._size, t);
             else {
@@ -837,7 +852,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             else {
                 index = index - 1;
                 if (index < 0)
-                    airkit.Log.exception("位置不存在");
+                    airkit.Log.exception('位置不存在');
                 inode = this.getNode(index);
             }
             var tnode = { Data: t, Prev: inode, Next: inode.Next };
@@ -872,7 +887,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         /**通过索引查找*/
         LinkList.prototype.getNode = function (index) {
             if (index < 0 || index >= this._size) {
-                airkit.Log.exception("索引溢出或者链表为空");
+                airkit.Log.exception('索引溢出或者链表为空');
             }
             if (index < this._size / 2) {
                 //正向查找
@@ -915,6 +930,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.LinkList = LinkList;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:01:37
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/collection/ObjectPools.ts
+ */
 // import { Log } from "../log/Log";
 // import { DicUtils } from "../utils/DicUtils";
 
@@ -933,10 +956,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param classDef  类名
          */
         ObjectPools.get = function (classDef) {
-            var sign = classDef["objectKey"];
+            var sign = classDef['objectKey'];
             if (sign == null) {
                 //直接通过classDef.name获取sign,在混淆的情况下会出错
-                airkit.Log.error("static objectKey must set in %s ", classDef.name);
+                airkit.Log.error('static objectKey must set in %s ', classDef.name);
             }
             var pool = this.poolsMap[sign];
             if (pool == null) {
@@ -947,7 +970,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (obj == null) {
                 obj = new classDef();
             }
-            if (obj && obj["init"])
+            if (obj && obj['init'])
                 obj.init();
             return obj;
         };
@@ -958,19 +981,19 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         ObjectPools.recover = function (obj) {
             if (!obj)
                 return;
-            if (obj["parent"] != null) {
+            if (obj['parent'] != null) {
                 obj.removeFromParent();
             }
-            if (obj["dispose"] && obj["displayObject"] == null) {
+            if (obj['dispose'] && obj['displayObject'] == null) {
                 obj.dispose();
                 return;
             }
             var proto = Object.getPrototypeOf(obj);
-            var clazz = proto["constructor"];
-            var sign = clazz["objectKey"];
+            var clazz = proto['constructor'];
+            var sign = clazz['objectKey'];
             var pool = this.poolsMap[sign];
             if (pool != null) {
-                if (obj["visible"] !== null && obj["visible"] === false) {
+                if (obj['visible'] !== null && obj['visible'] === false) {
                     obj.visible = true;
                 }
                 pool.push(obj);
@@ -985,14 +1008,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         ObjectPools.clear = function (sign) {
             var pool = this.poolsMap[sign];
-            airkit.Log.info("max object count %s", pool.length);
+            airkit.Log.info('max object count %s', pool.length);
             while (pool.length > 0) {
                 var obj = pool.pop();
-                if (obj && obj["dispose"]) {
-                    if (obj["parent"] != null) {
+                if (obj && obj['dispose']) {
+                    if (obj['parent'] != null) {
                         obj.removeFromParent();
                     }
-                    else if (obj.displayObject["parent"] != null) {
+                    else if (obj.displayObject['parent'] != null) {
                         obj.displayObject.removeFromParent();
                     }
                     obj.dispose();
@@ -1065,6 +1088,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.Queue = Queue;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:01:45
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/collection/Size.ts
+ */
 
 (function (airkit) {
     /**
@@ -1101,6 +1132,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.Size = Size;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:01:48
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/collection/Stack.ts
+ */
 
 (function (airkit) {
     /**
@@ -1156,6 +1195,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.Stack = Stack;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:01:53
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/common/Constant.ts
+ */
 
 (function (airkit) {
     var eLoaderType;
@@ -1199,6 +1246,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         eDlgResult[eDlgResult["NO"] = 2] = "NO";
     })(eDlgResult = airkit.eDlgResult || (airkit.eDlgResult = {}));
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:01:56
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/config/ConfigItem.ts
+ */
 
 (function (airkit) {
     /**
@@ -1322,7 +1377,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             configurable: true
         });
         ConfigManger.instance = null;
-        ConfigManger.zipUrl = "config/config";
+        ConfigManger.zipUrl = 'config/config';
         return ConfigManger;
     }(airkit.Singleton));
     airkit.ConfigManger = ConfigManger;
@@ -1401,12 +1456,12 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             var _this = this;
             return airkit.ResourceManager.Instance.loadRes(url, cc.BufferAsset).then(function (v) {
                 var ab = airkit.ResourceManager.Instance.getRes(url);
-                return airkit.ZipUtils.unzip(ab["_buffer"])
+                return airkit.ZipUtils.unzip(ab['_buffer'])
                     .then(function (v) {
                     for (var i = 0; i < list.length; i++) {
                         var template = list[i];
                         _this._dicTemplate.add(list[i].url, template);
-                        airkit.Log.info("Load config %s", template.url);
+                        airkit.Log.info('Load config %s', template.url);
                         var json_res = JSON.parse(v[template.url]);
                         if (airkit.StringUtils.isNullOrEmpty(template.key)) {
                             _this._dicData.add(template.name, json_res);
@@ -1422,13 +1477,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                                 if (isArrayKey) {
                                     sValue = sData[template.key[0]];
                                     for (var i_2 = 1; i_2 < template.key.length; i_2++) {
-                                        sValue += "_" + sData[template.key[i_2]];
+                                        sValue += '_' + sData[template.key[i_2]];
                                     }
                                 }
                                 else {
                                     sValue = sData[template.key];
                                 }
-                                airkit.assertNullOrNil(sValue, "配置表解析错误:" + template.url);
+                                airkit.assertNullOrNil(sValue, '配置表解析错误:' + template.url);
                                 map[sValue] = sData;
                                 i_1++;
                             }
@@ -1505,7 +1560,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 if (isArrayKey) {
                     sValue = key[0];
                     for (var i = 1; i < key.length; i++) {
-                        sValue += "_" + key[i];
+                        sValue += '_' + key[i];
                     }
                 }
                 else {
@@ -1517,7 +1572,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             return null;
         };
         DataProvider.prototype.getRes = function (url) {
-            airkit.Log.debug("[load]加载配置表:" + url);
+            airkit.Log.debug('[load]加载配置表:' + url);
             var template = this._dicTemplate.getValue(url);
             if (template) {
                 var json_res = airkit.ResourceManager.Instance.getRes(url);
@@ -1535,13 +1590,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         if (isArrayKey) {
                             sValue = sData[template.key[0]];
                             for (var i_3 = 1; i_3 < template.key.length; i_3++) {
-                                sValue += "_" + sData[template.key[i_3]];
+                                sValue += '_' + sData[template.key[i_3]];
                             }
                         }
                         else {
                             sValue = sData[template.key];
                         }
-                        airkit.assertNullOrNil(sValue, "配置表解析错误:" + template.url);
+                        airkit.assertNullOrNil(sValue, '配置表解析错误:' + template.url);
                         map[sValue] = sData;
                         i++;
                     }
@@ -1580,70 +1635,70 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     var Base64 = /** @class */ (function () {
         function Base64() {
             this.alphabet = [
-                "A",
-                "B",
-                "C",
-                "D",
-                "E",
-                "F",
-                "G",
-                "H",
-                "I",
-                "J",
-                "K",
-                "L",
-                "M",
-                "N",
-                "O",
-                "P",
-                "Q",
-                "R",
-                "S",
-                "T",
-                "U",
-                "V",
-                "W",
-                "X",
-                "Y",
-                "Z",
-                "a",
-                "b",
-                "c",
-                "d",
-                "e",
-                "f",
-                "g",
-                "h",
-                "i",
-                "j",
-                "k",
-                "l",
-                "m",
-                "n",
-                "o",
-                "p",
-                "q",
-                "r",
-                "s",
-                "t",
-                "u",
-                "v",
-                "w",
-                "x",
-                "y",
-                "z",
-                "0",
-                "1",
-                "2",
-                "3",
-                "4",
-                "5",
-                "6",
-                "7",
-                "8",
-                "9",
-                "+",
-                "/"
+                'A',
+                'B',
+                'C',
+                'D',
+                'E',
+                'F',
+                'G',
+                'H',
+                'I',
+                'J',
+                'K',
+                'L',
+                'M',
+                'N',
+                'O',
+                'P',
+                'Q',
+                'R',
+                'S',
+                'T',
+                'U',
+                'V',
+                'W',
+                'X',
+                'Y',
+                'Z',
+                'a',
+                'b',
+                'c',
+                'd',
+                'e',
+                'f',
+                'g',
+                'h',
+                'i',
+                'j',
+                'k',
+                'l',
+                'm',
+                'n',
+                'o',
+                'p',
+                'q',
+                'r',
+                's',
+                't',
+                'u',
+                'v',
+                'w',
+                'x',
+                'y',
+                'z',
+                '0',
+                '1',
+                '2',
+                '3',
+                '4',
+                '5',
+                '6',
+                '7',
+                '8',
+                '9',
+                '+',
+                '/',
             ];
             this.values = {};
             for (var i = 0; i < 64; ++i) {
@@ -1659,8 +1714,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             /* tslint:disable:no-bitwise */
             // Grab as many sets of 3 bytes as we can, that form 24 bits.
             while (index + 2 < array.byteLength) {
-                quantum =
-                    (array[index] << 16) | (array[index + 1] << 8) | array[index + 2];
+                quantum = (array[index] << 16) | (array[index + 1] << 8) | array[index + 2];
                 // 24 bits will become 4 base64 chars.
                 value = (quantum >> 18) & 0x3f;
                 base64.push(this.alphabet[value]);
@@ -1680,7 +1734,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 base64.push(this.alphabet[value]);
                 value = quantum & 0x3f;
                 base64.push(this.alphabet[value]);
-                base64.push("==");
+                base64.push('==');
             }
             else if (index + 2 === array.byteLength) {
                 // 16 bits; shift by 2 to pad on the right with 0s to make 18 bits total.
@@ -1691,10 +1745,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 base64.push(this.alphabet[value]);
                 value = quantum & 0x3f;
                 base64.push(this.alphabet[value]);
-                base64.push("=");
+                base64.push('=');
             }
             /* tslint:enable:no-bitwise */
-            return base64.join("");
+            return base64.join('');
         };
         Base64.prototype.decode = function (string) {
             var size = string.length;
@@ -1702,20 +1756,20 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 return new Uint8Array(new ArrayBuffer(0));
             }
             if (size % 4 !== 0) {
-                throw new Error("Bad length: " + size);
+                throw new Error('Bad length: ' + size);
             }
             if (!string.match(/^[a-zA-Z0-9+/]+={0,2}$/)) {
-                throw new Error("Invalid base64 encoded value");
+                throw new Error('Invalid base64 encoded value');
             }
             // Every 4 base64 chars = 24 bits = 3 bytes. But, we also need to figure out
             // padding, if any.
             var bytes = 3 * (size / 4);
             var numPad = 0;
-            if (string.charAt(size - 1) === "=") {
+            if (string.charAt(size - 1) === '=') {
                 numPad++;
                 bytes--;
             }
-            if (string.charAt(size - 2) === "=") {
+            if (string.charAt(size - 2) === '=') {
                 numPad++;
                 bytes--;
             }
@@ -1775,7 +1829,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     var MD5 = /** @class */ (function () {
         function MD5() {
             this.hexcase = 0; /* hex output format. 0 - lowercase 1 - uppercase        */
-            this.b64pad = ""; /* base-64 pad character. "=" for strict RFC compliance   */
+            this.b64pad = ''; /* base-64 pad character. "=" for strict RFC compliance   */
         }
         /*
          * These are the privates you'll usually want to call
@@ -1803,7 +1857,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * Perform a simple self-test to see if the VM is working
          */
         MD5.prototype.md5_vm_test = function () {
-            return (this.hex_md5("abc").toLowerCase() == "900150983cd24fb0d6963f7d28e17f72");
+            return this.hex_md5('abc').toLowerCase() == '900150983cd24fb0d6963f7d28e17f72';
         };
         /*
          * Calculate the MD5 of a raw string
@@ -1836,8 +1890,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             catch (e) {
                 this.hexcase = 0;
             }
-            var hex_tab = this.hexcase ? "0123456789ABCDEF" : "0123456789abcdef";
-            var output = "";
+            var hex_tab = this.hexcase ? '0123456789ABCDEF' : '0123456789abcdef';
+            var output = '';
             var x;
             for (var i = 0; i < input.length; i++) {
                 x = input.charCodeAt(i);
@@ -1853,15 +1907,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 this.b64pad;
             }
             catch (e) {
-                this.b64pad = "";
+                this.b64pad = '';
             }
-            var tab = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-            var output = "";
+            var tab = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+            var output = '';
             var len = input.length;
             for (var i = 0; i < len; i += 3) {
-                var triplet = (input.charCodeAt(i) << 16) |
-                    (i + 1 < len ? input.charCodeAt(i + 1) << 8 : 0) |
-                    (i + 2 < len ? input.charCodeAt(i + 2) : 0);
+                var triplet = (input.charCodeAt(i) << 16) | (i + 1 < len ? input.charCodeAt(i + 1) << 8 : 0) | (i + 2 < len ? input.charCodeAt(i + 2) : 0);
                 for (var j = 0; j < 4; j++) {
                     if (i * 8 + j * 6 > input.length * 8)
                         output += this.b64pad;
@@ -1880,8 +1932,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             /* Convert to an array of 16-bit big-endian values, forming the dividend */
             var dividend = Array(Math.ceil(input.length / 2));
             for (i = 0; i < dividend.length; i++) {
-                dividend[i] =
-                    (input.charCodeAt(i * 2) << 8) | input.charCodeAt(i * 2 + 1);
+                dividend[i] = (input.charCodeAt(i * 2) << 8) | input.charCodeAt(i * 2 + 1);
             }
             /*
              * Repeatedly perform a long division. The binary array forms the dividend,
@@ -1905,7 +1956,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 dividend = quotient;
             }
             /* Convert the remainders to the output string */
-            var output = "";
+            var output = '';
             for (i = remainders.length - 1; i >= 0; i--)
                 output += encoding.charAt(remainders[i]);
             return output;
@@ -1915,7 +1966,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * For efficiency, this assumes the input is valid utf-16.
          */
         MD5.prototype.str2rstr_utf8 = function (input) {
-            var output = "";
+            var output = '';
             var i = -1;
             var x, y;
             while (++i < input.length) {
@@ -1942,13 +1993,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * Encode a string as utf-16
          */
         MD5.prototype.str2rstr_utf16le = function (input) {
-            var output = "";
+            var output = '';
             for (var i = 0; i < input.length; i++)
                 output += String.fromCharCode(input.charCodeAt(i) & 0xff, (input.charCodeAt(i) >>> 8) & 0xff);
             return output;
         };
         MD5.prototype.str2rstr_utf16be = function (input) {
-            var output = "";
+            var output = '';
             for (var i = 0; i < input.length; i++)
                 output += String.fromCharCode((input.charCodeAt(i) >>> 8) & 0xff, input.charCodeAt(i) & 0xff);
             return output;
@@ -1969,7 +2020,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * Convert an array of little-endian words to a string
          */
         MD5.prototype.binl2rstr = function (input) {
-            var output = "";
+            var output = '';
             for (var i = 0; i < input.length * 32; i += 8)
                 output += String.fromCharCode((input[i >> 5] >>> i % 32) & 0xff);
             return output;
@@ -2098,6 +2149,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.MD5 = MD5;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:02:15
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/event/EventArgs.ts
+ */
 // import { ArrayUtils } from "../utils/ArrayUtils";
 
 (function (airkit) {
@@ -2112,7 +2171,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
-            this._type = "";
+            this._type = '';
             this._data = null;
             if (!args || args.length == 0)
                 return;
@@ -2154,6 +2213,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.EventArgs = EventArgs;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:02:18
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/event/EventCenter.ts
+ */
 // import { EventArgs } from "./EventArgs";
 // import { EventDispatcher } from "./EventDispatcher";
 // import { Singleton } from "../collection/Singleton";
@@ -2217,6 +2284,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }(airkit.Singleton));
     airkit.EventCenter = EventCenter;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:02:24
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/event/EventDispatcher.ts
+ */
 // import { DicUtils } from "../utils/DicUtils";
 // import { EventArgs } from "./EventArgs";
 
@@ -2300,14 +2375,22 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.EventDispatcher = EventDispatcher;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:02:28
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/event/EventID.ts
+ */
 
 (function (airkit) {
     var Event = /** @class */ (function () {
         function Event() {
         }
-        Event.PROGRESS = "progress";
-        Event.COMPLETE = "complete";
-        Event.ERROR = "error";
+        Event.PROGRESS = 'progress';
+        Event.COMPLETE = 'complete';
+        Event.ERROR = 'error';
         return Event;
     }());
     airkit.Event = Event;
@@ -2316,24 +2399,24 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         }
         //～～～～～～～～～～～～～～～～～～～～～～～场景~～～～～～～～～～～～～～～～～～～～～～～～//
         //游戏
-        EventID.BEGIN_GAME = "BEGIN_GAME";
-        EventID.RESTART_GAEM = "RESTART_GAME";
+        EventID.BEGIN_GAME = 'BEGIN_GAME';
+        EventID.RESTART_GAEM = 'RESTART_GAME';
         //暂停游戏-主界面暂停按钮
-        EventID.STOP_GAME = "STOP_GAME";
-        EventID.PAUSE_GAME = "PAUSE_GAME";
-        EventID.ON_SHOW = "ON_SHOW";
-        EventID.ON_HIDE = "ON_HIDE";
+        EventID.STOP_GAME = 'STOP_GAME';
+        EventID.PAUSE_GAME = 'PAUSE_GAME';
+        EventID.ON_SHOW = 'ON_SHOW';
+        EventID.ON_HIDE = 'ON_HIDE';
         //切换场景
-        EventID.CHANGE_SCENE = "CHANGE_SCENE";
-        EventID.RESIZE = "RESIZE";
+        EventID.CHANGE_SCENE = 'CHANGE_SCENE';
+        EventID.RESIZE = 'RESIZE';
         //模块管理事件
-        EventID.BEGIN_MODULE = "BEGIN_MODULE";
-        EventID.END_MODULE = "END_MODULE";
-        EventID.ENTER_MODULE = "ENTER_MODULE";
-        EventID.EXIT_MODULE = "EXIT_MODULE";
-        EventID.UI_OPEN = "UI_OPEN"; //界面打开
-        EventID.UI_CLOSE = "UI_CLOSE"; //界面关闭
-        EventID.UI_LANG = "UI_LANG"; //语言设置改变
+        EventID.BEGIN_MODULE = 'BEGIN_MODULE';
+        EventID.END_MODULE = 'END_MODULE';
+        EventID.ENTER_MODULE = 'ENTER_MODULE';
+        EventID.EXIT_MODULE = 'EXIT_MODULE';
+        EventID.UI_OPEN = 'UI_OPEN'; //界面打开
+        EventID.UI_CLOSE = 'UI_CLOSE'; //界面关闭
+        EventID.UI_LANG = 'UI_LANG'; //语言设置改变
         return EventID;
     }());
     airkit.EventID = EventID;
@@ -2341,13 +2424,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         function LoaderEventID() {
         }
         //加载事件
-        LoaderEventID.RESOURCE_LOAD_COMPLATE = "RESOURCE_LOAD_COMPLATE"; //资源加载完成
-        LoaderEventID.RESOURCE_LOAD_PROGRESS = "RESOURCE_LOAD_PROGRESS"; //资源加载进度
-        LoaderEventID.RESOURCE_LOAD_FAILED = "RESOURCE_LOAD_FAILED"; //资源加载失败
+        LoaderEventID.RESOURCE_LOAD_COMPLATE = 'RESOURCE_LOAD_COMPLATE'; //资源加载完成
+        LoaderEventID.RESOURCE_LOAD_PROGRESS = 'RESOURCE_LOAD_PROGRESS'; //资源加载进度
+        LoaderEventID.RESOURCE_LOAD_FAILED = 'RESOURCE_LOAD_FAILED'; //资源加载失败
         //加载界面事件
-        LoaderEventID.LOADVIEW_OPEN = "LOADVIEW_OPEN"; //加载界面打开
-        LoaderEventID.LOADVIEW_COMPLATE = "LOADVIEW_COMPLATE"; //加载进度完成
-        LoaderEventID.LOADVIEW_PROGRESS = "LOADVIEW_PROGRESS"; //加载进度
+        LoaderEventID.LOADVIEW_OPEN = 'LOADVIEW_OPEN'; //加载界面打开
+        LoaderEventID.LOADVIEW_COMPLATE = 'LOADVIEW_COMPLATE'; //加载进度完成
+        LoaderEventID.LOADVIEW_PROGRESS = 'LOADVIEW_PROGRESS'; //加载进度
         return LoaderEventID;
     }());
     airkit.LoaderEventID = LoaderEventID;
@@ -2542,6 +2625,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.SignalListener = SignalListener;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:02:41
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/lang/LangManager.ts
+ */
 
 (function (airkit) {
     /**
@@ -2556,9 +2647,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         }
         var info = airkit.getCInfo(LangManager.lang, key);
         if (info == null)
-            return "unknown key:" + key;
+            return 'unknown key:' + key;
         if (airkit.StringUtils.isNullOrEmpty(info.name))
-            return "";
+            return '';
         return airkit.StringUtils.format.apply(airkit.StringUtils, __spreadArrays([info.name], args));
     }
     airkit.L = L;
@@ -2576,18 +2667,26 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         LangManager.setLang = function (lang) {
             var data = airkit.ConfigManger.Instance.query(this.lang);
             if (data == null) {
-                airkit.Log.error("set lang %s failed ", lang);
+                airkit.Log.error('set lang %s failed ', lang);
                 return false;
             }
             this.lang = lang;
             airkit.EventCenter.dispatchEvent(airkit.EventID.UI_LANG, this.lang);
             return true;
         };
-        LangManager.lang = "zh_cn.json"; // 语言包
+        LangManager.lang = 'zh_cn.json'; // 语言包
         return LangManager;
     }(airkit.Singleton));
     airkit.LangManager = LangManager;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:02:45
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/log/Log.ts
+ */
 // import { StringUtils } from "../utils/StringUtils";
 // import { DateUtils } from "../utils/DateUtils";
 // import { LogLevel } from "../common/Constant";
@@ -2607,7 +2706,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 args[_i - 1] = arguments[_i];
             }
             if (format == null)
-                return "null";
+                return 'null';
             if (airkit.StringUtils.isString(format)) {
                 var arr = [];
                 for (var i = 0; i < args.length; i++) {
@@ -2623,7 +2722,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 return content;
             }
             else {
-                if (typeof format == "object" && format.message) {
+                if (typeof format == 'object' && format.message) {
                     return format.message;
                 }
                 else {
@@ -2639,7 +2738,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (this.LEVEL < airkit.LogLevel.DEBUG)
                 return;
             var content = this.format.apply(this, __spreadArrays([format], args));
-            console.log(airkit.DateUtils.currentYMDHMS(), "[debug]", content);
+            console.log(airkit.DateUtils.currentYMDHMS(), '[debug]', content);
             return content;
         };
         Log.info = function (format) {
@@ -2650,7 +2749,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (this.LEVEL < airkit.LogLevel.INFO)
                 return;
             var content = this.format.apply(this, __spreadArrays([format], args));
-            console.log(airkit.DateUtils.currentYMDHMS(), "[info]", content);
+            console.log(airkit.DateUtils.currentYMDHMS(), '[info]', content);
             return content;
         };
         Log.warning = function (format) {
@@ -2661,7 +2760,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (this.LEVEL < airkit.LogLevel.WARNING)
                 return;
             var content = this.format.apply(this, __spreadArrays([format], args));
-            console.warn(airkit.DateUtils.currentYMDHMS(), "[warn]", content);
+            console.warn(airkit.DateUtils.currentYMDHMS(), '[warn]', content);
             return content;
         };
         Log.error = function (format) {
@@ -2672,7 +2771,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (this.LEVEL < airkit.LogLevel.ERROR)
                 return;
             var content = this.format.apply(this, __spreadArrays([format], args));
-            console.error(airkit.DateUtils.currentYMDHMS(), "[error]", content);
+            console.error(airkit.DateUtils.currentYMDHMS(), '[error]', content);
             return content;
         };
         Log.exception = function (format) {
@@ -2683,7 +2782,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (this.LEVEL < airkit.LogLevel.EXCEPTION)
                 return;
             var content = this.format.apply(this, __spreadArrays([format], args));
-            console.exception(airkit.DateUtils.currentYMDHMS(), "[exce]", content);
+            console.exception(airkit.DateUtils.currentYMDHMS(), '[exce]', content);
             return content;
         };
         Log.dump = function (value) {
@@ -2697,13 +2796,21 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     console.error(error);
                 }
             }
-            console.log(airkit.DateUtils.currentYMDHMS(), "[Dump]", value);
+            console.log(airkit.DateUtils.currentYMDHMS(), '[Dump]', value);
         };
         Log.LEVEL = airkit.LogLevel.INFO;
         return Log;
     }());
     airkit.Log = Log;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:02:50
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/module/BaseModule.ts
+ */
 // import { ISignal } from "../event/ISignal";
 // import { EventID } from "../event/EventID";
 // import { LOADVIEW_TYPE_NONE } from "../common/Constant";
@@ -2736,7 +2843,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             return null;
         };
         BaseModule.loaderTips = function () {
-            return "资源加载中";
+            return '资源加载中';
         };
         /**是否显示加载界面*/
         BaseModule.loaderType = function () {
@@ -2816,8 +2923,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     m = airkit.ClassUtils.getInstance(name);
                     var clas = airkit.ClassUtils.getClass(name);
                     if (m == null) {
-                        airkit.Log.warning("Cant find module %s", name);
-                        reject("Cant find module" + name);
+                        airkit.Log.warning('Cant find module %s', name);
+                        reject('Cant find module' + name);
                     }
                     _this.modules.add(name, m);
                     m.name = name;
@@ -2833,11 +2940,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     };
                     m.once(airkit.EventID.BEGIN_MODULE, onInitModuleOver, null);
                     if (clas.res() && clas.res().length > 0) {
-                        _this.loadResource(m, clas).then(function (v) {
+                        _this.loadResource(m, clas)
+                            .then(function (v) {
                             m.setup(null);
-                        }).catch(function (e) {
-                            airkit.Log.warning("Load module Resource Failed %s", name);
-                            reject("Load module Resource Failed " + name);
+                        })
+                            .catch(function (e) {
+                            airkit.Log.warning('Load module Resource Failed %s', name);
+                            reject('Load module Resource Failed ' + name);
                         });
                     }
                     else {
@@ -2870,7 +2979,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
             else {
-                airkit.Log.error("cant find funcName %s from Module:%s", funcName, m.name);
+                airkit.Log.error('cant find funcName %s from Module:%s', funcName, m.name);
             }
             return result;
         };
@@ -2939,16 +3048,16 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         eHttpRequestType[eHttpRequestType["TypeJson"] = 1] = "TypeJson";
         eHttpRequestType[eHttpRequestType["TypePB"] = 2] = "TypePB";
     })(eHttpRequestType = airkit.eHttpRequestType || (airkit.eHttpRequestType = {}));
-    airkit.POST = "POST";
-    airkit.GET = "GET";
-    airkit.CONTENT_TYPE_TEXT = "application/x-www-form-urlencoded";
-    airkit.CONTENT_TYPE_JSON = "application/json";
-    airkit.CONTENT_TYPE_PB = "application/octet-stream"; // "application/x-protobuf"  //
+    airkit.POST = 'POST';
+    airkit.GET = 'GET';
+    airkit.CONTENT_TYPE_TEXT = 'application/x-www-form-urlencoded';
+    airkit.CONTENT_TYPE_JSON = 'application/json';
+    airkit.CONTENT_TYPE_PB = 'application/octet-stream'; // "application/x-protobuf"  //
     //responseType  (default = "text")Web 服务器的响应类型，可设置为 "text"、"json"、"xml"、"arraybuffer"。
-    airkit.RESPONSE_TYPE_TEXT = "text";
-    airkit.RESPONSE_TYPE_JSON = "json";
-    airkit.RESPONSE_TYPE_XML = "xml";
-    airkit.RESPONSE_TYPE_BYTE = "arraybuffer";
+    airkit.RESPONSE_TYPE_TEXT = 'text';
+    airkit.RESPONSE_TYPE_JSON = 'json';
+    airkit.RESPONSE_TYPE_XML = 'xml';
+    airkit.RESPONSE_TYPE_BYTE = 'arraybuffer';
     airkit.HTTP_REQUEST_TIMEOUT = 10000; //设置超时时间
     var Http = /** @class */ (function () {
         function Http() {
@@ -2970,21 +3079,21 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             var _this = this;
             return new Promise(function (resolve, reject) {
                 if (Http.currentRequsts > Http.maxRequest) {
-                    airkit.Log.error("reached max request %s", Http.currentRequsts);
+                    airkit.Log.error('reached max request %s', Http.currentRequsts);
                 }
                 if (Http.currentRequsts < 0)
                     Http.currentRequsts = 0;
                 Http.currentRequsts++;
                 if (responseType == undefined) {
-                    responseType = "text";
+                    responseType = 'text';
                 }
                 if (method != airkit.POST && method != airkit.GET) {
                     Http.currentRequsts--;
-                    reject("method error");
+                    reject('method error');
                 }
                 if (!header)
                     header = [];
-                var key = "Content-Type";
+                var key = 'Content-Type';
                 switch (reqType) {
                     case eHttpRequestType.TypeText:
                         header.push(key, airkit.CONTENT_TYPE_TEXT);
@@ -3002,10 +3111,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 var request = new airkit.HttpRequest();
                 request.http.timeout = airkit.HTTP_REQUEST_TIMEOUT;
                 request.http.ontimeout = function () {
-                    airkit.Log.error("request timeout %s", url);
+                    airkit.Log.error('request timeout %s', url);
                     request.targetOff(request);
                     Http.currentRequsts--;
-                    reject("timeout");
+                    reject('timeout');
                 };
                 request.once(airkit.Event.COMPLETE, _this, function (event) {
                     var data;
@@ -3031,7 +3140,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     resolve(data);
                 });
                 request.once(airkit.Event.ERROR, _this, function (event) {
-                    airkit.Log.error("req:%s error:%s", url, event);
+                    airkit.Log.error('req:%s error:%s', url, event);
                     request.targetOff(request);
                     Http.currentRequsts--;
                     reject(event);
@@ -3126,8 +3235,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         HttpRequest.prototype.send = function (url, data, method, responseType, headers) {
             if (data === void 0) { data = null; }
-            if (method === void 0) { method = "get"; }
-            if (responseType === void 0) { responseType = "text"; }
+            if (method === void 0) { method = 'get'; }
+            if (responseType === void 0) { responseType = 'text'; }
             if (headers === void 0) { headers = null; }
             this._responseType = responseType;
             this._data = null;
@@ -3142,17 +3251,18 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
             else if (!window.conch) {
-                if (!data || typeof data == "string")
-                    http.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                if (!data || typeof data == 'string')
+                    http.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                 else {
-                    http.setRequestHeader("Content-Type", "application/json");
+                    http.setRequestHeader('Content-Type', 'application/json');
                     isJson = true;
                 }
             }
-            var restype = responseType !== "arraybuffer" ? "text" : "arraybuffer";
+            var restype = responseType !== 'arraybuffer' ? 'text' : 'arraybuffer';
             http.responseType = restype;
             if (http.dataType) {
                 //for Ali
+                ;
                 http.dataType = restype;
             }
             http.onerror = function (e) {
@@ -3184,7 +3294,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	e 事件对象。
          */
         HttpRequest.prototype._onAbort = function (e) {
-            this.error("Request was aborted by user");
+            this.error('Request was aborted by user');
         };
         /**
          * @private
@@ -3192,7 +3302,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	e 事件对象。
          */
         HttpRequest.prototype._onError = function (e) {
-            this.error("Request failed Status:" + this._http.status + " text:" + this._http.statusText);
+            this.error('Request failed Status:' + this._http.status + ' text:' + this._http.statusText);
         };
         /**
          * @private
@@ -3206,7 +3316,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 this.complete();
             }
             else {
-                this.error("[" + http.status + "]" + http.statusText + ":" + http.responseURL);
+                this.error('[' + http.status + ']' + http.statusText + ':' + http.responseURL);
             }
         };
         /**
@@ -3227,10 +3337,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this.clear();
             var flag = true;
             try {
-                if (this._responseType === "json") {
+                if (this._responseType === 'json') {
                     this._data = JSON.parse(this._http.responseText);
                 }
-                else if (this._responseType === "xml") {
+                else if (this._responseType === 'xml') {
                     this._data = airkit.Utils.parseXMLFromString(this._http.responseText);
                 }
                 else {
@@ -3284,6 +3394,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }(cc.Node));
     airkit.HttpRequest = HttpRequest;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:03:08
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/plugins/state_machine/State.ts
+ */
 // import { StateMachine } from "./StateMachine";
 // import { Log } from "../../log/Log";
 
@@ -3300,18 +3418,26 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this._status = status;
         }
         State.prototype.enter = function () {
-            airkit.Log.info("you must overwrite the func state.enter !");
+            airkit.Log.info('you must overwrite the func state.enter !');
         };
         State.prototype.update = function (dt) {
-            airkit.Log.info("you must overwrite the func state.update !");
+            airkit.Log.info('you must overwrite the func state.update !');
         };
         State.prototype.exit = function () {
-            airkit.Log.info("you must overwrite the func state.exit !");
+            airkit.Log.info('you must overwrite the func state.exit !');
         };
         return State;
     }());
     airkit.State = State;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:03:11
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/plugins/state_machine/StateMachine.ts
+ */
 // import { State } from "./State";
 
 (function (airkit) {
@@ -3394,12 +3520,12 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     var SocketStatus = /** @class */ (function () {
         function SocketStatus() {
         }
-        SocketStatus.SOCKET_CONNECT = "1";
-        SocketStatus.SOCKET_RECONNECT = "2";
-        SocketStatus.SOCKET_START_RECONNECT = "3";
-        SocketStatus.SOCKET_CLOSE = "4";
-        SocketStatus.SOCKET_NOCONNECT = "5";
-        SocketStatus.SOCKET_DATA = "6";
+        SocketStatus.SOCKET_CONNECT = '1';
+        SocketStatus.SOCKET_RECONNECT = '2';
+        SocketStatus.SOCKET_START_RECONNECT = '3';
+        SocketStatus.SOCKET_CLOSE = '4';
+        SocketStatus.SOCKET_NOCONNECT = '5';
+        SocketStatus.SOCKET_DATA = '6';
         return SocketStatus;
     }());
     airkit.SocketStatus = SocketStatus;
@@ -3443,7 +3569,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         WebSocketEx.prototype.connect = function () {
             this.mSocket = new WebSocket(this._remoteAddress);
-            this.mSocket.binaryType = "arraybuffer";
+            this.mSocket.binaryType = 'arraybuffer';
             // this.mSocket.binaryType = this.mEndian;
             this.addEvents();
             return this.wait();
@@ -3523,7 +3649,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             }
             var message = obj.unpack(msg.data, this.mEndian);
             if (message == null) {
-                airkit.Log.error("decode msg faild %s", msg.data);
+                airkit.Log.error('decode msg faild %s', msg.data);
                 return;
             }
             var hander = this._handers.getValue(obj.getID());
@@ -3543,7 +3669,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 if (buf) {
                     var id_1 = airkit.TimerManager.Instance.addOnce(that._requestTimeout, null, function () {
                         that._handers.remove(handerID);
-                        reject("timeout");
+                        reject('timeout');
                     });
                     that._handers.add(handerID, function (resp) {
                         airkit.TimerManager.Instance.removeTimer(id_1);
@@ -3574,6 +3700,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }(cc.Node));
     airkit.WebSocketEx = WebSocketEx;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:03:24
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/serialize/LocalDB.ts
+ */
 /**
  * 本地数据
  * @author ankye
@@ -3619,13 +3753,21 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             cc.sys.localStorage.clear();
         };
         LocalDB.getFullKey = function (key) {
-            return this._globalKey + "_" + key;
+            return this._globalKey + '_' + key;
         };
-        LocalDB._globalKey = "";
+        LocalDB._globalKey = '';
         return LocalDB;
     }());
     airkit.LocalDB = LocalDB;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:03:28
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/timer/IntervalTimer.ts
+ */
 /**
  * 定时执行
  * @author ankye
@@ -3662,6 +3804,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.IntervalTimer = IntervalTimer;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:03:32
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/timer/Timer.ts
+ */
 /**
  * 时间
  * @author ankye
@@ -3813,7 +3963,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 airkit.ArrayUtils.clear(this._removalPending);
             }
         };
-        TimerManager.TIMER_OBJECT = "timerObject";
+        TimerManager.TIMER_OBJECT = 'timerObject';
         TimerManager.instance = null;
         return TimerManager;
     }(airkit.Singleton));
@@ -3851,7 +4001,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
         };
-        TimerObject.objectKey = "TimerObject";
+        TimerObject.objectKey = 'TimerObject';
         return TimerObject;
     }());
     airkit.TimerObject = TimerObject;
@@ -3910,7 +4060,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             configurable: true
         });
         BaseView.prototype.debug = function () {
-            var bgColor = "#4aa7a688";
+            var bgColor = '#4aa7a688';
             // this.graphics.clear()
             // this.graphics.drawRect(0, 0, this.width, this.height, bgColor)
         };
@@ -3951,8 +4101,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～可重写的方法，注意逻辑层不要再次调用～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**初始化，和onDestroy是一对*/
-        BaseView.prototype.onCreate = function (args) {
-        };
+        BaseView.prototype.onCreate = function (args) { };
         /**销毁*/
         BaseView.prototype.onDestroy = function () {
             _super.prototype.onDestroy.call(this);
@@ -3984,7 +4133,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             }
         };
         BaseView.loaderTips = function () {
-            return "资源加载中";
+            return '资源加载中';
         };
         //显示加载界面 默认不显示
         BaseView.loaderType = function () {
@@ -4150,8 +4299,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this.registeGUIEvent();
             this.registerSignalEvent();
         };
-        Dialog.prototype.onShown = function () {
-        };
+        Dialog.prototype.onShown = function () { };
         Dialog.prototype.onHide = function () {
             this.onClose();
         };
@@ -4185,7 +4333,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 airkit.EventCenter.dispatchEvent(airkit.EventID.UI_CLOSE, this._UIID, this._viewID);
             airkit.EventCenter.off(airkit.EventID.UI_LANG, this, this.onLangChange);
             _super.prototype.dispose.call(this);
-            console.log("dialog dispose");
+            console.log('dialog dispose');
         };
         Dialog.prototype.isDestory = function () {
             return this._destory;
@@ -4210,8 +4358,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         /*～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～可重写的方法，注意逻辑层不要再次调用～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～*/
         /**初始化，和onDestroy是一对*/
-        Dialog.prototype.onCreate = function (args) {
-        };
+        Dialog.prototype.onCreate = function (args) { };
         /**销毁*/
         Dialog.prototype.onDestroy = function () {
             _super.prototype.onDestroy.call(this);
@@ -4243,7 +4390,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             }
         };
         Dialog.loaderTips = function () {
-            return "资源加载中";
+            return '资源加载中';
         };
         //显示加载界面 默认不显示
         Dialog.loaderType = function () {
@@ -4345,16 +4492,16 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         Dialog.buildRes = function (resMap) {
             var res = [];
             for (var k in resMap) {
-                res.push({ url: "ui/" + k, type: airkit.FguiAsset, refCount: 1, pkg: k });
+                res.push({ url: 'ui/' + k, type: airkit.FguiAsset, refCount: 1, pkg: k });
                 for (var k2 in resMap[k]) {
-                    res.push({ url: "ui/" + k2, type: airkit.FguiAtlas, refCount: resMap[k][k2], pkg: k });
+                    res.push({ url: 'ui/' + k2, type: airkit.FguiAtlas, refCount: resMap[k][k2], pkg: k });
                 }
             }
             return res;
         };
         Dialog.prototype.onClose = function () {
             if (this._isOpen === false) {
-                airkit.Log.error("连续点击");
+                airkit.Log.error('连续点击');
                 return false; //避免连续点击关闭
             }
             this._isOpen = false;
@@ -4388,7 +4535,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             return _super.call(this) || this;
         }
         Layer.prototype.debug = function () {
-            var bgColor = "#f4e1e188";
+            var bgColor = '#f4e1e188';
             //	this.graphics.clear()
             //	this.graphics.drawRect(0, 0, this.width, this.height, bgColor)
         };
@@ -4440,8 +4587,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 //     layer = this.topLayer;
                 //     break;
             }
-            if (cc.winSize.width != layer.width ||
-                cc.winSize.height != layer.height) {
+            if (cc.winSize.width != layer.width || cc.winSize.height != layer.height) {
                 layer.width = cc.winSize.width;
                 layer.height = cc.winSize.height;
             }
@@ -4452,12 +4598,12 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this._root = new Layer();
             root.addChild(this._root);
             this._bgLayer = new Layer();
-            this._bgLayer.node.name = "bgLayer";
+            this._bgLayer.node.name = 'bgLayer';
             this._bgLayer.touchable = true;
             this._root.addChild(this._bgLayer);
             this._bgLayer.sortingOrder = 0;
             this._mainLayer = new Layer();
-            this._mainLayer.node.name = "mainLayer";
+            this._mainLayer.node.name = 'mainLayer';
             this._mainLayer.touchable = true;
             this._root.addChild(this._mainLayer);
             this._mainLayer.sortingOrder = 1;
@@ -4467,7 +4613,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             // this._root.addChild(this._tooltipLayer);
             // this._tooltipLayer.sortingOrder = 3;
             this._uiLayer = new Layer();
-            this._uiLayer.node.name = "uiLayer";
+            this._uiLayer.node.name = 'uiLayer';
             this._uiLayer.touchable = true;
             this._root.addChild(this._uiLayer);
             this._uiLayer.sortingOrder = 2;
@@ -4482,7 +4628,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             // this._root.addChild(this._systemLayer);
             // this._systemLayer.sortingOrder = 6;
             this._loadingLayer = new Layer();
-            this._loadingLayer.node.name = "loadingLayer";
+            this._loadingLayer.node.name = 'loadingLayer';
             this._loadingLayer.touchable = true;
             this._root.addChild(this._loadingLayer);
             this._loadingLayer.sortingOrder = 1001;
@@ -4510,7 +4656,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             airkit.EventCenter.off(airkit.EventID.RESIZE, this, this.resize);
         };
         LayerManager.resize = function () {
-            airkit.Log.info("LayerManager Receive Resize %s %s", cc.winSize.width, cc.winSize.height);
+            airkit.Log.info('LayerManager Receive Resize %s %s', cc.winSize.width, cc.winSize.height);
             var i;
             var l;
             var w = cc.winSize.width;
@@ -4618,6 +4764,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }(airkit.Singleton));
     airkit.LayerManager = LayerManager;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:03:52
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/ui/LoaderDialog.ts
+ */
 
 (function (airkit) {
     var LoaderDialog = /** @class */ (function (_super) {
@@ -4635,20 +4789,17 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         /**
          * 打开
          */
-        LoaderDialog.prototype.onOpen = function (total) {
-        };
+        LoaderDialog.prototype.onOpen = function (total) { };
         /**
          * 设置提示
          */
-        LoaderDialog.prototype.setTips = function (s) {
-        };
+        LoaderDialog.prototype.setTips = function (s) { };
         /**
          * 加载进度
          * @param 	cur		当前加载数量
          * @param	total	总共需要加载的数量
          */
-        LoaderDialog.prototype.setProgress = function (cur, total) {
-        };
+        LoaderDialog.prototype.setProgress = function (cur, total) { };
         /**
          * 关闭
          */
@@ -4724,7 +4875,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             switch (type) {
                 case airkit.LoaderEventID.LOADVIEW_OPEN:
                     {
-                        airkit.Log.debug("显示加载界面");
+                        airkit.Log.debug('显示加载界面');
                         var total = args.get(1);
                         var tips = args.get(2);
                         this.show(viewType, total, tips);
@@ -4740,7 +4891,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     break;
                 case airkit.LoaderEventID.LOADVIEW_COMPLATE:
                     {
-                        airkit.Log.debug("加载界面关闭");
+                        airkit.Log.debug('加载界面关闭');
                         this.close(viewType);
                     }
                     break;
@@ -4773,13 +4924,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                                 _this.updateView(view, total, tips);
                             }
                             else {
-                                airkit.Log.error("创建加载类失败 %s", className_1);
+                                airkit.Log.error('创建加载类失败 %s', className_1);
                             }
                         });
                     }
                 }
                 else {
-                    airkit.Log.error("Must set loadingview first type= %s", type);
+                    airkit.Log.error('Must set loadingview first type= %s', type);
                 }
             }
             else {
@@ -4870,23 +5021,23 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             var totalMemory = 0;
             var size = 0;
             for (var key in cache) {
-                var asset = cc.loader["_cache"][key];
+                var asset = cc.loader['_cache'][key];
                 if (asset instanceof cc.Texture2D) {
-                    if (asset.width && asset.height && asset["_format"]) {
-                        size = asset.width * asset.height * (asset["_native"] === '.jpg' ? 3 : 4) / (1024.0 * 1024.0);
-                        airkit.Log.info("Texture %s 资源占用内存%sMB", asset.nativeUrl, size.toFixed(3));
+                    if (asset.width && asset.height && asset['_format']) {
+                        size = (asset.width * asset.height * (asset['_native'] === '.jpg' ? 3 : 4)) / (1024.0 * 1024.0);
+                        airkit.Log.info('Texture %s 资源占用内存%sMB', asset.nativeUrl, size.toFixed(3));
                         totalMemory += size;
                     }
                 }
                 else if (asset instanceof cc.SpriteFrame) {
-                    if (asset["_originalSize"] && asset["_texture"]) {
-                        size = asset["_originalSize"].width * asset["_originalSize"].height * asset["_texture"]._format / 4 / (1024.0 * 1024.0);
+                    if (asset['_originalSize'] && asset['_texture']) {
+                        size = (asset['_originalSize'].width * asset['_originalSize'].height * asset['_texture']._format) / 4 / (1024.0 * 1024.0);
                         totalMemory += size;
-                        airkit.Log.info("SpriteFrame %s 资源占用内存%sMB", asset.nativeUrl, size.toFixed(3));
+                        airkit.Log.info('SpriteFrame %s 资源占用内存%sMB', asset.nativeUrl, size.toFixed(3));
                     }
                 }
             }
-            airkit.Log.info("资源占用内存%sMB", totalMemory.toFixed(3));
+            airkit.Log.info('资源占用内存%sMB', totalMemory.toFixed(3));
         };
         /**
          * 异步加载
@@ -4917,7 +5068,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         ResourceManager.prototype.dump = function () {
             this._dicResInfo.foreach(function (k, v) {
-                console.log("url:" + k + " refCount=" + v.ref + "\n");
+                console.log('url:' + k + ' refCount=' + v.ref + '\n');
                 return true;
             });
         };
@@ -4940,7 +5091,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (viewType === void 0) { viewType = airkit.eLoaderType.NONE; }
             if (priority === void 0) { priority = 1; }
             if (cache === void 0) { cache = true; }
-            if (pkg === void 0) { pkg = ""; }
+            if (pkg === void 0) { pkg = ''; }
             if (ignoreCache === void 0) { ignoreCache = false; }
             if (viewType == null)
                 viewType = airkit.eLoaderType.NONE;
@@ -4964,7 +5115,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             }
             return new Promise(function (resolve, reject) {
                 cc.resources.load(url, type, function (completedCount, totalCount, item) {
-                    _this.onLoadProgress(viewType, totalCount, "", completedCount / totalCount);
+                    _this.onLoadProgress(viewType, totalCount, '', completedCount / totalCount);
                 }, function (error, resource) {
                     if (error) {
                         resInfo.updateStatus(eLoaderStatus.READY);
@@ -4973,7 +5124,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         return;
                     }
                     resInfo.updateStatus(eLoaderStatus.LOADED);
-                    _this.onLoadComplete(viewType, [url], [{ url: url, type: type, refCount: 1, pkg: pkg }], "");
+                    _this.onLoadComplete(viewType, [url], [{ url: url, type: type, refCount: 1, pkg: pkg }], '');
                     resolve(url);
                 });
             });
@@ -5105,7 +5256,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         ResourceManager.prototype.onLoadProgress = function (viewType, total, tips, progress) {
             var cur = airkit.NumberUtils.toInt(Math.floor(progress * total));
-            airkit.Log.debug("[load]进度: current=%s total=%s precent = %s", cur, total, progress);
+            airkit.Log.debug('[load]进度: current=%s total=%s precent = %s', cur, total, progress);
             if (viewType != airkit.eLoaderType.NONE) {
                 airkit.LoaderManager.Instance.setProgress(viewType, cur, total);
             }
@@ -5123,7 +5274,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         ResourceManager.prototype.releaseRes = function (url) {
             this._dicResInfo.remove(url);
             cc.resources.release(url);
-            airkit.Log.info("[res]释放资源:" + url);
+            airkit.Log.info('[res]释放资源:' + url);
         };
         /**
          * 图片代理，可以远程加载图片显示
@@ -5146,21 +5297,21 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     if (proxy) {
                         image.url = proxy;
                     }
-                    airkit.Log.info("imageProxy start load %s ", res_1);
+                    airkit.Log.info('imageProxy start load %s ', res_1);
                     ResourceManager.Instance.loadRes(res_1)
                         .then(function (v) {
                         image.url = skin;
                         image.alpha = 0.1;
                         airkit.TweenUtils.get(image).to({ alpha: 1.0 }, 0.3);
-                        airkit.Log.info("imageProxy start load done %s ", res_1);
+                        airkit.Log.info('imageProxy start load done %s ', res_1);
                     })
                         .catch(function (e) { return airkit.Log.error(e); });
                 }
             });
         };
-        ResourceManager.FONT_Yuanti = "Yuanti SC Regular";
-        ResourceManager.Font_Helvetica = "Helvetica";
-        ResourceManager.FONT_DEFAULT = "";
+        ResourceManager.FONT_Yuanti = 'Yuanti SC Regular';
+        ResourceManager.Font_Helvetica = 'Helvetica';
+        ResourceManager.FONT_DEFAULT = '';
         ResourceManager.FONT_DEFAULT_SIZE = airkit.FONT_SIZE_5;
         ResourceManager.instance = null;
         return ResourceManager;
@@ -5199,7 +5350,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (this.ref <= 0) {
                 if (this.type == FguiAsset) {
                     fgui.UIPackage.removePackage(this.url);
-                    console.log("remove package" + this.url);
+                    console.log('remove package' + this.url);
                     ResourceManager.Instance.releaseRes(this.url);
                 }
                 else if (this.type == FguiAtlas) {
@@ -5244,7 +5395,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 this.cache = new airkit.SDictionary();
             }
             if (this.cache.containsKey(name)) {
-                airkit.Log.error("SceneManager::register scene - same id is register:" + name);
+                airkit.Log.error('SceneManager::register scene - same id is register:' + name);
                 return;
             }
             this.cache.add(name, cls);
@@ -5281,10 +5432,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             airkit.EventCenter.off(airkit.EventID.RESIZE, this, this.resize);
         };
         SceneManager.prototype.resize = function () {
-            airkit.Log.info("SceneManager Receive Resize %s %s", cc.winSize.width, cc.winSize.height);
+            airkit.Log.info('SceneManager Receive Resize %s %s', cc.winSize.width, cc.winSize.height);
             if (this._curScene) {
                 this._curScene.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
-                var func = this._curScene["resize"];
+                var func = this._curScene['resize'];
                 var result = null;
                 if (func) {
                     result = func.apply(this._curScene);
@@ -5292,7 +5443,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 for (var i = 0; i < fgui.GRoot.inst.numChildren; i++) {
                     var v = fgui.GRoot.inst._children[i];
                     if (v instanceof airkit.Dialog) {
-                        var func = v["resize"];
+                        var func = v['resize'];
                         if (func) {
                             result = func.apply(v);
                         }
@@ -5324,7 +5475,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         //  ResourceManager.Instance.dump();
                     }
                     else {
-                        airkit.Log.error("加载场景失败 %s", sceneName);
+                        airkit.Log.error('加载场景失败 %s', sceneName);
                     }
                 });
             }
@@ -5360,17 +5511,17 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 
 (function (airkit) {
     /**
-    * UIManager 弹出ui管理类
-    * example1:
-    * ak.UIManager.showQ(eDialogUIID.ALERT,{clickMaskClose:true}).then(v=>{
-    *   if(v){
-    *       console.log("showQ dlg ="+v.viewID);
-    *       v.wait().then(result=>{
-    *           console.log("result wait ");
-    *           console.log(result);
-    *       });
-    *  }
-    *});
+     * UIManager 弹出ui管理类
+     * example1:
+     * ak.UIManager.showQ(eDialogUIID.ALERT,{clickMaskClose:true}).then(v=>{
+     *   if(v){
+     *       console.log("showQ dlg ="+v.viewID);
+     *       v.wait().then(result=>{
+     *           console.log("result wait ");
+     *           console.log(result);
+     *       });
+     *  }
+     *});
      */
     var UIManager = /** @class */ (function (_super) {
         __extends(UIManager, _super);
@@ -5386,16 +5537,16 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             return _this;
         }
         /**
-      * 注册ui类，存放uiname和class的对应关系
-      * @param name
-      * @param cls
-      */
+         * 注册ui类，存放uiname和class的对应关系
+         * @param name
+         * @param cls
+         */
         UIManager.register = function (name, cls) {
             if (!this.cache) {
                 this.cache = new airkit.SDictionary();
             }
             if (this.cache.containsKey(name)) {
-                airkit.Log.error("UIManager::register ui - same id is register:" + name);
+                airkit.Log.error('UIManager::register ui - same id is register:' + name);
                 return;
             }
             this.cache.add(name, cls);
@@ -5472,7 +5623,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     }
                     if (findObj) {
                         findObj.setVisible(true);
-                        airkit.Log.info("添加重复uiid %s", uiid);
+                        airkit.Log.info('添加重复uiid %s', uiid);
                         resolve(findObj);
                         return;
                     }
@@ -5494,7 +5645,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                             resolve(ui);
                         }
                         else {
-                            reject("ui load resource failed");
+                            reject('ui load resource failed');
                         }
                     });
                 }
@@ -5504,10 +5655,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             });
         };
         /**
-        * 显示界面
-        * @param uiid        界面uiName
-        * @param args      参数
-        */
+         * 显示界面
+         * @param uiid        界面uiName
+         * @param args      参数
+         */
         UIManager.prototype.popup = function (uiid, params) {
             var _this = this;
             return new Promise(function (resolve, reject) {
@@ -5524,7 +5675,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     }
                     if (findObj) {
                         findObj.setVisible(true);
-                        airkit.Log.info("添加重复uiid %s", uiid);
+                        airkit.Log.info('添加重复uiid %s', uiid);
                         resolve(findObj);
                         return;
                     }
@@ -5546,7 +5697,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                             resolve(ui);
                         }
                         else {
-                            reject("ui load resource failed");
+                            reject('ui load resource failed');
                         }
                     });
                 }
@@ -5557,7 +5708,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         UIManager.prototype.showUI = function (type, uiid, clas, params) {
             var ui = new clas();
-            airkit.assert(ui != null, "UIManager::Show - cannot create ui:" + uiid);
+            airkit.assert(ui != null, 'UIManager::Show - cannot create ui:' + uiid);
             ui.UIID = uiid;
             ui.setup(params.data);
             if (params.clickMaskClose) {
@@ -5592,7 +5743,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (airkit.StringUtils.isNullOrEmpty(uiid))
                 return;
             return new Promise(function (resolve, reject) {
-                airkit.Log.info("close panel %s %s", uiid, vid);
+                airkit.Log.info('close panel %s %s', uiid, vid);
                 for (var i = _this._cacheViews.length - 1; i >= 0; i--) {
                     var obj = _this._cacheViews[i];
                     if (obj.UIID == uiid && obj.viewID == vid) {
@@ -5929,7 +6080,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     //         return info.mLayer;
     //     }
     // }
-    // /** 
+    // /**
     // 显示弹出框信息
     // @param callback         回调函数
     // @param title            标题，默认是""
@@ -6034,7 +6185,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             var info = this._readyUIs.dequeue();
             var viewID = airkit.genViewIDSeq();
             this._currentUIs.push([info[0], viewID]);
-            airkit.Log.info("dialog queue %s %s", info[0], viewID);
+            airkit.Log.info('dialog queue %s %s', info[0], viewID);
             if (this._type == airkit.eUIType.POPUP) {
                 UIManager.Instance.popup(info[0], info[1]).then(function (v) {
                     if (v) {
@@ -6083,7 +6234,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     var viewID = args.get(1);
                     for (var i = 0; i < this._currentUIs.length; i++) {
                         if (this._currentUIs[i][0] == id && this._currentUIs[i][1] == viewID) {
-                            console.log("close dialog:" + id + " and id:" + viewID);
+                            console.log('close dialog:' + id + ' and id:' + viewID);
                             this._currentUIs.splice(i, 1);
                             if (this._currentUIs.length == 0) {
                                 this.unRegisterEvent();
@@ -6132,7 +6283,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @function
          */
         ArrayUtils.isArray = function (obj) {
-            return Object.prototype.toString.call(obj) === "[object Array]";
+            return Object.prototype.toString.call(obj) === '[object Array]';
         };
         ArrayUtils.equip = function (arr, v) {
             // if the other array is a falsy value, return
@@ -6346,7 +6497,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 this._d_ = new DataView(newByteView.buffer);
             }
             catch (err) {
-                throw "Invalid typed array length:" + len;
+                throw 'Invalid typed array length:' + len;
             }
         };
         /**
@@ -6451,7 +6602,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         Byte.prototype.readFloat32 = function () {
             if (this._pos_ + 4 > this._length)
-                throw "getFloat32 error - Out of bounds";
+                throw 'getFloat32 error - Out of bounds';
             var v = this._d_.getFloat32(this._pos_, this._xd_);
             this._pos_ += 4;
             return v;
@@ -6470,7 +6621,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         Byte.prototype.readFloat64 = function () {
             if (this._pos_ + 8 > this._length)
-                throw "getFloat64 error - Out of bounds";
+                throw 'getFloat64 error - Out of bounds';
             var v = this._d_.getFloat64(this._pos_, this._xd_);
             this._pos_ += 8;
             return v;
@@ -6507,7 +6658,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         Byte.prototype.readInt32 = function () {
             if (this._pos_ + 4 > this._length)
-                throw "getInt32 error - Out of bounds";
+                throw 'getInt32 error - Out of bounds';
             var float = this._d_.getInt32(this._pos_, this._xd_);
             this._pos_ += 4;
             return float;
@@ -6526,7 +6677,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         Byte.prototype.readUint32 = function () {
             if (this._pos_ + 4 > this._length)
-                throw "getUint32 error - Out of bounds";
+                throw 'getUint32 error - Out of bounds';
             var v = this._d_.getUint32(this._pos_, this._xd_);
             this._pos_ += 4;
             return v;
@@ -6563,7 +6714,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         Byte.prototype.readInt16 = function () {
             if (this._pos_ + 2 > this._length)
-                throw "getInt16 error - Out of bounds";
+                throw 'getInt16 error - Out of bounds';
             var us = this._d_.getInt16(this._pos_, this._xd_);
             this._pos_ += 2;
             return us;
@@ -6582,7 +6733,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         Byte.prototype.readUint16 = function () {
             if (this._pos_ + 2 > this._length)
-                throw "getUint16 error - Out of bounds";
+                throw 'getUint16 error - Out of bounds';
             var us = this._d_.getUint16(this._pos_, this._xd_);
             this._pos_ += 2;
             return us;
@@ -6619,7 +6770,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         Byte.prototype.readUint8 = function () {
             if (this._pos_ + 1 > this._length)
-                throw "getUint8 error - Out of bounds";
+                throw 'getUint8 error - Out of bounds';
             return this._u8d_[this._pos_++];
         };
         /**
@@ -6678,7 +6829,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @return 读取的字符串。
          */
         Byte.prototype._rUTF = function (len) {
-            var v = "", max = this._pos_ + len, c, c2, c3, f = String.fromCharCode;
+            var v = '', max = this._pos_ + len, c, c2, c3, f = String.fromCharCode;
             var u = this._u8d_, i = 0;
             var strs = [];
             var n = 0;
@@ -6718,7 +6869,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 i++;
             }
             strs.length = n;
-            return strs.join("");
+            return strs.join('');
             //return v;
         };
         /**
@@ -6739,7 +6890,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         //TODO:coverage
         Byte.prototype.readCustomString = function (len) {
-            var v = "", ulen = 0, c, c2, f = String.fromCharCode;
+            var v = '', ulen = 0, c, c2, f = String.fromCharCode;
             var u = this._u8d_, i = 0;
             while (len > 0) {
                 c = u[this._pos_];
@@ -6810,7 +6961,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         Byte.prototype.writeUTFBytes = function (value) {
             // utf8-decode
-            value = value + "";
+            value = value + '';
             for (var i = 0, sz = value.length; i < sz; i++) {
                 var c = value.charCodeAt(i);
                 if (c <= 0x7f) {
@@ -6890,10 +7041,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         Byte.prototype.readUTFBytes = function (len) {
             if (len === void 0) { len = -1; }
             if (len === 0)
-                return "";
+                return '';
             var lastBytes = this.bytesAvailable;
             if (len > lastBytes)
-                throw "readUTFBytes error - Out of bounds";
+                throw 'readUTFBytes error - Out of bounds';
             len = len > 0 ? len : lastBytes;
             return this._rUTF(len);
         };
@@ -6924,7 +7075,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         Byte.prototype.readByte = function () {
             if (this._pos_ + 1 > this._length)
-                throw "readByte error - Out of bounds";
+                throw 'readByte error - Out of bounds';
             return this._d_.getInt8(this._pos_++);
         };
         /**
@@ -6957,7 +7108,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (offset === void 0) { offset = 0; }
             if (length === void 0) { length = 0; }
             if (offset < 0 || length < 0)
-                throw "writeArrayBuffer error - Out of bounds";
+                throw 'writeArrayBuffer error - Out of bounds';
             if (length == 0)
                 length = arraybuffer.byteLength - offset;
             this._ensureWrite(this._pos_ + length);
@@ -6981,19 +7132,27 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * <p> <code>BIG_ENDIAN</code> ：大端字节序，地址低位存储值的高位，地址高位存储值的低位。有时也称之为网络字节序。<br/>
          * <code>LITTLE_ENDIAN</code> ：小端字节序，地址低位存储值的低位，地址高位存储值的高位。</p>
          */
-        Byte.BIG_ENDIAN = "bigEndian";
+        Byte.BIG_ENDIAN = 'bigEndian';
         /**
          * <p>主机字节序，是 CPU 存放数据的两种不同顺序，包括小端字节序和大端字节序。通过 <code>getSystemEndian</code> 可以获取当前系统的字节序。</p>
          * <p> <code>LITTLE_ENDIAN</code> ：小端字节序，地址低位存储值的低位，地址高位存储值的高位。<br/>
          * <code>BIG_ENDIAN</code> ：大端字节序，地址低位存储值的高位，地址高位存储值的低位。有时也称之为网络字节序。</p>
          */
-        Byte.LITTLE_ENDIAN = "littleEndian";
+        Byte.LITTLE_ENDIAN = 'littleEndian';
         /**@private */
         Byte._sysEndian = null;
         return Byte;
     }());
     airkit.Byte = Byte;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:04:17
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/utils/ByteArrayUtils.ts
+ */
 
 (function (airkit) {
     /**
@@ -7033,7 +7192,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }
     airkit.string2Uint8Array = string2Uint8Array;
     function uint8Array2String(fileData) {
-        var dataString = "";
+        var dataString = '';
         for (var i = 0; i < fileData.length; i++) {
             dataString += String.fromCharCode(fileData[i]);
         }
@@ -7084,7 +7243,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @return 类对象
          */
         ClassUtils.getClass = function (className) {
-            var classObject = ClassUtils._classMap[className] || ClassUtils._classMap["cc." + className] || className;
+            var classObject = ClassUtils._classMap[className] || ClassUtils._classMap['cc.' + className] || className;
             return classObject;
         };
         /**
@@ -7097,7 +7256,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (compClass)
                 return new compClass();
             else
-                console.warn("[error] Undefined class:", className);
+                console.warn('[error] Undefined class:', className);
             return null;
         };
         /**深复制一个对象*/
@@ -7128,14 +7287,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
             else {
-                airkit.Log.error("cant find funcName %s from Module:%s", funcName, obj.name);
+                airkit.Log.error('cant find funcName %s from Module:%s', funcName, obj.name);
             }
             return result;
         };
         ClassUtils.classKey = function (obj) {
             var proto = Object.getPrototypeOf(obj);
-            var clazz = proto["constructor"];
-            var sign = clazz["objectKey"];
+            var clazz = proto['constructor'];
+            var sign = clazz['objectKey'];
             return sign;
         };
         /**@private */
@@ -7207,20 +7366,20 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             var date = new Date(timeValue);
             var y = date.getFullYear();
             var m = date.getMonth() + 1;
-            var M = m < 10 ? "0" + m : m;
+            var M = m < 10 ? '0' + m : m;
             var d = date.getDate();
-            var D = d < 10 ? "0" + d : d;
+            var D = d < 10 ? '0' + d : d;
             var h = date.getHours();
-            var H = h < 10 ? "0" + h : h;
+            var H = h < 10 ? '0' + h : h;
             var minute = date.getMinutes();
             var second = date.getSeconds();
-            var minut = minute < 10 ? "0" + minute : minute;
-            var secon = second < 10 ? "0" + second : second;
-            return y + "-" + M + "-" + D + " " + H + ":" + minut + ":" + secon;
+            var minut = minute < 10 ? '0' + minute : minute;
+            var secon = second < 10 ? '0' + second : second;
+            return y + '-' + M + '-' + D + ' ' + H + ':' + minut + ':' + secon;
         };
         //返回时:分:秒
         DateUtils.countdown = function (time, format) {
-            if (format === void 0) { format = "D天H时M分S秒"; }
+            if (format === void 0) { format = 'D天H时M分S秒'; }
             var s = Math.max(0, time / 1000);
             var d = Math.floor(s / 24 / 3600);
             var h = Math.floor((s / 3600) % 24);
@@ -7233,52 +7392,52 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             return f;
         };
         DateUtils.formatTime = function (time, format) {
-            if (format === void 0) { format = "%s:%s:%s"; }
+            if (format === void 0) { format = '%s:%s:%s'; }
             var s = Math.max(0, time);
             var h = Math.floor((s / 3600) % 24);
             var m = Math.floor((s / 60) % 60);
             s = Math.floor(s % 60);
-            return airkit.StringUtils.format(format, h < 10 ? "0" + h : h, m < 10 ? "0" + m : m, s < 10 ? "0" + s : s);
+            return airkit.StringUtils.format(format, h < 10 ? '0' + h : h, m < 10 ? '0' + m : m, s < 10 ? '0' + s : s);
         };
         DateUtils.format2Time = function (time) {
-            var format = "%s:%s";
+            var format = '%s:%s';
             var s = Math.max(0, time);
             var d = Math.floor(s / 24 / 3600);
             if (d > 0) {
-                return airkit.StringUtils.format("%s天", d);
+                return airkit.StringUtils.format('%s天', d);
             }
             var h = Math.floor((s / 3600) % 24);
             var m = Math.floor((s / 60) % 60);
             s = Math.floor(s % 60);
-            var M = m < 10 ? "0" + m : m;
-            var H = h < 10 ? "0" + h : h;
-            var S = s < 10 ? "0" + s : s;
+            var M = m < 10 ? '0' + m : m;
+            var H = h < 10 ? '0' + h : h;
+            var S = s < 10 ? '0' + s : s;
             if (h > 0) {
                 return airkit.StringUtils.format(format, H, M);
             }
             else {
-                format = format.replace(":", "’");
+                format = format.replace(':', '’');
                 return airkit.StringUtils.format(format, M, S);
             }
         };
         DateUtils.format2Time2 = function (time) {
-            var format = "%s:%s";
+            var format = '%s:%s';
             var s = Math.max(0, time);
             var d = Math.floor(s / 24 / 3600);
             if (d > 0) {
-                return airkit.StringUtils.format("%s天", d);
+                return airkit.StringUtils.format('%s天', d);
             }
             var h = Math.floor((s / 3600) % 24);
             var m = Math.floor((s / 60) % 60);
             s = Math.floor(s % 60);
-            var M = m < 10 ? "0" + m : m;
-            var H = h < 10 ? "0" + h : h;
-            var S = s < 10 ? "0" + s : s;
+            var M = m < 10 ? '0' + m : m;
+            var H = h < 10 ? '0' + h : h;
+            var S = s < 10 ? '0' + s : s;
             if (h > 0) {
                 return airkit.StringUtils.format(format, H, M);
             }
             else {
-                format = format.replace(":", "’");
+                format = format.replace(':', '’');
                 return airkit.StringUtils.format(format, M, S);
             }
         };
@@ -7289,6 +7448,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.DateUtils = DateUtils;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:04:27
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/utils/DicUtils.ts
+ */
 /**
  * 字典工具类
  * @author ankye
@@ -7359,6 +7526,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             return count;
         };
         DicUtils.assign = function (obj, dic) {
+            ;
             Object.assign(obj, dic);
         };
         return DicUtils;
@@ -7397,8 +7565,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             while (container.numChildren > 0) {
                 var node = container.removeChildAt(0);
                 if (node) {
-                    var cons = node["constructor"];
-                    if (cons["name"] == "Animation") {
+                    var cons = node['constructor'];
+                    if (cons['name'] == 'Animation') {
                         var ani = node;
                         ani.clear();
                         ani.destroy(true);
@@ -7498,8 +7666,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             view.setPosition(x, y);
             var time = 0.25;
             airkit.TweenUtils.get(view).to({ scaleX: 1, scaleY: 1 }, time, fgui.EaseType.QuadOut, handler);
-            if (view.parent && view.parent.getChild("bg")) {
-                var bg = view.parent.getChild("bg");
+            if (view.parent && view.parent.getChild('bg')) {
+                var bg = view.parent.getChild('bg');
                 bg.alpha = 0;
                 airkit.TweenUtils.get(bg).to({ alpha: 1.0 }, 0.25, fgui.EaseType.QuadOut);
             }
@@ -7890,16 +8058,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             }
             else if (pts.length == 4) {
                 //三阶贝塞尔
-                target.x =
-                    Math.pow(1 - t, 3) * pts[0].x +
-                        3 * t * Math.pow(1 - t, 2) * pts[1].x +
-                        3 * Math.pow(t, 2) * (1 - t) * pts[2].x +
-                        Math.pow(t, 3) * pts[3].x;
-                target.y =
-                    Math.pow(1 - t, 3) * pts[0].y +
-                        3 * t * Math.pow(1 - t, 2) * pts[1].y +
-                        3 * Math.pow(t, 2) * (1 - t) * pts[2].y +
-                        Math.pow(t, 3) * pts[3].y;
+                target.x = Math.pow(1 - t, 3) * pts[0].x + 3 * t * Math.pow(1 - t, 2) * pts[1].x + 3 * Math.pow(t, 2) * (1 - t) * pts[2].x + Math.pow(t, 3) * pts[3].x;
+                target.y = Math.pow(1 - t, 3) * pts[0].y + 3 * t * Math.pow(1 - t, 2) * pts[1].y + 3 * Math.pow(t, 2) * (1 - t) * pts[2].y + Math.pow(t, 3) * pts[3].y;
             }
             return target;
         };
@@ -8034,6 +8194,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.MathUtils = MathUtils;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:04:49
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/utils/NumberUtils.ts
+ */
 // import { StringUtils } from "./StringUtils";
 
 (function (airkit) {
@@ -8063,7 +8231,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         NumberUtils.reserveNumber = function (num, size) {
             var str = String(num);
             var l = str.length;
-            var p_index = str.indexOf(".");
+            var p_index = str.indexOf('.');
             if (p_index < 0) {
                 return num;
             }
@@ -8081,12 +8249,12 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         NumberUtils.reserveNumberWithZero = function (num, size) {
             var str = String(num);
             var l = str.length;
-            var p_index = str.indexOf(".");
+            var p_index = str.indexOf('.');
             if (p_index < 0) {
                 //是整数
-                str += ".";
+                str += '.';
                 for (var i = 0; i < size; ++i)
-                    str += "0";
+                    str += '0';
                 return str;
             }
             var ret = str.slice(0, p_index + 1);
@@ -8101,7 +8269,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 //不足补0
                 var diff = size - lastNum;
                 for (var i = 0; i < diff; ++i)
-                    str += "0";
+                    str += '0';
                 return str;
             }
             else {
@@ -8124,7 +8292,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         }
         Object.defineProperty(StringUtils, "empty", {
             get: function () {
-                return "";
+                return '';
             },
             enumerable: false,
             configurable: true
@@ -8146,7 +8314,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             return parseFloat(str);
         };
         StringUtils.stringCut = function (str, len, fill) {
-            if (fill === void 0) { fill = "..."; }
+            if (fill === void 0) { fill = '...'; }
             var result = str;
             if (str.length > len) {
                 result = str.substr(0, len) + fill;
@@ -8178,14 +8346,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         StringUtils.addZero = function (str, len, dir) {
             if (dir === void 0) { dir = 0; }
-            var _str = "";
+            var _str = '';
             var _len = str.length;
-            var str_pre_zero = "";
-            var str_end_zero = "";
+            var str_pre_zero = '';
+            var str_end_zero = '';
             if (dir == 0)
-                str_end_zero = "0";
+                str_end_zero = '0';
             else
-                str_pre_zero = "0";
+                str_pre_zero = '0';
             if (_len < len) {
                 var i = 0;
                 while (i < len - _len) {
@@ -8201,7 +8369,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @function
          */
         StringUtils.isString = function (obj) {
-            return Object.prototype.toString.call(obj) === "[object String]";
+            return Object.prototype.toString.call(obj) === '[object String]';
         };
         /**
          * 去除左右空格
@@ -8210,9 +8378,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         StringUtils.trim = function (input) {
             if (input == null) {
-                return "";
+                return '';
             }
-            return input.replace(/^\s+|\s+$""^\s+|\s+$/g, "");
+            return input.replace(/^\s+|\s+$""^\s+|\s+$/g, '');
         };
         /**
          * 去除左侧空格
@@ -8221,9 +8389,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         StringUtils.trimLeft = function (input) {
             if (input == null) {
-                return "";
+                return '';
             }
-            return input.replace(/^\s+""^\s+/, "");
+            return input.replace(/^\s+""^\s+/, '');
         };
         /**
          * 去除右侧空格
@@ -8232,9 +8400,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         StringUtils.trimRight = function (input) {
             if (input == null) {
-                return "";
+                return '';
             }
-            return input.replace(/\s+$""\s+$/, "");
+            return input.replace(/\s+$""\s+$/, '');
         };
         /**
          * 分钟与秒格式(如-> 40:15)
@@ -8244,9 +8412,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         StringUtils.minuteFormat = function (seconds) {
             var min = Math.floor(seconds / 60);
             var sec = Math.floor(seconds % 60);
-            var min_str = min < 10 ? "0" + min.toString() : min.toString();
-            var sec_str = sec < 10 ? "0" + sec.toString() : sec.toString();
-            return min_str + ":" + sec_str;
+            var min_str = min < 10 ? '0' + min.toString() : min.toString();
+            var sec_str = sec < 10 ? '0' + sec.toString() : sec.toString();
+            return min_str + ':' + sec_str;
         };
         /**
          * 时分秒格式(如-> 05:32:20)
@@ -8255,8 +8423,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         StringUtils.hourFormat = function (seconds) {
             var hour = Math.floor(seconds / 3600);
-            var hour_str = hour < 10 ? "0" + hour.toString() : hour.toString();
-            return hour_str + ":" + StringUtils.minuteFormat(seconds % 3600);
+            var hour_str = hour < 10 ? '0' + hour.toString() : hour.toString();
+            return hour_str + ':' + StringUtils.minuteFormat(seconds % 3600);
         };
         /**
          * 格式化字符串
@@ -8269,7 +8437,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 args[_i - 1] = arguments[_i];
             }
             for (var i = 0; i < args.length; i++) {
-                str = str.replace(new RegExp("\\{" + i + "\\}", "gm"), (typeof args[i] === "object") ? JSON.stringify(args[i], null, 4) : args[i]);
+                str = str.replace(new RegExp('\\{' + i + '\\}', 'gm'), typeof args[i] === 'object' ? JSON.stringify(args[i], null, 4) : args[i]);
             }
             return str;
         };
@@ -8286,7 +8454,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         StringUtils.formatWithDic = function (str, dic) {
             for (var key in dic) {
-                str = str.replace(new RegExp("\\{" + key + "\\}", "gm"), (typeof dic[key] === "object") ? JSON.stringify(dic[key], null, 4) : dic[key]);
+                str = str.replace(new RegExp('\\{' + key + '\\}', 'gm'), typeof dic[key] === 'object' ? JSON.stringify(dic[key], null, 4) : dic[key]);
             }
             return str;
         };
@@ -8305,13 +8473,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         /**guid*/
         StringUtils.getGUIDString = function () {
             var d = Date.now();
-            if (window.performance && typeof window.performance.now === "function") {
+            if (window.performance && typeof window.performance.now === 'function') {
                 d += performance.now(); //use high-precision timer if available
             }
-            return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
                 var r = (d + Math.random() * 16) % 16 | 0;
                 d = Math.floor(d / 16);
-                return (c == "x" ? r : (r & 0x3) | 0x8).toString(16);
+                return (c == 'x' ? r : (r & 0x3) | 0x8).toString(16);
             });
         };
         return StringUtils;
@@ -8382,31 +8550,27 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (!this._isPlaying) {
                 if (this._steps && this._steps.length) {
                     var step = this._steps.shift();
-                    if (step.hasOwnProperty("props")) {
+                    if (step.hasOwnProperty('props')) {
                         this._isPlaying = true;
                         // Laya.Tween.to(this._target, step.props, step.duration, step.ease, step.complete, step.delay, step.coverBefore, step.autoRecover)
-                        if (step.props["x"] != null || step.props["y"] != null) {
-                            var x = step.props["x"] != null ? step.props.x : this._target.x;
-                            var y = step.props["y"] != null ? step.props.y : this._target.y;
-                            fgui.GTween.to2(this._target.x, this._target.y, x, y, step.duration)
-                                .setTarget(this._target, this._target.setPosition)
-                                .setEase(step.ease);
+                        if (step.props['x'] != null || step.props['y'] != null) {
+                            var x = step.props['x'] != null ? step.props.x : this._target.x;
+                            var y = step.props['y'] != null ? step.props.y : this._target.y;
+                            fgui.GTween.to2(this._target.x, this._target.y, x, y, step.duration).setTarget(this._target, this._target.setPosition).setEase(step.ease);
                         }
-                        if (step.props["scaleX"] != null || step.props["scaleY"] != null) {
-                            var x = step.props["scaleX"] != null ? step.props.scaleX : this._target.scaleX;
-                            var y = step.props["scaleY"] != null ? step.props.scaleY : this._target.scaleY;
-                            fgui.GTween.to2(this._target.scaleX, this._target.scaleY, x, y, step.duration)
-                                .setTarget(this._target, this._target.setScale)
-                                .setEase(step.ease);
+                        if (step.props['scaleX'] != null || step.props['scaleY'] != null) {
+                            var x = step.props['scaleX'] != null ? step.props.scaleX : this._target.scaleX;
+                            var y = step.props['scaleY'] != null ? step.props.scaleY : this._target.scaleY;
+                            fgui.GTween.to2(this._target.scaleX, this._target.scaleY, x, y, step.duration).setTarget(this._target, this._target.setScale).setEase(step.ease);
                         }
-                        if (step.props["rotation"] != null) {
-                            var rotation = step.props["rotation"] != null ? step.props.rotation : this._target.rotation;
-                            fgui.GTween.to(this._target.rotation, rotation, step.duration).setTarget(this._target, "rotation").setEase(step.ease);
+                        if (step.props['rotation'] != null) {
+                            var rotation = step.props['rotation'] != null ? step.props.rotation : this._target.rotation;
+                            fgui.GTween.to(this._target.rotation, rotation, step.duration).setTarget(this._target, 'rotation').setEase(step.ease);
                         }
-                        if (step.props["alpha"] != null) {
+                        if (step.props['alpha'] != null) {
                             if (step.props.pts) {
                                 fgui.GTween.to(this._target.alpha, step.props.alpha, step.duration)
-                                    .setTarget(this._target, "alpha")
+                                    .setTarget(this._target, 'alpha')
                                     .setEase(step.ease)
                                     .onUpdate(function (gt) {
                                     var point = airkit.MathUtils.getPos(step.props.pts, gt.normalizedTime, airkit.OrbitType.Curve);
@@ -8416,7 +8580,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                             }
                             else {
                                 fgui.GTween.to(this._target.alpha, step.props.alpha, step.duration)
-                                    .setTarget(this._target, "alpha")
+                                    .setTarget(this._target, 'alpha')
                                     .setEase(step.ease)
                                     .onUpdate(function (gt) {
                                     _this.onUpdate(gt);
@@ -8425,7 +8589,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         }
                         airkit.TimerManager.Instance.addOnce((step.duration + step.delay) * 1000, this, this.onStepComplete, [step.complete]);
                     }
-                    else if (step.hasOwnProperty("delay")) {
+                    else if (step.hasOwnProperty('delay')) {
                         this._isPlaying = true;
                         airkit.TimerManager.Instance.addOnce(step.delay * 1000, this, this.onStepComplete, [step.complete]);
                     }
@@ -8456,6 +8620,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     }());
     airkit.TweenUtils = TweenUtils;
 })(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:05:02
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/utils/UrlUtils.ts
+ */
 // import { StringUtils } from "./StringUtils";
 
 (function (airkit) {
@@ -8471,7 +8643,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         UrlUtils.getFileExte = function (url) {
             if (airkit.StringUtils.isNullOrEmpty(url))
                 return airkit.StringUtils.empty;
-            var idx = url.lastIndexOf(".");
+            var idx = url.lastIndexOf('.');
             if (idx >= 0) {
                 return url.substr(idx + 1);
             }
@@ -8481,7 +8653,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         UrlUtils.getPathWithNoExtend = function (url) {
             if (airkit.StringUtils.isNullOrEmpty(url))
                 return airkit.StringUtils.empty;
-            var idx = url.lastIndexOf(".");
+            var idx = url.lastIndexOf('.');
             if (idx >= 0) {
                 return url.substr(0, idx);
             }
@@ -8507,9 +8679,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         Utils.buildRes = function (resMap) {
             var res = [];
             for (var k in resMap) {
-                res.push({ url: "ui/" + k, type: airkit.FguiAsset, refCount: 1, pkg: k });
+                res.push({ url: 'ui/' + k, type: airkit.FguiAsset, refCount: 1, pkg: k });
                 for (var k2 in resMap[k]) {
-                    res.push({ url: "ui/" + k2, type: airkit.FguiAtlas, refCount: resMap[k][k2], pkg: k });
+                    res.push({ url: 'ui/' + k2, type: airkit.FguiAtlas, refCount: resMap[k][k2], pkg: k });
                 }
             }
             return res;
@@ -8522,14 +8694,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         Utils.getLocationParams = function () {
             var url = window.location.href;
             var dic = new airkit.SDictionary();
-            var num = url.indexOf("?");
+            var num = url.indexOf('?');
             if (num >= 0) {
                 url = url.substr(num + 1);
                 var key = void 0, value = void 0;
-                var arr = url.split("&");
+                var arr = url.split('&');
                 for (var i in arr) {
                     var str = arr[i];
-                    num = str.indexOf("=");
+                    num = str.indexOf('=');
                     key = str.substr(0, num);
                     value = str.substr(num + 1);
                     dic.add(key, value);
@@ -8544,27 +8716,27 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         Utils.obj2query = function (obj) {
             if (!obj) {
-                return "";
+                return '';
             }
             var arr = [];
             for (var key in obj) {
-                arr.push(key + "=" + obj[key]);
+                arr.push(key + '=' + obj[key]);
             }
-            return arr.join("&");
+            return arr.join('&');
         };
         Utils.injectProp = function (target, data, callback, ignoreMethod, ignoreNull, keyBefore) {
             if (data === void 0) { data = null; }
             if (callback === void 0) { callback = null; }
             if (ignoreMethod === void 0) { ignoreMethod = true; }
             if (ignoreNull === void 0) { ignoreNull = true; }
-            if (keyBefore === void 0) { keyBefore = ""; }
+            if (keyBefore === void 0) { keyBefore = ''; }
             if (!data) {
                 return false;
             }
             var result = true;
             for (var key in data) {
                 var value = data[key];
-                if ((!ignoreMethod || typeof value != "function") && (!ignoreNull || value != null)) {
+                if ((!ignoreMethod || typeof value != 'function') && (!ignoreNull || value != null)) {
                     if (callback) {
                         callback(target, key, value);
                     }
@@ -8582,9 +8754,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          */
         Utils.parseXMLFromString = function (value) {
             var rst;
-            value = value.replace(/>\s+</g, "><");
-            rst = new DOMParser().parseFromString(value, "text/xml");
-            if (rst.firstChild.textContent.indexOf("This page contains the following errors") > -1) {
+            value = value.replace(/>\s+</g, '><');
+            rst = new DOMParser().parseFromString(value, 'text/xml');
+            if (rst.firstChild.textContent.indexOf('This page contains the following errors') > -1) {
                 throw new Error(rst.firstChild.firstChild.textContent);
             }
             return rst;
@@ -8623,12 +8795,12 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
      */
     function assert(condition, msg) {
         if (!condition) {
-            throw msg || "assert";
+            throw msg || 'assert';
         }
     }
     airkit.assert = assert;
     function assertNullOrNil(condition, msg) {
-        if (condition == null || condition === null || typeof condition === "undefined") {
+        if (condition == null || condition === null || typeof condition === 'undefined') {
             assert(false, msg);
         }
     }
@@ -8641,7 +8813,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             return true;
         if (x === null)
             return true;
-        if (typeof x === "undefined")
+        if (typeof x === 'undefined')
             return true;
         return false;
     }
@@ -8649,7 +8821,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     function checkEmptyDic(x) {
         if (checkNullOrNil(x))
             return true;
-        if (JSON.stringify(x) == "{}") {
+        if (JSON.stringify(x) == '{}') {
             return true;
         }
         return false;
@@ -8694,7 +8866,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                                 resultDic[results[i][0]] = results[i][1];
                             }
                             else {
-                                airkit.Log.info("解析zip file:%s error", results[i][0]);
+                                airkit.Log.info('解析zip file:%s error', results[i][0]);
                             }
                         }
                         reqs = null;
@@ -8744,7 +8916,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         // }
         ZipUtils.parseZip = function (ab) {
             var fileNameArr = new Array();
-            return JSZip.loadAsync(ab).then(function (jszip) {
+            return JSZip.loadAsync(ab)
+                .then(function (jszip) {
                 for (var fileName in jszip.files) {
                     fileNameArr.push(fileName);
                 }
@@ -8759,9 +8932,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             });
         };
         ZipUtils.parseZipFile = function (jszip, filename) {
-            return jszip.file(filename).async("text").then(function (content) {
+            return jszip
+                .file(filename)
+                .async('text')
+                .then(function (content) {
                 return [filename, content];
-            }).catch(function (e) {
+            })
+                .catch(function (e) {
                 airkit.Log.error(e);
                 return [filename, null];
             });

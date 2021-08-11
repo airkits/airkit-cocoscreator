@@ -1501,25 +1501,25 @@ declare namespace airkit {
  */
 declare namespace airkit {
     /**
-    * UIManager 弹出ui管理类
-    * example1:
-    * ak.UIManager.showQ(eDialogUIID.ALERT,{clickMaskClose:true}).then(v=>{
-    *   if(v){
-    *       console.log("showQ dlg ="+v.viewID);
-    *       v.wait().then(result=>{
-    *           console.log("result wait ");
-    *           console.log(result);
-    *       });
-    *  }
-    *});
+     * UIManager 弹出ui管理类
+     * example1:
+     * ak.UIManager.showQ(eDialogUIID.ALERT,{clickMaskClose:true}).then(v=>{
+     *   if(v){
+     *       console.log("showQ dlg ="+v.viewID);
+     *       v.wait().then(result=>{
+     *           console.log("result wait ");
+     *           console.log(result);
+     *       });
+     *  }
+     *});
      */
     export class UIManager extends Singleton {
         static cache: SDictionary<any>;
         /**
-      * 注册ui类，存放uiname和class的对应关系
-      * @param name
-      * @param cls
-      */
+         * 注册ui类，存放uiname和class的对应关系
+         * @param name
+         * @param cls
+         */
         static register(name: string, cls: any): any;
         private _cacheViews;
         private _UIQueues;
@@ -1541,10 +1541,10 @@ declare namespace airkit {
          */
         show(uiid: string, params?: ShowParams): Promise<IUIPanel>;
         /**
-        * 显示界面
-        * @param uiid        界面uiName
-        * @param args      参数
-        */
+         * 显示界面
+         * @param uiid        界面uiName
+         * @param args      参数
+         */
         popup(uiid: string, params?: ShowParams): Promise<IUIPanel>;
         protected showUI(type: eUIType, uiid: string, clas: any, params: ShowParams): any;
         /**

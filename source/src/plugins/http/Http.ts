@@ -28,23 +28,23 @@ namespace airkit {
         TypePB,
     }
 
-    export const POST = "POST";
-    export const GET = "GET";
+    export const POST = 'POST'
+    export const GET = 'GET'
 
-    export const CONTENT_TYPE_TEXT = "application/x-www-form-urlencoded";
-    export const CONTENT_TYPE_JSON = "application/json";
-    export const CONTENT_TYPE_PB = "application/octet-stream"; // "application/x-protobuf"  //
+    export const CONTENT_TYPE_TEXT = 'application/x-www-form-urlencoded'
+    export const CONTENT_TYPE_JSON = 'application/json'
+    export const CONTENT_TYPE_PB = 'application/octet-stream' // "application/x-protobuf"  //
 
     //responseType  (default = "text")Web 服务器的响应类型，可设置为 "text"、"json"、"xml"、"arraybuffer"。
-    export const RESPONSE_TYPE_TEXT = "text";
-    export const RESPONSE_TYPE_JSON = "json";
-    export const RESPONSE_TYPE_XML = "xml";
-    export const RESPONSE_TYPE_BYTE = "arraybuffer";
+    export const RESPONSE_TYPE_TEXT = 'text'
+    export const RESPONSE_TYPE_JSON = 'json'
+    export const RESPONSE_TYPE_XML = 'xml'
+    export const RESPONSE_TYPE_BYTE = 'arraybuffer'
 
-    export const HTTP_REQUEST_TIMEOUT = 10000; //设置超时时间
+    export const HTTP_REQUEST_TIMEOUT = 10000 //设置超时时间
     export class Http {
-        public static currentRequsts: number = 0;
-        public static maxRequest: number = 6;
+        public static currentRequsts: number = 0
+        public static maxRequest: number = 6
         /**
          * 请求request封装
          *
@@ -61,80 +61,80 @@ namespace airkit {
         static request(url: string, method: string, reqType: eHttpRequestType, header: any[], data?: any, responseType?: string): Promise<any> {
             return new Promise((resolve, reject) => {
                 if (Http.currentRequsts > Http.maxRequest) {
-                    Log.error("reached max request %s", Http.currentRequsts);
+                    Log.error('reached max request %s', Http.currentRequsts)
                 }
-                if (Http.currentRequsts < 0) Http.currentRequsts = 0;
-                Http.currentRequsts++;
+                if (Http.currentRequsts < 0) Http.currentRequsts = 0
+                Http.currentRequsts++
                 if (responseType == undefined) {
-                    responseType = "text";
+                    responseType = 'text'
                 }
                 if (method != POST && method != GET) {
-                    Http.currentRequsts--;
-                    reject("method error");
+                    Http.currentRequsts--
+                    reject('method error')
                 }
-                if (!header) header = [];
-                let key = "Content-Type";
+                if (!header) header = []
+                let key = 'Content-Type'
                 switch (reqType) {
                     case eHttpRequestType.TypeText:
-                        header.push(key, CONTENT_TYPE_TEXT);
-                        break;
+                        header.push(key, CONTENT_TYPE_TEXT)
+                        break
                     case eHttpRequestType.TypeJson:
-                        header.push(key, CONTENT_TYPE_JSON);
-                        break;
+                        header.push(key, CONTENT_TYPE_JSON)
+                        break
                     case eHttpRequestType.TypePB:
-                        header.push(key, CONTENT_TYPE_PB);
-                        break;
+                        header.push(key, CONTENT_TYPE_PB)
+                        break
                     default:
-                        header.push(key, CONTENT_TYPE_TEXT);
+                        header.push(key, CONTENT_TYPE_TEXT)
                 }
                 // header.push("Accept-Encoding","gzip, deflate, br")
-                var request: HttpRequest = new HttpRequest();
-                request.http.timeout = HTTP_REQUEST_TIMEOUT;
+                var request: HttpRequest = new HttpRequest()
+                request.http.timeout = HTTP_REQUEST_TIMEOUT
                 request.http.ontimeout = function () {
-                    Log.error("request timeout %s", url);
-                    request.targetOff(request);
-                    Http.currentRequsts--;
-                    reject("timeout");
-                };
+                    Log.error('request timeout %s', url)
+                    request.targetOff(request)
+                    Http.currentRequsts--
+                    reject('timeout')
+                }
                 request.once(Event.COMPLETE, this, function (event: Event): void {
-                    let data: any;
+                    let data: any
                     switch (responseType) {
                         case RESPONSE_TYPE_TEXT:
-                            data = request.data;
-                            break;
+                            data = request.data
+                            break
                         case RESPONSE_TYPE_JSON:
                             //  data = JSON.parse(request.data)
-                            data = request.data;
-                            break;
+                            data = request.data
+                            break
                         case RESPONSE_TYPE_BYTE:
-                            var bytes: Byte = new Byte(request.data);
-                            bytes.endian = Byte.BIG_ENDIAN;
-                            var body: Uint8Array = bytes.getUint8Array(bytes.pos, bytes.length - bytes.pos);
-                            data = body;
+                            var bytes: Byte = new Byte(request.data)
+                            bytes.endian = Byte.BIG_ENDIAN
+                            var body: Uint8Array = bytes.getUint8Array(bytes.pos, bytes.length - bytes.pos)
+                            data = body
 
-                            break;
+                            break
                         default:
-                            data = request.data;
+                            data = request.data
                     }
-                    request.targetOff(request);
-                    Http.currentRequsts--;
-                    resolve(data);
-                });
+                    request.targetOff(request)
+                    Http.currentRequsts--
+                    resolve(data)
+                })
                 request.once(Event.ERROR, this, function (event: Event): void {
-                    Log.error("req:%s error:%s", url, event);
-                    request.targetOff(request);
+                    Log.error('req:%s error:%s', url, event)
+                    request.targetOff(request)
 
-                    Http.currentRequsts--;
-                    reject(event);
-                });
-                request.on(Event.PROGRESS, this, function (event: Event): void {});
+                    Http.currentRequsts--
+                    reject(event)
+                })
+                request.on(Event.PROGRESS, this, function (event: Event): void {})
 
                 if (method == GET) {
-                    request.send(url, null, method, responseType, header);
+                    request.send(url, null, method, responseType, header)
                 } else {
-                    request.send(url, data, method, responseType, header);
+                    request.send(url, data, method, responseType, header)
                 }
-            });
+            })
         }
 
         /**
@@ -150,12 +150,12 @@ namespace airkit {
          */
         static get(url: string, reqType?: eHttpRequestType, header?: any, responseType?: string): Promise<any> {
             if (reqType == undefined) {
-                reqType = eHttpRequestType.TypeText;
+                reqType = eHttpRequestType.TypeText
             }
             if (responseType == undefined) {
-                responseType = RESPONSE_TYPE_TEXT;
+                responseType = RESPONSE_TYPE_TEXT
             }
-            return this.request(url, GET, reqType, header, null, responseType);
+            return this.request(url, GET, reqType, header, null, responseType)
         }
 
         /**
@@ -171,26 +171,26 @@ namespace airkit {
          * @memberof Http
          */
         static post(url: string, params: any, reqType?: eHttpRequestType, header?: any, responseType?: string): Promise<any> {
-            var data: any = null;
+            var data: any = null
             if (reqType == undefined) {
-                reqType = eHttpRequestType.TypeText;
+                reqType = eHttpRequestType.TypeText
             }
             switch (reqType) {
                 case eHttpRequestType.TypeText:
-                    if (params) data = Utils.obj2query(params);
-                    break;
+                    if (params) data = Utils.obj2query(params)
+                    break
                 case eHttpRequestType.TypeJson:
-                    if (params) data = JSON.stringify(params);
-                    break;
+                    if (params) data = JSON.stringify(params)
+                    break
                 case eHttpRequestType.TypePB:
-                    if (params) data = params;
+                    if (params) data = params
             }
 
             if (responseType == undefined) {
-                responseType = RESPONSE_TYPE_TEXT;
+                responseType = RESPONSE_TYPE_TEXT
             }
 
-            return this.request(url, POST, reqType, header, data, responseType);
+            return this.request(url, POST, reqType, header, data, responseType)
         }
     }
 }

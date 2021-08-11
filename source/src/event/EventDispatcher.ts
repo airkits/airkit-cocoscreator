@@ -1,3 +1,11 @@
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:02:24
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/event/EventDispatcher.ts
+ */
 // import { DicUtils } from "../utils/DicUtils";
 // import { EventArgs } from "./EventArgs";
 namespace airkit {
@@ -8,11 +16,11 @@ namespace airkit {
      */
 
     export class EventDispatcher {
-        private _dicFuns: Object = {};
-        private _evtArgs: EventArgs = null;
+        private _dicFuns: Object = {}
+        private _evtArgs: EventArgs = null
 
         constructor() {
-            this._evtArgs = new EventArgs();
+            this._evtArgs = new EventArgs()
         }
         /**
          * 添加监听
@@ -22,14 +30,14 @@ namespace airkit {
          */
         public on(type: string, caller: any, fun: Function): void {
             if (!this._dicFuns[type]) {
-                this._dicFuns[type] = [];
-                this._dicFuns[type].push(Handler.create(caller, fun, null, false));
+                this._dicFuns[type] = []
+                this._dicFuns[type].push(Handler.create(caller, fun, null, false))
             } else {
-                let arr: Handler[] = this._dicFuns[type];
+                let arr: Handler[] = this._dicFuns[type]
                 for (let item of arr) {
-                    if (item.caller == caller && item.method == fun) return;
+                    if (item.caller == caller && item.method == fun) return
                 }
-                arr.push(Handler.create(caller, fun, null, false));
+                arr.push(Handler.create(caller, fun, null, false))
             }
         }
 
@@ -37,14 +45,14 @@ namespace airkit {
          * 移除监听
          */
         public off(type: string, caller: any, fun: Function): void {
-            let arr: Handler[] = this._dicFuns[type];
-            if (!arr) return;
+            let arr: Handler[] = this._dicFuns[type]
+            if (!arr) return
             for (let i = 0; i < arr.length; ++i) {
-                let item: Handler = arr[i];
+                let item: Handler = arr[i]
                 if (item.caller == caller && item.method == fun) {
-                    item.recover();
-                    arr.splice(i, 1);
-                    break;
+                    item.recover()
+                    arr.splice(i, 1)
+                    break
                 }
             }
         }
@@ -53,11 +61,11 @@ namespace airkit {
          * 派发事件，注意参数类型为EventArgs
          */
         public dispatchEvent(type: string, args: EventArgs): void {
-            args.type = type;
-            let arr: Handler[] = this._dicFuns[type];
-            if (!arr) return;
+            args.type = type
+            let arr: Handler[] = this._dicFuns[type]
+            if (!arr) return
             for (let item of arr) {
-                item.runWith(args);
+                item.runWith(args)
             }
         }
 
@@ -65,12 +73,12 @@ namespace airkit {
          * 派发事件
          */
         public dispatch(type: string, ...args: any[]): void {
-            this._evtArgs.init(args);
-            this.dispatchEvent(type, this._evtArgs);
+            this._evtArgs.init(args)
+            this.dispatchEvent(type, this._evtArgs)
         }
 
         public clear(): void {
-            DicUtils.clearDic(this._dicFuns);
+            DicUtils.clearDic(this._dicFuns)
         }
     }
 }

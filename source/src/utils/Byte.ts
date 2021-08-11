@@ -9,27 +9,27 @@ namespace airkit {
          * <p> <code>BIG_ENDIAN</code> ：大端字节序，地址低位存储值的高位，地址高位存储值的低位。有时也称之为网络字节序。<br/>
          * <code>LITTLE_ENDIAN</code> ：小端字节序，地址低位存储值的低位，地址高位存储值的高位。</p>
          */
-        static BIG_ENDIAN: string = "bigEndian";
+        static BIG_ENDIAN: string = 'bigEndian'
         /**
          * <p>主机字节序，是 CPU 存放数据的两种不同顺序，包括小端字节序和大端字节序。通过 <code>getSystemEndian</code> 可以获取当前系统的字节序。</p>
          * <p> <code>LITTLE_ENDIAN</code> ：小端字节序，地址低位存储值的低位，地址高位存储值的高位。<br/>
          * <code>BIG_ENDIAN</code> ：大端字节序，地址低位存储值的高位，地址高位存储值的低位。有时也称之为网络字节序。</p>
          */
-        static LITTLE_ENDIAN: string = "littleEndian";
+        static LITTLE_ENDIAN: string = 'littleEndian'
         /**@private */
-        private static _sysEndian: string = null;
+        private static _sysEndian: string = null
         /**@private 是否为小端数据。*/
-        protected _xd_: boolean = true;
+        protected _xd_: boolean = true
         /**@private */
-        private _allocated_: number = 8;
+        private _allocated_: number = 8
         /**@private 原始数据。*/
-        protected _d_: any;
+        protected _d_: any
         /**@private DataView*/
-        protected _u8d_: any;
+        protected _u8d_: any
         /**@private */
-        protected _pos_: number = 0;
+        protected _pos_: number = 0
         /**@private */
-        protected _length: number = 0;
+        protected _length: number = 0
 
         /**
          * <p>获取当前主机的字节序。</p>
@@ -40,11 +40,11 @@ namespace airkit {
          */
         static getSystemEndian(): string {
             if (!Byte._sysEndian) {
-                var buffer: any = new ArrayBuffer(2);
-                new DataView(buffer).setInt16(0, 256, true);
-                Byte._sysEndian = new Int16Array(buffer)[0] === 256 ? Byte.LITTLE_ENDIAN : Byte.BIG_ENDIAN;
+                var buffer: any = new ArrayBuffer(2)
+                new DataView(buffer).setInt16(0, 256, true)
+                Byte._sysEndian = new Int16Array(buffer)[0] === 256 ? Byte.LITTLE_ENDIAN : Byte.BIG_ENDIAN
             }
-            return Byte._sysEndian;
+            return Byte._sysEndian
         }
 
         /**
@@ -53,11 +53,11 @@ namespace airkit {
          */
         constructor(data: any = null) {
             if (data) {
-                this._u8d_ = new Uint8Array(data);
-                this._d_ = new DataView(this._u8d_.buffer);
-                this._length = this._d_.byteLength;
+                this._u8d_ = new Uint8Array(data)
+                this._d_ = new DataView(this._u8d_.buffer)
+                this._length = this._d_.byteLength
             } else {
-                this._resizeBuffer(this._allocated_);
+                this._resizeBuffer(this._allocated_)
             }
         }
 
@@ -65,9 +65,9 @@ namespace airkit {
          * 获取此对象的 ArrayBuffer 数据，数据只包含有效数据部分。
          */
         get buffer(): ArrayBuffer {
-            var rstBuffer: ArrayBuffer = this._d_.buffer;
-            if (rstBuffer.byteLength === this._length) return rstBuffer;
-            return rstBuffer.slice(0, this._length);
+            var rstBuffer: ArrayBuffer = this._d_.buffer
+            if (rstBuffer.byteLength === this._length) return rstBuffer
+            return rstBuffer.slice(0, this._length)
         }
 
         /**
@@ -77,11 +77,11 @@ namespace airkit {
          *  <code>LITTLE_ENDIAN</code> ：小端字节序，地址低位存储值的低位，地址高位存储值的高位。</p>
          */
         get endian(): string {
-            return this._xd_ ? Byte.LITTLE_ENDIAN : Byte.BIG_ENDIAN;
+            return this._xd_ ? Byte.LITTLE_ENDIAN : Byte.BIG_ENDIAN
         }
 
         set endian(value: string) {
-            this._xd_ = value === Byte.LITTLE_ENDIAN;
+            this._xd_ = value === Byte.LITTLE_ENDIAN
         }
 
         /**
@@ -90,27 +90,27 @@ namespace airkit {
          * <p>如果要设置的长度大于当前已分配的内存空间的字节长度，则重新分配内存空间，大小为以下两者较大者：要设置的长度、当前已分配的长度的2倍，并将原有数据拷贝到新的内存空间中；如果要设置的长度小于当前已分配的内存空间的字节长度，也会重新分配内存空间，大小为要设置的长度，并将原有数据从头截断为要设置的长度存入新的内存空间中。</p>
          */
         set length(value: number) {
-            if (this._allocated_ < value) this._resizeBuffer((this._allocated_ = Math.floor(Math.max(value, this._allocated_ * 2))));
-            else if (this._allocated_ > value) this._resizeBuffer((this._allocated_ = value));
-            this._length = value;
+            if (this._allocated_ < value) this._resizeBuffer((this._allocated_ = Math.floor(Math.max(value, this._allocated_ * 2))))
+            else if (this._allocated_ > value) this._resizeBuffer((this._allocated_ = value))
+            this._length = value
         }
 
         get length(): number {
-            return this._length;
+            return this._length
         }
 
         /**@private */
         private _resizeBuffer(len: number): void {
             try {
-                var newByteView: any = new Uint8Array(len);
+                var newByteView: any = new Uint8Array(len)
                 if (this._u8d_ != null) {
-                    if (this._u8d_.length <= len) newByteView.set(this._u8d_);
-                    else newByteView.set(this._u8d_.subarray(0, len));
+                    if (this._u8d_.length <= len) newByteView.set(this._u8d_)
+                    else newByteView.set(this._u8d_.subarray(0, len))
                 }
-                this._u8d_ = newByteView;
-                this._d_ = new DataView(newByteView.buffer);
+                this._u8d_ = newByteView
+                this._d_ = new DataView(newByteView.buffer)
             } catch (err) {
-                throw "Invalid typed array length:" + len;
+                throw 'Invalid typed array length:' + len
             }
         }
 
@@ -121,7 +121,7 @@ namespace airkit {
          * @return 读取的字符串。
          */
         getString(): string {
-            return this.readString();
+            return this.readString()
         }
 
         /**
@@ -130,7 +130,7 @@ namespace airkit {
          * @return 读取的字符串。
          */
         readString(): string {
-            return this._rUTF(this.getUint16());
+            return this._rUTF(this.getUint16())
         }
 
         /**
@@ -142,7 +142,7 @@ namespace airkit {
          * @return  读取的 Float32Array 对象。
          */
         getFloat32Array(start: number, len: number): any {
-            return this.readFloat32Array(start, len);
+            return this.readFloat32Array(start, len)
         }
 
         /**
@@ -152,11 +152,11 @@ namespace airkit {
          * @return  读取的 Float32Array 对象。
          */
         readFloat32Array(start: number, len: number): any {
-            var end: number = start + len;
-            end = end > this._length ? this._length : end;
-            var v: any = new Float32Array(this._d_.buffer.slice(start, end));
-            this._pos_ = end;
-            return v;
+            var end: number = start + len
+            end = end > this._length ? this._length : end
+            var v: any = new Float32Array(this._d_.buffer.slice(start, end))
+            this._pos_ = end
+            return v
         }
 
         /**
@@ -167,7 +167,7 @@ namespace airkit {
          * @return  读取的 Uint8Array 对象。
          */
         getUint8Array(start: number, len: number): Uint8Array {
-            return this.readUint8Array(start, len);
+            return this.readUint8Array(start, len)
         }
 
         /**
@@ -177,11 +177,11 @@ namespace airkit {
          * @return  读取的 Uint8Array 对象。
          */
         readUint8Array(start: number, len: number): Uint8Array {
-            var end: number = start + len;
-            end = end > this._length ? this._length : end;
-            var v: any = new Uint8Array(this._d_.buffer.slice(start, end));
-            this._pos_ = end;
-            return v;
+            var end: number = start + len
+            end = end > this._length ? this._length : end
+            var v: any = new Uint8Array(this._d_.buffer.slice(start, end))
+            this._pos_ = end
+            return v
         }
 
         /**
@@ -193,7 +193,7 @@ namespace airkit {
          * @return  读取的 Int16Array 对象。
          */
         getInt16Array(start: number, len: number): any {
-            return this.readInt16Array(start, len);
+            return this.readInt16Array(start, len)
         }
 
         /**
@@ -203,11 +203,11 @@ namespace airkit {
          * @return  读取的 Uint8Array 对象。
          */
         readInt16Array(start: number, len: number): any {
-            var end: number = start + len;
-            end = end > this._length ? this._length : end;
-            var v: any = new Int16Array(this._d_.buffer.slice(start, end));
-            this._pos_ = end;
-            return v;
+            var end: number = start + len
+            end = end > this._length ? this._length : end
+            var v: any = new Int16Array(this._d_.buffer.slice(start, end))
+            this._pos_ = end
+            return v
         }
 
         /**
@@ -216,7 +216,7 @@ namespace airkit {
          * @return 单精度（32 位）浮点数。
          */
         getFloat32(): number {
-            return this.readFloat32();
+            return this.readFloat32()
         }
 
         /**
@@ -224,10 +224,10 @@ namespace airkit {
          * @return 单精度（32 位）浮点数。
          */
         readFloat32(): number {
-            if (this._pos_ + 4 > this._length) throw "getFloat32 error - Out of bounds";
-            var v: number = this._d_.getFloat32(this._pos_, this._xd_);
-            this._pos_ += 4;
-            return v;
+            if (this._pos_ + 4 > this._length) throw 'getFloat32 error - Out of bounds'
+            var v: number = this._d_.getFloat32(this._pos_, this._xd_)
+            this._pos_ += 4
+            return v
         }
 
         /**
@@ -236,7 +236,7 @@ namespace airkit {
          * @return 双精度（64 位）浮点数。
          */
         getFloat64(): number {
-            return this.readFloat64();
+            return this.readFloat64()
         }
 
         /**
@@ -244,10 +244,10 @@ namespace airkit {
          * @return 双精度（64 位）浮点数。
          */
         readFloat64(): number {
-            if (this._pos_ + 8 > this._length) throw "getFloat64 error - Out of bounds";
-            var v: number = this._d_.getFloat64(this._pos_, this._xd_);
-            this._pos_ += 8;
-            return v;
+            if (this._pos_ + 8 > this._length) throw 'getFloat64 error - Out of bounds'
+            var v: number = this._d_.getFloat64(this._pos_, this._xd_)
+            this._pos_ += 8
+            return v
         }
 
         /**
@@ -255,9 +255,9 @@ namespace airkit {
          * @param	value	单精度（32 位）浮点数。
          */
         writeFloat32(value: number): void {
-            this._ensureWrite(this._pos_ + 4);
-            this._d_.setFloat32(this._pos_, value, this._xd_);
-            this._pos_ += 4;
+            this._ensureWrite(this._pos_ + 4)
+            this._d_.setFloat32(this._pos_, value, this._xd_)
+            this._pos_ += 4
         }
 
         /**
@@ -265,9 +265,9 @@ namespace airkit {
          * @param	value	双精度（64 位）浮点数。
          */
         writeFloat64(value: number): void {
-            this._ensureWrite(this._pos_ + 8);
-            this._d_.setFloat64(this._pos_, value, this._xd_);
-            this._pos_ += 8;
+            this._ensureWrite(this._pos_ + 8)
+            this._d_.setFloat64(this._pos_, value, this._xd_)
+            this._pos_ += 8
         }
 
         /**
@@ -276,7 +276,7 @@ namespace airkit {
          * @return Int32 值。
          */
         getInt32(): number {
-            return this.readInt32();
+            return this.readInt32()
         }
 
         /**
@@ -284,10 +284,10 @@ namespace airkit {
          * @return Int32 值。
          */
         readInt32(): number {
-            if (this._pos_ + 4 > this._length) throw "getInt32 error - Out of bounds";
-            var float: number = this._d_.getInt32(this._pos_, this._xd_);
-            this._pos_ += 4;
-            return float;
+            if (this._pos_ + 4 > this._length) throw 'getInt32 error - Out of bounds'
+            var float: number = this._d_.getInt32(this._pos_, this._xd_)
+            this._pos_ += 4
+            return float
         }
 
         /**
@@ -296,7 +296,7 @@ namespace airkit {
          * @return Uint32 值。
          */
         getUint32(): number {
-            return this.readUint32();
+            return this.readUint32()
         }
 
         /**
@@ -304,10 +304,10 @@ namespace airkit {
          * @return Uint32 值。
          */
         readUint32(): number {
-            if (this._pos_ + 4 > this._length) throw "getUint32 error - Out of bounds";
-            var v: number = this._d_.getUint32(this._pos_, this._xd_);
-            this._pos_ += 4;
-            return v;
+            if (this._pos_ + 4 > this._length) throw 'getUint32 error - Out of bounds'
+            var v: number = this._d_.getUint32(this._pos_, this._xd_)
+            this._pos_ += 4
+            return v
         }
 
         /**
@@ -315,9 +315,9 @@ namespace airkit {
          * @param	value	需要写入的 Int32 值。
          */
         writeInt32(value: number): void {
-            this._ensureWrite(this._pos_ + 4);
-            this._d_.setInt32(this._pos_, value, this._xd_);
-            this._pos_ += 4;
+            this._ensureWrite(this._pos_ + 4)
+            this._d_.setInt32(this._pos_, value, this._xd_)
+            this._pos_ += 4
         }
 
         /**
@@ -325,9 +325,9 @@ namespace airkit {
          * @param	value	需要写入的 Uint32 值。
          */
         writeUint32(value: number): void {
-            this._ensureWrite(this._pos_ + 4);
-            this._d_.setUint32(this._pos_, value, this._xd_);
-            this._pos_ += 4;
+            this._ensureWrite(this._pos_ + 4)
+            this._d_.setUint32(this._pos_, value, this._xd_)
+            this._pos_ += 4
         }
 
         /**
@@ -336,7 +336,7 @@ namespace airkit {
          * @return Int16 值。
          */
         getInt16(): number {
-            return this.readInt16();
+            return this.readInt16()
         }
 
         /**
@@ -344,10 +344,10 @@ namespace airkit {
          * @return Int16 值。
          */
         readInt16(): number {
-            if (this._pos_ + 2 > this._length) throw "getInt16 error - Out of bounds";
-            var us: number = this._d_.getInt16(this._pos_, this._xd_);
-            this._pos_ += 2;
-            return us;
+            if (this._pos_ + 2 > this._length) throw 'getInt16 error - Out of bounds'
+            var us: number = this._d_.getInt16(this._pos_, this._xd_)
+            this._pos_ += 2
+            return us
         }
 
         /**
@@ -356,7 +356,7 @@ namespace airkit {
          * @return Uint16 值。
          */
         getUint16(): number {
-            return this.readUint16();
+            return this.readUint16()
         }
 
         /**
@@ -364,10 +364,10 @@ namespace airkit {
          * @return Uint16 值。
          */
         readUint16(): number {
-            if (this._pos_ + 2 > this._length) throw "getUint16 error - Out of bounds";
-            var us: number = this._d_.getUint16(this._pos_, this._xd_);
-            this._pos_ += 2;
-            return us;
+            if (this._pos_ + 2 > this._length) throw 'getUint16 error - Out of bounds'
+            var us: number = this._d_.getUint16(this._pos_, this._xd_)
+            this._pos_ += 2
+            return us
         }
 
         /**
@@ -375,9 +375,9 @@ namespace airkit {
          * @param	value	需要写入的Uint16 值。
          */
         writeUint16(value: number): void {
-            this._ensureWrite(this._pos_ + 2);
-            this._d_.setUint16(this._pos_, value, this._xd_);
-            this._pos_ += 2;
+            this._ensureWrite(this._pos_ + 2)
+            this._d_.setUint16(this._pos_, value, this._xd_)
+            this._pos_ += 2
         }
 
         /**
@@ -385,9 +385,9 @@ namespace airkit {
          * @param	value	需要写入的 Int16 值。
          */
         writeInt16(value: number): void {
-            this._ensureWrite(this._pos_ + 2);
-            this._d_.setInt16(this._pos_, value, this._xd_);
-            this._pos_ += 2;
+            this._ensureWrite(this._pos_ + 2)
+            this._d_.setInt16(this._pos_, value, this._xd_)
+            this._pos_ += 2
         }
 
         /**
@@ -396,7 +396,7 @@ namespace airkit {
          * @return Uint8 值。
          */
         getUint8(): number {
-            return this.readUint8();
+            return this.readUint8()
         }
 
         /**
@@ -404,8 +404,8 @@ namespace airkit {
          * @return Uint8 值。
          */
         readUint8(): number {
-            if (this._pos_ + 1 > this._length) throw "getUint8 error - Out of bounds";
-            return this._u8d_[this._pos_++];
+            if (this._pos_ + 1 > this._length) throw 'getUint8 error - Out of bounds'
+            return this._u8d_[this._pos_++]
         }
 
         /**
@@ -413,9 +413,9 @@ namespace airkit {
          * @param	value	需要写入的 Uint8 值。
          */
         writeUint8(value: number): void {
-            this._ensureWrite(this._pos_ + 1);
-            this._d_.setUint8(this._pos_, value);
-            this._pos_++;
+            this._ensureWrite(this._pos_ + 1)
+            this._d_.setUint8(this._pos_, value)
+            this._pos_++
         }
 
         /**
@@ -426,7 +426,7 @@ namespace airkit {
          */
         //TODO:coverage
         _getUInt8(pos: number): number {
-            return this._readUInt8(pos);
+            return this._readUInt8(pos)
         }
 
         /**
@@ -437,7 +437,7 @@ namespace airkit {
          */
         //TODO:coverage
         _readUInt8(pos: number): number {
-            return this._d_.getUint8(pos);
+            return this._d_.getUint8(pos)
         }
 
         /**
@@ -448,7 +448,7 @@ namespace airkit {
          */
         //TODO:coverage
         _getUint16(pos: number): number {
-            return this._readUint16(pos);
+            return this._readUint16(pos)
         }
 
         /**
@@ -459,7 +459,7 @@ namespace airkit {
          */
         //TODO:coverage
         _readUint16(pos: number): number {
-            return this._d_.getUint16(pos, this._xd_);
+            return this._d_.getUint16(pos, this._xd_)
         }
         /**
          * @private
@@ -468,49 +468,49 @@ namespace airkit {
          * @return 读取的字符串。
          */
         private _rUTF(len: number): string {
-            var v: string = "",
+            var v: string = '',
                 max: number = this._pos_ + len,
                 c: number,
                 c2: number,
                 c3: number,
-                f: Function = String.fromCharCode;
+                f: Function = String.fromCharCode
             var u: any = this._u8d_,
-                i: number = 0;
-            var strs: any[] = [];
-            var n: number = 0;
-            strs.length = 1000;
+                i: number = 0
+            var strs: any[] = []
+            var n: number = 0
+            strs.length = 1000
             while (this._pos_ < max) {
-                c = u[this._pos_++];
+                c = u[this._pos_++]
                 if (c < 0x80) {
                     if (c != 0)
                         //v += f(c);\
-                        strs[n++] = f(c);
+                        strs[n++] = f(c)
                 } else if (c < 0xe0) {
                     //v += f(((c & 0x3F) << 6) | (u[_pos_++] & 0x7F));
-                    strs[n++] = f(((c & 0x3f) << 6) | (u[this._pos_++] & 0x7f));
+                    strs[n++] = f(((c & 0x3f) << 6) | (u[this._pos_++] & 0x7f))
                 } else if (c < 0xf0) {
-                    c2 = u[this._pos_++];
+                    c2 = u[this._pos_++]
                     //v += f(((c & 0x1F) << 12) | ((c2 & 0x7F) << 6) | (u[_pos_++] & 0x7F));
-                    strs[n++] = f(((c & 0x1f) << 12) | ((c2 & 0x7f) << 6) | (u[this._pos_++] & 0x7f));
+                    strs[n++] = f(((c & 0x1f) << 12) | ((c2 & 0x7f) << 6) | (u[this._pos_++] & 0x7f))
                 } else {
-                    c2 = u[this._pos_++];
-                    c3 = u[this._pos_++];
+                    c2 = u[this._pos_++]
+                    c3 = u[this._pos_++]
                     //v += f(((c & 0x0F) << 18) | ((c2 & 0x7F) << 12) | ((c3 << 6) & 0x7F) | (u[_pos_++] & 0x7F));
-                    const _code = ((c & 0x0f) << 18) | ((c2 & 0x7f) << 12) | ((c3 & 0x7f) << 6) | (u[this._pos_++] & 0x7f);
+                    const _code = ((c & 0x0f) << 18) | ((c2 & 0x7f) << 12) | ((c3 & 0x7f) << 6) | (u[this._pos_++] & 0x7f)
                     if (_code >= 0x10000) {
-                        const _offset = _code - 0x10000;
-                        const _lead = 0xd800 | (_offset >> 10);
-                        const _trail = 0xdc00 | (_offset & 0x3ff);
-                        strs[n++] = f(_lead);
-                        strs[n++] = f(_trail);
+                        const _offset = _code - 0x10000
+                        const _lead = 0xd800 | (_offset >> 10)
+                        const _trail = 0xdc00 | (_offset & 0x3ff)
+                        strs[n++] = f(_lead)
+                        strs[n++] = f(_trail)
                     } else {
-                        strs[n++] = f(_code);
+                        strs[n++] = f(_code)
                     }
                 }
-                i++;
+                i++
             }
-            strs.length = n;
-            return strs.join("");
+            strs.length = n
+            return strs.join('')
             //return v;
         }
 
@@ -522,7 +522,7 @@ namespace airkit {
          */
         //TODO:coverage
         getCustomString(len: number): string {
-            return this.readCustomString(len);
+            return this.readCustomString(len)
         }
 
         /**
@@ -533,44 +533,44 @@ namespace airkit {
          */
         //TODO:coverage
         readCustomString(len: number): string {
-            var v: string = "",
+            var v: string = '',
                 ulen: number = 0,
                 c: number,
                 c2: number,
-                f: Function = String.fromCharCode;
+                f: Function = String.fromCharCode
             var u: any = this._u8d_,
-                i: number = 0;
+                i: number = 0
             while (len > 0) {
-                c = u[this._pos_];
+                c = u[this._pos_]
                 if (c < 0x80) {
-                    v += f(c);
-                    this._pos_++;
-                    len--;
+                    v += f(c)
+                    this._pos_++
+                    len--
                 } else {
-                    ulen = c - 0x80;
-                    this._pos_++;
-                    len -= ulen;
+                    ulen = c - 0x80
+                    this._pos_++
+                    len -= ulen
                     while (ulen > 0) {
-                        c = u[this._pos_++];
-                        c2 = u[this._pos_++];
-                        v += f((c2 << 8) | c);
-                        ulen--;
+                        c = u[this._pos_++]
+                        c2 = u[this._pos_++]
+                        v += f((c2 << 8) | c)
+                        ulen--
                     }
                 }
             }
 
-            return v;
+            return v
         }
 
         /**
          * 移动或返回 Byte 对象的读写指针的当前位置（以字节为单位）。下一次调用读取方法时将在此位置开始读取，或者下一次调用写入方法时将在此位置开始写入。
          */
         get pos(): number {
-            return this._pos_;
+            return this._pos_
         }
 
         set pos(value: number) {
-            this._pos_ = value;
+            this._pos_ = value
             //$MOD byteOffset是只读的，这里进行赋值没有意义。
             //_d_.byteOffset = value;
         }
@@ -579,15 +579,15 @@ namespace airkit {
          * 可从字节流的当前位置到末尾读取的数据的字节数。
          */
         get bytesAvailable(): number {
-            return this._length - this._pos_;
+            return this._length - this._pos_
         }
 
         /**
          * 清除字节数组的内容，并将 length 和 pos 属性重置为 0。调用此方法将释放 Byte 实例占用的内存。
          */
         clear(): void {
-            this._pos_ = 0;
-            this.length = 0;
+            this._pos_ = 0
+            this.length = 0
         }
 
         /**
@@ -597,7 +597,7 @@ namespace airkit {
          */
         __getBuffer(): ArrayBuffer {
             //this._d_.buffer.byteLength = this.length;
-            return this._d_.buffer;
+            return this._d_.buffer
         }
 
         /**
@@ -607,41 +607,41 @@ namespace airkit {
          */
         writeUTFBytes(value: string): void {
             // utf8-decode
-            value = value + "";
+            value = value + ''
             for (var i: number = 0, sz: number = value.length; i < sz; i++) {
-                var c: number = value.charCodeAt(i);
+                var c: number = value.charCodeAt(i)
 
                 if (c <= 0x7f) {
-                    this.writeByte(c);
+                    this.writeByte(c)
                 } else if (c <= 0x7ff) {
                     //优化为直接写入多个字节，而不必重复调用writeByte，免去额外的调用和逻辑开销。
-                    this._ensureWrite(this._pos_ + 2);
-                    this._u8d_.set([0xc0 | (c >> 6), 0x80 | (c & 0x3f)], this._pos_);
-                    this._pos_ += 2;
+                    this._ensureWrite(this._pos_ + 2)
+                    this._u8d_.set([0xc0 | (c >> 6), 0x80 | (c & 0x3f)], this._pos_)
+                    this._pos_ += 2
                 } else if (c >= 0xd800 && c <= 0xdbff) {
-                    i++;
-                    const c2 = value.charCodeAt(i);
+                    i++
+                    const c2 = value.charCodeAt(i)
                     if (!Number.isNaN(c2) && c2 >= 0xdc00 && c2 <= 0xdfff) {
-                        const _p1 = (c & 0x3ff) + 0x40;
-                        const _p2 = c2 & 0x3ff;
+                        const _p1 = (c & 0x3ff) + 0x40
+                        const _p2 = c2 & 0x3ff
 
-                        const _b1 = 0xf0 | ((_p1 >> 8) & 0x3f);
-                        const _b2 = 0x80 | ((_p1 >> 2) & 0x3f);
-                        const _b3 = 0x80 | ((_p1 & 0x3) << 4) | ((_p2 >> 6) & 0xf);
-                        const _b4 = 0x80 | (_p2 & 0x3f);
+                        const _b1 = 0xf0 | ((_p1 >> 8) & 0x3f)
+                        const _b2 = 0x80 | ((_p1 >> 2) & 0x3f)
+                        const _b3 = 0x80 | ((_p1 & 0x3) << 4) | ((_p2 >> 6) & 0xf)
+                        const _b4 = 0x80 | (_p2 & 0x3f)
 
-                        this._ensureWrite(this._pos_ + 4);
-                        this._u8d_.set([_b1, _b2, _b3, _b4], this._pos_);
-                        this._pos_ += 4;
+                        this._ensureWrite(this._pos_ + 4)
+                        this._u8d_.set([_b1, _b2, _b3, _b4], this._pos_)
+                        this._pos_ += 4
                     }
                 } else if (c <= 0xffff) {
-                    this._ensureWrite(this._pos_ + 3);
-                    this._u8d_.set([0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f)], this._pos_);
-                    this._pos_ += 3;
+                    this._ensureWrite(this._pos_ + 3)
+                    this._u8d_.set([0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f)], this._pos_)
+                    this._pos_ += 3
                 } else {
-                    this._ensureWrite(this._pos_ + 4);
-                    this._u8d_.set([0xf0 | (c >> 18), 0x80 | ((c >> 12) & 0x3f), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f)], this._pos_);
-                    this._pos_ += 4;
+                    this._ensureWrite(this._pos_ + 4)
+                    this._u8d_.set([0xf0 | (c >> 18), 0x80 | ((c >> 12) & 0x3f), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f)], this._pos_)
+                    this._pos_ += 4
                 }
             }
         }
@@ -652,12 +652,12 @@ namespace airkit {
          * @param	value 要写入的字符串值。
          */
         writeUTFString(value: string): void {
-            var tPos: number = this.pos;
-            this.writeUint16(1);
-            this.writeUTFBytes(value);
-            var dPos: number = this.pos - tPos - 2;
+            var tPos: number = this.pos
+            this.writeUint16(1)
+            this.writeUTFBytes(value)
+            var dPos: number = this.pos - tPos - 2
             //trace("writeLen:",dPos,"pos:",tPos);
-            this._d_.setUint16(tPos, dPos, this._xd_);
+            this._d_.setUint16(tPos, dPos, this._xd_)
         }
 
         /**
@@ -669,7 +669,7 @@ namespace airkit {
             //var tPos:int = pos;
             //var len:int = getUint16();
             ////trace("readLen:"+len,"pos,",tPos);
-            return this.readUTFBytes(this.getUint16());
+            return this.readUTFBytes(this.getUint16())
         }
 
         /**
@@ -678,7 +678,7 @@ namespace airkit {
          * @return 读取的字符串。
          */
         getUTFString(): string {
-            return this.readUTFString();
+            return this.readUTFString()
         }
 
         /**
@@ -688,11 +688,11 @@ namespace airkit {
          * @return 读取的字符串。
          */
         readUTFBytes(len: number = -1): string {
-            if (len === 0) return "";
-            var lastBytes: number = this.bytesAvailable;
-            if (len > lastBytes) throw "readUTFBytes error - Out of bounds";
-            len = len > 0 ? len : lastBytes;
-            return this._rUTF(len);
+            if (len === 0) return ''
+            var lastBytes: number = this.bytesAvailable
+            if (len > lastBytes) throw 'readUTFBytes error - Out of bounds'
+            len = len > 0 ? len : lastBytes
+            return this._rUTF(len)
         }
 
         /**
@@ -702,7 +702,7 @@ namespace airkit {
          * @return 读取的字符串。
          */
         getUTFBytes(len: number = -1): string {
-            return this.readUTFBytes(len);
+            return this.readUTFBytes(len)
         }
 
         /**
@@ -711,9 +711,9 @@ namespace airkit {
          * @param	value
          */
         writeByte(value: number): void {
-            this._ensureWrite(this._pos_ + 1);
-            this._d_.setInt8(this._pos_, value);
-            this._pos_ += 1;
+            this._ensureWrite(this._pos_ + 1)
+            this._d_.setInt8(this._pos_, value)
+            this._pos_ += 1
         }
 
         /**
@@ -722,8 +722,8 @@ namespace airkit {
          * @return 介于 -128 和 127 之间的整数。
          */
         readByte(): number {
-            if (this._pos_ + 1 > this._length) throw "readByte error - Out of bounds";
-            return this._d_.getInt8(this._pos_++);
+            if (this._pos_ + 1 > this._length) throw 'readByte error - Out of bounds'
+            return this._d_.getInt8(this._pos_++)
         }
 
         /**
@@ -731,7 +731,7 @@ namespace airkit {
          * 从字节流中读取带符号的字节。
          */
         getByte(): number {
-            return this.readByte();
+            return this.readByte()
         }
 
         /**
@@ -740,8 +740,8 @@ namespace airkit {
          * @param	lengthToEnsure	指定的长度。
          */
         _ensureWrite(lengthToEnsure: number): void {
-            if (this._length < lengthToEnsure) this._length = lengthToEnsure;
-            if (this._allocated_ < lengthToEnsure) this.length = lengthToEnsure;
+            if (this._length < lengthToEnsure) this._length = lengthToEnsure
+            if (this._allocated_ < lengthToEnsure) this.length = lengthToEnsure
         }
 
         /**
@@ -753,12 +753,12 @@ namespace airkit {
          * @param	length		从 Arraybuffer 对象写入到 Byte 对象的长度（以字节为单位）
          */
         writeArrayBuffer(arraybuffer: any, offset: number = 0, length: number = 0): void {
-            if (offset < 0 || length < 0) throw "writeArrayBuffer error - Out of bounds";
-            if (length == 0) length = arraybuffer.byteLength - offset;
-            this._ensureWrite(this._pos_ + length);
-            var uint8array: any = new Uint8Array(arraybuffer);
-            this._u8d_.set(uint8array.subarray(offset, offset + length), this._pos_);
-            this._pos_ += length;
+            if (offset < 0 || length < 0) throw 'writeArrayBuffer error - Out of bounds'
+            if (length == 0) length = arraybuffer.byteLength - offset
+            this._ensureWrite(this._pos_ + length)
+            var uint8array: any = new Uint8Array(arraybuffer)
+            this._u8d_.set(uint8array.subarray(offset, offset + length), this._pos_)
+            this._pos_ += length
         }
 
         /**
@@ -767,10 +767,10 @@ namespace airkit {
          * @return
          */
         readArrayBuffer(length: number): ArrayBuffer {
-            var rst: ArrayBuffer;
-            rst = this._u8d_.buffer.slice(this._pos_, this._pos_ + length);
-            this._pos_ = this._pos_ + length;
-            return rst;
+            var rst: ArrayBuffer
+            rst = this._u8d_.buffer.slice(this._pos_, this._pos_ + length)
+            this._pos_ = this._pos_ + length
+            return rst
         }
     }
 }

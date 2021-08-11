@@ -1,3 +1,11 @@
+/*
+ * @Author: ankye
+ * @since: 2021-08-11 14:42:41
+ * @lastTime: 2021-08-11 16:04:27
+ * @LastAuthor: ankye
+ * @message:
+ * @文件相对于项目的路径: /source/src/utils/DicUtils.ts
+ */
 /**
  * 字典工具类
  * @author ankye
@@ -9,38 +17,38 @@ namespace airkit {
          * 键列表
          */
         public static getKeys(d: Object): any[] {
-            let a: any[] = [];
+            let a: any[] = []
             for (let key in d) {
-                a.push(key);
+                a.push(key)
             }
 
-            return a;
+            return a
         }
 
         /**
          * 值列表
          */
         public static getValues(d: Object): any[] {
-            let a: any[] = [];
+            let a: any[] = []
 
             for (let key in d) {
-                a.push(d[key]);
+                a.push(d[key])
             }
 
-            return a;
+            return a
         }
 
         /**
          * 清空字典
          */
         public static clearDic(dic: Object): void {
-            let v: any;
+            let v: any
             for (let key in dic) {
-                v = dic[key];
+                v = dic[key]
                 if (v instanceof Object) {
-                    DicUtils.clearDic(v);
+                    DicUtils.clearDic(v)
                 }
-                delete dic[key];
+                delete dic[key]
             }
         }
 
@@ -49,31 +57,31 @@ namespace airkit {
          */
         public static foreach(dic: Object, compareFn: (key: any, value: any) => boolean): void {
             for (let key in dic) {
-                if (!compareFn.call(null, key, dic[key])) break;
+                if (!compareFn.call(null, key, dic[key])) break
             }
         }
 
         public static isEmpty(dic: Object): Boolean {
-            if (dic == null) return true;
+            if (dic == null) return true
 
             for (let key in dic) {
-                return false;
+                return false
             }
-            return true;
+            return true
         }
 
         public static getLength(dic: Object): number {
-            if (dic == null) return 0;
+            if (dic == null) return 0
 
-            let count: number = 0;
+            let count: number = 0
             for (let key in dic) {
-                ++count;
+                ++count
             }
-            return count;
+            return count
         }
 
         public static assign(obj: any, dic: any): void {
-            (<any>Object).assign(obj, dic);
+            ;(<any>Object).assign(obj, dic)
         }
     }
 }

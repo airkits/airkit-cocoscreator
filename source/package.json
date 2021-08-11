@@ -22,11 +22,18 @@
         "gulp-typescript": "^3.2.4",
         "gulp-uglify": "^3.0.2",
         "tsify": "^3.0.1",
-        "typescript": "^3.9.2",
+        "typescript": "^3.9.3",
         "vinyl-source-stream": "^1.1.0",
         "watchify": "^3.9.0"
     },
     "devDependencies": {
-        "gulp-sourcemaps": "^3.0.0"
+        "@types/node": "^14.14.22",
+        "gulp-sourcemaps": "^3.0.0",
+        "ts-node": "^10.2.0",
+        "@typescript-eslint/eslint-plugin": "^3.6.1",
+        "@typescript-eslint/parser": "^3.6.1",
+        "compressing": "^1.5.1",
+        "eslint": "^7.5.0",
+        "eslint-plugin-simple-import-sort": "^7.0.0"
     }
 }
