@@ -17,6 +17,10 @@ namespace airkit {
 
     export class FguiAsset extends cc.BufferAsset {}
     export class FguiAtlas extends cc.BufferAsset {}
+    export class BufferAsset extends cc.BufferAsset {}
+    export class TxtAsset extends cc.TextAsset {}
+    export class ImageAsset extends cc.BufferAsset {}
+
     export class ResourceManager extends Singleton {
         public static FONT_Yuanti = 'Yuanti SC Regular'
         public static Font_Helvetica = 'Helvetica'
@@ -161,17 +165,17 @@ namespace airkit {
         /**
          * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
          * @param	arr_res 	需要加载的资源数组
-         * @param	viewType 	加载界面
+         * @param	loaderType 	加载界面 eLoaderType
          * @param   tips		提示文字
          * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
          * @param	cache 		是否缓存加载结果。
          * @return 	结束回调(参数：Array<string>，加载的url数组)
          */
-        public loadArrayRes(arr_res: Array<Res>, viewType: number = eLoaderType.NONE, tips: string = null, priority: number = 1, cache: boolean = true): Promise<string[]> {
+        public loadArrayRes(arr_res: Array<Res>, loaderType: number = eLoaderType.NONE, tips: string = null, priority: number = 1, cache: boolean = true): Promise<string[]> {
             let has_unload: boolean = false
             let urls = []
             let resArr = []
-            if (viewType == null) viewType = eLoaderType.NONE
+            if (loaderType == null) loaderType = eLoaderType.NONE
             if (priority == null) priority = 1
             if (cache == null) cache = true
             for (let i = 0; i < arr_res.length; i++) {
@@ -191,19 +195,19 @@ namespace airkit {
                 }
             }
             //判断是否需要显示加载界面
-            if (!has_unload && viewType != eLoaderType.NONE) {
-                viewType = eLoaderType.NONE
+            if (!has_unload && loaderType != eLoaderType.NONE) {
+                loaderType = eLoaderType.NONE
             }
             //显示加载界面
-            if (viewType != eLoaderType.NONE) {
-                LoaderManager.Instance.show(viewType, urls.length, tips)
+            if (loaderType != eLoaderType.NONE) {
+                LoaderManager.Instance.show(loaderType, urls.length, tips)
             }
 
             return new Promise((resolve, reject) => {
                 cc.resources.load(
                     urls,
                     (completedCount: number, totalCount: number, item: any) => {
-                        this.onLoadProgress(viewType, totalCount, tips, completedCount / totalCount)
+                        this.onLoadProgress(loaderType, totalCount, tips, completedCount / totalCount)
                     },
                     (error: Error, resource: any) => {
                         if (error) {
@@ -225,13 +229,13 @@ namespace airkit {
                             }
                         }
 
-                        if (viewType != eLoaderType.NONE) {
+                        if (loaderType != eLoaderType.NONE) {
                             TimerManager.Instance.addOnce(this._minLoaderTime, null, (v) => {
-                                this.onLoadComplete(viewType, urls, resArr, tips)
+                                this.onLoadComplete(loaderType, urls, resArr, tips)
                                 resolve(urls)
                             })
                         } else {
-                            this.onLoadComplete(viewType, urls, resArr, tips)
+                            this.onLoadComplete(loaderType, urls, resArr, tips)
                             resolve(urls)
                         }
                     }
@@ -240,11 +244,11 @@ namespace airkit {
         }
         /**
          * 加载完成
-         * @param	viewType	显示的加载界面类型
+         * @param	loaderType	显示的加载界面类型
          * @param 	handle 		加载时，传入的回调函数
          * @param 	args		第一个参数为加载的资源url列表；第二个参数为是否加载成功
          */
-        public onLoadComplete(viewType: number, urls: string[], arr_res: Array<Res>, tips: string): void {
+        public onLoadComplete(loaderType: eLoaderType, urls: string[], arr_res: Array<Res>, tips: string): void {
             //显示加载日志
             if (urls) {
                 let arr: Array<string> = urls
@@ -273,8 +277,8 @@ namespace airkit {
             }
 
             //关闭加载界面
-            if (viewType != eLoaderType.NONE) {
-                LoaderManager.Instance.close(viewType)
+            if (loaderType != eLoaderType.NONE) {
+                LoaderManager.Instance.close(loaderType)
             }
         }
         /**

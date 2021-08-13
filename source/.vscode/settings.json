@@ -153,5 +153,7 @@
     },
     "eslint.debug": true,
     "eslint.format.enable": true,
-    "cSpell.words": [],
+    "cSpell.words": [
+        "skel"
+    ],
 }

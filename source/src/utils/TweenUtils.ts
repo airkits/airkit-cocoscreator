@@ -1,19 +1,35 @@
 namespace airkit {
+    /**
+     * 动画属性类，可叠加
+     */
+    export interface ITweenProps {
+        // 动画属性移动接口定义
+        x?: number
+        y?: number
+        // 动画属性缩放接口定义
+        scaleX?: number
+        scaleY?: number
+        // 动画属性旋转接口定义
+        rotation?: number
+    }
+
     /*
      * @author ankye
      * 连续动画
      */
     export class TweenUtils {
-        public static EaseBezier: number = 9999
-
         constructor(target: fgui.GObject) {
             this._target = target
-            this.clear()
+            this._steps = []
+            this._isPlaying = false
+            this._currentTweener = null
         }
 
         private _target: fgui.GObject
-        private _steps: any[]
+        private _currentTweener: fgui.GTweener
+        private _steps: unknown[]
         private _isPlaying: boolean
+        private _stepCompleteHandler: Handler
 
         private _updateFunc: Function
 
@@ -23,10 +39,12 @@ namespace airkit {
         public get target(): fgui.GObject {
             return this._target
         }
-        public setOnUpdate(callback: Function) {
+        // set update callback
+        public setOnUpdate(callback: Function): void {
             this._updateFunc = callback
         }
-        public onUpdate(gt: fgui.GTweener) {
+        // update
+        public onUpdate(gt: fgui.GTweener): void {
             if (this._updateFunc) {
                 this._updateFunc(gt)
             }
@@ -40,7 +58,7 @@ namespace airkit {
          * @param	complete 结束回调函数。
          * @param	delay 延迟执行时间。
          */
-        public to(props: any, duration: number, ease: number = fgui.EaseType.QuadOut, complete: Handler = null, delay: number = 0): TweenUtils {
+        public to(props: ITweenProps, duration: number, ease: number = fgui.EaseType.QuadOut, complete: Handler = null, delay: number = 0): TweenUtils {
             this._steps.push({ props, duration, ease, complete, delay })
             this.trigger()
             return this
@@ -62,59 +80,69 @@ namespace airkit {
                         if (step.props['x'] != null || step.props['y'] != null) {
                             let x = step.props['x'] != null ? step.props.x : this._target.x
                             let y = step.props['y'] != null ? step.props.y : this._target.y
-                            fgui.GTween.to2(this._target.x, this._target.y, x, y, step.duration).setTarget(this._target, this._target.setPosition).setEase(step.ease)
+                            this._currentTweener = fgui.GTween.to2(this._target.x, this._target.y, x, y, step.duration).setTarget(this._target, this._target.setPosition).setEase(step.ease)
                         }
                         if (step.props['scaleX'] != null || step.props['scaleY'] != null) {
                             let x = step.props['scaleX'] != null ? step.props.scaleX : this._target.scaleX
                             let y = step.props['scaleY'] != null ? step.props.scaleY : this._target.scaleY
-                            fgui.GTween.to2(this._target.scaleX, this._target.scaleY, x, y, step.duration).setTarget(this._target, this._target.setScale).setEase(step.ease)
+                            this._currentTweener = fgui.GTween.to2(this._target.scaleX, this._target.scaleY, x, y, step.duration).setTarget(this._target, this._target.setScale).setEase(step.ease)
                         }
 
                         if (step.props['rotation'] != null) {
                             let rotation = step.props['rotation'] != null ? step.props.rotation : this._target.rotation
-                            fgui.GTween.to(this._target.rotation, rotation, step.duration).setTarget(this._target, 'rotation').setEase(step.ease)
+                            this._currentTweener = fgui.GTween.to(this._target.rotation, rotation, step.duration).setTarget(this._target, 'rotation').setEase(step.ease)
                         }
-
-                        if (step.props['alpha'] != null) {
-                            if (step.props.pts) {
-                                fgui.GTween.to(this._target.alpha, step.props.alpha, step.duration)
-                                    .setTarget(this._target, 'alpha')
-                                    .setEase(step.ease)
-                                    .onUpdate((gt: fgui.GTweener) => {
-                                        let point = MathUtils.getPos(step.props.pts, gt.normalizedTime, OrbitType.Curve)
-                                        this._target.setPosition(point.x, point.y)
-                                        this.onUpdate(gt)
-                                    }, null)
-                            } else {
-                                fgui.GTween.to(this._target.alpha, step.props.alpha, step.duration)
-                                    .setTarget(this._target, 'alpha')
-                                    .setEase(step.ease)
-                                    .onUpdate((gt: fgui.GTweener) => {
-                                        this.onUpdate(gt)
-                                    }, null)
-                            }
-                        }
-                        TimerManager.Instance.addOnce((step.duration + step.delay) * 1000, this, this.onStepComplete, [step.complete])
+                        this._stepCompleteHandler = step.complete
+                        fgui.GTween.delayedCall(step.duration + step.delay)
+                            .onComplete(this.onStepComplete, this)
+                            .setTarget(this)
                     } else if (step.hasOwnProperty('delay')) {
                         this._isPlaying = true
-                        TimerManager.Instance.addOnce(step.delay * 1000, this, this.onStepComplete, [step.complete])
+                        this._stepCompleteHandler = step.complete
+                        fgui.GTween.delayedCall(step.duration + step.delay)
+                            .onComplete(this.onStepComplete, this)
+                            .setTarget(this)
                     }
                 }
             }
         }
 
-        private onStepComplete(onFunc: any): void {
-            if (onFunc) {
-                onFunc.runWith()
+        private onStepComplete(tweener: fgui.GTweener): void {
+            let handler = this._stepCompleteHandler
+            if (handler) {
+                if (!this._isPlaying || this._steps == null) {
+                    handler.clear()
+                    return
+                }
+                if (handler) {
+                    handler.runWith(null)
+                }
+                this._isPlaying = false
             }
-            this._isPlaying = false
+
             this.trigger()
         }
 
+        /**
+         * 取消target所有的动画
+         */
         public clear(): void {
-            this._steps = []
+            this._steps = null
             this._isPlaying = false
-            fgui.GTween.kill(this._target)
+            fgui.GTween.kill(this._target, false)
+            fgui.GTween.kill(this)
+        }
+
+        /**
+         * 取消当前运行的tween
+         */
+        public cancel(doComplete: boolean = false): void {
+            this._steps = null
+            this._isPlaying = false
+            if (this._currentTweener != null) {
+                fgui.GTween.kill(this._target, doComplete)
+            }
+            fgui.GTween.kill(this)
         }
 
         public static scale(view: fgui.GObject): void {
