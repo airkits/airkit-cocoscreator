@@ -2686,6 +2686,7 @@ declare namespace airkit {
         scaleX?: number;
         scaleY?: number;
         rotation?: number;
+        alpha?: number;
     }
     class TweenUtils {
         constructor(target: fgui.GObject);

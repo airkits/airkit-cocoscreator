@@ -5565,7 +5565,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (!this.cache) {
                 this.cache = new airkit.SDictionary();
             }
-            if (this.cache.containsKey(name)) {
+            if (this.cache.has(name)) {
                 airkit.Log.error('SceneManager::register scene - same id is register:' + name);
                 return;
             }
@@ -5706,9 +5706,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 return this._source ? this._source : '';
             },
             set: function (value) {
-                if (this._source == value)
-                    return;
-                this._source = value;
+                if (this._source != value) {
+                    this._source = value;
+                }
             },
             enumerable: false,
             configurable: true
@@ -5813,7 +5813,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (!this.cache) {
                 this.cache = new airkit.SDictionary();
             }
-            if (this.cache.containsKey(name)) {
+            if (this.cache.has(name)) {
                 airkit.Log.error('UIManager::register ui - same id is register:' + name);
                 return;
             }
@@ -8837,6 +8837,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         if (step.props['rotation'] != null) {
                             var rotation = step.props['rotation'] != null ? step.props.rotation : this._target.rotation;
                             this._currentTweener = fgui.GTween.to(this._target.rotation, rotation, step.duration).setTarget(this._target, 'rotation').setEase(step.ease);
+                        }
+                        if (step.props['alpha'] != null) {
+                            var alpha = step.props['alpha'] != null ? step.props.alpha : this._target.alpha;
+                            this._currentTweener = fgui.GTween.to(this._target.alpha, alpha, step.duration).setTarget(this._target, 'alpha').setEase(step.ease);
                         }
                         this._stepCompleteHandler = step.complete;
                         fgui.GTween.delayedCall(step.duration + step.delay)

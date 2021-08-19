@@ -29,7 +29,7 @@ namespace airkit {
             if (!this.cache) {
                 this.cache = new SDictionary<any>()
             }
-            if (this.cache.containsKey(name)) {
+            if (this.cache.has(name)) {
                 Log.error('UIManager::register ui - same id is register:' + name)
                 return
             }

@@ -29,7 +29,7 @@ namespace airkit {
             if (!this.cache) {
                 this.cache = new SDictionary<BaseView>()
             }
-            if (this.cache.containsKey(name)) {
+            if (this.cache.has(name)) {
                 Log.error('SceneManager::register scene - same id is register:' + name)
                 return
             }

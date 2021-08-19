@@ -29,51 +29,53 @@ namespace airkit {
             super()
         }
         public set source(value: string) {
-            if (this._source == value) return
-            this._source = value
+            if (this._source != value){
+                this._source = value
+            }
+            
         }
 
         public loadSkeleton(source: string): Promise<boolean> {
             return new Promise<boolean>((resolve, reject) => {})
         }
 
-        get isLoaded(): boolean {
+        public get isLoaded(): boolean {
             return this._isLoaded
         }
 
-        get source(): string {
+        public get source(): string {
             return this._source ? this._source : ''
         }
 
-        get animName(): string {
+        public get animName(): string {
             return this._animName
         }
 
-        set animName(value: string) {
+        public set animName(value: string) {
             this._animName = value
         }
 
-        get aniRate(): number {
+        public get aniRate(): number {
             return this._animRate
         }
 
-        set aniRate(value: number) {
+        public set aniRate(value: number) {
             this._animRate = value
         }
 
-        get loopCount(): number {
+        public get loopCount(): number {
             return this._loopCount
         }
 
-        set loopCount(value: number) {
+        public set loopCount(value: number) {
             this._loopCount = value
         }
 
-        get autoPlay(): boolean {
+        public get autoPlay(): boolean {
             return this._autoPlay
         }
 
-        set autoPlay(value: boolean) {
+        public set autoPlay(value: boolean) {
             if (this._autoPlay == value) return
             this._autoPlay = value
             value && this._isLoaded && this.play(this._animName, this._loopCount, this._completeHandler)

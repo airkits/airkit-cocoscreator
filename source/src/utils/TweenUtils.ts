@@ -11,6 +11,8 @@ namespace airkit {
         scaleY?: number
         // 动画属性旋转接口定义
         rotation?: number
+        // 透明度
+        alpha?: number
     }
 
     /*
@@ -91,6 +93,10 @@ namespace airkit {
                         if (step.props['rotation'] != null) {
                             let rotation = step.props['rotation'] != null ? step.props.rotation : this._target.rotation
                             this._currentTweener = fgui.GTween.to(this._target.rotation, rotation, step.duration).setTarget(this._target, 'rotation').setEase(step.ease)
+                        }
+                        if( step.props['alpha'] != null){
+                            let alpha = step.props['alpha'] != null ? step.props.alpha: this._target.alpha
+                            this._currentTweener = fgui.GTween.to(this._target.alpha, alpha, step.duration).setTarget(this._target, 'alpha').setEase(step.ease)
                         }
                         this._stepCompleteHandler = step.complete
                         fgui.GTween.delayedCall(step.duration + step.delay)
