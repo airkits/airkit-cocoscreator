@@ -9,59 +9,132 @@
 // import { State } from "./State";
 namespace airkit {
     export class StateMachine<T> {
-        public _currentState: State<T> = null
-        public _previousState: State<T> = null
-        public _globalState: State<T> = null
+        protected _currentState: State<T> = null
+        protected _previousState: State<T> = null
+        protected _gState: State<T> = null
+        protected _states: NDictionary<State<T>>
+        protected _stateQueue: Queue<number>
 
-        public constructor() {}
+        public constructor() {
+            this._states = new NDictionary<State<T>>()
+            this._stateQueue = new Queue<number>()
+        }
+
+        /**
+         * 注册状态
+         * @param type
+         * @param state
+         */
+        public registerState(type: number, state: State<T>): void {
+            state.setStatus(eStateEnum.INIT)
+            this._states.add(type, state)
+        }
+        /**
+         * 移除状态
+         * @param type
+         */
+        public unregisterState(type: number): void {
+            this._states.remove(type)
+        }
+
         public update(dt: number) {
-            if (this._globalState) {
-                this._globalState.update(dt)
+            if (this._gState && this._gState.hasStatus(eStateEnum.RUNNING) && !this._gState.hasStatus(eStateEnum.EXIT)) {
+                this._gState.update(dt)
             }
 
-            if (this._currentState) {
+            if (this._currentState && this._currentState.hasStatus(eStateEnum.RUNNING) && !this._currentState.hasStatus(eStateEnum.EXIT)) {
                 this._currentState.update(dt)
             }
         }
+        /**
+         * 切换状态,如果有上一个状态，先退出上一个状态，再切换到该状态
+         * @param type
+         */
+        public changeState(type: number): boolean {
+            if (!this._states.has(type)) {
+                return false
+            }
+            this._stateQueue.clear()
+            this._stateQueue.enqueue(type)
+            return this.doNextState()
+        }
 
-        public changeState(_state: any) {
+        protected doNextState(): boolean {
+            if (this._stateQueue.length <= 0) {
+                return false
+            }
+            let type = this._stateQueue.dequeue()
+            if (!this._states.has(type)) {
+                return false
+            }
             this._previousState = this._currentState
-            this._currentState = _state
-            this._currentState._owner = this
-            if (this._previousState) this._previousState.exit()
-            this._currentState.enter()
-        }
+            this._currentState = this._states.getValue(type)
+            this._stateExit(this._previousState)
+            this._stateEnter(this._currentState)
 
-        public setCurrentState(_state: any) {
-            if (this._currentState) {
-                this._currentState.exit()
+            return true
+        }
+        private _stateExit(state: State<T>): void {
+            state.setStatus(eStateEnum.EXIT)
+            state.exit()
+        }
+        private _stateEnter(state: State<T>): void {
+            state.resetStatus(eStateEnum.ENTER | eStateEnum.RUNNING | eStateEnum.EXIT)
+            state.owner = this
+            state.setStatus(eStateEnum.ENTER)
+            state.enter()
+            state.setStatus(eStateEnum.RUNNING)
+        }
+        /**
+         * 设置下一个状态，如果队列有，追加到最后，如果当前没有运行的状态，直接运行
+         * @param type
+         * @returns
+         */
+        public setNextState(type: number): boolean {
+            if (!this._states.has(type)) {
+                return false
+            }
+            this._stateQueue.enqueue(type)
+            if (!this._currentState) {
+                return this.doNextState()
+            } else {
+                if (this._currentState.hasStatus(eStateEnum.EXIT)) {
+                    return this.doNextState()
+                }
+            }
+            return true
+        }
+        public setGlobalState(type: number): boolean {
+            if (!this._states.has(type)) {
+                return false
+            }
+            if (this._gState) {
+                this._stateExit(this._gState)
+                this._gState = null
             }
 
-            this._currentState = _state
-            this._currentState._owner = this
-            this._currentState.enter()
-        }
-
-        public setGlobalState(_state: any) {
-            if (this._globalState) {
-                this._globalState.exit()
-            }
-            this._globalState = _state
-            this._globalState._owner = this
-            this._globalState.enter()
+            this._gState = this._states.getValue(type)
+            this._stateEnter(this._gState)
         }
 
         public clearAllState() {
-            if (this._globalState) {
-                this._globalState.exit()
-                this._globalState = null
+            if (this._gState) {
+                this._stateExit(this._gState)
+                this._gState = null
             }
 
             if (this._currentState) {
-                this._currentState.exit()
+                this._stateExit(this._currentState)
                 this._currentState = null
             }
             this._previousState = null
+            this._states.foreach((k, v) => {
+                v.setStatus(eStateEnum.DESTROY)
+                v.destroy()
+                return true
+            })
+            this._states.clear()
+            this._stateQueue.clear()
         }
 
         public get currentState() {
@@ -73,7 +146,11 @@ namespace airkit {
         }
 
         public get globalState() {
-            return this._globalState
+            return this._gState
+        }
+
+        public destory(): void {
+            this.clearAllState()
         }
     }
 }

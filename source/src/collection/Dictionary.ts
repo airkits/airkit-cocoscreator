@@ -12,7 +12,7 @@ namespace airkit {
         private _dic: Object = {}
 
         public add(key: number, value: TValue): boolean {
-            if (this.containsKey(key)) {
+            if (this.has(key)) {
                 Log.warning('NDictionary already containsKey ', key.toString())
                 return false
             }
@@ -25,11 +25,11 @@ namespace airkit {
         public set(key: number, value: TValue) {
             this._dic[key] = value
         }
-        public containsKey(key: number): boolean {
+        public has(key: number): boolean {
             return this._dic[key] != null ? true : false
         }
         public getValue(key: number): TValue {
-            if (!this.containsKey(key)) return null
+            if (!this.has(key)) return null
             return this._dic[key]
         }
         public clear(): void {
@@ -72,7 +72,7 @@ namespace airkit {
         private _dic: Object = {}
 
         public add(key: string, value: TValue): boolean {
-            if (this.containsKey(key)) return false
+            if (this.has(key)) return false
             this._dic[key] = value
             return true
         }
@@ -84,12 +84,12 @@ namespace airkit {
             delete this._dic[key]
         }
 
-        public containsKey(key: string): boolean {
+        public has(key: string): boolean {
             return this._dic[key] != null ? true : false
         }
 
         public getValue(key: string): TValue {
-            if (!this.containsKey(key)) return null
+            if (!this.has(key)) return null
             return this._dic[key]
         }
 

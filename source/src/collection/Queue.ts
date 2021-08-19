@@ -30,7 +30,7 @@ namespace airkit {
             return this._list.slice(0, this._list.length)
         }
         /**是否包含指定元素*/
-        public contains(item: T): boolean {
+        public has(item: T): boolean {
             return this._list.indexOf(item, 0) == -1 ? false : true
         }
         /**清空*/

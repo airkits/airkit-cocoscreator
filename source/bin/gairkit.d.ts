@@ -46,6 +46,98 @@ declare namespace airkit {
     }
 }
 declare namespace airkit {
+    class AudioManager extends Singleton {
+        private _effectSwitch;
+        private _musicSwitch;
+        /**
+         * 背景音乐id，唯一
+         */
+        private _musicID;
+        private _audioIDs;
+        constructor();
+        private static instance;
+        static get Instance(): AudioManager;
+        /**
+         * 设置背景音乐开关，关闭(false)将关闭背景音乐
+         *
+         * @memberof SoundsManager
+         */
+        set musicSwitch(v: boolean);
+        /**
+         * 设置音效开关，关闭(false)将关闭所有的音效
+         *
+         * @memberof SoundsManager
+         */
+        set effectSwitch(v: boolean);
+        /**
+         * 播放背景音乐
+         * @param url
+         * @param loopCount default -1 = loop for ever,
+         * @param complete
+         * @param startTime 设置开始秒
+         */
+        playMusic(url: string, loopCount?: number, complete?: Handler, startTime?: number): void;
+        getAudioClip(url: string): Promise<cc.AudioClip>;
+        /**
+         * 播放音效
+         * @param url
+         * @param loopCount default -1 = loop for ever,
+         * @param complete
+         * @param startTime
+         */
+        playEffect(url: string, loopCount?: number, complete?: Handler, startTime?: number): void;
+        /**
+         * 设置背景音乐音量。音量范围从 0（静音）至 1（最大音量）。
+         * @param volume
+         */
+        setMusicVolume(volume: number): void;
+        /**
+         * 设置声音音量。根据参数不同，可以分别设置指定声音（背景音乐或音效）音量或者所有音效（不包括背景音乐）音量。
+         * @param volume
+         * @param url
+         */
+        setEffectVolume(volume: number, url?: string): void;
+        /**
+         * 停止所有音乐
+         */
+        stopAll(): void;
+        /**
+         * 停止播放所有音效（不包括背景音乐）
+         */
+        stopAllEffect(): void;
+        /**
+         * 停止播放背景音乐
+         */
+        stopMusic(): void;
+        /**
+         * 暂停背景音乐
+         */
+        pauseMusic(): void;
+        /**
+         * 暂停播放音效
+         * @param url
+         */
+        pauseEffect(url?: string): void;
+        /**
+         * 暂停所有的
+         */
+        pauseAll(): void;
+        /**
+         * 恢复背景音乐
+         */
+        resumeMusic(): void;
+        /**
+         * 恢复音效
+         * @param url
+         */
+        resumeEffect(url: string): void;
+        /**
+         * 恢复所有的音乐和音效
+         */
+        resumeAll(): void;
+    }
+}
+declare namespace airkit {
     /**
      * 颜色
      * @author ankye
@@ -96,7 +188,7 @@ declare namespace airkit {
         add(key: number, value: TValue): boolean;
         remove(key: number): void;
         set(key: number, value: TValue): void;
-        containsKey(key: number): boolean;
+        has(key: number): boolean;
         getValue(key: number): TValue;
         clear(): void;
         getkeys(): Array<number>;
@@ -117,7 +209,7 @@ declare namespace airkit {
         add(key: string, value: TValue): boolean;
         set(key: string, value: TValue): void;
         remove(key: string): void;
-        containsKey(key: string): boolean;
+        has(key: string): boolean;
         getValue(key: string): TValue;
         getkeys(): Array<string>;
         getValues(): Array<TValue>;
@@ -233,7 +325,7 @@ declare namespace airkit {
         /**转换成标准数组*/
         toArray(): Array<T>;
         /**是否包含指定元素*/
-        contains(item: T): boolean;
+        has(item: T): boolean;
         /**清空*/
         clear(): void;
         get length(): number;
@@ -870,32 +962,80 @@ declare namespace airkit {
     }
 }
 declare namespace airkit {
+    enum eStateEnum {
+        NONE = 1,
+        INIT = 2,
+        ENTER = 4,
+        RUNNING = 8,
+        EXIT = 16,
+        DESTROY = 32
+    }
     class State<T> {
-        _owner: StateMachine<T>;
-        _entity: T;
-        _status: number;
+        protected _owner: StateMachine<T>;
+        protected _entity: T;
+        protected _state: number;
+        protected _status: eStateEnum;
         protected _times: number;
         protected _tick: number;
-        constructor(entity: T, status: number);
+        constructor(entity: T, state: number);
+        setStatus(v: number): void;
+        resetStatus(v: number): void;
+        /**
+         * hasStatus
+         * @param Status
+         * @returns boolean
+         * 是否存在运行状态,支持多个状态查询
+         */
+        hasStatus(v: number): boolean;
+        set owner(v: StateMachine<T>);
+        set entity(v: T);
+        set state(v: number);
         enter(): void;
         update(dt: number): void;
         exit(): void;
+        destroy(): void;
     }
 }
 declare namespace airkit {
     class StateMachine<T> {
-        _currentState: State<T>;
-        _previousState: State<T>;
-        _globalState: State<T>;
+        protected _currentState: State<T>;
+        protected _previousState: State<T>;
+        protected _gState: State<T>;
+        protected _states: NDictionary<State<T>>;
+        protected _stateQueue: Queue<number>;
         constructor();
+        /**
+         * 注册状态
+         * @param type
+         * @param state
+         */
+        registerState(type: number, state: State<T>): void;
+        /**
+         * 移除状态
+         * @param type
+         */
+        unregisterState(type: number): void;
         update(dt: number): void;
-        changeState(_state: any): void;
-        setCurrentState(_state: any): void;
-        setGlobalState(_state: any): void;
+        /**
+         * 切换状态,如果有上一个状态，先退出上一个状态，再切换到该状态
+         * @param type
+         */
+        changeState(type: number): boolean;
+        protected doNextState(): boolean;
+        private _stateExit;
+        private _stateEnter;
+        /**
+         * 设置下一个状态，如果队列有，追加到最后，如果当前没有运行的状态，直接运行
+         * @param type
+         * @returns
+         */
+        setNextState(type: number): boolean;
+        setGlobalState(type: number): boolean;
         clearAllState(): void;
         get currentState(): State<T>;
         get previousState(): State<T>;
         get globalState(): State<T>;
+        destory(): void;
     }
 }
 declare namespace airkit {
@@ -1386,6 +1526,12 @@ declare namespace airkit {
     }
     class FguiAtlas extends cc.BufferAsset {
     }
+    class BufferAsset extends cc.BufferAsset {
+    }
+    class TxtAsset extends cc.TextAsset {
+    }
+    class ImageAsset extends cc.BufferAsset {
+    }
     class ResourceManager extends Singleton {
         static FONT_Yuanti: string;
         static Font_Helvetica: string;
@@ -1427,20 +1573,20 @@ declare namespace airkit {
         /**
          * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
          * @param	arr_res 	需要加载的资源数组
-         * @param	viewType 	加载界面
+         * @param	loaderType 	加载界面 eLoaderType
          * @param   tips		提示文字
          * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
          * @param	cache 		是否缓存加载结果。
          * @return 	结束回调(参数：Array<string>，加载的url数组)
          */
-        loadArrayRes(arr_res: Array<Res>, viewType?: number, tips?: string, priority?: number, cache?: boolean): Promise<string[]>;
+        loadArrayRes(arr_res: Array<Res>, loaderType?: number, tips?: string, priority?: number, cache?: boolean): Promise<string[]>;
         /**
          * 加载完成
-         * @param	viewType	显示的加载界面类型
+         * @param	loaderType	显示的加载界面类型
          * @param 	handle 		加载时，传入的回调函数
          * @param 	args		第一个参数为加载的资源url列表；第二个参数为是否加载成功
          */
-        onLoadComplete(viewType: number, urls: string[], arr_res: Array<Res>, tips: string): void;
+        onLoadComplete(loaderType: eLoaderType, urls: string[], arr_res: Array<Res>, tips: string): void;
         /**
          * 加载进度
          * @param	viewType	显示的加载界面类型
@@ -1492,6 +1638,31 @@ declare namespace airkit {
         gotoScene(sceneName: string, args?: any): void;
         private enterScene;
         private exitScene;
+    }
+}
+declare namespace airkit {
+    class SpineView extends BaseView {
+        private _source;
+        private _animName;
+        private _animRate;
+        private _loopCount;
+        private _autoPlay;
+        private _isLoaded;
+        private _completeHandler;
+        constructor();
+        set source(value: string);
+        loadSkeleton(source: string): Promise<boolean>;
+        get isLoaded(): boolean;
+        get source(): string;
+        get animName(): string;
+        set animName(value: string);
+        get aniRate(): number;
+        set aniRate(value: number);
+        get loopCount(): number;
+        set loopCount(value: number);
+        get autoPlay(): boolean;
+        set autoPlay(value: boolean);
+        play(animName: string, loopCount: number, completeHandler: Handler): void;
     }
 }
 /**
@@ -2506,12 +2677,23 @@ declare namespace airkit {
     }
 }
 declare namespace airkit {
+    /**
+     * 动画属性类，可叠加
+     */
+    interface ITweenProps {
+        x?: number;
+        y?: number;
+        scaleX?: number;
+        scaleY?: number;
+        rotation?: number;
+    }
     class TweenUtils {
-        static EaseBezier: number;
         constructor(target: fgui.GObject);
         private _target;
+        private _currentTweener;
         private _steps;
         private _isPlaying;
+        private _stepCompleteHandler;
         private _updateFunc;
         static get(target: fgui.GObject): TweenUtils;
         get target(): fgui.GObject;
@@ -2526,11 +2708,18 @@ declare namespace airkit {
          * @param	complete 结束回调函数。
          * @param	delay 延迟执行时间。
          */
-        to(props: any, duration: number, ease?: number, complete?: Handler, delay?: number): TweenUtils;
+        to(props: ITweenProps, duration: number, ease?: number, complete?: Handler, delay?: number): TweenUtils;
         delay(delay: number): TweenUtils;
         private trigger;
         private onStepComplete;
+        /**
+         * 取消target所有的动画
+         */
         clear(): void;
+        /**
+         * 取消当前运行的tween
+         */
+        cancel(doComplete?: boolean): void;
         static scale(view: fgui.GObject): void;
         static appear(view: fgui.GObject): void;
     }

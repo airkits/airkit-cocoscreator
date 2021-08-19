@@ -235,231 +235,250 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 // // import { SDictionary, NDictionary } from "../collection/Dictionary";
 // // import { Timer } from "../timer/Timer";
 // ///<reference path="../collection/Singleton.ts"/>
-// namespace airkit {
-//   /*
-//    * 声音管理
-//    */
-//   export class AudioManager extends Singleton {
-//     //{
-//     //     0:{id:0, "url": "res/sound/bgm.mp3", "desc": "游戏背景" }
-//     // }
-//     private musicsConfig: NDictionary<{
-//       id: number;
-//       url: string;
-//       desc: string;
-//     }>;
-//     // {
-//     //    0: {id:0, "url": "res/sound/click.mp3", "desc": "点击音效" },
-//     // }
-//     private effectConfig: NDictionary<{
-//       id: number;
-//       url: string;
-//       desc: string;
-//     }>;
-//     private effectChannelDic: SDictionary<Laya.SoundChannel>;
-//     private effectChannelNumDic: SDictionary<number>;
-//     private _effectSwitch: boolean;
-//     private _musicSwitch: boolean;
-//     constructor() {
-//       super();
-//       this.effectChannelDic = new SDictionary<Laya.SoundChannel>();
-//       this.effectChannelNumDic = new SDictionary<number>();
-//       this._effectSwitch = true;
-//       this._musicSwitch = true;
-//       Laya.SoundManager.useAudioMusic = false;
-//       Laya.SoundManager.autoReleaseSound = false;
-//     }
-//     private static instance: AudioManager = null;
-//     public static get Instance(): AudioManager {
-//       if (!this.instance) this.instance = new AudioManager();
-//       return this.instance;
-//     }
-//     public registerMusic(obj: { id: number; url: string; desc: string }): void {
-//       if (this.musicsConfig == null) {
-//         this.musicsConfig = new NDictionary<{
-//           id: number;
-//           url: string;
-//           desc: string;
-//         }>();
-//       }
-//       this.musicsConfig.add(obj.id, obj);
-//     }
-//     public registerEffect(obj: {
-//       id: number;
-//       url: string;
-//       desc: string;
-//     }): void {
-//       if (this.effectConfig == null) {
-//         this.effectConfig = new NDictionary<{
-//           id: number;
-//           url: string;
-//           desc: string;
-//         }>();
-//       }
-//       this.setEffectVolume(0.3, obj.url);
-//       this.effectConfig.add(obj.id, obj);
-//     }
-//     /**
-//      * 设置背景音乐开关，关闭(false)将关闭背景音乐
-//      *
-//      * @memberof SoundsManager
-//      */
-//     public set musicSwitch(v: boolean) {
-//       if (this._musicSwitch != v) {
-//         if (!v) {
-//           this.stopMusic();
-//         }
-//         this._musicSwitch = v;
-//       }
-//     }
-//     /**
-//      * 设置音效开关，关闭(false)将关闭所有的音效
-//      *
-//      * @memberof SoundsManager
-//      */
-//     public set effectSwitch(v: boolean) {
-//       if (this._effectSwitch != v) {
-//         if (!v) {
-//           this.stopAllEffect();
-//         }
-//         this._effectSwitch = v;
-//       }
-//     }
-//     /**
-//      * 播放背景音乐
-//      * @param url
-//      * @param loops
-//      * @param complete
-//      * @param startTime
-//      */
-//     public playMusic(
-//       url: string,
-//       loops: number = 0,
-//       complete: Laya.Handler = null,
-//       startTime: number = 0
-//     ): void {
-//       if (!this._musicSwitch) return;
-//       Laya.SoundManager.playMusic(url, loops, complete, startTime);
-//       Laya.SoundManager.setMusicVolume(0.5);
-//     }
-//     /**
-//      * 播放音效
-//      * @param url
-//      * @param loops
-//      * @param complete
-//      * @param soundClass
-//      * @param startTime
-//      */
-//     public playEffect(
-//       url: string,
-//       loops: number = 1,
-//       complete: Laya.Handler = null,
-//       soundClass: any = null,
-//       startTime: number = 0
-//     ): void {
-//       if (!this._effectSwitch) return;
-//       let num = this.effectChannelNumDic.getValue(url);
-//       if (num == null) {
-//         this.effectChannelNumDic.add(url, 1);
-//       } else {
-//         this.effectChannelNumDic.set(url, num + 1);
-//       }
-//       var soundChannel: Laya.SoundChannel = this.effectChannelDic.getValue(url);
-//       if (soundChannel) {
-//         // soundChannel.stop()
-//         // this.removeChannel(url, soundChannel)
-//         return;
-//       }
-//       num = this.effectChannelNumDic.getValue(url);
-//       this.effectChannelNumDic.remove(url);
-//       // if (num > 3) num = 3
-//       let scale = Timer.timeScale;
-//       if (scale > 1.5) scale = 1.5;
-//       Laya.SoundManager.playbackRate = scale;
-//       this.effectChannelDic.add(
-//         url,
-//         Laya.SoundManager.playSound(
-//           url,
-//           num,
-//           Laya.Handler.create(null, () => {
-//             this.effectChannelDic.remove(url);
-//           }),
-//           soundClass,
-//           startTime
-//         )
-//       );
-//       Laya.SoundManager.setSoundVolume(0.5, url);
-//       //  Laya.SoundManager.playSound(url, loops, complete, soundClass, startTime)
-//     }
-//     /**
-//      * 设置背景音乐音量。音量范围从 0（静音）至 1（最大音量）。
-//      * @param volume
-//      */
-//     public setMusicVolume(volume: number): void {
-//       Laya.SoundManager.setMusicVolume(volume);
-//     }
-//     /**
-//      * 设置声音音量。根据参数不同，可以分别设置指定声音（背景音乐或音效）音量或者所有音效（不包括背景音乐）音量。
-//      * @param volume
-//      * @param url
-//      */
-//     public setEffectVolume(volume: number, url: string = null): void {
-//       Laya.SoundManager.setSoundVolume(volume, url);
-//     }
-//     /**
-//      * 停止所有音乐
-//      */
-//     public stopAll(): void {
-//       Laya.SoundManager.stopAll();
-//     }
-//     /**
-//      * 停止播放所有音效（不包括背景音乐）
-//      */
-//     public stopAllEffect(): void {
-//       // Laya.SoundManager.stopAllSound()
-//       this.effectChannelDic.foreach((url, channel) => {
-//         if (channel != null) channel.stop();
-//         this.removeChannel(url, channel);
-//         return true;
-//       });
-//       this.effectChannelNumDic.clear();
-//     }
-//     /**
-//      * 停止播放背景音乐
-//      */
-//     public stopMusic(): void {
-//       Laya.SoundManager.stopMusic();
-//     }
-//     /**
-//      * 移除播放的声音实例。
-//      * @param channel
-//      */
-//     public removeChannel(url: string, channel: Laya.SoundChannel): void {
-//       this.effectChannelDic.remove(url);
-//       Laya.SoundManager.removeChannel(channel);
-//     }
-//     /**播放背景音乐 */
-//     public playMusicByID(
-//       eId: number,
-//       loops: number = 0,
-//       complete: Laya.Handler = null,
-//       startTime: number = 0
-//     ): void {
-//       var config = this.musicsConfig.getValue(eId);
-//       this.playMusic(config.url, loops, complete, startTime);
-//     }
-//     /**播放音效 */
-//     public playEffectByID(
-//       eId: number,
-//       loops: number = 1,
-//       complete: Laya.Handler = null,
-//       startTime: number = 0
-//     ): void {
-//       var config = this.effectConfig.getValue(eId);
-//       this.playEffect(config.url, loops, complete, startTime);
-//     }
-//   }
-// }
+
+(function (airkit) {
+    /*
+     * 声音管理
+     */
+    var AudioManager = /** @class */ (function (_super) {
+        __extends(AudioManager, _super);
+        function AudioManager() {
+            var _this = _super.call(this) || this;
+            _this._audioIDs = new airkit.NDictionary();
+            _this._musicID = -1;
+            _this._effectSwitch = true;
+            _this._musicSwitch = true;
+            return _this;
+        }
+        Object.defineProperty(AudioManager, "Instance", {
+            get: function () {
+                if (!this.instance)
+                    this.instance = new AudioManager();
+                return this.instance;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(AudioManager.prototype, "musicSwitch", {
+            /**
+             * 设置背景音乐开关，关闭(false)将关闭背景音乐
+             *
+             * @memberof SoundsManager
+             */
+            set: function (v) {
+                if (this._musicSwitch != v) {
+                    if (!v) {
+                        this.stopMusic();
+                    }
+                    this._musicSwitch = v;
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(AudioManager.prototype, "effectSwitch", {
+            /**
+             * 设置音效开关，关闭(false)将关闭所有的音效
+             *
+             * @memberof SoundsManager
+             */
+            set: function (v) {
+                if (this._effectSwitch != v) {
+                    if (!v) {
+                        this.stopAllEffect();
+                    }
+                    this._effectSwitch = v;
+                }
+            },
+            enumerable: false,
+            configurable: true
+        });
+        /**
+         * 播放背景音乐
+         * @param url
+         * @param loopCount default -1 = loop for ever,
+         * @param complete
+         * @param startTime 设置开始秒
+         */
+        AudioManager.prototype.playMusic = function (url, loopCount, complete, startTime) {
+            var _this = this;
+            if (loopCount === void 0) { loopCount = -1; }
+            if (complete === void 0) { complete = null; }
+            if (startTime === void 0) { startTime = 0; }
+            if (!this._musicSwitch)
+                return;
+            this.getAudioClip(url).then(function (clip) {
+                if (clip) {
+                    var loop = false;
+                    if (loopCount == -1) {
+                        loop = true;
+                    }
+                    var audioID_1 = cc.audioEngine.playMusic(clip, loop);
+                    _this._musicID = audioID_1;
+                    cc.audioEngine.setCurrentTime(audioID_1, startTime);
+                    cc.audioEngine.setFinishCallback(audioID_1, function () {
+                        complete.runWith(audioID_1);
+                        _this._musicID = audioID_1;
+                    });
+                }
+            });
+        };
+        AudioManager.prototype.getAudioClip = function (url) {
+            var clip = airkit.ResourceManager.Instance.getRes(url);
+            if (!clip) {
+                return airkit.ResourceManager.Instance.loadRes(url, cc.AudioClip).then(function (v) {
+                    return airkit.ResourceManager.Instance.getRes(url);
+                });
+            }
+            else {
+                return Promise.resolve(clip);
+            }
+        };
+        /**
+         * 播放音效
+         * @param url
+         * @param loopCount default -1 = loop for ever,
+         * @param complete
+         * @param startTime
+         */
+        AudioManager.prototype.playEffect = function (url, loopCount, complete, startTime) {
+            var _this = this;
+            if (loopCount === void 0) { loopCount = 1; }
+            if (complete === void 0) { complete = null; }
+            if (startTime === void 0) { startTime = 0; }
+            if (!this._effectSwitch)
+                return;
+            this.getAudioClip(url).then(function (clip) {
+                if (clip) {
+                    var loop = false;
+                    if (loopCount == -1) {
+                        loop = true;
+                    }
+                    var audioID_2 = cc.audioEngine.playEffect(clip, loop);
+                    _this._audioIDs.add(audioID_2, url);
+                    cc.audioEngine.setCurrentTime(audioID_2, startTime);
+                    cc.audioEngine.setFinishCallback(audioID_2, function () {
+                        complete.runWith(audioID_2);
+                        _this._audioIDs.remove(audioID_2);
+                    });
+                }
+            });
+        };
+        /**
+         * 设置背景音乐音量。音量范围从 0（静音）至 1（最大音量）。
+         * @param volume
+         */
+        AudioManager.prototype.setMusicVolume = function (volume) {
+            cc.audioEngine.setMusicVolume(volume);
+        };
+        /**
+         * 设置声音音量。根据参数不同，可以分别设置指定声音（背景音乐或音效）音量或者所有音效（不包括背景音乐）音量。
+         * @param volume
+         * @param url
+         */
+        AudioManager.prototype.setEffectVolume = function (volume, url) {
+            if (url === void 0) { url = null; }
+            if (url != null) {
+                this._audioIDs.foreach(function (k, v) {
+                    if (v == url) {
+                        cc.audioEngine.setVolume(k, volume);
+                    }
+                    return true;
+                });
+            }
+            else {
+                cc.audioEngine.setEffectsVolume(volume);
+            }
+        };
+        /**
+         * 停止所有音乐
+         */
+        AudioManager.prototype.stopAll = function () {
+            cc.audioEngine.stopAll();
+            this._musicID = -1;
+            this._audioIDs.clear();
+        };
+        /**
+         * 停止播放所有音效（不包括背景音乐）
+         */
+        AudioManager.prototype.stopAllEffect = function () {
+            this._audioIDs.foreach(function (k, v) {
+                cc.audioEngine.stopEffect(k);
+                return true;
+            });
+            this._audioIDs.clear();
+        };
+        /**
+         * 停止播放背景音乐
+         */
+        AudioManager.prototype.stopMusic = function () {
+            cc.audioEngine.stopMusic();
+            this._musicID = -1;
+        };
+        /**
+         * 暂停背景音乐
+         */
+        AudioManager.prototype.pauseMusic = function () {
+            cc.audioEngine.pauseMusic();
+        };
+        /**
+         * 暂停播放音效
+         * @param url
+         */
+        AudioManager.prototype.pauseEffect = function (url) {
+            if (url === void 0) { url = null; }
+            if (url == null) {
+                cc.audioEngine.pauseAllEffects();
+            }
+            else {
+                this._audioIDs.foreach(function (k, v) {
+                    if (v == url) {
+                        cc.audioEngine.pause(k);
+                    }
+                    return true;
+                });
+            }
+        };
+        /**
+         * 暂停所有的
+         */
+        AudioManager.prototype.pauseAll = function () {
+            cc.audioEngine.pauseAll();
+        };
+        /**
+         * 恢复背景音乐
+         */
+        AudioManager.prototype.resumeMusic = function () {
+            cc.audioEngine.resumeMusic();
+        };
+        /**
+         * 恢复音效
+         * @param url
+         */
+        AudioManager.prototype.resumeEffect = function (url) {
+            if (url == null) {
+                cc.audioEngine.resumeAllEffects();
+            }
+            else {
+                this._audioIDs.foreach(function (k, v) {
+                    if (v == url) {
+                        cc.audioEngine.resume(k);
+                    }
+                    return true;
+                });
+            }
+        };
+        /**
+         * 恢复所有的音乐和音效
+         */
+        AudioManager.prototype.resumeAll = function () {
+            cc.audioEngine.resumeAll();
+        };
+        AudioManager.instance = null;
+        return AudioManager;
+    }(airkit.Singleton));
+    airkit.AudioManager = AudioManager;
+})(airkit || (airkit = {}));
 // import { StringUtils } from "../utils/StringUtils";
 // import { MathUtils } from "../utils/MathUtils";
 
@@ -631,7 +650,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this._dic = {};
         }
         NDictionary.prototype.add = function (key, value) {
-            if (this.containsKey(key)) {
+            if (this.has(key)) {
                 airkit.Log.warning('NDictionary already containsKey ', key.toString());
                 return false;
             }
@@ -644,11 +663,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         NDictionary.prototype.set = function (key, value) {
             this._dic[key] = value;
         };
-        NDictionary.prototype.containsKey = function (key) {
+        NDictionary.prototype.has = function (key) {
             return this._dic[key] != null ? true : false;
         };
         NDictionary.prototype.getValue = function (key) {
-            if (!this.containsKey(key))
+            if (!this.has(key))
                 return null;
             return this._dic[key];
         };
@@ -700,7 +719,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this._dic = {};
         }
         SDictionary.prototype.add = function (key, value) {
-            if (this.containsKey(key))
+            if (this.has(key))
                 return false;
             this._dic[key] = value;
             return true;
@@ -711,11 +730,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         SDictionary.prototype.remove = function (key) {
             delete this._dic[key];
         };
-        SDictionary.prototype.containsKey = function (key) {
+        SDictionary.prototype.has = function (key) {
             return this._dic[key] != null ? true : false;
         };
         SDictionary.prototype.getValue = function (key) {
-            if (!this.containsKey(key))
+            if (!this.has(key))
                 return null;
             return this._dic[key];
         };
@@ -1063,7 +1082,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             return this._list.slice(0, this._list.length);
         };
         /**是否包含指定元素*/
-        Queue.prototype.contains = function (item) {
+        Queue.prototype.has = function (item) {
             return this._list.indexOf(item, 0) == -1 ? false : true;
         };
         /**清空*/
@@ -3406,17 +3425,68 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 // import { Log } from "../../log/Log";
 
 (function (airkit) {
+    var eStateEnum;
+    (function (eStateEnum) {
+        eStateEnum[eStateEnum["NONE"] = 1] = "NONE";
+        eStateEnum[eStateEnum["INIT"] = 2] = "INIT";
+        eStateEnum[eStateEnum["ENTER"] = 4] = "ENTER";
+        eStateEnum[eStateEnum["RUNNING"] = 8] = "RUNNING";
+        eStateEnum[eStateEnum["EXIT"] = 16] = "EXIT";
+        eStateEnum[eStateEnum["DESTROY"] = 32] = "DESTROY";
+    })(eStateEnum = airkit.eStateEnum || (airkit.eStateEnum = {}));
     var State = /** @class */ (function () {
-        function State(entity, status) {
+        function State(entity, state) {
             this._owner = null;
-            this._status = 0;
+            //实体控制器引用
+            this._entity = null;
+            this._state = 0;
+            this._status = eStateEnum.NONE;
             //帧数统计,每帧update的时候+1,每次enter和exit的时候清零,用于处理一些定时事件,比较通用
             //所以抽离到基础属性里面了，有需要的需要自己在状态里面进行加减重置等操作，基类只提供属性字段
             this._times = 0;
             this._tick = 0; //用于计数
             this._entity = entity;
-            this._status = status;
+            this._state = state;
         }
+        // 设置运行状态，对外开放的接口
+        State.prototype.setStatus = function (v) {
+            this._status = this._status | v;
+        };
+        // 重置运行状态
+        // 支持重置多个状态位
+        State.prototype.resetStatus = function (v) {
+            this._status = this._status & (this._status ^ v);
+        };
+        /**
+         * hasStatus
+         * @param Status
+         * @returns boolean
+         * 是否存在运行状态,支持多个状态查询
+         */
+        State.prototype.hasStatus = function (v) {
+            return (this._status & v) > 0;
+        };
+        Object.defineProperty(State.prototype, "owner", {
+            set: function (v) {
+                this._owner = v;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(State.prototype, "entity", {
+            set: function (v) {
+                this._entity = v;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(State.prototype, "state", {
+            set: function (v) {
+                this._state = v;
+            },
+            enumerable: false,
+            configurable: true
+        });
         State.prototype.enter = function () {
             airkit.Log.info('you must overwrite the func state.enter !');
         };
@@ -3425,6 +3495,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         State.prototype.exit = function () {
             airkit.Log.info('you must overwrite the func state.exit !');
+        };
+        State.prototype.destroy = function () {
+            this._owner = null;
+            this._entity = null;
+            this._state = 0;
         };
         return State;
     }());
@@ -3445,50 +3520,119 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         function StateMachine() {
             this._currentState = null;
             this._previousState = null;
-            this._globalState = null;
+            this._gState = null;
+            this._states = new airkit.NDictionary();
+            this._stateQueue = new airkit.Queue();
         }
+        /**
+         * 注册状态
+         * @param type
+         * @param state
+         */
+        StateMachine.prototype.registerState = function (type, state) {
+            state.setStatus(airkit.eStateEnum.INIT);
+            this._states.add(type, state);
+        };
+        /**
+         * 移除状态
+         * @param type
+         */
+        StateMachine.prototype.unregisterState = function (type) {
+            this._states.remove(type);
+        };
         StateMachine.prototype.update = function (dt) {
-            if (this._globalState) {
-                this._globalState.update(dt);
+            if (this._gState && this._gState.hasStatus(airkit.eStateEnum.RUNNING) && !this._gState.hasStatus(airkit.eStateEnum.EXIT)) {
+                this._gState.update(dt);
             }
-            if (this._currentState) {
+            if (this._currentState && this._currentState.hasStatus(airkit.eStateEnum.RUNNING) && !this._currentState.hasStatus(airkit.eStateEnum.EXIT)) {
                 this._currentState.update(dt);
             }
         };
-        StateMachine.prototype.changeState = function (_state) {
+        /**
+         * 切换状态,如果有上一个状态，先退出上一个状态，再切换到该状态
+         * @param type
+         */
+        StateMachine.prototype.changeState = function (type) {
+            if (!this._states.has(type)) {
+                return false;
+            }
+            this._stateQueue.clear();
+            this._stateQueue.enqueue(type);
+            return this.doNextState();
+        };
+        StateMachine.prototype.doNextState = function () {
+            if (this._stateQueue.length <= 0) {
+                return false;
+            }
+            var type = this._stateQueue.dequeue();
+            if (!this._states.has(type)) {
+                return false;
+            }
             this._previousState = this._currentState;
-            this._currentState = _state;
-            this._currentState._owner = this;
-            if (this._previousState)
-                this._previousState.exit();
-            this._currentState.enter();
+            this._currentState = this._states.getValue(type);
+            this._stateExit(this._previousState);
+            this._stateEnter(this._currentState);
+            return true;
         };
-        StateMachine.prototype.setCurrentState = function (_state) {
-            if (this._currentState) {
-                this._currentState.exit();
-            }
-            this._currentState = _state;
-            this._currentState._owner = this;
-            this._currentState.enter();
+        StateMachine.prototype._stateExit = function (state) {
+            state.setStatus(airkit.eStateEnum.EXIT);
+            state.exit();
         };
-        StateMachine.prototype.setGlobalState = function (_state) {
-            if (this._globalState) {
-                this._globalState.exit();
+        StateMachine.prototype._stateEnter = function (state) {
+            state.resetStatus(airkit.eStateEnum.ENTER | airkit.eStateEnum.RUNNING | airkit.eStateEnum.EXIT);
+            state.owner = this;
+            state.setStatus(airkit.eStateEnum.ENTER);
+            state.enter();
+            state.setStatus(airkit.eStateEnum.RUNNING);
+        };
+        /**
+         * 设置下一个状态，如果队列有，追加到最后，如果当前没有运行的状态，直接运行
+         * @param type
+         * @returns
+         */
+        StateMachine.prototype.setNextState = function (type) {
+            if (!this._states.has(type)) {
+                return false;
             }
-            this._globalState = _state;
-            this._globalState._owner = this;
-            this._globalState.enter();
+            this._stateQueue.enqueue(type);
+            if (!this._currentState) {
+                return this.doNextState();
+            }
+            else {
+                if (this._currentState.hasStatus(airkit.eStateEnum.EXIT)) {
+                    return this.doNextState();
+                }
+            }
+            return true;
+        };
+        StateMachine.prototype.setGlobalState = function (type) {
+            if (!this._states.has(type)) {
+                return false;
+            }
+            if (this._gState) {
+                this._stateExit(this._gState);
+                this._gState = null;
+            }
+            this._gState = this._states.getValue(type);
+            this._stateEnter(this._gState);
         };
         StateMachine.prototype.clearAllState = function () {
-            if (this._globalState) {
-                this._globalState.exit();
-                this._globalState = null;
+            if (this._gState) {
+                this._stateExit(this._gState);
+                this._gState = null;
             }
             if (this._currentState) {
-                this._currentState.exit();
+                this._stateExit(this._currentState);
                 this._currentState = null;
             }
             this._previousState = null;
+            this._states.foreach(function (k, v) {
+                v.setStatus(airkit.eStateEnum.DESTROY);
+                v.destroy();
+                return true;
+            });
+            this._states.clear();
+            this._stateQueue.clear();
         };
         Object.defineProperty(StateMachine.prototype, "currentState", {
             get: function () {
@@ -3506,11 +3650,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         });
         Object.defineProperty(StateMachine.prototype, "globalState", {
             get: function () {
-                return this._globalState;
+                return this._gState;
             },
             enumerable: false,
             configurable: true
         });
+        StateMachine.prototype.destory = function () {
+            this.clearAllState();
+        };
         return StateMachine;
     }());
     airkit.StateMachine = StateMachine;
@@ -4996,6 +5143,30 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         return FguiAtlas;
     }(cc.BufferAsset));
     airkit.FguiAtlas = FguiAtlas;
+    var BufferAsset = /** @class */ (function (_super) {
+        __extends(BufferAsset, _super);
+        function BufferAsset() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        return BufferAsset;
+    }(cc.BufferAsset));
+    airkit.BufferAsset = BufferAsset;
+    var TxtAsset = /** @class */ (function (_super) {
+        __extends(TxtAsset, _super);
+        function TxtAsset() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        return TxtAsset;
+    }(cc.TextAsset));
+    airkit.TxtAsset = TxtAsset;
+    var ImageAsset = /** @class */ (function (_super) {
+        __extends(ImageAsset, _super);
+        function ImageAsset() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        return ImageAsset;
+    }(cc.BufferAsset));
+    airkit.ImageAsset = ImageAsset;
     var ResourceManager = /** @class */ (function (_super) {
         __extends(ResourceManager, _super);
         function ResourceManager() {
@@ -5132,23 +5303,23 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         /**
          * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
          * @param	arr_res 	需要加载的资源数组
-         * @param	viewType 	加载界面
+         * @param	loaderType 	加载界面 eLoaderType
          * @param   tips		提示文字
          * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
          * @param	cache 		是否缓存加载结果。
          * @return 	结束回调(参数：Array<string>，加载的url数组)
          */
-        ResourceManager.prototype.loadArrayRes = function (arr_res, viewType, tips, priority, cache) {
+        ResourceManager.prototype.loadArrayRes = function (arr_res, loaderType, tips, priority, cache) {
             var _this = this;
-            if (viewType === void 0) { viewType = airkit.eLoaderType.NONE; }
+            if (loaderType === void 0) { loaderType = airkit.eLoaderType.NONE; }
             if (tips === void 0) { tips = null; }
             if (priority === void 0) { priority = 1; }
             if (cache === void 0) { cache = true; }
             var has_unload = false;
             var urls = [];
             var resArr = [];
-            if (viewType == null)
-                viewType = airkit.eLoaderType.NONE;
+            if (loaderType == null)
+                loaderType = airkit.eLoaderType.NONE;
             if (priority == null)
                 priority = 1;
             if (cache == null)
@@ -5171,16 +5342,16 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
             //判断是否需要显示加载界面
-            if (!has_unload && viewType != airkit.eLoaderType.NONE) {
-                viewType = airkit.eLoaderType.NONE;
+            if (!has_unload && loaderType != airkit.eLoaderType.NONE) {
+                loaderType = airkit.eLoaderType.NONE;
             }
             //显示加载界面
-            if (viewType != airkit.eLoaderType.NONE) {
-                airkit.LoaderManager.Instance.show(viewType, urls.length, tips);
+            if (loaderType != airkit.eLoaderType.NONE) {
+                airkit.LoaderManager.Instance.show(loaderType, urls.length, tips);
             }
             return new Promise(function (resolve, reject) {
                 cc.resources.load(urls, function (completedCount, totalCount, item) {
-                    _this.onLoadProgress(viewType, totalCount, tips, completedCount / totalCount);
+                    _this.onLoadProgress(loaderType, totalCount, tips, completedCount / totalCount);
                 }, function (error, resource) {
                     if (error) {
                         for (var i = 0; i < urls.length; i++) {
@@ -5199,14 +5370,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                             resInfo.updateStatus(eLoaderStatus.READY);
                         }
                     }
-                    if (viewType != airkit.eLoaderType.NONE) {
+                    if (loaderType != airkit.eLoaderType.NONE) {
                         airkit.TimerManager.Instance.addOnce(_this._minLoaderTime, null, function (v) {
-                            _this.onLoadComplete(viewType, urls, resArr, tips);
+                            _this.onLoadComplete(loaderType, urls, resArr, tips);
                             resolve(urls);
                         });
                     }
                     else {
-                        _this.onLoadComplete(viewType, urls, resArr, tips);
+                        _this.onLoadComplete(loaderType, urls, resArr, tips);
                         resolve(urls);
                     }
                 });
@@ -5214,11 +5385,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         /**
          * 加载完成
-         * @param	viewType	显示的加载界面类型
+         * @param	loaderType	显示的加载界面类型
          * @param 	handle 		加载时，传入的回调函数
          * @param 	args		第一个参数为加载的资源url列表；第二个参数为是否加载成功
          */
-        ResourceManager.prototype.onLoadComplete = function (viewType, urls, arr_res, tips) {
+        ResourceManager.prototype.onLoadComplete = function (loaderType, urls, arr_res, tips) {
             //显示加载日志
             if (urls) {
                 var arr = urls;
@@ -5244,8 +5415,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 }
             }
             //关闭加载界面
-            if (viewType != airkit.eLoaderType.NONE) {
-                airkit.LoaderManager.Instance.close(viewType);
+            if (loaderType != airkit.eLoaderType.NONE) {
+                airkit.LoaderManager.Instance.close(loaderType);
             }
         };
         /**
@@ -5502,6 +5673,103 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         return SceneManager;
     }());
     airkit.SceneManager = SceneManager;
+})(airkit || (airkit = {}));
+/*
+ * @Author: ankye
+ * @Date: 2021-08-13 16:20:10
+ * @LastEditTime: 2021-08-13 18:23:48
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: /source/src/ui/SpineView.ts
+ */
+/// <reference path="./BaseView.ts" />
+
+(function (airkit) {
+    var SpineView = /** @class */ (function (_super) {
+        __extends(SpineView, _super);
+        function SpineView() {
+            var _this = _super.call(this) || this;
+            // 播放速率
+            _this._animRate = 1;
+            // 循环次数
+            _this._loopCount = 0;
+            // 是否自动播放
+            _this._autoPlay = true;
+            // 是否已加载
+            _this._isLoaded = false;
+            // 完成回调
+            _this._completeHandler = null;
+            return _this;
+        }
+        Object.defineProperty(SpineView.prototype, "source", {
+            get: function () {
+                return this._source ? this._source : '';
+            },
+            set: function (value) {
+                if (this._source == value)
+                    return;
+                this._source = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        SpineView.prototype.loadSkeleton = function (source) {
+            return new Promise(function (resolve, reject) { });
+        };
+        Object.defineProperty(SpineView.prototype, "isLoaded", {
+            get: function () {
+                return this._isLoaded;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SpineView.prototype, "animName", {
+            get: function () {
+                return this._animName;
+            },
+            set: function (value) {
+                this._animName = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SpineView.prototype, "aniRate", {
+            get: function () {
+                return this._animRate;
+            },
+            set: function (value) {
+                this._animRate = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SpineView.prototype, "loopCount", {
+            get: function () {
+                return this._loopCount;
+            },
+            set: function (value) {
+                this._loopCount = value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(SpineView.prototype, "autoPlay", {
+            get: function () {
+                return this._autoPlay;
+            },
+            set: function (value) {
+                if (this._autoPlay == value)
+                    return;
+                this._autoPlay = value;
+                value && this._isLoaded && this.play(this._animName, this._loopCount, this._completeHandler);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        SpineView.prototype.play = function (animName, loopCount, completeHandler) { };
+        return SpineView;
+    }(airkit.BaseView));
+    airkit.SpineView = SpineView;
 })(airkit || (airkit = {}));
 /**
  * UI管理器
@@ -8504,7 +8772,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     var TweenUtils = /** @class */ (function () {
         function TweenUtils(target) {
             this._target = target;
-            this.clear();
+            this._steps = [];
+            this._isPlaying = false;
+            this._currentTweener = null;
         }
         TweenUtils.get = function (target) {
             return new TweenUtils(target);
@@ -8516,9 +8786,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             enumerable: false,
             configurable: true
         });
+        // set update callback
         TweenUtils.prototype.setOnUpdate = function (callback) {
             this._updateFunc = callback;
         };
+        // update
         TweenUtils.prototype.onUpdate = function (gt) {
             if (this._updateFunc) {
                 this._updateFunc(gt);
@@ -8546,7 +8818,6 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             return this;
         };
         TweenUtils.prototype.trigger = function () {
-            var _this = this;
             if (!this._isPlaying) {
                 if (this._steps && this._steps.length) {
                     var step = this._steps.shift();
@@ -8556,57 +8827,66 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                         if (step.props['x'] != null || step.props['y'] != null) {
                             var x = step.props['x'] != null ? step.props.x : this._target.x;
                             var y = step.props['y'] != null ? step.props.y : this._target.y;
-                            fgui.GTween.to2(this._target.x, this._target.y, x, y, step.duration).setTarget(this._target, this._target.setPosition).setEase(step.ease);
+                            this._currentTweener = fgui.GTween.to2(this._target.x, this._target.y, x, y, step.duration).setTarget(this._target, this._target.setPosition).setEase(step.ease);
                         }
                         if (step.props['scaleX'] != null || step.props['scaleY'] != null) {
                             var x = step.props['scaleX'] != null ? step.props.scaleX : this._target.scaleX;
                             var y = step.props['scaleY'] != null ? step.props.scaleY : this._target.scaleY;
-                            fgui.GTween.to2(this._target.scaleX, this._target.scaleY, x, y, step.duration).setTarget(this._target, this._target.setScale).setEase(step.ease);
+                            this._currentTweener = fgui.GTween.to2(this._target.scaleX, this._target.scaleY, x, y, step.duration).setTarget(this._target, this._target.setScale).setEase(step.ease);
                         }
                         if (step.props['rotation'] != null) {
                             var rotation = step.props['rotation'] != null ? step.props.rotation : this._target.rotation;
-                            fgui.GTween.to(this._target.rotation, rotation, step.duration).setTarget(this._target, 'rotation').setEase(step.ease);
+                            this._currentTweener = fgui.GTween.to(this._target.rotation, rotation, step.duration).setTarget(this._target, 'rotation').setEase(step.ease);
                         }
-                        if (step.props['alpha'] != null) {
-                            if (step.props.pts) {
-                                fgui.GTween.to(this._target.alpha, step.props.alpha, step.duration)
-                                    .setTarget(this._target, 'alpha')
-                                    .setEase(step.ease)
-                                    .onUpdate(function (gt) {
-                                    var point = airkit.MathUtils.getPos(step.props.pts, gt.normalizedTime, airkit.OrbitType.Curve);
-                                    _this._target.setPosition(point.x, point.y);
-                                    _this.onUpdate(gt);
-                                }, null);
-                            }
-                            else {
-                                fgui.GTween.to(this._target.alpha, step.props.alpha, step.duration)
-                                    .setTarget(this._target, 'alpha')
-                                    .setEase(step.ease)
-                                    .onUpdate(function (gt) {
-                                    _this.onUpdate(gt);
-                                }, null);
-                            }
-                        }
-                        airkit.TimerManager.Instance.addOnce((step.duration + step.delay) * 1000, this, this.onStepComplete, [step.complete]);
+                        this._stepCompleteHandler = step.complete;
+                        fgui.GTween.delayedCall(step.duration + step.delay)
+                            .onComplete(this.onStepComplete, this)
+                            .setTarget(this);
                     }
                     else if (step.hasOwnProperty('delay')) {
                         this._isPlaying = true;
-                        airkit.TimerManager.Instance.addOnce(step.delay * 1000, this, this.onStepComplete, [step.complete]);
+                        this._stepCompleteHandler = step.complete;
+                        fgui.GTween.delayedCall(step.duration + step.delay)
+                            .onComplete(this.onStepComplete, this)
+                            .setTarget(this);
                     }
                 }
             }
         };
-        TweenUtils.prototype.onStepComplete = function (onFunc) {
-            if (onFunc) {
-                onFunc.runWith();
+        TweenUtils.prototype.onStepComplete = function (tweener) {
+            var handler = this._stepCompleteHandler;
+            if (handler) {
+                if (!this._isPlaying || this._steps == null) {
+                    handler.clear();
+                    return;
+                }
+                if (handler) {
+                    handler.runWith(null);
+                }
+                this._isPlaying = false;
             }
-            this._isPlaying = false;
             this.trigger();
         };
+        /**
+         * 取消target所有的动画
+         */
         TweenUtils.prototype.clear = function () {
-            this._steps = [];
+            this._steps = null;
             this._isPlaying = false;
-            fgui.GTween.kill(this._target);
+            fgui.GTween.kill(this._target, false);
+            fgui.GTween.kill(this);
+        };
+        /**
+         * 取消当前运行的tween
+         */
+        TweenUtils.prototype.cancel = function (doComplete) {
+            if (doComplete === void 0) { doComplete = false; }
+            this._steps = null;
+            this._isPlaying = false;
+            if (this._currentTweener != null) {
+                fgui.GTween.kill(this._target, doComplete);
+            }
+            fgui.GTween.kill(this);
         };
         TweenUtils.scale = function (view) {
             this.get(view).to({ scaleX: 0.8, scaleY: 0.8 }, 0.05, fgui.EaseType.QuadIn).to({ scaleX: 1.0, scaleY: 1.0 }, 0.05, fgui.EaseType.QuadIn);
@@ -8615,7 +8895,6 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             view.setScale(0, 0);
             this.get(view).to({ scaleX: 1.2, scaleY: 1.2 }, 0.4, fgui.EaseType.QuadOut).to({ scaleX: 1.0, scaleY: 1.0 }, 0.2, fgui.EaseType.QuadOut);
         };
-        TweenUtils.EaseBezier = 9999;
         return TweenUtils;
     }());
     airkit.TweenUtils = TweenUtils;
