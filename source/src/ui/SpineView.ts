@@ -24,19 +24,63 @@ namespace airkit {
         private _isLoaded: boolean = false
         // 完成回调
         private _completeHandler: Handler = null
-
+        private _skeletonData: sp.SkeletonData = null
+        private _skeleton: sp.Skeleton = null
+        private _trackIndex: number = 0
         constructor() {
             super()
         }
         public set source(value: string) {
-            if (this._source != value){
+            if (this._source != value) {
                 this._source = value
             }
-            
         }
 
-        public loadSkeleton(source: string): Promise<boolean> {
-            return new Promise<boolean>((resolve, reject) => {})
+        public loadSkeleton(source: string, useJson: boolean = true): Promise<boolean> {
+            if (this.isLoaded) {
+                return Promise.resolve(true)
+            }
+            let image = `spine/${source}/${source}.png`
+            let atlas = `spine/${source}/${source}.atlas`
+            let json = `spine/${source}/${source}.json`
+            let ske = `spine/${source}/${source}.skel`
+            let res: Res[] = [
+                {
+                    url: image,
+                    type: ImageAsset,
+                    refCount: 1,
+                    pkg: null,
+                },
+                {
+                    url: atlas,
+                    type: TxtAsset,
+                    refCount: 1,
+                    pkg: null,
+                },
+            ]
+            if (useJson) {
+                res.push({
+                    url: json,
+                    type: TxtAsset,
+                    refCount: 1,
+                    pkg: null,
+                })
+            } else {
+                res.push({
+                    url: ske,
+                    type: BufferAsset,
+                    refCount: 1,
+                    pkg: null,
+                })
+            }
+
+            return new Promise<boolean>((resolve, reject) => {
+                cc.resources.load(`spine/${source}/${source}`, sp.SkeletonData, (err: Error, asset: sp.SkeletonData) => {
+                    this._skeletonData = asset
+                    this._isLoaded = true
+                    resolve(true)
+                })
+            })
         }
 
         public get isLoaded(): boolean {
@@ -81,6 +125,23 @@ namespace airkit {
             value && this._isLoaded && this.play(this._animName, this._loopCount, this._completeHandler)
         }
 
-        public play(animName: string, loopCount: number, completeHandler: Handler): void {}
+        public play(animName: string, loopCount: number, completeHandler: Handler): void {
+            if (this.isLoaded) {
+                if (this._skeleton) {
+                    this._skeleton.setAnimation(this._trackIndex, animName, loopCount == -1 ? true : false)
+                }
+            } else {
+                this.loadSkeleton(this.source).then((result) => {
+                    let skeleton = this.node.addComponent(sp.Skeleton)
+                    skeleton.skeletonData = this._skeletonData
+                    this._skeleton = skeleton
+                    this._skeleton.setAnimation(this._trackIndex, animName, loopCount == -1 ? true : false)
+                })
+            }
+        }
+
+        public dispose(): void {
+            super.dispose()
+        }
     }
 }

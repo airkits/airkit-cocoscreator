@@ -88,9 +88,9 @@ namespace airkit {
         public update(dt: number): void {}
 
         /**获取资源*/
-        public getRes(url: string): any {
+        public getRes(path: string, type?: typeof cc.Asset): any {
             //修改访问时间
-            return cc.resources.get(url)
+            return cc.resources.get(path, type)
         }
 
         public dump(): void {

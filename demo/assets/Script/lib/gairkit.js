@@ -5240,9 +5240,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         ResourceManager.prototype.update = function (dt) { };
         /**获取资源*/
-        ResourceManager.prototype.getRes = function (url) {
+        ResourceManager.prototype.getRes = function (path, type) {
             //修改访问时间
-            return cc.resources.get(url);
+            return cc.resources.get(path, type);
         };
         ResourceManager.prototype.dump = function () {
             this._dicResInfo.foreach(function (k, v) {
@@ -5706,6 +5706,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             _this._isLoaded = false;
             // 完成回调
             _this._completeHandler = null;
+            _this._skeletonData = null;
+            _this._skeleton = null;
+            _this._trackIndex = 0;
             return _this;
         }
         Object.defineProperty(SpineView.prototype, "source", {
@@ -5720,8 +5723,53 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             enumerable: false,
             configurable: true
         });
-        SpineView.prototype.loadSkeleton = function (source) {
-            return new Promise(function (resolve, reject) { });
+        SpineView.prototype.loadSkeleton = function (source, useJson) {
+            var _this = this;
+            if (useJson === void 0) { useJson = true; }
+            if (this.isLoaded) {
+                return Promise.resolve(true);
+            }
+            var image = "spine/" + source + "/" + source + ".png";
+            var atlas = "spine/" + source + "/" + source + ".atlas";
+            var json = "spine/" + source + "/" + source + ".json";
+            var ske = "spine/" + source + "/" + source + ".skel";
+            var res = [
+                {
+                    url: image,
+                    type: airkit.ImageAsset,
+                    refCount: 1,
+                    pkg: null,
+                },
+                {
+                    url: atlas,
+                    type: airkit.TxtAsset,
+                    refCount: 1,
+                    pkg: null,
+                },
+            ];
+            if (useJson) {
+                res.push({
+                    url: json,
+                    type: airkit.TxtAsset,
+                    refCount: 1,
+                    pkg: null,
+                });
+            }
+            else {
+                res.push({
+                    url: ske,
+                    type: airkit.BufferAsset,
+                    refCount: 1,
+                    pkg: null,
+                });
+            }
+            return new Promise(function (resolve, reject) {
+                cc.resources.load("spine/" + source + "/" + source, sp.SkeletonData, function (err, asset) {
+                    _this._skeletonData = asset;
+                    _this._isLoaded = true;
+                    resolve(true);
+                });
+            });
         };
         Object.defineProperty(SpineView.prototype, "isLoaded", {
             get: function () {
@@ -5773,7 +5821,25 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             enumerable: false,
             configurable: true
         });
-        SpineView.prototype.play = function (animName, loopCount, completeHandler) { };
+        SpineView.prototype.play = function (animName, loopCount, completeHandler) {
+            var _this = this;
+            if (this.isLoaded) {
+                if (this._skeleton) {
+                    this._skeleton.setAnimation(this._trackIndex, animName, loopCount == -1 ? true : false);
+                }
+            }
+            else {
+                this.loadSkeleton(this.source).then(function (result) {
+                    var skeleton = _this.node.addComponent(sp.Skeleton);
+                    skeleton.skeletonData = _this._skeletonData;
+                    _this._skeleton = skeleton;
+                    _this._skeleton.setAnimation(_this._trackIndex, animName, loopCount == -1 ? true : false);
+                });
+            }
+        };
+        SpineView.prototype.dispose = function () {
+            _super.prototype.dispose.call(this);
+        };
         return SpineView;
     }(airkit.BaseView));
     airkit.SpineView = SpineView;

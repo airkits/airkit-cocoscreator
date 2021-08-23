@@ -1560,7 +1560,7 @@ declare namespace airkit {
         destroy(): boolean;
         update(dt: number): void;
         /**获取资源*/
-        getRes(url: string): any;
+        getRes(path: string, type?: typeof cc.Asset): any;
         dump(): void;
         /**
          * 加载资源，如果资源在此之前已经加载过，则当前帧会调用complete
@@ -1653,9 +1653,12 @@ declare namespace airkit {
         private _autoPlay;
         private _isLoaded;
         private _completeHandler;
+        private _skeletonData;
+        private _skeleton;
+        private _trackIndex;
         constructor();
         set source(value: string);
-        loadSkeleton(source: string): Promise<boolean>;
+        loadSkeleton(source: string, useJson?: boolean): Promise<boolean>;
         get isLoaded(): boolean;
         get source(): string;
         get animName(): string;
@@ -1667,6 +1670,7 @@ declare namespace airkit {
         get autoPlay(): boolean;
         set autoPlay(value: boolean);
         play(animName: string, loopCount: number, completeHandler: Handler): void;
+        dispose(): void;
     }
 }
 /**
