@@ -53,6 +53,10 @@ namespace airkit {
             if (this._listener) this._listener.off(caller, method)
         }
 
+        public offAll(): void {
+            if (this._listener) this._listener.offAll()
+        }
+
         /**
          * 保证ListenerManager可用
          */
@@ -119,21 +123,9 @@ namespace airkit {
          * @param caller
          * @param method
          */
-        public offAll(caller: any, method: Function) {
-            if (!this.handlers || this.handlers.length <= 0) return
-
-            let temp: Handler[] = []
-            let handlers: Handler[] = this.handlers
-            let len: number = handlers.length
-            for (var i: number = 0; i < len; ++i) {
-                if (caller !== handlers[i].caller || method !== handlers[i].method) {
-                    temp.push(handlers[i])
-                } else {
-                    handlers[i].recover()
-                }
-            }
-
-            this.handlers = temp
+        public offAll() {
+            this.clear()
+            this.handlers = []
         }
 
         /**

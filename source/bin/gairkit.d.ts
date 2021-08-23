@@ -697,6 +697,7 @@ declare namespace airkit {
          * @param method
          */
         off(caller: any, method: (arg: T, ...args: any[]) => any): void;
+        offAll(): void;
         /**
          * 保证ListenerManager可用
          */
@@ -720,7 +721,7 @@ declare namespace airkit {
          * @param caller
          * @param method
          */
-        offAll(caller: any, method: Function): void;
+        offAll(): void;
         /**
          * 清除所有回调
          */
@@ -977,7 +978,7 @@ declare namespace airkit {
         protected _status: eStateEnum;
         protected _times: number;
         protected _tick: number;
-        constructor(entity: T, state: number);
+        constructor(entity: T);
         setStatus(v: number): void;
         resetStatus(v: number): void;
         /**
@@ -1003,6 +1004,9 @@ declare namespace airkit {
         protected _gState: State<T>;
         protected _states: NDictionary<State<T>>;
         protected _stateQueue: Queue<number>;
+        changedSignal: Signal<[number, number]>;
+        enterSignal: Signal<number>;
+        exitSignal: Signal<number>;
         constructor();
         /**
          * 注册状态

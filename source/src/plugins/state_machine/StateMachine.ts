@@ -14,10 +14,16 @@ namespace airkit {
         protected _gState: State<T> = null
         protected _states: NDictionary<State<T>>
         protected _stateQueue: Queue<number>
+        public changedSignal: Signal<[number, number]>
+        public enterSignal: Signal<number>
+        public exitSignal: Signal<number>
 
         public constructor() {
             this._states = new NDictionary<State<T>>()
             this._stateQueue = new Queue<number>()
+            this.changedSignal = new Signal<[number, number]>()
+            this.enterSignal = new Signal<number>()
+            this.exitSignal = new Signal<number>()
         }
 
         /**
@@ -26,8 +32,9 @@ namespace airkit {
          * @param state
          */
         public registerState(type: number, state: State<T>): void {
-            state.setStatus(eStateEnum.INIT)
+            state.state = type
             this._states.add(type, state)
+            state.setStatus(eStateEnum.INIT)
         }
         /**
          * 移除状态
@@ -70,6 +77,7 @@ namespace airkit {
             this._previousState = this._currentState
             this._currentState = this._states.getValue(type)
             this._stateExit(this._previousState)
+            this.changedSignal.dispatch([this._previousState.state, this._currentState.state])
             this._stateEnter(this._currentState)
 
             return true
@@ -77,6 +85,7 @@ namespace airkit {
         private _stateExit(state: State<T>): void {
             state.setStatus(eStateEnum.EXIT)
             state.exit()
+            this.exitSignal.dispatch(state.state)
         }
         private _stateEnter(state: State<T>): void {
             state.resetStatus(eStateEnum.ENTER | eStateEnum.RUNNING | eStateEnum.EXIT)
@@ -84,6 +93,7 @@ namespace airkit {
             state.setStatus(eStateEnum.ENTER)
             state.enter()
             state.setStatus(eStateEnum.RUNNING)
+            this.enterSignal.dispatch(state.state)
         }
         /**
          * 设置下一个状态，如果队列有，追加到最后，如果当前没有运行的状态，直接运行
@@ -135,6 +145,9 @@ namespace airkit {
             })
             this._states.clear()
             this._stateQueue.clear()
+            this.changedSignal.offAll()
+            this.enterSignal.offAll()
+            this.exitSignal.offAll()
         }
 
         public get currentState() {
@@ -151,6 +164,12 @@ namespace airkit {
 
         public destory(): void {
             this.clearAllState()
+            this.changedSignal.destory()
+            this.enterSignal.destory()
+            this.exitSignal.destory()
+            this.changedSignal = null
+            this.enterSignal = null
+            this.exitSignal = null
         }
     }
 }

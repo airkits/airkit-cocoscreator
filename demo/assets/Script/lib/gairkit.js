@@ -2514,6 +2514,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (this._listener)
                 this._listener.off(caller, method);
         };
+        Signal.prototype.offAll = function () {
+            if (this._listener)
+                this._listener.offAll();
+        };
         /**
          * 保证ListenerManager可用
          */
@@ -2579,21 +2583,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param caller
          * @param method
          */
-        SignalListener.prototype.offAll = function (caller, method) {
-            if (!this.handlers || this.handlers.length <= 0)
-                return;
-            var temp = [];
-            var handlers = this.handlers;
-            var len = handlers.length;
-            for (var i = 0; i < len; ++i) {
-                if (caller !== handlers[i].caller || method !== handlers[i].method) {
-                    temp.push(handlers[i]);
-                }
-                else {
-                    handlers[i].recover();
-                }
-            }
-            this.handlers = temp;
+        SignalListener.prototype.offAll = function () {
+            this.clear();
+            this.handlers = [];
         };
         /**
          * 清除所有回调
@@ -3435,7 +3427,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         eStateEnum[eStateEnum["DESTROY"] = 32] = "DESTROY";
     })(eStateEnum = airkit.eStateEnum || (airkit.eStateEnum = {}));
     var State = /** @class */ (function () {
-        function State(entity, state) {
+        function State(entity) {
             this._owner = null;
             //实体控制器引用
             this._entity = null;
@@ -3446,7 +3438,6 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this._times = 0;
             this._tick = 0; //用于计数
             this._entity = entity;
-            this._state = state;
         }
         // 设置运行状态，对外开放的接口
         State.prototype.setStatus = function (v) {
@@ -3523,6 +3514,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this._gState = null;
             this._states = new airkit.NDictionary();
             this._stateQueue = new airkit.Queue();
+            this.changedSignal = new airkit.Signal();
+            this.enterSignal = new airkit.Signal();
+            this.exitSignal = new airkit.Signal();
         }
         /**
          * 注册状态
@@ -3530,8 +3524,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param state
          */
         StateMachine.prototype.registerState = function (type, state) {
-            state.setStatus(airkit.eStateEnum.INIT);
+            state.state = type;
             this._states.add(type, state);
+            state.setStatus(airkit.eStateEnum.INIT);
         };
         /**
          * 移除状态
@@ -3571,12 +3566,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             this._previousState = this._currentState;
             this._currentState = this._states.getValue(type);
             this._stateExit(this._previousState);
+            this.changedSignal.dispatch([this._previousState.state, this._currentState.state]);
             this._stateEnter(this._currentState);
             return true;
         };
         StateMachine.prototype._stateExit = function (state) {
             state.setStatus(airkit.eStateEnum.EXIT);
             state.exit();
+            this.exitSignal.dispatch(state.state);
         };
         StateMachine.prototype._stateEnter = function (state) {
             state.resetStatus(airkit.eStateEnum.ENTER | airkit.eStateEnum.RUNNING | airkit.eStateEnum.EXIT);
@@ -3584,6 +3581,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             state.setStatus(airkit.eStateEnum.ENTER);
             state.enter();
             state.setStatus(airkit.eStateEnum.RUNNING);
+            this.enterSignal.dispatch(state.state);
         };
         /**
          * 设置下一个状态，如果队列有，追加到最后，如果当前没有运行的状态，直接运行
@@ -3633,6 +3631,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             });
             this._states.clear();
             this._stateQueue.clear();
+            this.changedSignal.offAll();
+            this.enterSignal.offAll();
+            this.exitSignal.offAll();
         };
         Object.defineProperty(StateMachine.prototype, "currentState", {
             get: function () {
@@ -3657,6 +3658,12 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         });
         StateMachine.prototype.destory = function () {
             this.clearAllState();
+            this.changedSignal.destory();
+            this.enterSignal.destory();
+            this.exitSignal.destory();
+            this.changedSignal = null;
+            this.enterSignal = null;
+            this.exitSignal = null;
         };
         return StateMachine;
     }());

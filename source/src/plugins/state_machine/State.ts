@@ -29,9 +29,8 @@ namespace airkit {
         protected _times: number = 0
         protected _tick: number = 0 //用于计数
 
-        public constructor(entity: T, state: number) {
+        public constructor(entity: T) {
             this._entity = entity
-            this._state = state
         }
 
         // 设置运行状态，对外开放的接口
