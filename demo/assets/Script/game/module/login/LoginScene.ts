@@ -24,11 +24,15 @@ export default class LoginScene extends UILoginScene {
         super.onEnable()
         airkit.Log.info('login scene onEnable')
         console.log(ak.L(LK.format_h_m_s, '2011', '3', 4))
-        let view = new airkit.SpineView()
-        this.addChild(view)
-        view.setPosition(100, 200)
-        view.source = '211101'
-        view.play('happy', -1, null)
+        for (let i = 0; i < 4; i++) {
+            let view = new airkit.SpineView()
+            this.addChild(view)
+            view.setPosition((i + 1) * (this.width / 5), this.height / 2)
+            view.source = '211101'
+            // setTimeout(() => {
+            view.play('happy', -1, null)
+            //}, i * 100)
+        }
 
         //     let node = new cc.Node();
         //     const sprite = node.addComponent(VideoSprite);

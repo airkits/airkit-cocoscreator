@@ -68,6 +68,7 @@ namespace airkit {
         /**关闭*/
         public dispose(): void {
             if (this._destory) return
+
             this._destory = true
 
             this.unRegisterEvent()
@@ -77,6 +78,9 @@ namespace airkit {
             this.objectData = null
             if (this._UIID) EventCenter.dispatchEvent(EventID.UI_CLOSE, this._UIID, this._viewID)
             EventCenter.off(EventID.UI_LANG, this, this.onLangChange)
+            if (this.numChildren > 0) {
+                this.removeChildren(0, this.numChildren, true)
+            }
             super.dispose()
         }
 

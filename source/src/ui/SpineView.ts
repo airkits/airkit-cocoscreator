@@ -78,6 +78,8 @@ namespace airkit {
                 cc.resources.load(`spine/${source}/${source}`, sp.SkeletonData, (err: Error, asset: sp.SkeletonData) => {
                     this._skeletonData = asset
                     this._isLoaded = true
+                    asset.addRef()
+                    console.log('spine引用数量', asset.refCount)
                     resolve(true)
                 })
             })
@@ -142,6 +144,9 @@ namespace airkit {
 
         public dispose(): void {
             super.dispose()
+            if (this._skeletonData) {
+                this._skeletonData.decRef()
+            }
         }
     }
 }

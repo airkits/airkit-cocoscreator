@@ -4243,6 +4243,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (this._UIID)
                 airkit.EventCenter.dispatchEvent(airkit.EventID.UI_CLOSE, this._UIID, this._viewID);
             airkit.EventCenter.off(airkit.EventID.UI_LANG, this, this.onLangChange);
+            if (this.numChildren > 0) {
+                this.removeChildren(0, this.numChildren, true);
+            }
             _super.prototype.dispose.call(this);
         };
         BaseView.prototype.isDestory = function () {
@@ -5198,12 +5201,11 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             var cache = cc.loader._cache;
             var totalMemory = 0;
             var size = 0;
-            for (var key in cache) {
-                var asset = cc.loader['_cache'][key];
+            cc.assetManager.assets.forEach(function (asset, key) {
                 if (asset instanceof cc.Texture2D) {
                     if (asset.width && asset.height && asset['_format']) {
                         size = (asset.width * asset.height * (asset['_native'] === '.jpg' ? 3 : 4)) / (1024.0 * 1024.0);
-                        airkit.Log.info('Texture %s 资源占用内存%sMB', asset.nativeUrl, size.toFixed(3));
+                        airkit.Log.info('Texture[%s] %s 资源占用内存%sMB', asset.name, asset.nativeUrl, size.toFixed(3));
                         totalMemory += size;
                     }
                 }
@@ -5211,10 +5213,26 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                     if (asset['_originalSize'] && asset['_texture']) {
                         size = (asset['_originalSize'].width * asset['_originalSize'].height * asset['_texture']._format) / 4 / (1024.0 * 1024.0);
                         totalMemory += size;
-                        airkit.Log.info('SpriteFrame %s 资源占用内存%sMB', asset.nativeUrl, size.toFixed(3));
+                        airkit.Log.info('SpriteFrame[%s] %s 资源占用内存%sMB', asset.name, asset.nativeUrl, size.toFixed(3));
                     }
                 }
-            }
+            });
+            // for (let key in cache) {
+            //     let asset = cc.loader['_cache'][key]
+            //     if (asset instanceof cc.Texture2D) {
+            //         if (asset.width && asset.height && asset['_format']) {
+            //             size = (asset.width * asset.height * (asset['_native'] === '.jpg' ? 3 : 4)) / (1024.0 * 1024.0)
+            //             Log.info('Texture %s 资源占用内存%sMB', asset.nativeUrl, size.toFixed(3))
+            //             totalMemory += size
+            //         }
+            //     } else if (asset instanceof cc.SpriteFrame) {
+            //         if (asset['_originalSize'] && asset['_texture']) {
+            //             size = (asset['_originalSize'].width * asset['_originalSize'].height * asset['_texture']._format) / 4 / (1024.0 * 1024.0)
+            //             totalMemory += size
+            //             Log.info('SpriteFrame %s 资源占用内存%sMB', asset.nativeUrl, size.toFixed(3))
+            //         }
+            //     }
+            // }
             airkit.Log.info('资源占用内存%sMB', totalMemory.toFixed(3));
         };
         /**
@@ -5767,6 +5785,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 cc.resources.load("spine/" + source + "/" + source, sp.SkeletonData, function (err, asset) {
                     _this._skeletonData = asset;
                     _this._isLoaded = true;
+                    asset.addRef();
+                    console.log('spine引用数量', asset.refCount);
                     resolve(true);
                 });
             });
@@ -5839,6 +5859,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         };
         SpineView.prototype.dispose = function () {
             _super.prototype.dispose.call(this);
+            if (this._skeletonData) {
+                this._skeletonData.decRef();
+            }
         };
         return SpineView;
     }(airkit.BaseView));

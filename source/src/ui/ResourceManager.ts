@@ -45,22 +45,37 @@ namespace airkit {
             let cache = (<any>cc.loader)._cache
             let totalMemory = 0
             let size = 0
-            for (let key in cache) {
-                let asset = cc.loader['_cache'][key]
+            cc.assetManager.assets.forEach((asset: cc.Asset, key: string) => {
                 if (asset instanceof cc.Texture2D) {
                     if (asset.width && asset.height && asset['_format']) {
                         size = (asset.width * asset.height * (asset['_native'] === '.jpg' ? 3 : 4)) / (1024.0 * 1024.0)
-                        Log.info('Texture %s 资源占用内存%sMB', asset.nativeUrl, size.toFixed(3))
+                        Log.info('Texture[%s] %s 资源占用内存%sMB', asset.name, asset.nativeUrl, size.toFixed(3))
                         totalMemory += size
                     }
                 } else if (asset instanceof cc.SpriteFrame) {
                     if (asset['_originalSize'] && asset['_texture']) {
                         size = (asset['_originalSize'].width * asset['_originalSize'].height * asset['_texture']._format) / 4 / (1024.0 * 1024.0)
                         totalMemory += size
-                        Log.info('SpriteFrame %s 资源占用内存%sMB', asset.nativeUrl, size.toFixed(3))
+                        Log.info('SpriteFrame[%s] %s 资源占用内存%sMB', asset.name, asset.nativeUrl, size.toFixed(3))
                     }
                 }
-            }
+            })
+            // for (let key in cache) {
+            //     let asset = cc.loader['_cache'][key]
+            //     if (asset instanceof cc.Texture2D) {
+            //         if (asset.width && asset.height && asset['_format']) {
+            //             size = (asset.width * asset.height * (asset['_native'] === '.jpg' ? 3 : 4)) / (1024.0 * 1024.0)
+            //             Log.info('Texture %s 资源占用内存%sMB', asset.nativeUrl, size.toFixed(3))
+            //             totalMemory += size
+            //         }
+            //     } else if (asset instanceof cc.SpriteFrame) {
+            //         if (asset['_originalSize'] && asset['_texture']) {
+            //             size = (asset['_originalSize'].width * asset['_originalSize'].height * asset['_texture']._format) / 4 / (1024.0 * 1024.0)
+            //             totalMemory += size
+            //             Log.info('SpriteFrame %s 资源占用内存%sMB', asset.nativeUrl, size.toFixed(3))
+            //         }
+            //     }
+            // }
             Log.info('资源占用内存%sMB', totalMemory.toFixed(3))
         }
         /**
