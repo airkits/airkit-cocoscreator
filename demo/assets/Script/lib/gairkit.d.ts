@@ -1526,15 +1526,7 @@ declare namespace airkit {
     const FONT_SIZE_5 = 22;
     const FONT_SIZE_6 = 25;
     const FONT_SIZE_7 = 29;
-    class FguiAsset extends cc.BufferAsset {
-    }
-    class FguiAtlas extends cc.BufferAsset {
-    }
-    class BufferAsset extends cc.BufferAsset {
-    }
-    class TxtAsset extends cc.TextAsset {
-    }
-    class ImageAsset extends cc.BufferAsset {
+    class FGUIAsset extends cc.BufferAsset {
     }
     class ResourceManager extends Singleton {
         static FONT_Yuanti: string;
@@ -2751,7 +2743,7 @@ declare namespace airkit {
      */
     class UrlUtils {
         /**获取文件扩展名*/
-        static getFileExte(url: string): string;
+        static getFileExt(url: string): string;
         /**获取不含扩展名的路径*/
         static getPathWithNoExtend(url: string): string;
     }
@@ -2766,7 +2758,7 @@ declare namespace airkit {
         static buildRes(resMap: {
             [index: string]: {};
         }): Array<Res>;
-        /**打开外部链接，如https://ask.laya.ui.Box.com/xxx*/
+        /**打开外部链接 xxx */
         static openURL(url: string): void;
         /**获取当前地址栏参数*/
         static getLocationParams(): SDictionary<string>;

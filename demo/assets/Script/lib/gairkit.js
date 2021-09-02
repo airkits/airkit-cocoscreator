@@ -4649,9 +4649,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         Dialog.buildRes = function (resMap) {
             var res = [];
             for (var k in resMap) {
-                res.push({ url: 'ui/' + k, type: airkit.FguiAsset, refCount: 1, pkg: k });
+                res.push({ url: 'ui/' + k, type: airkit.FGUIAsset, refCount: 1, pkg: k });
                 for (var k2 in resMap[k]) {
-                    res.push({ url: 'ui/' + k2, type: airkit.FguiAtlas, refCount: resMap[k][k2], pkg: k });
+                    res.push({ url: 'ui/' + k2, type: cc.BufferAsset, refCount: resMap[k][k2], pkg: k });
                 }
             }
             return res;
@@ -5137,46 +5137,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     airkit.FONT_SIZE_5 = 22;
     airkit.FONT_SIZE_6 = 25;
     airkit.FONT_SIZE_7 = 29;
-    var FguiAsset = /** @class */ (function (_super) {
-        __extends(FguiAsset, _super);
-        function FguiAsset() {
+    var FGUIAsset = /** @class */ (function (_super) {
+        __extends(FGUIAsset, _super);
+        function FGUIAsset() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        return FguiAsset;
+        return FGUIAsset;
     }(cc.BufferAsset));
-    airkit.FguiAsset = FguiAsset;
-    var FguiAtlas = /** @class */ (function (_super) {
-        __extends(FguiAtlas, _super);
-        function FguiAtlas() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        return FguiAtlas;
-    }(cc.BufferAsset));
-    airkit.FguiAtlas = FguiAtlas;
-    var BufferAsset = /** @class */ (function (_super) {
-        __extends(BufferAsset, _super);
-        function BufferAsset() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        return BufferAsset;
-    }(cc.BufferAsset));
-    airkit.BufferAsset = BufferAsset;
-    var TxtAsset = /** @class */ (function (_super) {
-        __extends(TxtAsset, _super);
-        function TxtAsset() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        return TxtAsset;
-    }(cc.TextAsset));
-    airkit.TxtAsset = TxtAsset;
-    var ImageAsset = /** @class */ (function (_super) {
-        __extends(ImageAsset, _super);
-        function ImageAsset() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        return ImageAsset;
-    }(cc.BufferAsset));
-    airkit.ImageAsset = ImageAsset;
+    airkit.FGUIAsset = FGUIAsset;
     var ResourceManager = /** @class */ (function (_super) {
         __extends(ResourceManager, _super);
         function ResourceManager() {
@@ -5287,7 +5255,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (viewType === void 0) { viewType = airkit.eLoaderType.NONE; }
             if (priority === void 0) { priority = 1; }
             if (cache === void 0) { cache = true; }
-            if (pkg === void 0) { pkg = ''; }
+            if (pkg === void 0) { pkg = null; }
             if (ignoreCache === void 0) { ignoreCache = false; }
             if (viewType == null)
                 viewType = airkit.eLoaderType.NONE;
@@ -5502,7 +5470,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (urls) {
                 var arr = urls;
                 for (var i = 0; i < urls.length; i++) {
-                    if (arr_res[i].type == airkit.FguiAsset) {
+                    if (arr_res[i].type == FGUIAsset) {
                         fgui.UIPackage.addPackage(urls[i]);
                         // }else if(arr_res[i].type == airkit.FguiAtlas){
                         //     console.log(arr_res[i].url);
@@ -5627,13 +5595,13 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (v === void 0) { v = 1; }
             this.ref -= v;
             if (this.ref <= 0) {
-                if (this.type == FguiAsset) {
+                if (this.type == FGUIAsset) {
                     fgui.UIPackage.removePackage(this.url);
                     console.log('remove package' + this.url);
                     ResourceManager.Instance.releaseRes(this.url);
                 }
-                else if (this.type == FguiAtlas) {
-                    //do nothing
+                else if (this.pkg != null) {
+                    // do nothing
                 }
                 else {
                     ResourceManager.Instance.releaseRes(this.url);
@@ -5830,56 +5798,57 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             if (this.isLoaded) {
                 return Promise.resolve(true);
             }
-            var image = "spine/" + source + "/" + source + ".png";
-            var atlas = "spine/" + source + "/" + source + ".atlas";
-            var json = "spine/" + source + "/" + source + ".json";
-            var ske = "spine/" + source + "/" + source + ".skel";
-            var res = [
-                {
-                    url: image,
-                    type: airkit.ImageAsset,
-                    refCount: 1,
-                    pkg: null,
-                },
-                {
-                    url: atlas,
-                    type: airkit.TxtAsset,
-                    refCount: 1,
-                    pkg: null,
-                },
-            ];
-            if (useJson) {
-                res.push({
-                    url: json,
-                    type: airkit.TxtAsset,
-                    refCount: 1,
-                    pkg: null,
-                });
-            }
-            else {
-                res.push({
-                    url: ske,
-                    type: airkit.BufferAsset,
-                    refCount: 1,
-                    pkg: null,
-                });
-            }
+            // let image = `spine/${source}/${source}.png`
+            // let atlas = `spine/${source}/${source}.atlas`
+            // let json = `spine/${source}/${source}.json`
+            // let ske = `spine/${source}/${source}.skel`
+            // let res: Res[] = [
+            //     {
+            //         url: image,
+            //         type: ImageAsset,
+            //         refCount: 1,
+            //         pkg: null,
+            //     },
+            //     {
+            //         url: atlas,
+            //         type: TxtAsset,
+            //         refCount: 1,
+            //         pkg: null,
+            //     },
+            // ]
+            // if (useJson) {
+            //     res.push({
+            //         url: json,
+            //         type: TxtAsset,
+            //         refCount: 1,
+            //         pkg: null,
+            //     })
+            // } else {
+            //     res.push({
+            //         url: ske,
+            //         type: BufferAsset,
+            //         refCount: 1,
+            //         pkg: null,
+            //     })
+            // }
             return new Promise(function (resolve, reject) {
-                // cc.resources.load(`spine/${source}/${source}`, sp.SkeletonData, (err: Error, asset: sp.SkeletonData) => {
-                //     this._skeletonData = asset
-                //     this._isLoaded = true
-                //     asset.addRef()
-                //     console.log('spine引用数量', asset.refCount)
-                //     resolve(true)
-                // })
-                airkit.ResourceManager.Instance.loadArray(res).then(function (v) {
-                    console.log(v);
-                    _this._skeletonData = airkit.ResourceManager.Instance.getRes("spine/" + source + "/" + source, sp.SkeletonData);
+                cc.resources.load("spine/" + source + "/" + source, sp.SkeletonData, function (err, asset2) {
+                    var asset = cc.resources.get("spine/" + source + "/" + source, sp.SkeletonData);
+                    _this._skeletonData = asset;
                     _this._isLoaded = true;
-                    _this._skeletonData.addRef();
-                    console.log('spine引用数量', _this._skeletonData.refCount);
+                    asset.addRef();
+                    console.log('spine引用数量', asset.refCount);
                     resolve(true);
                 });
+                // ////
+                // ResourceManager.Instance.loadArrayRes([{ url: `spine/${source}/${source}`, type: sp.SkeletonData, refCount: 1, pkg: null }]).then((v) => {
+                //     console.log(v)
+                //     this._skeletonData = ResourceManager.Instance.getRes(`spine/${source}/${source}`, sp.SkeletonData)
+                //     this._isLoaded = true
+                //     this._skeletonData.addRef()
+                //     console.log('spine引用数量', this._skeletonData.refCount)
+                //     resolve(true)
+                // })
             });
         };
         Object.defineProperty(SpineView.prototype, "isLoaded", {
@@ -9110,7 +9079,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         function UrlUtils() {
         }
         /**获取文件扩展名*/
-        UrlUtils.getFileExte = function (url) {
+        UrlUtils.getFileExt = function (url) {
             if (airkit.StringUtils.isNullOrEmpty(url))
                 return airkit.StringUtils.empty;
             var idx = url.lastIndexOf('.');
@@ -9149,14 +9118,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
         Utils.buildRes = function (resMap) {
             var res = [];
             for (var k in resMap) {
-                res.push({ url: 'ui/' + k, type: airkit.FguiAsset, refCount: 1, pkg: k });
+                res.push({ url: 'ui/' + k, type: airkit.FGUIAsset, refCount: 1, pkg: k });
                 for (var k2 in resMap[k]) {
-                    res.push({ url: 'ui/' + k2, type: airkit.FguiAtlas, refCount: resMap[k][k2], pkg: k });
+                    res.push({ url: 'ui/' + k2, type: cc.BufferAsset, refCount: resMap[k][k2], pkg: k });
                 }
             }
             return res;
         };
-        /**打开外部链接，如https://ask.laya.ui.Box.com/xxx*/
+        /**打开外部链接 xxx */
         Utils.openURL = function (url) {
             window.location.href = url;
         };

@@ -40,57 +40,58 @@ namespace airkit {
             if (this.isLoaded) {
                 return Promise.resolve(true)
             }
-            let image = `spine/${source}/${source}.png`
-            let atlas = `spine/${source}/${source}.atlas`
-            let json = `spine/${source}/${source}.json`
-            let ske = `spine/${source}/${source}.skel`
-            let res: Res[] = [
-                {
-                    url: image,
-                    type: ImageAsset,
-                    refCount: 1,
-                    pkg: null,
-                },
-                {
-                    url: atlas,
-                    type: TxtAsset,
-                    refCount: 1,
-                    pkg: null,
-                },
-            ]
-            if (useJson) {
-                res.push({
-                    url: json,
-                    type: TxtAsset,
-                    refCount: 1,
-                    pkg: null,
-                })
-            } else {
-                res.push({
-                    url: ske,
-                    type: BufferAsset,
-                    refCount: 1,
-                    pkg: null,
-                })
-            }
+            // let image = `spine/${source}/${source}.png`
+            // let atlas = `spine/${source}/${source}.atlas`
+            // let json = `spine/${source}/${source}.json`
+            // let ske = `spine/${source}/${source}.skel`
+            // let res: Res[] = [
+            //     {
+            //         url: image,
+            //         type: ImageAsset,
+            //         refCount: 1,
+            //         pkg: null,
+            //     },
+            //     {
+            //         url: atlas,
+            //         type: TxtAsset,
+            //         refCount: 1,
+            //         pkg: null,
+            //     },
+            // ]
+            // if (useJson) {
+            //     res.push({
+            //         url: json,
+            //         type: TxtAsset,
+            //         refCount: 1,
+            //         pkg: null,
+            //     })
+            // } else {
+            //     res.push({
+            //         url: ske,
+            //         type: BufferAsset,
+            //         refCount: 1,
+            //         pkg: null,
+            //     })
+            // }
 
             return new Promise<boolean>((resolve, reject) => {
-                // cc.resources.load(`spine/${source}/${source}`, sp.SkeletonData, (err: Error, asset: sp.SkeletonData) => {
-                //     this._skeletonData = asset
-                //     this._isLoaded = true
-                //     asset.addRef()
-                //     console.log('spine引用数量', asset.refCount)
-                //     resolve(true)
-                // })
-
-                ResourceManager.Instance.loadArray(res).then((v) => {
-                    console.log(v)
-                    this._skeletonData = ResourceManager.Instance.getRes(`spine/${source}/${source}`, sp.SkeletonData)
+                cc.resources.load(`spine/${source}/${source}`, sp.SkeletonData, (err: Error, asset2: sp.SkeletonData) => {
+                    let asset: sp.SkeletonData = cc.resources.get(`spine/${source}/${source}`, sp.SkeletonData)
+                    this._skeletonData = asset
                     this._isLoaded = true
-                    this._skeletonData.addRef()
-                    console.log('spine引用数量', this._skeletonData.refCount)
+                    asset.addRef()
+                    console.log('spine引用数量', asset.refCount)
                     resolve(true)
                 })
+                // ////
+                // ResourceManager.Instance.loadArrayRes([{ url: `spine/${source}/${source}`, type: sp.SkeletonData, refCount: 1, pkg: null }]).then((v) => {
+                //     console.log(v)
+                //     this._skeletonData = ResourceManager.Instance.getRes(`spine/${source}/${source}`, sp.SkeletonData)
+                //     this._isLoaded = true
+                //     this._skeletonData.addRef()
+                //     console.log('spine引用数量', this._skeletonData.refCount)
+                //     resolve(true)
+                // })
             })
         }
 

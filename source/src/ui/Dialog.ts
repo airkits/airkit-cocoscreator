@@ -272,9 +272,9 @@ namespace airkit {
         protected static buildRes(resMap: { [index: string]: {} }): Array<Res> {
             let res = []
             for (let k in resMap) {
-                res.push({ url: 'ui/' + k, type: airkit.FguiAsset, refCount: 1, pkg: k })
+                res.push({ url: 'ui/' + k, type: FGUIAsset, refCount: 1, pkg: k })
                 for (let k2 in resMap[k]) {
-                    res.push({ url: 'ui/' + k2, type: airkit.FguiAtlas, refCount: resMap[k][k2], pkg: k })
+                    res.push({ url: 'ui/' + k2, type: cc.BufferAsset, refCount: resMap[k][k2], pkg: k })
                 }
             }
             return res

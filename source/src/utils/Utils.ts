@@ -11,15 +11,15 @@ namespace airkit {
         public static buildRes(resMap: { [index: string]: {} }): Array<Res> {
             let res = []
             for (let k in resMap) {
-                res.push({ url: 'ui/' + k, type: airkit.FguiAsset, refCount: 1, pkg: k })
+                res.push({ url: 'ui/' + k, type: FGUIAsset, refCount: 1, pkg: k })
                 for (let k2 in resMap[k]) {
-                    res.push({ url: 'ui/' + k2, type: airkit.FguiAtlas, refCount: resMap[k][k2], pkg: k })
+                    res.push({ url: 'ui/' + k2, type: cc.BufferAsset, refCount: resMap[k][k2], pkg: k })
                 }
             }
             return res
         }
 
-        /**打开外部链接，如https://ask.laya.ui.Box.com/xxx*/
+        /**打开外部链接 xxx */
         public static openURL(url: string): void {
             window.location.href = url
         }

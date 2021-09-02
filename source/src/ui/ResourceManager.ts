@@ -14,13 +14,7 @@ namespace airkit {
     export const FONT_SIZE_5 = 22
     export const FONT_SIZE_6 = 25
     export const FONT_SIZE_7 = 29
-
-    export class FguiAsset extends cc.BufferAsset {}
-    export class FguiAtlas extends cc.BufferAsset {}
-    export class BufferAsset extends cc.BufferAsset {}
-    export class TxtAsset extends cc.TextAsset {}
-    export class ImageAsset extends cc.BufferAsset {}
-
+    export class FGUIAsset extends cc.BufferAsset {}
     export class ResourceManager extends Singleton {
         public static FONT_Yuanti = 'Yuanti SC Regular'
         public static Font_Helvetica = 'Helvetica'
@@ -133,7 +127,7 @@ namespace airkit {
             viewType: number = eLoaderType.NONE,
             priority: number = 1,
             cache: boolean = true,
-            pkg: string = '',
+            pkg: string = null,
             ignoreCache: boolean = false
         ): Promise<string> {
             //添加到加载目录
@@ -349,7 +343,7 @@ namespace airkit {
             if (urls) {
                 let arr: Array<string> = urls
                 for (let i = 0; i < urls.length; i++) {
-                    if (arr_res[i].type == airkit.FguiAsset) {
+                    if (arr_res[i].type == FGUIAsset) {
                         fgui.UIPackage.addPackage(urls[i])
                         // }else if(arr_res[i].type == airkit.FguiAtlas){
                         //     console.log(arr_res[i].url);
@@ -479,12 +473,12 @@ namespace airkit {
         public decRef(v: number = 1): void {
             this.ref -= v
             if (this.ref <= 0) {
-                if (this.type == FguiAsset) {
+                if (this.type == FGUIAsset) {
                     fgui.UIPackage.removePackage(this.url)
                     console.log('remove package' + this.url)
                     ResourceManager.Instance.releaseRes(this.url)
-                } else if (this.type == FguiAtlas) {
-                    //do nothing
+                } else if (this.pkg != null) {
+                    // do nothing
                 } else {
                     ResourceManager.Instance.releaseRes(this.url)
                 }

@@ -15,7 +15,7 @@ namespace airkit {
      */
     export class UrlUtils {
         /**获取文件扩展名*/
-        public static getFileExte(url: string): string {
+        public static getFileExt(url: string): string {
             if (StringUtils.isNullOrEmpty(url)) return StringUtils.empty
 
             let idx: number = url.lastIndexOf('.')
