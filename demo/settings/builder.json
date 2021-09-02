@@ -36,7 +36,7 @@
   },
   "startScene": "a0b48413-72ba-4990-ab8b-49e55d013f01",
   "title": "FairyGUI-Demo",
-  "webOrientation": "landscape",
+  "webOrientation": "portrait",
   "wechatgame": {
     "REMOTE_SERVER_ROOT": "",
     "appid": "wx6ac3f5090a6b99c5",

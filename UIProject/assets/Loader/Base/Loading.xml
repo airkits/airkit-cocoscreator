@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component size="750,1136" adaptationTest="FitHeightAndSetCenter">
+<component size="750,1136">
   <displayList>
     <component id="n17_nz2l" name="bg" src="nz2l12" fileName="Base/MaskBg.xml" xy="-2,0"/>
     <graph id="n15_pdf7" name="n15" xy="368,494" pivot="0.5,0.5" anchor="true" size="100,100" type="rect" lineSize="0" fillColor="#ff0066cc" corner="40">
       <relation target="" sidePair="center-center,middle-middle"/>
     </graph>
-    <text id="n16_pdf7" name="text" xy="192,646" size="356,28" fontSize="24" color="#ffffff" align="center" autoSize="none" text="Loading...&#xA;">
+    <text id="n16_pdf7" name="txt" xy="192,646" size="356,28" fontSize="24" color="#ffffff" align="center" autoSize="none" text="Loading...&#xA;">
       <relation target="n15_pdf7" sidePair="bottom-top"/>
       <relation target="" sidePair="center-center"/>
     </text>
   </displayList>
   <transition name="loading" autoPlay="true" autoPlayRepeat="-1">
     <item time="0" type="Rotation" target="n15_pdf7" tween="true" startValue="0" endValue="360" duration="24"/>
-    <item time="24" type="Rotation" target="n15_pdf7" tween="true" startValue="360"/>
+    <item time="24" type="Rotation" target="n15_pdf7" value="360"/>
   </transition>
 </component>

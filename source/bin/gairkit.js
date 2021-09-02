@@ -5334,6 +5334,89 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
          * @param	cache 		是否缓存加载结果。
          * @return 	结束回调(参数：Array<string>，加载的url数组)
          */
+        ResourceManager.prototype.loadArray = function (arr_res, loaderType, tips, priority, cache) {
+            var _this = this;
+            if (loaderType === void 0) { loaderType = airkit.eLoaderType.NONE; }
+            if (tips === void 0) { tips = null; }
+            if (priority === void 0) { priority = 1; }
+            if (cache === void 0) { cache = true; }
+            var has_unload = false;
+            var pathInfos = [];
+            var resArr = [];
+            if (loaderType == null)
+                loaderType = airkit.eLoaderType.NONE;
+            if (priority == null)
+                priority = 1;
+            if (cache == null)
+                cache = true;
+            for (var i = 0; i < arr_res.length; i++) {
+                var res = arr_res[i];
+                if (!this.getRes(res.url)) {
+                    pathInfos.push({ path: res.url, type: res.type });
+                    resArr.push(res);
+                    has_unload = true;
+                }
+                var resInfo = this._dicResInfo.getValue(res.url);
+                if (!resInfo) {
+                    resInfo = new ResInfo(res.url, res.type, res.refCount, res.pkg);
+                    this._dicResInfo.set(res.url, resInfo);
+                }
+                else {
+                    resInfo.incRef(res.refCount);
+                    resInfo.updateStatus(eLoaderStatus.LOADED);
+                }
+            }
+            //判断是否需要显示加载界面
+            if (!has_unload && loaderType != airkit.eLoaderType.NONE) {
+                loaderType = airkit.eLoaderType.NONE;
+            }
+            //显示加载界面
+            if (loaderType != airkit.eLoaderType.NONE) {
+                airkit.LoaderManager.Instance.show(loaderType, pathInfos.length, tips);
+            }
+            return new Promise(function (resolve, reject) {
+                cc.assetManager.loadAny(pathInfos, { bundle: 'resources' }, function (completedCount, totalCount, item) {
+                    _this.onLoadProgress(loaderType, totalCount, tips, completedCount / totalCount);
+                }, function (error, resource) {
+                    if (error) {
+                        for (var i = 0; i < pathInfos.length; i++) {
+                            var resInfo = _this._dicResInfo.getValue(pathInfos[i].path);
+                            if (resInfo) {
+                                resInfo.decRef(arr_res[i].refCount);
+                                resInfo.updateStatus(eLoaderStatus.READY);
+                            }
+                        }
+                        reject(pathInfos);
+                        return;
+                    }
+                    for (var i = 0; i < pathInfos.length; i++) {
+                        var resInfo = _this._dicResInfo.getValue(pathInfos[i].url);
+                        if (resInfo) {
+                            resInfo.updateStatus(eLoaderStatus.READY);
+                        }
+                    }
+                    if (loaderType != airkit.eLoaderType.NONE) {
+                        airkit.TimerManager.Instance.addOnce(_this._minLoaderTime, null, function (v) {
+                            _this.onLoadComplete(loaderType, pathInfos, resArr, tips);
+                            resolve(pathInfos);
+                        });
+                    }
+                    else {
+                        _this.onLoadComplete(loaderType, pathInfos, resArr, tips);
+                        resolve(pathInfos);
+                    }
+                });
+            });
+        };
+        /**
+         * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
+         * @param	arr_res 	需要加载的资源数组
+         * @param	loaderType 	加载界面 eLoaderType
+         * @param   tips		提示文字
+         * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
+         * @param	cache 		是否缓存加载结果。
+         * @return 	结束回调(参数：Array<string>，加载的url数组)
+         */
         ResourceManager.prototype.loadArrayRes = function (arr_res, loaderType, tips, priority, cache) {
             var _this = this;
             if (loaderType === void 0) { loaderType = airkit.eLoaderType.NONE; }
@@ -5782,11 +5865,19 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
                 });
             }
             return new Promise(function (resolve, reject) {
-                cc.resources.load("spine/" + source + "/" + source, sp.SkeletonData, function (err, asset) {
-                    _this._skeletonData = asset;
+                // cc.resources.load(`spine/${source}/${source}`, sp.SkeletonData, (err: Error, asset: sp.SkeletonData) => {
+                //     this._skeletonData = asset
+                //     this._isLoaded = true
+                //     asset.addRef()
+                //     console.log('spine引用数量', asset.refCount)
+                //     resolve(true)
+                // })
+                airkit.ResourceManager.Instance.loadArray(res).then(function (v) {
+                    console.log(v);
+                    _this._skeletonData = airkit.ResourceManager.Instance.getRes("spine/" + source + "/" + source, sp.SkeletonData);
                     _this._isLoaded = true;
-                    asset.addRef();
-                    console.log('spine引用数量', asset.refCount);
+                    _this._skeletonData.addRef();
+                    console.log('spine引用数量', _this._skeletonData.refCount);
                     resolve(true);
                 });
             });

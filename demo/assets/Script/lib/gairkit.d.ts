@@ -1583,6 +1583,16 @@ declare namespace airkit {
          * @param	cache 		是否缓存加载结果。
          * @return 	结束回调(参数：Array<string>，加载的url数组)
          */
+        loadArray(arr_res: Array<Res>, loaderType?: number, tips?: string, priority?: number, cache?: boolean): Promise<string[]>;
+        /**
+         * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
+         * @param	arr_res 	需要加载的资源数组
+         * @param	loaderType 	加载界面 eLoaderType
+         * @param   tips		提示文字
+         * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
+         * @param	cache 		是否缓存加载结果。
+         * @return 	结束回调(参数：Array<string>，加载的url数组)
+         */
         loadArrayRes(arr_res: Array<Res>, loaderType?: number, tips?: string, priority?: number, cache?: boolean): Promise<string[]>;
         /**
          * 加载完成

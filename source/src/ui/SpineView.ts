@@ -75,11 +75,20 @@ namespace airkit {
             }
 
             return new Promise<boolean>((resolve, reject) => {
-                cc.resources.load(`spine/${source}/${source}`, sp.SkeletonData, (err: Error, asset: sp.SkeletonData) => {
-                    this._skeletonData = asset
+                // cc.resources.load(`spine/${source}/${source}`, sp.SkeletonData, (err: Error, asset: sp.SkeletonData) => {
+                //     this._skeletonData = asset
+                //     this._isLoaded = true
+                //     asset.addRef()
+                //     console.log('spine引用数量', asset.refCount)
+                //     resolve(true)
+                // })
+
+                ResourceManager.Instance.loadArray(res).then((v) => {
+                    console.log(v)
+                    this._skeletonData = ResourceManager.Instance.getRes(`spine/${source}/${source}`, sp.SkeletonData)
                     this._isLoaded = true
-                    asset.addRef()
-                    console.log('spine引用数量', asset.refCount)
+                    this._skeletonData.addRef()
+                    console.log('spine引用数量', this._skeletonData.refCount)
                     resolve(true)
                 })
             })

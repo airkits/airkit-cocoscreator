@@ -186,6 +186,87 @@ namespace airkit {
          * @param	cache 		是否缓存加载结果。
          * @return 	结束回调(参数：Array<string>，加载的url数组)
          */
+        public loadArray(arr_res: Array<Res>, loaderType: number = eLoaderType.NONE, tips: string = null, priority: number = 1, cache: boolean = true): Promise<string[]> {
+            let has_unload: boolean = false
+            let pathInfos = []
+            let resArr = []
+            if (loaderType == null) loaderType = eLoaderType.NONE
+            if (priority == null) priority = 1
+            if (cache == null) cache = true
+            for (let i = 0; i < arr_res.length; i++) {
+                let res = arr_res[i]
+                if (!this.getRes(res.url)) {
+                    pathInfos.push({ path: res.url, type: res.type })
+                    resArr.push(res)
+                    has_unload = true
+                }
+                let resInfo = this._dicResInfo.getValue(res.url)
+                if (!resInfo) {
+                    resInfo = new ResInfo(res.url, res.type, res.refCount, res.pkg)
+                    this._dicResInfo.set(res.url, resInfo)
+                } else {
+                    resInfo.incRef(res.refCount)
+                    resInfo.updateStatus(eLoaderStatus.LOADED)
+                }
+            }
+            //判断是否需要显示加载界面
+            if (!has_unload && loaderType != eLoaderType.NONE) {
+                loaderType = eLoaderType.NONE
+            }
+            //显示加载界面
+            if (loaderType != eLoaderType.NONE) {
+                LoaderManager.Instance.show(loaderType, pathInfos.length, tips)
+            }
+
+            return new Promise((resolve, reject) => {
+                cc.assetManager.loadAny(
+                    pathInfos,
+                    { bundle: 'resources' },
+                    (completedCount, totalCount, item) => {
+                        this.onLoadProgress(loaderType, totalCount, tips, completedCount / totalCount)
+                    },
+                    (error: Error, resource: any) => {
+                        if (error) {
+                            for (let i = 0; i < pathInfos.length; i++) {
+                                let resInfo = this._dicResInfo.getValue(pathInfos[i].path)
+                                if (resInfo) {
+                                    resInfo.decRef(arr_res[i].refCount)
+                                    resInfo.updateStatus(eLoaderStatus.READY)
+                                }
+                            }
+                            reject(pathInfos)
+                            return
+                        }
+
+                        for (let i = 0; i < pathInfos.length; i++) {
+                            let resInfo = this._dicResInfo.getValue(pathInfos[i].url)
+                            if (resInfo) {
+                                resInfo.updateStatus(eLoaderStatus.READY)
+                            }
+                        }
+
+                        if (loaderType != eLoaderType.NONE) {
+                            TimerManager.Instance.addOnce(this._minLoaderTime, null, (v) => {
+                                this.onLoadComplete(loaderType, pathInfos, resArr, tips)
+                                resolve(pathInfos)
+                            })
+                        } else {
+                            this.onLoadComplete(loaderType, pathInfos, resArr, tips)
+                            resolve(pathInfos)
+                        }
+                    }
+                )
+            })
+        }
+        /**
+         * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
+         * @param	arr_res 	需要加载的资源数组
+         * @param	loaderType 	加载界面 eLoaderType
+         * @param   tips		提示文字
+         * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
+         * @param	cache 		是否缓存加载结果。
+         * @return 	结束回调(参数：Array<string>，加载的url数组)
+         */
         public loadArrayRes(arr_res: Array<Res>, loaderType: number = eLoaderType.NONE, tips: string = null, priority: number = 1, cache: boolean = true): Promise<string[]> {
             let has_unload: boolean = false
             let urls = []

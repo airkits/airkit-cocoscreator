@@ -5,7 +5,7 @@ import UIMaskBg from "./UIMaskBg";
 export default class UILoading extends airkit.BaseView {
 
 	public bg:UIMaskBg;
-	public text:fgui.GTextField;
+	public txt:fgui.GTextField;
 	public loading:fgui.Transition;
 	public static URL:string = "ui://v9v1pqglnz2l14";
 	public static PkgName:string = "Loader";
@@ -18,7 +18,7 @@ export default class UILoading extends airkit.BaseView {
 
 	protected onConstruct():void {
 		this.bg = <UIMaskBg>(this.getChildAt(0));
-		this.text = <fgui.GTextField>(this.getChildAt(2));
+		this.txt = <fgui.GTextField>(this.getChildAt(2));
 		this.loading = this.getTransitionAt(0);
 	}
 }

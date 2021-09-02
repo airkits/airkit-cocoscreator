@@ -23,13 +23,13 @@
   ],
   "simulator-orientation": false,
   "simulator-resolution": {
-    "height": 640,
-    "width": 960
+    "width": 960,
+    "height": 640
   },
   "start-scene": "a0b48413-72ba-4990-ab8b-49e55d013f01",
   "use-customize-simulator": true,
   "use-project-simulator-setting": false,
-  "last-module-event-record-time": 1614579027121,
+  "last-module-event-record-time": 1630250247728,
   "assets-sort-type": "name",
   "facebook": {
     "appID": "",
