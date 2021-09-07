@@ -8,12 +8,12 @@ namespace airkit {
      * @time 2018-7-11
      */
     export class Utils {
-        public static buildRes(resMap: { [index: string]: {} }): Array<Res> {
-            let res = []
+        public static buildRes(resMap: { [pkg: string]: {} }, gResMap: { [pkg: string]: string[] }): Array<Res> {
+            let res: Array<Res> = []
             for (let k in resMap) {
-                res.push({ url: 'ui/' + k, type: FGUIAsset, refCount: 1, pkg: k })
-                for (let k2 in resMap[k]) {
-                    res.push({ url: 'ui/' + k2, type: cc.BufferAsset, refCount: resMap[k][k2], pkg: k })
+                res.push({ url: 'ui/' + k, type: FGUIAsset, pkg: k })
+                for (let k2 in gResMap[k]) {
+                    res.push({ url: 'ui/' + gResMap[k][k2], type: cc.BufferAsset, pkg: k })
                 }
             }
             return res

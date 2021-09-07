@@ -10,6 +10,7 @@
   "doc.openedDocs": [
     "ui://21mnfg0cn70mi",
     "ui://v9v1pqglsi0tb",
+    "ui://v9v1pqglsi0th",
     "ui://v9v1pqglsi0td",
     "ui://v9v1pqglnz2l12",
     "ui://v9v1pqglp6l917",
@@ -33,13 +34,11 @@
   "test.device": "iPhone 8 Plus",
   "canvasColor": 10066329,
   "auxline2": true,
-  "doc.activeDoc": "ui://v9v1pqglnz2l14",
+  "doc.activeDoc": "ui://21mnfg0cy3shk",
   "libview.twoColumn": false,
   "libview.expandedNodes": [
     "21mnfg0c",
     "/",
-    "21mnfg0c",
-    "/anim/",
     "v9v1pqgl",
     "/",
     "v9v1pqgl",

@@ -6,6 +6,7 @@ import UILoginScene from '../../gen/ui/Loader/UILoginScene'
 import { AlertDlg } from './AlertDlg'
 import VideoSprite from '../../render/VideoSprite'
 import BrightSaturaContrastAssembler from '../../render/BrightSaturaContrastAssembler'
+import UIResMap from '../../gen/ui/UIResMap'
 
 /**
  * 登陆场景
@@ -53,7 +54,7 @@ export default class LoginScene extends UILoginScene {
     }
     //先加载资源
     public static res(): Array<ak.Res> {
-        return ak.Utils.buildRes(UILoginScene.ResMap)
+        return ak.Utils.buildRes(UILoginScene.ResMap, UIResMap.ResMap)
     }
 
     public static loaderType(): number {

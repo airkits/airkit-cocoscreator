@@ -16,10 +16,10 @@ namespace airkit {
      * @time 2017-7-13
      */
     export class SceneManager {
-        public static cache: SDictionary<BaseView>
+        public static cache: SDictionary<BaseScene>
         private static instance: SceneManager = null
-        private _curScene: BaseView
-
+        private _curScene: BaseScene
+        private _preScene: BaseScene
         /**
          * 注册场景类，存放场景name和class的对应关系
          * @param name
@@ -27,7 +27,7 @@ namespace airkit {
          */
         public static register(name: string, cls: any): any {
             if (!this.cache) {
-                this.cache = new SDictionary<BaseView>()
+                this.cache = new SDictionary<BaseScene>()
             }
             if (this.cache.has(name)) {
                 Log.error('SceneManager::register scene - same id is register:' + name)
@@ -44,10 +44,20 @@ namespace airkit {
 
         public setup(): void {
             this.registerEvent()
+            this._curScene = null
+            this._preScene = null
         }
 
         public destroy(): void {
             this.unRegisterEvent()
+            if (this._preScene) {
+                this._preScene.dispose()
+                this._preScene = null
+            }
+            if (this._curScene) {
+                this._curScene.dispose()
+                this._curScene = null
+            }
         }
 
         public update(dt: number): void {
@@ -100,13 +110,13 @@ namespace airkit {
             let clas = ClassUtils.getClass(sceneName)
             let res = clas.res()
             if (res == null || (Array.isArray(res) && res.length == 0)) {
-                this.exitScene()
                 this.enterScene(sceneName, clas, args)
+                this.exitScene()
             } else {
                 clas.loadResource((v) => {
                     if (v) {
-                        this.exitScene()
                         this.enterScene(sceneName, clas, args)
+                        this.exitScene()
                         //  ResourceManager.Instance.dump();
                     } else {
                         Log.error('加载场景失败 %s', sceneName)
@@ -117,21 +127,24 @@ namespace airkit {
         private enterScene(sceneName: string, clas: any, args?: any): void {
             let scene = clas.createInstance()
             scene.UIID = sceneName
+            if (this._curScene) {
+                this._preScene = this._curScene
+            }
             this._curScene = scene
-            LayerManager.mainLayer.addChild(scene)
             scene.setup(args)
+            LayerManager.mainLayer.addChild(scene)
         }
 
         private exitScene(): void {
-            if (this._curScene) {
+            if (this._preScene) {
                 //切换
-                let sceneName = this._curScene.UIID
+                let sceneName = this._preScene.UIID
 
                 let clas = ClassUtils.getClass(sceneName)
                 clas.unres()
-                this._curScene.removeFromParent()
-                this._curScene.dispose()
-                this._curScene = null
+                this._preScene.removeFromParent()
+                this._preScene.dispose()
+                this._preScene = null
             }
         }
     }

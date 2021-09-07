@@ -2,7 +2,7 @@
 
 import UIButtonBack from "./UIButtonBack";
 
-export default class UIHomeScene extends airkit.BaseView {
+export default class UIHomeScene extends airkit.BaseScene {
 
 	public ctrl:fgui.Controller;
 	public bg:fgui.GGraph;

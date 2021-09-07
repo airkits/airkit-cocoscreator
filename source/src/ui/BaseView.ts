@@ -126,7 +126,7 @@ namespace airkit {
             let arr = this.res()
             if (arr && arr.length > 0) {
                 for (let i = 0; i < arr.length; i++) {
-                    ResourceManager.Instance.clearRes(arr[i].url, arr[i].refCount)
+                    ResourceManager.Instance.clearRes(arr[i].url)
                 }
             }
         }

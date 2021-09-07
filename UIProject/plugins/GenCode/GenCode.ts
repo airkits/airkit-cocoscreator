@@ -1,6 +1,7 @@
 import { FairyEditor, System } from 'csharp';
 import CodeWriter from './CodeWriter';
 
+var gResMap = {};
 //
 function genCode(handler: FairyEditor.PublishHandler) {
     let settings = (<FairyEditor.GlobalPublishSettings>handler.project.GetSettings("Publish")).codeGeneration;
@@ -54,7 +55,12 @@ function genCode(handler: FairyEditor.PublishHandler) {
            // if(classInfo.className.indexOf("Dlg") > 0){
              //   writer.writeln('export default class %s extends %s', classInfo.className, "airkit.Dialog");
             //}else{
-                writer.writeln('export default class %s extends %s', classInfo.className, "airkit.BaseView");
+                console.log(classInfo.className,classInfo.className.indexOf('Scene'))
+                if(classInfo.className.indexOf('Scene') != -1){
+                    writer.writeln('export default class %s extends %s', classInfo.className, "airkit.BaseScene");
+                }else{
+                    writer.writeln('export default class %s extends %s', classInfo.className, "airkit.BaseView");
+                }
            // }
         } else {
             writer.writeln('export default class %s extends %s', classInfo.className, classInfo.superClassName);
@@ -77,17 +83,22 @@ function genCode(handler: FairyEditor.PublishHandler) {
         let res = {};
         let key = "";
         q.resultList.ForEach(v => {
-            if (v.item.GetAsset().GetType().FullName == "FairyEditor.ImageAsset") {
+            if (v.item && v.item.GetAsset() && v.item.GetAsset().GetType() && v.item.GetAsset().GetType().FullName == "FairyEditor.ImageAsset") {
                 console.log(v.item.fileName);
                 console.log(v.item.GetAtlasIndex())
                 if (!res[v.item.owner.name]) {
                     res[v.item.owner.name] = {}
                 }
-
+                if(!gResMap[v.item.owner.name]){
+                    gResMap[v.item.owner.name] = []
+                }
                 if (v.item.GetAtlasIndex() >= 0) {
                     key = v.item.owner.name + "_atlas" + v.item.GetAtlasIndex();
                 } else {
                     key = v.item.owner.name + "_atlas_" + v.item.id
+                }
+                if(gResMap[v.item.owner.name].indexOf(key) == -1){
+                    gResMap[v.item.owner.name].push(key)
                 }
                 if (!res[v.item.owner.name][key]) {
                     res[v.item.owner.name][key] = 1;
@@ -228,6 +239,15 @@ function genCode(handler: FairyEditor.PublishHandler) {
 
         writer.save(exportCodePath + '/' + binderName + '.ts');
     }
+
+    writer.reset();
+    writer.writeln();
+    writer.writeln('export default class UIResMap');
+    writer.startBlock();
+    writer.writeln('public static ResMap:{ [index: string]: string[] } = %s;', JSON.stringify(gResMap));
+    writer.endBlock(); //class
+    writer.save(handler.exportCodePath + '/UIResMap.ts');
+    console.log(JSON.stringify(gResMap));
 
 }
 

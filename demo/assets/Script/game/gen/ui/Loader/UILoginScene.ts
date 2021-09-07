@@ -2,7 +2,7 @@
 
 import UIbg from "./UIbg";
 
-export default class UILoginScene extends airkit.BaseView {
+export default class UILoginScene extends airkit.BaseScene {
 
 	public bg:UIbg;
 	public imgBg:fgui.GLoader;

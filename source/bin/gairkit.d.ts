@@ -1289,6 +1289,15 @@ declare namespace airkit {
     }
 }
 declare namespace airkit {
+    class BaseScene extends BaseView {
+        setup(args: {
+            [key: string]: unknown;
+        }): void;
+        onEnable(): void;
+        onDisable(): void;
+    }
+}
+declare namespace airkit {
     /**
      * 非可拖动界面基类
      * @author ankye
@@ -1375,9 +1384,6 @@ declare namespace airkit {
         /**注册界面事件*/
         private registeGUIEvent;
         private unregisteGUIEvent;
-        protected static buildRes(resMap: {
-            [index: string]: {};
-        }): Array<Res>;
         onClose(): boolean;
         hideImmediately(): void;
     }
@@ -1514,7 +1520,6 @@ declare namespace airkit {
     interface Res {
         url: string;
         type: typeof cc.Asset;
-        refCount: number;
         pkg: string;
     }
     /**
@@ -1539,6 +1544,8 @@ declare namespace airkit {
         static get Instance(): ResourceManager;
         setup(): void;
         static memory(): void;
+        getFGUIAsset(pkg: string): FGUIAsset;
+        getFGUIPackageURL(pkg: string): string;
         /**
          * 异步加载
          * @param    url  要加载的单个资源地址或资源信息数组。比如：简单数组：["a.png","b.png"]；复杂数组[{url:"a.png",type:Loader.IMAGE,size:100,priority:1},{url:"b.json",type:Loader.JSON,size:50,priority:1}]。
@@ -1575,16 +1582,6 @@ declare namespace airkit {
          * @param	cache 		是否缓存加载结果。
          * @return 	结束回调(参数：Array<string>，加载的url数组)
          */
-        loadArray(arr_res: Array<Res>, loaderType?: number, tips?: string, priority?: number, cache?: boolean): Promise<string[]>;
-        /**
-         * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
-         * @param	arr_res 	需要加载的资源数组
-         * @param	loaderType 	加载界面 eLoaderType
-         * @param   tips		提示文字
-         * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
-         * @param	cache 		是否缓存加载结果。
-         * @return 	结束回调(参数：Array<string>，加载的url数组)
-         */
         loadArrayRes(arr_res: Array<Res>, loaderType?: number, tips?: string, priority?: number, cache?: boolean): Promise<string[]>;
         /**
          * 加载完成
@@ -1599,12 +1596,12 @@ declare namespace airkit {
          * @param	total		总共需要加载的资源数量
          * @param	progress	已经加载的数量，百分比；注意，有可能相同进度会下发多次
          */
-        onLoadProgress(viewType: number, total: number, tips: string, progress: number): void;
+        onLoadProgress(viewType: number, total: number, tips: string, progress: number, item: cc.AssetManager.RequestItem): void;
         /**
          * 释放指定资源
          * @param	url	资源路径
          */
-        clearRes(url: string, refCount: number): void;
+        clearRes(url: string): void;
         releaseRes(url: string): void;
         /**
          * 图片代理，可以远程加载图片显示
@@ -1623,9 +1620,10 @@ declare namespace airkit {
      * @time 2017-7-13
      */
     class SceneManager {
-        static cache: SDictionary<BaseView>;
+        static cache: SDictionary<BaseScene>;
         private static instance;
         private _curScene;
+        private _preScene;
         /**
          * 注册场景类，存放场景name和class的对应关系
          * @param name
@@ -2756,7 +2754,9 @@ declare namespace airkit {
      */
     class Utils {
         static buildRes(resMap: {
-            [index: string]: {};
+            [pkg: string]: {};
+        }, gResMap: {
+            [pkg: string]: string[];
         }): Array<Res>;
         /**打开外部链接 xxx */
         static openURL(url: string): void;

@@ -121,7 +121,7 @@ namespace airkit {
             }
             if (this._zip) {
             } else {
-                ResourceManager.Instance.clearRes(url, 1)
+                ResourceManager.Instance.clearRes(url)
             }
 
             this._dicTemplate.remove(url)

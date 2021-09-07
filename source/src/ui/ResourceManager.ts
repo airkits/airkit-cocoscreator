@@ -2,7 +2,6 @@ namespace airkit {
     export interface Res {
         url: string //资源地址
         type: typeof cc.Asset //资源类型
-        refCount: number //引用数
         pkg: string //fgui包名
     }
     /**
@@ -72,6 +71,28 @@ namespace airkit {
             // }
             Log.info('资源占用内存%sMB', totalMemory.toFixed(3))
         }
+        public getFGUIAsset(pkg: string): FGUIAsset {
+            let result: FGUIAsset = null
+            this._dicResInfo.foreach((k, v) => {
+                if (v.type == FGUIAsset && v.pkg == pkg) {
+                    result = cc.resources.get(v.url)
+                    return false
+                }
+                return true
+            })
+            return result
+        }
+        public getFGUIPackageURL(pkg: string): string {
+            let result: string = null
+            this._dicResInfo.foreach((k, v) => {
+                if (v.type == FGUIAsset && v.pkg == pkg) {
+                    result = v.url
+                    return false
+                }
+                return true
+            })
+            return result
+        }
         /**
          * 异步加载
          * @param    url  要加载的单个资源地址或资源信息数组。比如：简单数组：["a.png","b.png"]；复杂数组[{url:"a.png",type:Loader.IMAGE,size:100,priority:1},{url:"b.json",type:Loader.JSON,size:50,priority:1}]。
@@ -86,7 +107,7 @@ namespace airkit {
         public destroy(): boolean {
             if (this._dicResInfo) {
                 this._dicResInfo.foreach((k, v) => {
-                    ResourceManager.Instance.clearRes(k, v.ref)
+                    ResourceManager.Instance.releaseRes(k)
                     return true
                 })
                 this._dicResInfo.clear()
@@ -104,7 +125,7 @@ namespace airkit {
 
         public dump(): void {
             this._dicResInfo.foreach((k, v) => {
-                console.log('url:' + k + ' refCount=' + v.ref + '\n')
+                console.log('url:' + k + '\n')
                 return true
             })
         }
@@ -134,8 +155,9 @@ namespace airkit {
 
             if (viewType == null) viewType = eLoaderType.NONE
             //判断是否需要显示加载界面
+            let asset = this.getRes(url)
             if (viewType != eLoaderType.NONE) {
-                if (cc.resources.get(url)) viewType = eLoaderType.NONE
+                if (asset) viewType = eLoaderType.NONE
             }
             //显示加载界面
             if (viewType != eLoaderType.NONE) {
@@ -143,115 +165,33 @@ namespace airkit {
             }
             let resInfo = this._dicResInfo.getValue(url)
             if (!resInfo) {
-                resInfo = new ResInfo(url, type, refCount, pkg)
+                resInfo = new ResInfo(url, type, pkg)
                 this._dicResInfo.set(url, resInfo)
-                resInfo.updateStatus(eLoaderStatus.LOADING)
-            } else {
-                resInfo.incRef(refCount)
+            }
+            if (asset) {
+                resInfo.incRef()
+                return Promise.resolve(url)
             }
 
             return new Promise((resolve, reject) => {
                 cc.resources.load(
                     url,
                     type,
-                    (completedCount: number, totalCount: number, item: any) => {
-                        this.onLoadProgress(viewType, totalCount, '', completedCount / totalCount)
+                    (completedCount: number, totalCount: number, item: cc.AssetManager.RequestItem) => {
+                        this.onLoadProgress(viewType, totalCount, '', completedCount / totalCount, item)
                     },
                     (error: Error, resource: any) => {
                         if (error) {
-                            resInfo.updateStatus(eLoaderStatus.READY)
-                            resInfo.decRef(refCount)
                             reject(url)
                             return
                         }
-                        resInfo.updateStatus(eLoaderStatus.LOADED)
-                        this.onLoadComplete(viewType, [url], [{ url: url, type: type, refCount: 1, pkg: pkg }], '')
+                        this.onLoadComplete(viewType, [url], [{ url: url, type: type, pkg: pkg }], '')
                         resolve(url)
                     }
                 )
             })
         }
-        /**
-         * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
-         * @param	arr_res 	需要加载的资源数组
-         * @param	loaderType 	加载界面 eLoaderType
-         * @param   tips		提示文字
-         * @param	priority 	优先级，0-4，5个优先级，0优先级最高，默认为1。
-         * @param	cache 		是否缓存加载结果。
-         * @return 	结束回调(参数：Array<string>，加载的url数组)
-         */
-        public loadArray(arr_res: Array<Res>, loaderType: number = eLoaderType.NONE, tips: string = null, priority: number = 1, cache: boolean = true): Promise<string[]> {
-            let has_unload: boolean = false
-            let pathInfos = []
-            let resArr = []
-            if (loaderType == null) loaderType = eLoaderType.NONE
-            if (priority == null) priority = 1
-            if (cache == null) cache = true
-            for (let i = 0; i < arr_res.length; i++) {
-                let res = arr_res[i]
-                if (!this.getRes(res.url)) {
-                    pathInfos.push({ path: res.url, type: res.type })
-                    resArr.push(res)
-                    has_unload = true
-                }
-                let resInfo = this._dicResInfo.getValue(res.url)
-                if (!resInfo) {
-                    resInfo = new ResInfo(res.url, res.type, res.refCount, res.pkg)
-                    this._dicResInfo.set(res.url, resInfo)
-                } else {
-                    resInfo.incRef(res.refCount)
-                    resInfo.updateStatus(eLoaderStatus.LOADED)
-                }
-            }
-            //判断是否需要显示加载界面
-            if (!has_unload && loaderType != eLoaderType.NONE) {
-                loaderType = eLoaderType.NONE
-            }
-            //显示加载界面
-            if (loaderType != eLoaderType.NONE) {
-                LoaderManager.Instance.show(loaderType, pathInfos.length, tips)
-            }
 
-            return new Promise((resolve, reject) => {
-                cc.assetManager.loadAny(
-                    pathInfos,
-                    { bundle: 'resources' },
-                    (completedCount, totalCount, item) => {
-                        this.onLoadProgress(loaderType, totalCount, tips, completedCount / totalCount)
-                    },
-                    (error: Error, resource: any) => {
-                        if (error) {
-                            for (let i = 0; i < pathInfos.length; i++) {
-                                let resInfo = this._dicResInfo.getValue(pathInfos[i].path)
-                                if (resInfo) {
-                                    resInfo.decRef(arr_res[i].refCount)
-                                    resInfo.updateStatus(eLoaderStatus.READY)
-                                }
-                            }
-                            reject(pathInfos)
-                            return
-                        }
-
-                        for (let i = 0; i < pathInfos.length; i++) {
-                            let resInfo = this._dicResInfo.getValue(pathInfos[i].url)
-                            if (resInfo) {
-                                resInfo.updateStatus(eLoaderStatus.READY)
-                            }
-                        }
-
-                        if (loaderType != eLoaderType.NONE) {
-                            TimerManager.Instance.addOnce(this._minLoaderTime, null, (v) => {
-                                this.onLoadComplete(loaderType, pathInfos, resArr, tips)
-                                resolve(pathInfos)
-                            })
-                        } else {
-                            this.onLoadComplete(loaderType, pathInfos, resArr, tips)
-                            resolve(pathInfos)
-                        }
-                    }
-                )
-            })
-        }
         /**
          * 批量加载资源，如果所有资源在此之前已经加载过，则当前帧会调用complete
          * @param	arr_res 	需要加载的资源数组
@@ -270,18 +210,19 @@ namespace airkit {
             if (cache == null) cache = true
             for (let i = 0; i < arr_res.length; i++) {
                 let res = arr_res[i]
-                if (!this.getRes(res.url)) {
+                let asset = this.getRes(res.url)
+                if (!asset) {
                     urls.push(res.url)
                     resArr.push(res)
                     has_unload = true
                 }
                 let resInfo = this._dicResInfo.getValue(res.url)
                 if (!resInfo) {
-                    resInfo = new ResInfo(res.url, res.type, res.refCount, res.pkg)
+                    resInfo = new ResInfo(res.url, res.type, res.pkg)
                     this._dicResInfo.set(res.url, resInfo)
-                } else {
-                    resInfo.incRef(res.refCount)
-                    resInfo.updateStatus(eLoaderStatus.LOADED)
+                }
+                if (asset) {
+                    resInfo.incRef()
                 }
             }
             //判断是否需要显示加载界面
@@ -296,27 +237,13 @@ namespace airkit {
             return new Promise((resolve, reject) => {
                 cc.resources.load(
                     urls,
-                    (completedCount: number, totalCount: number, item: any) => {
-                        this.onLoadProgress(loaderType, totalCount, tips, completedCount / totalCount)
+                    (completedCount: number, totalCount: number, item: cc.AssetManager.RequestItem) => {
+                        this.onLoadProgress(loaderType, totalCount, tips, completedCount / totalCount, item)
                     },
                     (error: Error, resource: any) => {
                         if (error) {
-                            for (let i = 0; i < urls.length; i++) {
-                                let resInfo = this._dicResInfo.getValue(urls[i])
-                                if (resInfo) {
-                                    resInfo.decRef(arr_res[i].refCount)
-                                    resInfo.updateStatus(eLoaderStatus.READY)
-                                }
-                            }
                             reject(urls)
                             return
-                        }
-
-                        for (let i = 0; i < urls.length; i++) {
-                            let resInfo = this._dicResInfo.getValue(urls[i])
-                            if (resInfo) {
-                                resInfo.updateStatus(eLoaderStatus.READY)
-                            }
                         }
 
                         if (loaderType != eLoaderType.NONE) {
@@ -345,23 +272,12 @@ namespace airkit {
                 for (let i = 0; i < urls.length; i++) {
                     if (arr_res[i].type == FGUIAsset) {
                         fgui.UIPackage.addPackage(urls[i])
-                        // }else if(arr_res[i].type == airkit.FguiAtlas){
-                        //     console.log(arr_res[i].url);
-                        //     let arr = arr_res[i].url.split("_");
-                        //     if( Array.isArray(arr) && arr.length > 0){
-                        //         let pkg = fgui.UIPackage.getByName(arr_res[i].pkg);
-                        //         for (var j = 0; j < pkg["_items"].length; j++) {
-                        //             var pi = pkg["_items"][j];
-                        //             if(pi.file == arr_res[i].url){
-                        //                 if(pi["asset"] &&  pi["asset"]["nativeUrl"] == ""){
-                        //                     pi.decoded = false;
-                        //                     pkg.getItemAsset(pi);
-                        //                 }
+                        console.log('add fgui package:', urls[i])
+                    }
 
-                        //             }
-
-                        //         }
-                        //     }
+                    let info = this._dicResInfo.getValue(urls[i])
+                    if (info) {
+                        info.incRef()
                     }
                 }
             }
@@ -377,10 +293,10 @@ namespace airkit {
          * @param	total		总共需要加载的资源数量
          * @param	progress	已经加载的数量，百分比；注意，有可能相同进度会下发多次
          */
-        public onLoadProgress(viewType: number, total: number, tips: string, progress: number): void {
+        public onLoadProgress(viewType: number, total: number, tips: string, progress: number, item: cc.AssetManager.RequestItem): void {
             let cur: number = NumberUtils.toInt(Math.floor(progress * total))
 
-            Log.debug('[load]进度: current=%s total=%s precent = %s', cur, total, progress)
+            Log.debug('[load]进度: %s current=%s total=%s precent = %s', item.info.path, cur, total, progress)
             if (viewType != eLoaderType.NONE) {
                 LoaderManager.Instance.setProgress(viewType, cur, total)
             }
@@ -390,10 +306,10 @@ namespace airkit {
          * 释放指定资源
          * @param	url	资源路径
          */
-        public clearRes(url: string, refCount: number): void {
+        public clearRes(url: string): void {
             let res = this._dicResInfo.getValue(url)
             if (res) {
-                res.decRef(refCount)
+                res.decRef()
             }
         }
 
@@ -439,11 +355,6 @@ namespace airkit {
         }
     }
 
-    enum eLoaderStatus {
-        READY = 0,
-        LOADING = 1,
-        LOADED = 2,
-    }
     /**
      * 保存加载过的url
      */
@@ -451,35 +362,48 @@ namespace airkit {
         public pkg: string
         public url: string
         public type: typeof cc.Asset
-        public status: eLoaderStatus
-        public ref: number
 
-        constructor(url: string, type: typeof cc.Asset, refCount: number, pkg: string) {
+        constructor(url: string, type: typeof cc.Asset, pkg: string) {
             super()
             this.url = url
-            this.ref = refCount
+
             this.type = type
             this.pkg = pkg
-            this.status = eLoaderStatus.READY
         }
 
-        public updateStatus(status: eLoaderStatus): void {
-            this.status = status
-        }
+        public incRef(): void {
+            let asset = cc.resources.get(this.url)
+            if (asset) {
+                let fguiAsset: cc.Asset = null
+                if (this.pkg != null && this.type != FGUIAsset) {
+                    fguiAsset = ResourceManager.Instance.getFGUIAsset(this.pkg)
+                }
 
-        public incRef(v: number = 1): void {
-            this.ref += v
+                asset.addRef()
+                fguiAsset && fguiAsset.addRef()
+            }
         }
-        public decRef(v: number = 1): void {
-            this.ref -= v
-            if (this.ref <= 0) {
-                if (this.type == FGUIAsset) {
-                    fgui.UIPackage.removePackage(this.url)
-                    console.log('remove package' + this.url)
-                    ResourceManager.Instance.releaseRes(this.url)
-                } else if (this.pkg != null) {
-                    // do nothing
-                } else {
+        public decRef(): void {
+            let assert = cc.resources.get(this.url)
+            if (assert) {
+                let fguiAsset: cc.Asset = null
+                if (this.pkg != null && this.type != FGUIAsset) {
+                    fguiAsset = ResourceManager.Instance.getFGUIAsset(this.pkg)
+                }
+
+                assert.decRef()
+                fguiAsset && fguiAsset.decRef()
+
+                if (assert.refCount == 0) {
+                    if (this.type == FGUIAsset) {
+                        fgui.UIPackage.removePackage(this.url)
+                        console.log('remove fgui package:', this.url)
+                    } else if (this.pkg != null && fguiAsset.refCount == 0) {
+                        let url = ResourceManager.Instance.getFGUIPackageURL(this.pkg)
+                        fgui.UIPackage.removePackage(url)
+                        ResourceManager.Instance.releaseRes(url)
+                        console.log('remove fgui package:', url)
+                    }
                     ResourceManager.Instance.releaseRes(this.url)
                 }
             }

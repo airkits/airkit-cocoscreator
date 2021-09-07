@@ -166,7 +166,7 @@ namespace airkit {
             let arr = this.res()
             if (arr && arr.length > 0) {
                 for (let i = 0; i < arr.length; i++) {
-                    ResourceManager.Instance.clearRes(arr[i].url, arr[i].refCount)
+                    ResourceManager.Instance.clearRes(arr[i].url)
                 }
             }
         }
@@ -269,16 +269,7 @@ namespace airkit {
                 gui_control.off(item[1], item[2], this)
             }
         }
-        protected static buildRes(resMap: { [index: string]: {} }): Array<Res> {
-            let res = []
-            for (let k in resMap) {
-                res.push({ url: 'ui/' + k, type: FGUIAsset, refCount: 1, pkg: k })
-                for (let k2 in resMap[k]) {
-                    res.push({ url: 'ui/' + k2, type: cc.BufferAsset, refCount: resMap[k][k2], pkg: k })
-                }
-            }
-            return res
-        }
+
         public onClose(): boolean {
             if (this._isOpen === false) {
                 Log.error('连续点击')
